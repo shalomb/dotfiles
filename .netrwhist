@@ -1,8 +1,0 @@
-﻿let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =6
-let g:netrw_dirhist_1='scp://root@camautoxs2.eng.citrite.net//'
-let g:netrw_dirhist_2='scp://root@camautoxs2.eng.citrite.net//var/'
-let g:netrw_dirhist_3='scp://root@camautoxs2.eng.citrite.net//var/run/'
-let g:netrw_dirhist_4='/home/unop/citrix/perforce/devsrc2_2555/shalomb_kratos/Automation_Team/Infrastructure/Hypervisor_Manager/XDAHM'
-let g:netrw_dirhist_5='/home/unop/Dropbox/work'
-let g:netrw_dirhist_6='/home/unop/Dropbox/work/XDAHM'
