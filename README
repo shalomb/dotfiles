@@ -1,5 +1,5 @@
 ﻿Repository
-  dotvim - Vim config files, packages, etc
+  .vim - Vim config files, packages, etc
 
 Installation:
   Clone Repository:
@@ -7,19 +7,7 @@ Installation:
   Create symlinks:
     ln -sv ~/.vim/vimrc ~/.vimrc
     ln -sv ~/.vim/gvimrc ~/.gvimrc
-  Switch to the `~/.vim` directory, and fetch submodules:
-    cd ~/.vim
-    git submodule init
-    git submodule update
-
-Committing
-  cd ~/.vim
-  git add .
-  git commit -m "Commit on $(date); "
-  git remote add origin git@github.com:shalomb/dotvim.git
-  git push origin master
-
-Adding submodules
+  Switch to the `~/.vim` directory, and fetch submodules
   (
     set -e
     cd ~/.vim
@@ -37,7 +25,17 @@ Adding submodules
     git submodule add   https://github.com/wincent/Command-T.git                bundle/command-t
     git submodule add   https://github.com/msanders/snipmate.vim.git            bundle/snipmate
     git submodule add   https://github.com/vim-scripts/vimwiki.git              bundle/vimwiki
+
+    git submodule init
+    git submodule update
   )
+
+Committing notes
+  cd ~/.vim
+  git add .
+  git commit -m "Commit on $(date); "
+  git remote add origin git@github.com:shalomb/dotvim.git
+  git push origin master
 
 References
   "Synchronizing plugins with git submodules and pathogen" http://vimcasts.org/episodes/synchronizing-plugins-with-git-submodules-and-pathogen/
