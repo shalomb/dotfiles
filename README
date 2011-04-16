@@ -39,5 +39,5 @@ Adding submodules
     git submodule add   https://github.com/vim-scripts/vimwiki.git      bundle/vimwiki
   )
 
-
-
+References
+  "Synchronizing plugins with git submodules and pathogen" http://vimcasts.org/episodes/synchronizing-plugins-with-git-submodules-and-pathogen/
