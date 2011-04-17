@@ -3,7 +3,7 @@
 # when leaving the console clear the screen to increase privacy
 if [[ "$SHLVL" = 1 ]]; then
   type -p clear_console && clear_console -q
-  clear   # as a falback
+  clear   # as a fallback
 fi
 
 # append history entries to ~/.bash_history
