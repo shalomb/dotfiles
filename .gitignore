@@ -37,6 +37,10 @@ Thumbs.db
 *.sw*
 *~
 
+.gitignore
+.netrwhist
+*hist
+.*hist
 bak/
 bak/*
 spell/

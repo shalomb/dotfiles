@@ -1,9 +1,9 @@
 """" Pathogen  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 filetype off
-call pathogen#runtime_append_all_bundles()
 call pathogen#helptags()
+call pathogen#runtime_append_all_bundles()
 
-"""" Options """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"""" Options """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set more                    " page on extended output
 
 let $PAGER='less'           " less is my pager
@@ -17,7 +17,7 @@ set backupdir-=.            " ...and not in cwd
 " set background=light       " vim has a dark background when in the console
 set novisualbell            " now that beep is a croak
 set hidden                  " hide, don't close, undisplayed buffers
-set history=50              " keep 50 lines of command history
+set history=256             " keep 50 lines of command history
 set laststatus=2            " always show status line
 
 set statusline=%<%9*%F\ %*%M%r\ %h%Y%w\ %{&ff}\ %=%-14.(%l/%L,%c%V\ (%P)%)\ \ %o,0x%O\ \ %b,0x%B\ \ \ %N,%n 
@@ -44,9 +44,11 @@ set wildmenu                " enable menu of completions
 set wildmode=full           " Complete longest common string, then each full match
 set wildcharm=<C-Z>         " keybinding that charms the wild complete
 
-set mouse=a                 " mouse is available in all modes
-set mousemodel=popup_setpos
-set mousehide               " hide the mouse when busy
+if has('mouse')
+  set mouse=a                 " mouse is available in all modes
+  set mousemodel=popup_setpos
+  set mousehide               " hide the mouse when busy
+endif
 
 set backspace=2             " correct backspace to return to previous lines
 
@@ -85,6 +87,7 @@ set autoindent              " try and be smart about indenting
 set smartindent             " C like indenting
 set cindent                 " done better
 set copyindent              " make autoindent use the same characters to indent
+set nojoinspaces      
 
 set showmatch               " show matching braces, parantheses, brackets, etc
 set matchpairs+=<:>         " show and % jump matching angle brackets
@@ -374,7 +377,7 @@ nnoremap <silent> <leader>y           "+y   "copy
 vnoremap <silent> <leader>D           "+x  "cut
 vnoremap <silent> <leader>d           "+x   "cut
 vnoremap          z/                  y/<C-R>"<CR>
-vnoremap          <                   <gv   " move mouse to beginning of visual block move
+vnoremap          <                   <gv   " move cursor to beginning of visual block move
 vnoremap          >                   >gv
 vnoremap          <leader>#           :s/^/#/<cr>
 vnoremap          <leader>v           :vimgrep <c-r>=expand('<cword>') . ' **/*' <cr>
