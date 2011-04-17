@@ -1,10 +1,14 @@
-﻿Repository
+﻿REPOSITORY
   .bash - Configuration files for bash
 
-Installation
-  mkdir ~/.bash
-  cd ~ && for i in .bash* .profile .inputrc; do 
-    mv -vi "${i}" .bash/"${i##.}"
-    ln -sv .bash/"${i##.}" "${i}"
+INSTALLATION
+  git clone git://github.com/shalomb/.bash.git ~/.bash
+  cd ~/.bash
+  sudo dpkg --set-selections < bash.dpkg
+  sudo aptitude install
+
+  # Pay attention to files attempted to be overwritten below
+  for i in ~/.bash/@(bash|inputrc|profile)*; do
+    (cd ~ && ln -sv .bash/"${i##*/}" ."${i##*/}");
   done
 
