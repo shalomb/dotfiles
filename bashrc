@@ -50,7 +50,7 @@ export XEDITOR="${XEDITOR:-$(which gvim)}"
 
 export HISTCONTROL=ignoredups
 export HISTIGNORE='&:ls: ls *:[bf]g'
-export HISTFILESIZE=65535
+export HISTFILESIZE=8192
 export HISTSIZE=$HISTFILESIZE
 export HISTTIMEFORMAT="";
 export IGNOREEOF=5
@@ -186,9 +186,11 @@ clean_path PATH
 clean_path MANPATH
 
 echo -e "\n$BASH ${BASH_VERSION}"
+
 echo -n "last login: "
 lastlog -u unop | tail -n +2 | tail -n 1 | sed 's/\ \ \ */ on /g'
 echo ""
+
 fortune
 echo ""
 
