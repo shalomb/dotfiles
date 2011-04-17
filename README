@@ -1,0 +1,10 @@
+﻿Repository
+  .bash - Configuration files for bash
+
+Installation
+  mkdir ~/.bash
+  cd ~ && for i in .bash*; do 
+    mv -vi "${i}" .bash/"${i##.}"
+    ln -sv .bash/"${i##.}" "${i}"
+  done
+

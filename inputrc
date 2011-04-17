@@ -1,0 +1,17 @@
+$include /etc/inputrc
+set bell-style none
+
+"\e[5~": history-search-backward
+"\e[6~": history-search-forward
+
+set bell-style visible
+
+C-p: history-search-backward
+C-n: history-search-forward
+
+"\C-x\C-r": re-read-init-file
+
+set editing-mode vi
+set enable-keypad on
+set expand-tilde off
+

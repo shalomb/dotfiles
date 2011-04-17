@@ -1,0 +1,12 @@
+﻿bash=~ CD=~ filter="~/.bash*" {
+  ~/.profile
+  ~/.inputrc
+  ~/.bashrc
+  ~/.bashrc.screen
+  ~/.bash_profile
+  ~/.bash_aliases
+  ~/.bash_top_aliases
+  ~/.bash_history
+  ~/.bash_logout
+  ~/.bash.vimproject
+}
