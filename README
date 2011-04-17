@@ -3,7 +3,7 @@
 
 Installation
   mkdir ~/.bash
-  cd ~ && for i in .bash*; do 
+  cd ~ && for i in .bash* .profile .inputrc; do 
     mv -vi "${i}" .bash/"${i##.}"
     ln -sv .bash/"${i##.}" "${i}"
   done
