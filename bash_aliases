@@ -275,7 +275,7 @@ function sendkey () {
 
 function tips () {
   local files;
-  local infodir=~/Desktop/info/;
+  local infodir=~/Desktop/tips/;
 
   if [[ -z $1 ]]; then set -- bash; fi
   
