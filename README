@@ -9,6 +9,6 @@ INSTALLATION
 
   # Pay attention to files attempted to be overwritten below
   for i in ~/.bash/@(bash|inputrc|profile)*; do
-    (cd ~ && ln -sv .bash/"${i##*/}" ."${i##*/}");
+    (cd ~ && ln -sv "${i}" ."${i##*/}");
   done
 
