@@ -1,0 +1,3 @@
+#!/bin/bash
+sed 1d mimeapps.list >> defaults.list
+perl -i.$(date +%s).bak -lne 'print if !$seen{$_}++' defaults.list

@@ -1,0 +1,29 @@
+#:'<,'>perldo{s/(\S+)\s+/sprintf "%-16s", $1/e}
+activity        "activity in %n (%t) [%w:%s]~"
+altscreen       on
+autodetach      on
+autonuke        on
+#bindkey        -k kb stuff "177"
+
+bind            M screen -t 'MC'     5 mc
+bind            V screen -t 'vim'     4 vim
+
+clear
+defautonuke     on
+defflow         auto
+defscrollback   32767
+defutf8         on
+echo            "Welcome :)"
+hardstatus      on
+hardstatus      alwayslastline
+flow            auto
+msgwait         1
+nonblock        on
+shelltitle      ''
+shell           bash
+startup_message off
+vbell_msg       "[[[ ding ]]]"
+vbell           on
+verbose         on
+version
+sorendition     "+b kG"

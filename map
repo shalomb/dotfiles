@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use File::Path qw[make_path];
+use File::Basename qw[dirname];
+
+my $action = $ARGV[0] // 'add';
+
+local $\ = "\n";
+
+chdir dirname "$0" or die "Error changing directory to dirname($0): $!";
+
+my @files;
+while (<DATA>) {
+  chomp;
+  push @files, $_;
+}
+
+for (@files) {
+  my $realfile = $_;
+  $realfile =~ s[^\s*~][$ENV{HOME}];  # TODO, glob shoulda worked here!!
+
+  my ($relfile) = ($realfile =~ m[^\s*$ENV{HOME}\/(.*)\s*$]);
+
+  if (-d $realfile) {
+    print "mkdir -p $relfile";
+    if (not make_path($relfile)) {
+      warn "Error creating directory '$relfile': $!\n";
+    }
+    print `rsync -av --progress "$realfile"/ "$relfile"/`;
+  }
+  else {
+    if (local $_ = readlink($realfile)) {
+      $realfile = $_;
+    }
+    print "ln '$realfile' '$relfile'";
+    if (not link $realfile, $relfile) {
+      warn "Error creating link for '$realfile' to '$relfile': $!\n";
+    }
+  }
+
+}
+
+__DATA__
+~/.fehrc
+~/.gmrunrc
+~/.gtkrc-2.0
+~/.ideskrc
+~/.idesktop
+~/.inputrc
+~/.local/share/applications
+~/.profile
+~/.screenrc
+~/.screenrc
+~/.tmux.conf
+~/.vimperatorrc
+~/.Xdefaults
+~/.xinitrc
+~/.Xmodmap

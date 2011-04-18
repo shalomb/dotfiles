@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=office oo.org2
+Type=Application
+Version=1.0
+Encoding=UTF-8
+Icon=openoffice
+Terminal=false
+InitialPreference=2
+Categories=Office;
+Exec=soffice
+GenericName=Desktop Publishing
+GenericName[en]=Desktop Publishing
+Comment=Create text documents, spreadsheets, presentations, databases and other types of documents.
+X-KDE-Protocols=file,http,smb,ftp,webdav

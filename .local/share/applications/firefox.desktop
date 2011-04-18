@@ -1,0 +1,6 @@
+[Desktop Entry]
+Exec=firefox
+MimeType=text/html;
+Name=firefox
+NoDisplay=true
+Type=Application

@@ -1,0 +1,10 @@
+table Icon
+  Caption: Gnome Control Center
+  Icon: /home/unop/.idesktop/gnome-control-center.png
+  Height: 28
+  Width: 28
+  X: 169
+  Y: 542
+  Command[0]: gnome-control-center
+  Command[1]: gksu gnome-control-center
+end

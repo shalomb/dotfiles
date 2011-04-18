@@ -1,0 +1,6 @@
+REPOSITORY
+  dotfiles - Configuration files for random applications.
+
+INSTALLATION
+  mkdir ~/.config/dotfiles
+  git clone git://github.com/shalomb/dotfiles.git ~/.config/dotfiles

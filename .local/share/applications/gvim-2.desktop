@@ -1,0 +1,6 @@
+[Desktop Entry]
+Exec=gvim -f %F
+MimeType=text/plain;
+Name=gvim
+NoDisplay=true
+Type=Application
