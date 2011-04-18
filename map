@@ -1,16 +1,22 @@
 #!/usr/bin/perl
 
+# map
+
 use strict;
 use warnings;
 
-use File::Path qw[make_path];
-use File::Basename qw[dirname];
+use File::Basename  qw[basename dirname];
+use File::Glob      qw[:glob];
+use File::Path      qw[make_path];
+use File::Spec      qw[catfile];
+  sub fsc { File::Spec->catfile(@_) }
 
 my $action = $ARGV[0] // 'add';
 
 local $\ = "\n";
 
-chdir dirname "$0" or die "Error changing directory to dirname($0): $!";
+chdir dirname "$0"
+  or die "Error changing directory to dirname($0): $!";
 
 my @files;
 while (<DATA>) {
@@ -18,33 +24,61 @@ while (<DATA>) {
   push @files, $_;
 }
 
-for (@files) {
-  my $realfile = $_;
-  $realfile =~ s[^\s*~][$ENV{HOME}];  # TODO, glob shoulda worked here!!
+for my $realfile (@files) {
 
-  my ($relfile) = ($realfile =~ m[^\s*$ENV{HOME}\/(.*)\s*$]);
+  printf "Glob '%s' => '%s'\n",
+    $realfile, ($realfile = bsd_glob $realfile);
 
-  if (-d $realfile) {
-    print "mkdir -p $relfile";
-    if (not make_path($relfile)) {
-      warn "Error creating directory '$relfile': $!\n";
-    }
+  $realfile = $_ if local $_ = readlink($realfile);
+
+  my ($relfile) = ($realfile =~ m[^\s*$ENV{HOME}\/(.*)$]);
+
+  if (-d $realfile) {  # is a directory
+    warn "Error creating directory '$relfile': $!\n"
+    if (  not -d $relfile           and
+          print "mkdir -p $relfile" and
+          not make_path($relfile)
+        ); 
     print `rsync -av --progress "$realfile"/ "$relfile"/`;
   }
-  else {
-    if (local $_ = readlink($realfile)) {
-      $realfile = $_;
-    }
-    print "ln '$realfile' '$relfile'";
-    if (not link $realfile, $relfile) {
-      warn "Error creating link for '$realfile' to '$relfile': $!\n";
-    }
+
+  elsif ($relfile =~ m[\/]) { # is not a dir and is a file not in $PWD
+    my $directory = dirname($realfile); 
+    $directory =~ s[^\s*$ENV{HOME}\/][];
+    my $file      = basename($realfile);
+
+    warn "Error creating directory '$directory': $!\n"
+    if (  not -d $directory           and
+          print "mkdir -p $directory" and
+          not make_path($directory)
+        );
+
+    warn "Error creating link for '$realfile' to '$relfile': $!\n"
+    if (  not -f $relfile                           and
+          print "ln '$realfile' '$directory/$file'" and
+          not link $realfile, fsc($directory, $file)
+        ); 
+  }
+
+  else { # is not a dir and is not a file not in PWD
+    warn "Error creating link for '$realfile' to '$relfile': $!\n"
+    if (  not -f $relfile                   and 
+          print "ln '$realfile' '$relfile'" and
+          not link $realfile, $relfile
+        );
   }
 
 }
 
+# TODO
+#   * Add a reverse action of 'add'
+
+
 __DATA__
+~/.config/wallpapers/wallpaper.list
 ~/.fehrc
+~/.fluxbox/startup
+~/.fluxbox/keys
 ~/.gmrunrc
 ~/.gtkrc-2.0
 ~/.ideskrc
