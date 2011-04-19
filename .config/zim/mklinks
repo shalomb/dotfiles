@@ -1,0 +1,1 @@
+perl -lane '/~/ and do { /([^\/]+)\/[^\/]+$/ and print ((glob [1]),  ) }' ../notebooks.list | while read target link; do echo ln -s $target $link; done
