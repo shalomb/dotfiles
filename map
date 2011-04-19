@@ -74,6 +74,7 @@ for my $realfile (@files) {
 # TODO
 #   * Add a reverse action of 'add' - consider better verbage
 #   * Targets need to take on name as listed in __DATA__ not the real filename
+#   * __DATA__ should really exist in a synclist file
 
 
 __DATA__
@@ -84,6 +85,10 @@ __DATA__
 ~/.bashrc
 ~/.bashrc.screen
 ~/.config/wallpapers/wallpaper.list
+~/.config/zim/accelmap
+~/.config/zim/default.conf
+~/.config/zim/mklinks
+~/.config/zim/state.conf
 ~/.fehrc
 ~/.fluxbox/apps
 ~/.fluxbox/init
