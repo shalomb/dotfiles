@@ -26,8 +26,9 @@ while (<DATA>) {
 
 for my $realfile (@files) {
 
-  printf "Glob '%s' => '%s'\n",
-    $realfile, ($realfile = bsd_glob $realfile);
+#   printf "Glob '%s' => '%s'\n",
+#     $realfile, 
+      ($realfile = bsd_glob $realfile);
 
   $realfile = $_ if local $_ = readlink($realfile);
 
@@ -71,14 +72,27 @@ for my $realfile (@files) {
 }
 
 # TODO
-#   * Add a reverse action of 'add'
+#   * Add a reverse action of 'add' - consider better verbage
+#   * Targets need to take on name as listed in __DATA__ not the real filename
 
 
 __DATA__
+~/.bash_aliases
+~/.bash.dpkg
+~/.bash_logout
+~/.bash_profile
+~/.bashrc
+~/.bashrc.screen
 ~/.config/wallpapers/wallpaper.list
 ~/.fehrc
-~/.fluxbox/startup
+~/.fluxbox/apps
+~/.fluxbox/init
 ~/.fluxbox/keys
+~/.fluxbox/menu
+~/.fluxbox/overlay
+~/.fluxbox/startup
+~/.fluxbox/windowmenu
+~/.gitignore
 ~/.gmrunrc
 ~/.gtkrc-2.0
 ~/.ideskrc
@@ -87,9 +101,9 @@ __DATA__
 ~/.local/share/applications
 ~/.profile
 ~/.screenrc
-~/.screenrc
 ~/.tmux.conf
 ~/.vimperatorrc
 ~/.Xdefaults
 ~/.xinitrc
 ~/.Xmodmap
+~/.xsession
