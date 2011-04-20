@@ -59,8 +59,8 @@ for my $glob ( @globs ) {
               $realfile = readlink_f $File::Find::name if -l _;
               make_link( $realfile, $relative_name );
             }
-            elsif ( -d _ and not -d $relative_name ) {
-              make_directory( $relative_name ) 
+            elsif ( -d _ ) {
+              make_directory( $relative_name );
             }
             else {
               warn "Not processing '$File::Find::name', possible special file.\n";
@@ -187,6 +187,7 @@ __DATA__
 ~/.screenrc
 ~/.tmux.conf
 ~/.vimperatorrc
+~/.vimperator/plugin/
 ~/.Xdefaults
 ~/.xinitrc
 ~/.Xmodmap
