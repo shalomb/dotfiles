@@ -1,0 +1,124 @@
+#!/bin/sh
+# fluxbox startup-script:
+
+
+echo "pid:$$ ppid:$PPID DISPLAY:$DISPLAY" > /tmp/vt
+ps -o command= -p $(pidof X) | perl -lne '
+    BEGIN { ($display) = $ENV{DISPLAY} =~ /(:[0-9]+)/ } 
+    print /$display\b.*(vt[0-9]+)/ || 
+      /(vt[0-9]+).*$display\b/
+  ' >> /tmp/vt
+
+PATH="$HOME/.bin:$PATH:/usr/local/sbin:/usr/sbin:/sbin"; export PATH;
+TTY="$(date +%s)"; export TTY;
+
+TMP="/tmp/${USER}/${DISPLAY}/"; export TMP;
+mkdir -p "$TMP";
+# TODO, fix this
+# if [ -e "$TMP" ]; then
+#   if [ ! -d "$TMP" ]; then
+#     TMP="/tmp/${USER}.d/${DISPLAY}/"; export TMP;
+#      mkdir -p "$TMP";
+#   fi
+# else
+#   mkdir "$TMP"
+# fi
+# chmod 700 "$TMP";
+
+GNOME_DESKTOP_SESSION_ID='fluxbox0';  export GNOME_DESKTOP_SESSION_ID;
+
+FBLOGDIR="$TMP/fluxbox/"; mkdir "$FBLOGDIR";
+FBLOG="$FBLOGDIR/fluxbox.log";
+> "$FBLOG"
+
+
+# pre-launch
+{
+  xset s on           # screensaver
+  xset s blank        # screensaver blank
+  xset s 300          # after 5*60 seconds
+
+  xset +dpms          # enable DPMS (Energy Star) features.
+  xset dpms 420 480 600  # timeouts for standby, suspend, off
+
+  xset b on           # Turn the bell on
+  xset b 10 100 50    # Turn beeps into croaks
+  xset r rate 175 30  # Set the keyboard repeat-rate:
+
+  test -e ~/.Xmodmap &&	xmodmap ~/.Xmodmap & # change the keymap
+
+  test -d ~/.fonts || {
+    mkdir -p ~/.fonts;
+    chmod 755 ~/.fonts;
+    mkfontdir ~/.fonts; 
+  } &                 # set-up user fonts dir
+
+xset +fp ~/.fonts   # add ~/.fonts to the font path
+xset fp rehash      # rehash the font path
+
+test -r ~/.Xresources && xrdb -merge ~/.Xresources
+test -r ~/.Xmodmap    && xmodmap ~/.Xmodmap
+
+eval `ssh-agent -s -t 7200`;
+
+} &
+
+
+exec fluxbox -log "$FBLOG" &
+FLUXBOX_PID=$!
+
+{
+  wpset &
+  # xbindkeys
+  # fetchmail
+
+  nice -n 5   idesk &
+  
+  nice -n 0   urxvtd -q -f -o && \
+#    nice -n 0 urxvtc -name qterm -title qterm \
+#    -tr -tint black -fg \#dfdfdf -sh 60 -e screen -S qterm &
+  qterm &
+  qtermWinId=$(printf "0x%x" "$(wmctrl -lx | awk '/qterm.URxvt/{print $1}')")
+  wmctrl -i -r "$qtermWinId" -b add,skip_taskbar
+
+  unclutter -idle 5 &
+  autocutsel --fork &
+  laptop-detect && numlockx off &
+  nice -n 10 /usr/lib/evolution/[0-9]*/evolution-alarm-notify --sm-disable &
+  # while true; do ooffice -nodefault -nologo; done &
+
+  nice -n 10 zim --daemon --iconify _default_ &
+  nice -n 15 gdlinux &
+  sleep 15 && laptop-detect || alltray evolution calendar &
+  nice -n 2 gnome-session &
+  pgrep gnome-power-manager || gnome-power-manager &
+  pgrep gnome-keyring-daemon || gnome-keyring-daemon &
+
+  amixer -c 0 -- sset Master -18dB && \
+    nice -n 0 ogg123 ~/.fluxbox/login.ogg 2>/dev/null&
+  sleep 10 && nice -n 5  kmix &
+  sleep 10 && nice -n 15 ooffice -quickstart -nodefault -nologo -splash-pipe=5 &
+  superswitcher -C &
+
+  dbcli.py status & # dropbox
+  # override some settings that gnome-settings-daemon might set
+  sleep 10 && xset b on           # Turn the bell on
+  sleep 10 && xset b 10 100 50    # Turn beeps into croaks
+  sleep 10 && xset r rate 175 30  # Set the keyboard repeat-rate:
+} >> "$FBLOG" 2>&1 &
+
+wait $FLUXBOX_PID;
+
+# kill any processes on the TTY we started out on. $TTY ought to be set.
+# TODO: $TTY might not actually reflect the one we exported
+# TODO: this section doesn't work at all for some reason.
+{
+  if test -n "$TTY"; then
+    ps -ao pid,tty,command | grep "$TTY" | while read pid tty command; do
+    for sig in TERM HUP INT QUIT; do
+      echo "sending SIG$sig to $command [$pid]" && kill -"$sig" $pid
+    done
+  done
+fi
+clear
+} >> "$FBLOG" 2>&1

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Exec=gqview -r %F
+MimeType=image/bmp;
+Name=gqview
+NoDisplay=true
+Type=Application

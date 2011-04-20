@@ -1,0 +1,8 @@
+table Icon
+  Caption: desktop
+  Icon: /home/unop/.idesktop
+  Height: 24
+  Width: 24
+  X: 939
+  Y: 542
+end

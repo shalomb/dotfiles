@@ -1,0 +1,6 @@
+[Desktop Entry]
+Exec=gimp
+MimeType=image/vnd.adobe.photoshop;
+Name=gimp
+NoDisplay=true
+Type=Application
