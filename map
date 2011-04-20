@@ -5,70 +5,149 @@
 use strict;
 use warnings;
 
+use Cwd;
 use File::Basename  qw[basename dirname];
+use File::Find;
+  no warnings 'File::Find';
 use File::Glob      qw[:glob];
 use File::Path      qw[make_path];
 use File::Spec      qw[catfile];
   sub fsc { File::Spec->catfile(@_) }
 
-my $action = $ARGV[0] // 'add';
-
 local $\ = "\n";
+local $|; $|++;
+
+sub make_directory;
+sub make_link;
+sub readlink_f;
+
+my $action = $ARGV[0] // 'add';
 
 chdir dirname "$0"
   or die "Error changing directory to dirname($0): $!";
 
-my @files;
+my @globs;
 while (<DATA>) {
   chomp;
-  push @files, $_;
+  push @globs, $_;
+}
+close DATA;
+
+for my $glob ( @globs ) {
+
+  for my $file ( my @files = bsd_glob $glob ) {
+      
+    my ($relative_file) = ($file =~ m[^\s*$ENV{HOME}\/(.*)$]);
+    my $realfile = readlink $file // $file;
+
+    next unless length $relative_file 
+                and -e $realfile;
+
+    printf "Committing '%s' as '%s'\n", $file, $relative_file
+      if not -e $relative_file;
+
+    if ( -d $realfile ) {
+      make_directory ( $relative_file ) 
+        if not -d $relative_file;
+
+      find { 
+          wanted => sub {
+            my ($relative_name) = 
+              ($File::Find::name =~ m[^\s*$ENV{HOME}\/(.*)$]);
+
+            if ( -l (my $realfile = $File::Find::name) or -f _ ) {
+              $realfile = readlink_f $File::Find::name if -l _;
+              make_link( $realfile, $relative_name );
+            }
+            elsif ( -d _ and not -d $relative_name ) {
+              make_directory( $relative_name ) 
+            }
+            else {
+              warn "Not processing '$File::Find::name', possible special file.\n";
+            }
+          }, 
+          no_chdir => 1
+        }, 
+        $realfile;
+    }
+
+    elsif ( $relative_file =~ m[\/] ) { 
+      make_directory  ( dirname($relative_file) ) 
+        if not -d dirname($relative_file);
+
+      make_link ( $realfile, $relative_file );
+    }
+
+    else {
+      make_link ( $realfile, $relative_file );
+    }
+  }
+
 }
 
-for my $realfile (@files) {
+sub make_directory {
+  my $directory = shift;
 
-#   printf "Glob '%s' => '%s'\n",
-#     $realfile, 
-      ($realfile = bsd_glob $realfile);
-
-  $realfile = $_ if local $_ = readlink($realfile);
-
-  my ($relfile) = ($realfile =~ m[^\s*$ENV{HOME}\/(.*)$]);
-
-  if (-d $realfile) {  # is a directory
-    warn "Error creating directory '$relfile': $!\n"
-    if (  not -d $relfile           and
-          print "mkdir -p $relfile" and
-          not make_path($relfile)
-        ); 
-    print `rsync -av --progress "$realfile"/ "$relfile"/`;
-  }
-
-  elsif ($relfile =~ m[\/]) { # is not a dir and is a file not in $PWD
-    my $directory = dirname($realfile); 
-    $directory =~ s[^\s*$ENV{HOME}\/][];
-    my $file      = basename($realfile);
-
-    warn "Error creating directory '$directory': $!\n"
+  warn "Error creating directory '$directory': $!\n"
     if (  not -d $directory           and
           print "mkdir -p $directory" and
-          not make_path($directory)
-        );
-
-    warn "Error creating link for '$realfile' to '$relfile': $!\n"
-    if (  not -f $relfile                           and
-          print "ln '$realfile' '$directory/$file'" and
-          not link $realfile, fsc($directory, $file)
+          not make_path($directory)   and
+          return 1
         ); 
-  }
+}
 
-  else { # is not a dir and is not a file not in PWD
-    warn "Error creating link for '$realfile' to '$relfile': $!\n"
-    if (  not -f $relfile                   and 
-          print "ln '$realfile' '$relfile'" and
-          not link $realfile, $relfile
+sub make_link {
+  my ($target, $link) = (@_);
+
+  warn "Error creating link '$link' to '$target': $!\n"
+    if (  not -f $link                 and 
+          print "ln '$target' '$link'" and
+          not link $target, $link      and
+          return 1
         );
+
+}
+
+# Courtesy: R.Schwartz
+# "Expanding symbolic links (aug 99)"
+#  http://www.stonehenge.com/merlyn/UnixReview/col27.html
+sub readlink_f {
+  my $file = shift;
+
+  my @right = split /\//, $file;
+
+  my @left = do {
+    @right && ($right[0] eq "") ?
+    shift @right :            # quick way
+    split /\//, getcwd;
+  };    # first element always null
+
+  while (@right) {
+    my $item = shift @right;
+    next if $item eq "." or $item eq "";
+
+    if ($item eq "..") {
+      pop @left if @left > 1;
+      next;
+    }
+
+    my $link = readlink fsc(@left, $item);
+
+    if (defined $link) {
+      my @parts = split /\//, $link;
+      if (@parts && ($parts[0] eq "")) { # absolute
+        @left = shift @parts;   # quick way
+      }
+      unshift @right, @parts;
+      next;
+    } 
+    else {
+      push @left, $item;
+      next;
+    }
   }
 
+  return fsc(@left);
 }
 
 # TODO

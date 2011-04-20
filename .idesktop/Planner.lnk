@@ -1,9 +1,0 @@
-table Icon
-  Caption: Planner
-  Icon: /home/unop/.idesktop/planner.png
-  Height: 28
-  Width: 28
-  X: 629
-  Y: 542
-  Command[0]: planner
-end
