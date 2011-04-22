@@ -17,7 +17,7 @@ export TZ='Europe/London';
 
 # CDPATH: see workaround with PROMPT_COMMAND later on
 function set_cdpath () {
-  export CDPATH="$PWD:.:$OLDPWD:..:~:/media:/mnt:/tmp:/"
+  CDPATH="$PWD:.:$OLDPWD:..:~:/media:/mnt"
 }
 export MANPATH=$MANPATH:"/var/cache/man/:/usr/share/man/:/usr/share/doc/libncurses5-dev/html/man/:/usr/lib/jvm/java-6-sun-1.6.0.06/man/:/usr/lib/jvm/java-6-sun-1.6.0.06/jre/man/"
 # echo $(locate */man/* | grep -ioE '.*/man/' | sort -r | uniq | tr $'\n' ':')
@@ -136,7 +136,7 @@ fi
 #export PS1='\[\n${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h:\[\033[01;34m\]\W\[\033[01;33m\]\$\[\033[00m\] '
 case "$TERM" in
   screen)
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00;37m\]:\[\033[00;34m\]\W\[\033[00;35m\]\$\[\033[00;00m\] '
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;33m\]\! \[\033[01;32m\]\T \[\033[01;34m\]\W\[\033[00;35m\]\$\[\033[00;00m\] '
     ;;
   *)
     PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00;37m\]:\[\033[00;34m\]\W\[\033[00;35m\]\$\[\033[00;00m\] '
