@@ -157,17 +157,12 @@ sub readlink_f {
 
 
 __DATA__
-~/.bash_aliases
-~/.bash.dpkg
-~/.bash_logout
-~/.bash_profile
-~/.bashrc
-~/.bashrc.screen
-~/.config/wallpapers/wallpaper.list
+~/~/.config/wallpapers/wallpaper.list
 ~/.config/zim/accelmap
 ~/.config/zim/default.conf
 ~/.config/zim/mklinks
 ~/.config/zim/state.conf
+~/.dircolors
 ~/.fehrc
 ~/.fluxbox/apps
 ~/.fluxbox/init
@@ -186,8 +181,8 @@ __DATA__
 ~/.profile
 ~/.screenrc
 ~/.tmux.conf
-~/.vimperatorrc
 ~/.vimperator/plugin/
+~/.vimperatorrc
 ~/.Xdefaults
 ~/.xinitrc
 ~/.Xmodmap
