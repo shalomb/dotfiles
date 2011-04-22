@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 #set -v -x
 
-# vt_aliases - aliases to be set for a interactive VT session
-
+shopt -s nullglob dotglob
+alias_files=( ~/.config/bash/alias.d/* );
+if (( ${#alias_files[@]} > 0 )); then
+  reload "${alias_files[@]}";
+fi
+shopt -u nullglob dotglob
 
 function add_alias () {
   if alias $1 &> /dev/null; then
@@ -25,7 +29,6 @@ alias     cls='clear'
 
 alias     e='$EDITOR'
 
-# alias     exit="source $CONFIG/logout"
 alias     quit=exit
 
 # some vim-like commands
@@ -230,8 +233,6 @@ function  dirs () {
     cd $dir && \echo "$PWD"
   fi
 }
-
-source ~/.config/bash/d.bash
 
 function  calc () { 
   if [[ -n "$@" ]]; then
