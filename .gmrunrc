@@ -1,6 +1,4 @@
 # gmrun configuration file
-# gmrun is (C) Mihai Bazon, <mishoo@infoiasi.ro>
-# GPL v2.0 applies
 
 # Set terminal
 Terminal = x-terminal-emulator
