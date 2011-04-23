@@ -1,11 +1,18 @@
-#!/usr/bin/env bash
-#set -v -x
+#!/bin/bash
+# vi:ftype=bash:sw=2:tw=2:et
+
+# set -v -e -x
+
+# This file is to be treated as a stub i.e. it must not source any other files
+# except those files under ~/.config/bash/alias.d/. This behaviour must be
+# inherited by those files too.
 
 # If not running interactively, don't do anything but return
 [[ -n "$PS1" ]] || return
 test -t 0       || return
 
 export BASH_ALIASES_SOURCED="$(date +%s)"
+export BASH_ALIASES_SOURCED_BY="$BASH_ALIASES_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
 
 shopt -s nullglob dotglob
 alias_files=( ~/.config/bash/alias.d/* );
@@ -38,8 +45,6 @@ alias     e='$EDITOR'
 alias     quit=exit
 
 # some vim-like commands
-alias     :q=exit
-
 function  :h () {
   if builtin help $1 &> /dev/null; then
     help $1
@@ -54,10 +59,9 @@ function  :h () {
 
 function  f () { find . -name "$@" ; }
 
-export    GREP_COLOR="1;36"
-alias     grep='grep --colour=auto'
-alias     egrep='egrep --colour=auto'
-alias     g='egrep -iE --colour=auto'
+alias         grep='grep --colour=auto'
+alias        egrep='egrep -E --colour=auto'
+alias            g='egrep E --colour=auto'
 
 alias     h='fc -l'
 alias     j='jobs -l'
@@ -93,16 +97,16 @@ alias     lt='ls -lt'
 #  echo "${files[@]:1}"
 #}
 
-function     lsd () { 
+function  lsd () { 
   find . -maxdepth ${FIND_DEPTH:-1} -type d -exec \ls "$@" -d {} +
 }
-function     lsf () {
+function  lsf () {
   find . -maxdepth ${FIND_DEPTH:-1} -type f -iname "*$1*" | xargs ls -d $2
 }
-function     lsl () {
+function  lsl () {
   find . -maxdepth ${FIND_DEPTH:-1} -type l -iname "*$1*" | xargs ls -d $2
 }
-function     lso () {
+function  lso () {
   find . -maxdepth ${FIND_DEPTH:-1} ! -type f ! -type d ! -type l -iname "*$1*" | xargs ls -dF $2;
 }
 
@@ -137,19 +141,19 @@ alias     ip2bin="perl -le 'print join \" \", map {sprintf \"%08b [%1\\\$X]\", \
 alias     whatismyip="wget -q www.whatismyip.com/automation/n09230945.asp -O -"
 #alias     myip="lynx -dump http://checkip.dyndns.org | perl -ne 'print /((?:\d{1,3}(?:\.|$)){4})/'"
 
-function docbrowse   { find /usr/local/share/ -type f -name "*$@*" | $PAGER; }
+function  docbrowse   { find /usr/local/share/ -type f -name "*$@*" | $PAGER; }
 
-function help () {  builtin help "$@" | $PAGER ; }
-function pathgrep () {  perl -le 'print for grep /$ARGV[0]/, map { glob "$_/*" } split /:/, $ENV{PATH}' "$1"; }
+function  help () {  builtin help "$@" | $PAGER ; }
+function  pathgrep () {  perl -le 'print for grep /$ARGV[0]/, map { glob "$_/*" } split /:/, $ENV{PATH}' "$1"; }
 
-function lif  ()     { [[ -n "$2" ]] && egrep -Rsl $@ || egrep -sl $@ * ; }
+function  lif  ()     { [[ -n "$2" ]] && egrep -Rsl $@ || egrep -sl $@ * ; }
 
-function man         { LESS= /usr/bin/man -P $PAGER $@; }
-function manbrowse   { locate \/man\/ | grep "$1" | $PAGER; }
-function mcd         { mkdir "$@" && builtin cd "$@"; }
-alias md=mcd
+function  man         { LESS= /usr/bin/man -P $PAGER $@; }
+function  manbrowse   { locate \/man\/ | grep "$1" | $PAGER; }
+function  mcd         { mkdir "$@" && builtin cd "$@"; }
+alias     md=mcd
 
-function mkfile ()   {   mkdir -p $(dirname "$@"); touch $@; }
+function  mkfile ()   {   mkdir -p $(dirname "$@"); touch $@; }
 
 # function rand { echo $(( $RANDOM % ((${2:-$1} - $1 + 1) + $1) )) ; }
 
@@ -174,7 +178,7 @@ function  mkexe       {
   \echo;
 }
 
-function press () {
+function  press () {
   local archive="${1%%/}";
   
   if [[ ! -e "$archive" ]]; then shift; fi
@@ -182,7 +186,7 @@ function press () {
   tar cf - "$@" | bzip2 -9 > "$archive.tbz" && stat -c "%n  %s"  "$archive.tbz";
 }
 
-function _gvim  ()  {
+function  _gvim  ()  {
   local GVIM=$(which gvim)
   if ! $($GVIM --serverlist | grep -iq "^foo$"); then
     $GVIM --servername "foo"
@@ -274,13 +278,13 @@ function  calc () {
   fi
 }
 
-function sendkey () {
+function  sendkey () {
     if [[ -n $1 ]]; then
         ssh "$1" 'test -d ~/.ssh || mkdir -p ~/.ssh; cat ->> ~/.ssh/authorized_keys' < ~/.ssh/id_rsa.pub
     fi
 }
 
-function tips () {
+function  tips () {
   local files;
   local infodir=~/Desktop/tips/;
 
@@ -299,7 +303,7 @@ function tips () {
   cd "$OLDPWD";
 }
 
-reset_screen () {
+function  reset_screen () {
   printf "set mouse reporting on  \033[?1000h %d\n" $?; # turn mouse reporting on
   printf "set mouse reporting off \033[?1000l %d\n" $?; # turn mouse reporting off
 }

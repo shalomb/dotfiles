@@ -9,6 +9,10 @@
 test -t 0       || return
 
 export BASH_PROFILE_SOURCED="$(date +%s)"
+export BASH_PROFILE_SOURCED_BY+=( \
+  "$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)" \
+  )
+
 
 # the default umask is set in /etc/login.defs
 umask 022

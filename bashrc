@@ -1,8 +1,13 @@
-# ~/.bashrc: executed by bash(1) for non-login shells.
-# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
-# for examples
+#!/bin/bash
 
-export BASHRC_SOURCED="$(date +%s)"; # notification of this file being sourced.
+ ##############################################################################
+#   ~/.bashrc: executed by bash(1) for non-login shells.                       #
+#   See /usr/share/doc/bash/examples/startup-files (in the package bash-doc)   #
+#   for examples                                                               #
+ ##############################################################################
+
+export BASHRC_SOURCED="$(date +%s)"
+export BASHRC_SOURCED_BY="$BASHRC_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
 
 # If not running interactively, don't do anything
 [[ -n "$PS1" ]] || return
@@ -13,15 +18,6 @@ if [[ -z $PROFILE_SOURCED && -r ~/.profile ]]; then
   source ~/.profile
 fi
 
-# colourise manpages
-export LESS_TERMCAP_mb=$'\E[01;31m'    # Begin blink
-export LESS_TERMCAP_md=$'\E[01;37m'    # begin bold
-export LESS_TERMCAP_me=$'\E[0m'        # end mode
-export LESS_TERMCAP_so=$'\E[01;44;33m' # begin standout mode
-export LESS_TERMCAP_se=$'\E[0m'        # end standout-mode
-export LESS_TERMCAP_ue=$'\E[0m'        # begin underline
-export LESS_TERMCAP_us=$'\E[01;32m'    # end underline
-
 export PAGER=$(which less)
 export MANPAGER="$PAGER"
 
@@ -30,10 +26,9 @@ export FCEDIT="$EDITOR"
 export HISTCONTROL=ignoredups
 export HISTFILESIZE=8192
 export HISTIGNORE='&:ls: ls *:[bf]g'
-export HISTSIZE=$HISTFILESIZE
+export HISTSIZE="$HISTFILESIZE"
 export HISTTIMEFORMAT=""
 export IGNOREEOF=5
-export INPUTRC=~/.inputrc
 export TIMEFORMAT=$'\nReal: %3lR\tUser: %3lU\tSys: %3lS\tCPU: %3lP'
 
 read screen_session _ < <(screen -ls | grep "$PPID\.")
@@ -90,15 +85,13 @@ ulimit -Hu 320      # hard max. user processes
 # echo done
 
 
-type -p lesspipe &>/dev/null && eval "$(lesspipe)"
-
 if [[ -z "$debian_chroot" && -r /etc/debian_chroot ]]; then
     debian_chroot="$(</etc/debian_chroot)"
 fi
 
 
 case "$TERM" in
-  screen)
+  screen*)
     PS1='${debian_chroot:+($debian_chroot)}\[\033[01;35m\]\!\[\033[01;32m\]\T\[\033[01;34m\]\W\[\033[00;35m\]\$\[\033[00;00m\] '
     ;;
   *)
@@ -107,7 +100,7 @@ case "$TERM" in
 esac
 
 # If this is an xterm set the title to user@host:dir
-case "$TERM" in screen|xterm*|*rxvt*)
+case "$TERM" in screen*|xterm*|*rxvt*)
     PROMPT_COMMAND='echo -ne "\033]0;${debian_chroot}${USER}@${screen_session:-$HOSTNAME}:$$: ${PWD/$HOME/~}\007"'
     ;;
 *)
@@ -121,8 +114,8 @@ function set_cdpath () {
 
 # CDPATH does not seem to expand variables when cd is used
 # workaround: get PROMPT_COMMAND to do the expanding
-if [[ -n $PROMPT_COMMAND ]]; then
-  PROMPT_COMMAND="$PROMPT_COMMAND ; set_cdpath ;"
+if [[ -n $PROMPT_COMMAND && $PROMPT_COMMAND != *set_cdpath* ]]; then  
+    PROMPT_COMMAND="$PROMPT_COMMAND ; set_cdpath ;"
 else
   PROMPT_COMMAND="set_cdpath"
 fi

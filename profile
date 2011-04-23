@@ -1,24 +1,36 @@
-# ~/.profile: executed by the command interpreter for login shells.
-# This file is not read by bash(1), if ~/.bash_profile or ~/.bash_login
-# exists.
+#!/bin/bash
 
-# See /usr/share/doc/bash/examples/startup-files for examples.
-# the files are located in the bash-doc package.
-#
-# No checks to test whether $0 is being run interactively should be made as
-# ?DM and .xinitrc/.xsession spawn the DM non-interactively (with regards
-# to us).
+ ##############################################################################
+#   ~/.profile: executed by the command interpreter for login shells           #
+#   (including bash when invoked as a --login shell).                          #
+#                                                                              #
+#   For non-interactive shells, this file is not read by bash(1),              #
+#   if ~/.bash_profile or ~/.bash_login exists.                                #
+#                                                                              #
+#   See /usr/share/doc/bash/examples/startup-files for examples.               #
+#   the files are located in the bash-doc package.                             #
+#                                                                              #
+#   Avoid bashisms at all costs!! This file is to be sourced by any POSIX      #
+#   complaint shell (dash, ksh, zsh, etc), so portable scripting here is key.  #
+#                                                                              #
+#   No checks to test whether $0 is being run interactively should be made as  #
+#   ?DM and .xinitrc/.xsession spawn the DM non-interactively (with regards    #
+#   to us).                                                                    #
+ ##############################################################################
 
-# Let everyone know this file was sourced.
-#  we'll use it to break cyclic loops.
-PROFILE_SOURCED="$(date +%s)"; export PROFILE_SOURCED
-PROFILE_SOURCED_BY+=("$(ps -o pid= -o cmd= -p $$) $(date +%s)")
+#   Let everyone know this file was sourced.
+#    we'll use it to break never-ending cyclic loops.
+PROFILE_SOURCED="`date +%s`";
+PROFILE_SOURCED_BY="$PROFILE_SOURCED_BY|`ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=` `date +%s`";
+export PROFILE_SOURCED;
+export PROFILE_SOURCED_BY;
+
 
 # The default umask is set in /etc/profile; for setting the umask
 # for ssh logins, install and configure the libpam-umask package.
 umask 022
 
-SHELL=$(readlink -f /proc/$$/exe); export SHELL
+SHELL="`readlink -f /proc/$$/exe`";       export SHELL
 
 # source ~/.bashrc if we're under bash and it hasn't been sourced before
 if [ -n "$BASH_VERSION" ]; then
@@ -28,62 +40,99 @@ if [ -n "$BASH_VERSION" ]; then
 fi
 
 
-export LANG="en_GB.UTF-8"
-       HOSTNAME="${HOSTNAME:-"$(< /etc/hostname)"}"
-export HOSTNAME="${HOSTNAME:-"$(hostname -s)"}"
-export HOST="${HOST:-"$HOSTNAME"}"
-export TZ='Europe/London'
+# Environment Variables
+XDG_CACHE_HOME="$HOME/.cache";            export XDG_CACHE_HOME;
+XDG_CONFIG_HOME="$HOME/.config";          export XDG_CONFIG_HOME;
+XDG_CONFIG_DIRS="$HOME/.etc/:/etc:/etc/xdg:$XDG_CONFIG_HOME";
+                                          export XDG_CONFIG_DIRS;
+XDG_DATA_HOME="$HOME/.local/share";       export XDG_DATA_HOME;
+XDG_DATA_DIRS="/usr/local/share:/usr/share:$XDG_DATA_HOME";
+                                          export XDG_DATA_DIRS;
+XDG_RUNTIME_DIR="$HOME/.tmp";             export XDG_RUNTIME_DIR;
 
-export EDITOR="${EDITOR:-$(which vim)}"
-export VISUAL="$EDITOR"
-export XEDITOR="${XEDITOR:-$(which gvim)}"
+BROWSER="`which x-www-browser`";          export BROWSER;
+EDITOR="${EDITOR:-"`which vim`"}";        export EDITOR;
+VISUAL="$EDITOR";                         export VISUAL;
+XEDITOR="${XEDITOR:-"`which gvim`"}";     export XEDITOR;
 
-export GZIP="-9v"
-export BZIP2="-9v"
+GZIP="-9v";                               export GZIP;
+BZIP2="-9v";                              export BZIP2;
 
-export BROWSER=firefox
-#export LESSCHARSET='latin1'
-export LESSOPEN='|lesspipe.sh %s'
-export LESS=' -RCiJ '
-
-XDG_CACHE_HOME="$HOME/.cache"
-XDG_CONFIG_HOME="$HOME/.config"
-XDG_CONFIG_DIRS="$HOME/.etc/:/etc:/etc/xdg:$XDG_CONFIG_HOME"
-XDG_DATA_HOME="$HOME/.local/share"
-XDG_DATA_DIRS="/usr/local/share:/usr/share:$XDG_DATA_HOME"
-XDG_RUNTIME_DIR="$HOME/.tmp"
-export XDG_CACHE_HOME
-export XDG_CONFIG_HOME
-export XDG_CONFIG_DIRS
-export XDG_DATA_HOME
-export XDG_DATA_DIRS
-export XDG_RUNTIME_DIR
-
-# gtk
-export GTK2_RC_FILES=~/.gtkrc-2.0
-export QT_XFT="true"
-export GDK_USE_XFT="1"
+# GTK, QT, etc
+GTK2_RC_FILES=~/.gtkrc-2.0;               export GTK2_RC_FILES;
+GDK_USE_XFT="1";                          export GDK_USE_XFT;
+QT_XFT="true";                            export QT_XFT;
 
 # oo.org
-export OOO_FORCE_DESKTOP='gnome'
-export SAL_USE_VCLPLUGIN='gnome'
+OOO_FORCE_DESKTOP='gnome';                export OOO_FORCE_DESKTOP;
+SAL_USE_VCLPLUGIN='gnome';                export SAL_USE_VCLPLUGIN;
 
-export MANPATH="$MANPATH:/var/cache/man/:/usr/share/man/:/usr/share/doc/libncurses5-dev/html/man/:/usr/lib/jvm/java-6-sun-1.6.0.06/man/:/usr/lib/jvm/java-6-sun-1.6.0.06/jre/man/"
+#HOME="`getent passwd "$USER" | awk -F: '{print $6}'`";
+#                                         export HOME;
+#HOMEPATH="${HOME}";                      export HOMEPATH;
+
+HOSTNAME="${HOSTNAME:-"`cat /etc/hostname`"}";
+HOSTNAME="${HOSTNAME:-"`hostname -s`"}";  export HOSTNAME;
+HOST="${HOST:-"$HOSTNAME"}";              export HOST;
+
+LANG="en_GB.UTF-8";                       export LANG;
+LC_ALL="en_GB.UTF-8";                     export LC_ALL;
+TZ='Europe/London';                       export TZ;
 
 if [ -d "$HOME/.bin" ] ; then PATH="$HOME/.bin:$PATH"; fi
-export PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin:/usr/share/openoffice/bin/:/usr/share/mc/bin/:/usr/local/bin/:/usr/lib/pm-utils/bin/:/usr/lib/klibc/bin/:/usr/lib/jvm/java-6-sun-1.6.0.06/jre/bin/:/usr/lib/jvm/java-6-sun-1.6.0.06/bin/:/usr/lib/Adobe/Reader8/Reader/intellinux/bin/:/usr/lib/Adobe/Reader8/bin/:/usr/lib/Adobe/HelpViewer/1.0/intellinux/bin/"
+PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin:/usr/share/openoffice/bin/:/usr/share/mc/bin/:/usr/local/bin/:/usr/lib/pm-utils/bin/:/usr/lib/klibc/bin/:/usr/lib/jvm/java-6-sun-1.6.0.06/jre/bin/:/usr/lib/jvm/java-6-sun-1.6.0.06/bin/:/usr/lib/Adobe/Reader8/Reader/intellinux/bin/:/usr/lib/Adobe/Reader8/bin/:/usr/lib/Adobe/HelpViewer/1.0/intellinux/bin/"; 
+                                          export PATH;
 
 
+# Redirect $TMP to ~/.tmp
 TMP=/tmp/"$USER"
 if [ ! -e "$TMP" ]; then
-  old_umask="$(umask)"
+  old_umask="`umask`"
   umask 0077
   mkdir -p "$TMP"
   ln -sf "$TMP" "$HOME/.tmp"
   umask "$old_umask"
 fi
 
-export TEMP="$TMP"
-export TMPDIR="$TMP"
-export TMP="$HOME/.tmp"
+   TMP="$HOME/.tmp"; export    TMP;
+  TEMP="$TMP";       export   TEMP;
+TMPDIR="$TMP";       export TMPDIR;
+
+# Shell Specifics
+# We now go on to setup the env. for the interactive command shell.
+
+# If we're not running interactively, return.
+test -t 0 || return
+
+GREP_COLOR="1;36";                        export GREP_COLOR;
+GREP_COLORS="${GREP_COLOR:-"1;36"}";      export GREP_COLORS;
+
+INPUTRC=~/.inputrc;                       export INPUTRC;
+
+LESSCHARSET='utf-8';                      export LESSCHARSET;
+LESSHISTFILE="$XDG_CACHE_HOME/lesshst";   export LESSHISTFILE;
+LESSHISTSIZE="512";                       export LESSHISTSIZE;
+LESSKEY="$XDG_CONFIG_HOME/less/lesskey";  export LESSKEY;
+LESS=' -RCiJ';                            export LESS;
+type -p lesspipe &>/dev/null && eval "$(lesspipe)";
+                                          export LESSOPEN;
+# colourise manpages
+# Begin blink
+export LESS_TERMCAP_mb=$'\E[01;31m';      export LESS_TERMCAP_mb;
+# begin bold
+export LESS_TERMCAP_md=$'\E[01;37m';      export LESS_TERMCAP_md;
+# end mode
+export LESS_TERMCAP_me=$'\E[0m';          export LESS_TERMCAP_me;
+# begin standout mode
+export LESS_TERMCAP_so=$'\E[01;44;33m';   export LESS_TERMCAP_so;
+# end standout-mode
+export LESS_TERMCAP_se=$'\E[0m';          export LESS_TERMCAP_se;
+# begin underline
+export LESS_TERMCAP_ue=$'\E[0m';          export LESS_TERMCAP_ue;
+# end underline
+export LESS_TERMCAP_us=$'\E[01;32m';      export LESS_TERMCAP_us;
+
+MANPAGER="${PAGER:-"less"}";              export MANPAGER;
+MANPATH="$MANPATH:/usr/share/man/:/var/cache/man/:/usr/share/doc/libncurses5-dev/html/man/:/usr/lib/jvm/java-6-sun-1.6.0.06/man/:/usr/lib/jvm/java-6-sun-1.6.0.06/jre/man/"; 
+                                          export MANPATH;
 
