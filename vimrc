@@ -297,6 +297,7 @@ nnoremap <silent> <leader>[     			:silent if &virtualedit == ""<cr>set virtuale
 nnoremap <silent> <leader><space>     :edit #<cr>
 nnoremap <silent> <leader><Tab> 			<C-w><C-w>
 
+nnoremap <silent> <leader>,           :edit #<cr>
 nnoremap <silent> <leader>a           :edit #<cr>
 nnoremap <silent> <leader>A           :execute "set titlestring=".input("Set window title to: ")<cr>
 nnoremap <silent> <leader><C-a>       :edit #<cr>
@@ -324,7 +325,6 @@ nnoremap <silent> <leader>bl          :bnext<cr>
 nnoremap <silent> <leader>d     			:bdelete<cr>
 nnoremap <silent> <leader>g     			:silent set visualbell!<cr>
 nnoremap <silent> <leader>?     			:help h<cr>
-nnoremap <silent> <leader>,     			:help usr_01.txt<cr>
 nnoremap <silent> <leader>k     			:bdelete<cr>
 nnoremap <silent> <leader>lb          :LustyBufferExplorer<cr>
 nnoremap <silent> <leader>lF          :LustyFilesystemExplorer<cr>
