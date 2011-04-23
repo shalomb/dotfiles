@@ -187,3 +187,4 @@ __DATA__
 ~/.xinitrc
 ~/.Xmodmap
 ~/.xsession
+~/.bin/qterm
