@@ -20,11 +20,13 @@ umask 022
 
 SHELL=$(readlink -f /proc/$$/exe); export SHELL
 
+# source ~/.bashrc if we're under bash and it hasn't been sourced before
 if [ -n "$BASH_VERSION" ]; then
   if [[ -z $BASHRC_SOURCED && -r ~/.bashrc ]]; then
     source "$HOME/.bashrc"
   fi
 fi
+
 
 export LANG="en_GB.UTF-8"
        HOSTNAME="${HOSTNAME:-"$(< /etc/hostname)"}"
