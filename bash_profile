@@ -4,8 +4,13 @@
 # see /usr/share/doc/bash/examples/startup-files for examples.
 # the files are located in the bash-doc package.
 
-# the default umask is set in /etc/login.defs
+# If not running interactively, don't do anything
+[[ -n "$PS1" ]] || return
+test -t 0       || return
 
+export BASH_PROFILE_SOURCED="$(date +%s)"
+
+# the default umask is set in /etc/login.defs
 umask 022
 
 setterm -blength 0

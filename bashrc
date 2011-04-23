@@ -2,88 +2,47 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-export LANG="en_GB.UTF-8";
+export BASHRC_SOURCED="$(date +%s)"; # notification of this file being sourced.
 
 # If not running interactively, don't do anything
-[ -z "$PS1" ] && return
+[[ -n "$PS1" ]] || return
+test -t 0       || return
 
-
-# be careful setting anything in $0
-# it gets propogated into the user's xsession
-
-# echo -n "setting environment .. "
-
-export TZ='Europe/London';
-
-# CDPATH: see workaround with PROMPT_COMMAND later on
-function set_cdpath () {
-  CDPATH="$PWD:.:$OLDPWD:..:~:/media:/mnt"
-}
-export MANPATH=$MANPATH:"/var/cache/man/:/usr/share/man/:/usr/share/doc/libncurses5-dev/html/man/:/usr/lib/jvm/java-6-sun-1.6.0.06/man/:/usr/lib/jvm/java-6-sun-1.6.0.06/jre/man/"
-# echo $(locate */man/* | grep -ioE '.*/man/' | sort -r | uniq | tr $'\n' ':')
-export PATH=~/.bin:$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin:/usr/share/openoffice/bin/:/usr/share/mc/bin/:/usr/local/bin/:/usr/lib/pm-utils/bin/:/usr/lib/klibc/bin/:/usr/lib/jvm/java-6-sun-1.6.0.06/jre/bin/:/usr/lib/jvm/java-6-sun-1.6.0.06/bin/:/usr/lib/Adobe/Reader8/Reader/intellinux/bin/:/usr/lib/Adobe/Reader8/bin/:/usr/lib/Adobe/HelpViewer/1.0/intellinux/bin/ # additional paths
-
-export GZIP="-9v"
-export BZIP2="-9v"
-
-export BROWSER=firefox
-#export LESS="-CiJ"
-#export LESSCHARSET='latin1'
-export LESSOPEN='|lesspipe.sh %s'
-export LESS=' -RCiJ '
+# source ~/.profile if it hasn't already been marked as sourced.
+if [[ -z $PROFILE_SOURCED && -r ~/.profile ]]; then
+  source ~/.profile
+fi
 
 # colourise manpages
-export LESS_TERMCAP_mb=$'\E[01;31m'
-export LESS_TERMCAP_md=$'\E[01;37m'
-export LESS_TERMCAP_me=$'\E[0m'
-export LESS_TERMCAP_se=$'\E[0m'
-export LESS_TERMCAP_so=$'\E[01;44;33m'
-export LESS_TERMCAP_ue=$'\E[0m'
-export LESS_TERMCAP_us=$'\E[01;32m'
+export LESS_TERMCAP_mb=$'\E[01;31m'    # Begin blink
+export LESS_TERMCAP_md=$'\E[01;37m'    # begin bold
+export LESS_TERMCAP_me=$'\E[0m'        # end mode
+export LESS_TERMCAP_so=$'\E[01;44;33m' # begin standout mode
+export LESS_TERMCAP_se=$'\E[0m'        # end standout-mode
+export LESS_TERMCAP_ue=$'\E[0m'        # begin underline
+export LESS_TERMCAP_us=$'\E[01;32m'    # end underline
 
 export PAGER=$(which less)
 export MANPAGER="$PAGER"
-export EDITOR="${EDITOR:-$(which vim)}"
-export VISUAL="$EDITOR"
+
 export FCEDIT="$EDITOR"
-export XEDITOR="${XEDITOR:-$(which gvim)}"
 
 export HISTCONTROL=ignoredups
-export HISTIGNORE='&:ls: ls *:[bf]g'
 export HISTFILESIZE=8192
+export HISTIGNORE='&:ls: ls *:[bf]g'
 export HISTSIZE=$HISTFILESIZE
-export HISTTIMEFORMAT="";
+export HISTTIMEFORMAT=""
 export IGNOREEOF=5
 export INPUTRC=~/.inputrc
+export TIMEFORMAT=$'\nReal: %3lR\tUser: %3lU\tSys: %3lS\tCPU: %3lP'
 
-# gtk
-export GTK2_RC_FILES=~/.gtkrc-2.0
-export QT_XFT=true
-export GDK_USE_XFT=1
+read screen_session _ < <(screen -ls | grep "$PPID\.")
+export screen_session
 
-# oo.org
-export OOO_FORCE_DESKTOP='gnome'
-export SAL_USE_VCLPLUGIN='gnome'
-
-read screen_session _ < <(screen -ls | grep "$PPID\.");
-export screen_session;
-
-export TTY=$(tty); TTY=${TTY##/dev/}
-export RUNLEVEL="${RUNLEVEL##* }"; 
+export TTY="$(tty)"; TTY="${TTY##/dev/}"
+export RUNLEVEL="${RUNLEVEL##* }"
 export PRERUNLEVEL="${RUNLEVEL%% *}"
 
-TMP=/tmp/"$USER.$TTY"
-if [[ ! -e "$TMP" ]]; then
-  mkdir -p "$TMP";
-  ln -sf "$TMP" ~/.tmp;
-fi
-
-#export TMP="${TMP:-~/.tmp}"
-export TMP=~/.tmp
-export TEMP="$TMP"
-export TMPDIR="$TMP"
-
-# echo done
 
 # Shell Options
 # echo -n "setting shell options .. "
@@ -110,30 +69,34 @@ set -o notify
 set -o vi
 # echo "done"
 
+
 # ulimits
 # echo -n "setting ulimits .. "
-#ulimit -Sc 128000 # core file size
-#ulimit -Sd 512000 # data segment size
-#ulimit -Se 2      # max. nice value
-#ulimit -Sf 512000 # max. files created
-#ulimit -Sm 512000 # max. resident set size
-#ulimit -Ss 128000  # max. stack size
-#ulimit -Sn 122048   # open files
-#ulimit -St 45     # max. proc time
-#ulimit -Ht 60
-#ulimit -Su 224    # # of processes
-#ulimit -Hu 256
-#ulimit -Sv 512000 # max. virtual memory
-#ulimit -Hv 768000
+# Limit some inadvertent fork bombs.
+ulimit -Sc 0        # core dump file size i.e. no dump file
+# ulimit -Sc 128000 # core dump file size
+# ulimit -Sd 512000 # data segment size
+# ulimit -Se 2      # max. nice value
+# ulimit -Sf 512000 # max. files created
+# ulimit -Sm 512000 # max. resident set size
+# ulimit -Sn 122048 # open files
+# ulimit -Ss 128000 # max. stack size
+# ulimit -St 45     # soft max. CPU time in seconds
+# ulimit -Ht 60     # hard max. CPU time in seconds
+ulimit -Su 256      # soft max. user processes
+ulimit -Hu 320      # hard max. user processes
+# ulimit -Sv 512000 # max. virtual memory
+# ulimit -Hv 768000
 # echo done
 
-type -P lesspipe &>/dev/null && eval "$(lesspipe)"
+
+type -p lesspipe &>/dev/null && eval "$(lesspipe)"
 
 if [[ -z "$debian_chroot" && -r /etc/debian_chroot ]]; then
     debian_chroot="$(</etc/debian_chroot)"
 fi
 
-#export PS1='\[\n${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h:\[\033[01;34m\]\W\[\033[01;33m\]\$\[\033[00m\] '
+
 case "$TERM" in
   screen)
     PS1='${debian_chroot:+($debian_chroot)}\[\033[01;35m\]\!\[\033[01;32m\]\T\[\033[01;34m\]\W\[\033[00;35m\]\$\[\033[00;00m\] '
@@ -152,6 +115,10 @@ case "$TERM" in screen|xterm*|*rxvt*)
 esac
 
 
+function set_cdpath () {
+  CDPATH="$PWD:.:$OLDPWD:..:~:/media:/mnt"
+}
+
 # CDPATH does not seem to expand variables when cd is used
 # workaround: get PROMPT_COMMAND to do the expanding
 if [[ -n $PROMPT_COMMAND ]]; then
@@ -160,6 +127,9 @@ else
   PROMPT_COMMAND="set_cdpath"
 fi
 
+# Convenience function around source
+#   * takes multiple arguments,
+#   * defaults to the right stuff
 function reload () {
   if [[ -n "$@" ]]; then
     for f; do
@@ -172,19 +142,30 @@ function reload () {
   fi
 }
 
-reload /etc/bash_completion ~/.bash_aliases 
+reload /etc/bash_completion ~/.bash_aliases
 
-function clean_path () {
-  local path;
-  path=${!1};
+
+if type -p dircolors &>/dev/null; then
+  if [[ -r ~/.dircolors ]]; then
+    eval "$(dircolors -b ~/.dircolors)"
+  fi
+fi
+
+
+# Remove duplicates, non-existent directories from $VAR pass in.
+clean_path () {
+  local path
+  path=${!1}
   path=(${path//:/ })
-  eval "export $1=\"$( perl -e ' print join ":", grep -d $_, grep !$s{$_}++, @ARGV ' ${path[@]%*/} )\""
+  eval "$1=\"$( perl -e ' print join ":", grep -d $_, grep !$s{$_}++, @ARGV ' ${path[@]%*/} )\""
 }
 
+clean_path PATH;    export PATH
+clean_path MANPATH; export MANPATH
 
-clean_path PATH
-clean_path MANPATH
 
+# Right, we're ready to hand over control to the user now!
+# Print some informational trivia.
 echo -e "\n$BASH ${BASH_VERSION}"
 
 echo -n "last login: "
@@ -193,10 +174,3 @@ echo ""
 
 fortune
 echo ""
-
-function aplay_rand () {
-  wavs=($(locate *.wav))
-  aplay "${wavs[(($RANDOM%${#wavs[@]}))]}"
-}
-
-_expand () { :; }

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 #set -v -x
 
+# If not running interactively, don't do anything but return
+[[ -n "$PS1" ]] || return
+test -t 0       || return
+
+export BASH_ALIASES_SOURCED="$(date +%s)"
+
 shopt -s nullglob dotglob
 alias_files=( ~/.config/bash/alias.d/* );
 if (( ${#alias_files[@]} > 0 )); then
