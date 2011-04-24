@@ -59,9 +59,9 @@ function  :h () {
 
 function  f () { find . -name "$@" ; }
 
-alias         grep='grep --colour=auto'
-alias        egrep='egrep -E --colour=auto'
-alias            g='egrep E --colour=auto'
+alias         grep='grep  --colour=auto'
+alias        egrep='egrep --colour=auto'
+alias            g='egrep --colour=auto'
 
 alias     h='fc -l'
 alias     j='jobs -l'
