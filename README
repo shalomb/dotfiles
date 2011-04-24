@@ -13,6 +13,7 @@ Installation:
     cd ~/.vim
 
     git submodule add   https://github.com/godlygeek/tabular.git                bundle/tabular
+    git submodule add   https://github.com/hsitz/VimOrganizer.git               bundle/VimOrganizer
     git submodule add   https://github.com/kana/vim-arpeggio.git                bundle/arpeggio
     git submodule add   https://github.com/msanders/snipmate.vim.git            bundle/snipmate
     git submodule add   https://github.com/shalomb/vimcse.git                   vimcse
@@ -21,13 +22,31 @@ Installation:
     git submodule add   https://github.com/tpope/vim-repeat.git                 bundle/repeat
     git submodule add   https://github.com/tpope/vim-surround.git               bundle/surround
     git submodule add   https://github.com/tpope/vim-unimpaired.git             bundle/unimpaired
+    git submodule add   https://github.com/tsaleh/vim-tmux.git                  bundle/vim-tmux
     git submodule add   https://github.com/vim-scripts/DrawIt.git               bundle/drawit
+    git submodule add   https://github.com/vim-scripts/iptables.git             bundle/iptables
+    git submodule add   https://github.com/vim-scripts/ManPageView.git          bundle/manpageview
+    git submodule add   https://github.com/vim-scripts/Markdown.git             bundle/markdown
     git submodule add   https://github.com/vim-scripts/netrw.vim.git            bundle/netrw
+    git submodule add   https://github.com/vim-scripts/perforce.git             bundle/perforce
+    git submodule add   https://github.com/vim-scripts/perl-mauke.vim.git       bundle/mauke-perl.vim
+    git submodule add   https://github.com/vim-scripts/SearchComplete.git       bundle/SearchComplete
+    git submodule add   https://github.com/vim-scripts/sharp-Indent.git         bundle/sharp-indent
+    git submodule add   https://github.com/vim-scripts/sharp-Syntax.git         bundle/sharp-indent
+    git submodule add   https://github.com/vim-scripts/sharp-Syntax--Rim.git    bundle/fsharp-plugin
     git submodule add   https://github.com/vim-scripts/ShowMarks.git            bundle/ShowMarks
     git submodule add   https://github.com/vim-scripts/SuperTab-continued..git  bundle/supertab-continued 
     git submodule add   https://github.com/vim-scripts/taglist.vim.git          bundle/taglist
+    git submodule add   https://github.com/vim-scripts/underlinetag.git         bundle/underlinetag
     git submodule add   https://github.com/vim-scripts/vimwiki.git              bundle/vimwiki
+    git submodule add   https://github.com/vim-scripts/Windows-PowerShell-File-Type-Plugin.git bundle/posh-ftplugin
+    git submodule add   https://github.com/vim-scripts/Windows-PowerShell-indent-enhanced.git bundle/posh-indent
+    git submodule add   https://github.com/vim-scripts/Windows-PowerShell-Syntax-File.git bundle/posh-syntax
     git submodule add   https://github.com/wincent/Command-T.git                bundle/command-t
+    git submodule add   https://github.com/vim-scripts/css.vim--Streppone.git   bundle/streppone--css.vim
+    git submodule add   https://github.com/vim-scripts/perlprove.vim.git        bundle/perlprove.vim
+    git submodule add   https://github.com/vim-scripts/genutils.git             bundle/genutils
+ 
 
     git submodule init
     git submodule update

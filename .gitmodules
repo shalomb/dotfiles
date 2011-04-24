@@ -43,3 +43,57 @@
 [submodule "vimcse"]
   path = vimcse
   url = https://github.com/shalomb/vimcse.git
+[submodule "bundle/vim-tmux"]
+	path = bundle/vim-tmux
+	url = https://github.com/tsaleh/vim-tmux.git
+[submodule "bundle/posh-ftplugin"]
+	path = bundle/posh-ftplugin
+	url = https://github.com/vim-scripts/Windows-PowerShell-File-Type-Plugin.git
+[submodule "bundle/posh-syntax"]
+	path = bundle/posh-syntax
+	url = https://github.com/vim-scripts/Windows-PowerShell-Syntax-File.git
+[submodule "bundle/posh-indent"]
+	path = bundle/posh-indent
+	url = https://github.com/vim-scripts/Windows-PowerShell-indent-enhanced.git
+[submodule "bundle/sharp-indent"]
+	path = bundle/sharp-indent
+	url = https://github.com/vim-scripts/sharp-Indent.git
+[submodule "bundle/sharp-syntax"]
+	path = bundle/sharp-syntax
+	url = https://github.com/vim-scripts/sharp-Syntax.git
+[submodule "bundle/VimOrganizer"]
+	path = bundle/VimOrganizer
+	url = https://github.com/hsitz/VimOrganizer.git
+[submodule "bundle/iptables"]
+	path = bundle/iptables
+	url = https://github.com/vim-scripts/iptables.git
+[submodule "bundle/manpageview"]
+	path = bundle/manpageview
+	url = https://github.com/vim-scripts/ManPageView.git
+[submodule "bundle/markdown"]
+	path = bundle/markdown
+	url = https://github.com/vim-scripts/Markdown.git
+[submodule "bundle/perforce"]
+	path = bundle/perforce
+	url = https://github.com/vim-scripts/perforce.git
+[submodule "bundle/mauke-perl.vim"]
+	path = bundle/mauke-perl.vim
+	url = https://github.com/vim-scripts/perl-mauke.vim.git
+[submodule "bundle/SearchComplete"]
+	path = bundle/SearchComplete
+	url = https://github.com/vim-scripts/SearchComplete.git
+[submodule "bundle/fsharp-plugin"]
+	path = bundle/fsharp-plugin
+	url = https://github.com/vim-scripts/sharp-Syntax--Rim.git
+[submodule "bundle/underlinetag"]
+	path = bundle/underlinetag
+	url = https://github.com/vim-scripts/underlinetag.git
+[submodule "bundle/perlprove.vim"]
+	path = bundle/perlprove.vim
+	url = https://github.com/vim-scripts/perlprove.vim.git
+[submodule "bundle/streppone--css.vim"]
+	path = bundle/streppone--css.vim
+	url = https://github.com/vim-scripts/css.vim--Streppone.git
+[submodule "bundle/genutils"]
+	path = bundle/genutils
+	url = https://github.com/vim-scripts/genutils.git

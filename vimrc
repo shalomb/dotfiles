@@ -297,7 +297,6 @@ nnoremap <silent> <leader>[     			:silent if &virtualedit == ""<cr>set virtuale
 nnoremap <silent> <leader><space>     :edit #<cr>
 nnoremap <silent> <leader><Tab> 			<C-w><C-w>
 
-nnoremap <silent> <leader>,           :edit #<cr>
 nnoremap <silent> <leader>a           :edit #<cr>
 nnoremap <silent> <leader>A           :execute "set titlestring=".input("Set window title to: ")<cr>
 nnoremap <silent> <leader><C-a>       :edit #<cr>
@@ -323,8 +322,9 @@ nnoremap <silent> <leader>bh          :bprevious<cr>
 nnoremap          <leader>ba          :ls<cr>:b<space>
 nnoremap <silent> <leader>bl          :bnext<cr>
 nnoremap <silent> <leader>d     			:bdelete<cr>
+nnoremap <silent> <leader>,           :edit #<cr>
 nnoremap <silent> <leader>g     			:silent set visualbell!<cr>
-nnoremap <silent> <leader>?     			:help h<cr>
+nnoremap <silent> <leader>?     			:help 
 nnoremap <silent> <leader>k     			:bdelete<cr>
 nnoremap <silent> <leader>lb          :LustyBufferExplorer<cr>
 nnoremap <silent> <leader>lF          :LustyFilesystemExplorer<cr>
@@ -332,10 +332,10 @@ nnoremap <silent> <leader>lf          :LustyFilesystemExplorerFromHere<cr>
 nnoremap <silent> <leader>lg          :LustyBufferGrep<cr>
 nnoremap <silent> <leader>l     			:redraw<cr>
 nnoremap <silent> <leader>m     			g<  " last set of messages
-nnoremap <silent> <leader>nh     			:noh<cr>
 nnoremap <silent> <leader>>     			:new /tmp/screen-exchange<cr>ggP`]a<cr><Esc>"_dGgg:w!<cr> " :close<cr>
 nnoremap <Silent> <leader>]     			:new /tmp/screen-exchange<cr>ggyG<Esc>:e #<cr>p
 nnoremap <silent> <leader><     			:new /tmp/screen-exchange<cr>ggyG<Esc>:w!<cr>:close<cr>
+nnoremap <silent> <leader>nh     			:noh<cr>
 nnoremap <silent> <leader>P           "+gP      "paste
 nnoremap <silent> <leader>Q     			:only<cr>
 nnoremap <silent> <leader>r     			:set wrap!<cr>
@@ -371,11 +371,12 @@ nnoremap <silent> <leader>wj          <C-W>j
 nnoremap <silent> <leader>wk          <C-W>k
 nnoremap <silent> <leader>wl          <C-W>l
 nnoremap          <leader>wr          :update<cr>
-nnoremap <silent> <leader>X           :close<cr>
+nnoremap <silent> <leader>x           :close<cr>
 nnoremap <silent> <leader>y           "+y   "copy
 
-vnoremap <silent> <leader>D           "+x  "cut
+vnoremap <silent> <leader>D           "+x   "cut
 vnoremap <silent> <leader>d           "+x   "cut
+vnoremap <silent> <leader>x           "+x   "cut
 vnoremap          z/                  y/<C-R>"<CR>
 vnoremap          <                   <gv   " move cursor to beginning of visual block move
 vnoremap          >                   >gv
