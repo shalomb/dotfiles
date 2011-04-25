@@ -45,9 +45,7 @@ Installation:
     git submodule add   https://github.com/wincent/Command-T.git                bundle/command-t
     git submodule add   https://github.com/vim-scripts/css.vim--Streppone.git   bundle/streppone--css.vim
     git submodule add   https://github.com/vim-scripts/perlprove.vim.git        bundle/perlprove.vim
-    git submodule add   https://github.com/vim-scripts/genutils.git             bundle/genutils
- 
-
+    
     git submodule init
     git submodule update
   )
