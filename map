@@ -188,3 +188,4 @@ __DATA__
 ~/.Xmodmap
 ~/.xsession
 ~/.bin/qterm
+~/.bin/osd_msg
