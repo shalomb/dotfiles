@@ -10,19 +10,20 @@ Control Mod4 Shift Delete :Restart
 
 
 #----Workspace Actions----{{{--------------------------------------------------
-Control Mod4 d :Deiconify AllWorkspace
+Mod1 Escape    : WorkspaceMenu
+Control Mod4 d : Deiconify AllWorkspace
 
-Mod4 F1        :Workspace 1  # Change to a Workspace
-Mod4 F2        :Workspace 2
-Mod4 F3        :Workspace 3
-Mod4 F4        :Workspace 4
-Mod4 F5        :Workspace 5
-Mod4 F6        :Workspace 6
-Mod4 F7        :Workspace 7
-Mod4 F8        :Workspace 8
-Mod4 F9        :Workspace 9
+Mod4 F1        : Workspace 1  # Change to a Workspace
+Mod4 F2        : Workspace 2
+Mod4 F3        : Workspace 3
+Mod4 F4        : Workspace 4
+Mod4 F5        : Workspace 5
+Mod4 F6        : Workspace 6
+Mod4 F7        : Workspace 7
+Mod4 F8        : Workspace 8
+Mod4 F9        : Workspace 9
 
-Mod4 slash     :ClientMenu
+Mod4 slash     : ClientMenu
 # }}}
 
 
