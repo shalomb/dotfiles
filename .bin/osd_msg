@@ -1,0 +1,6 @@
+#!/bin/sh -x
+
+duration="${osd_msg_duration:-"3"}"
+
+echo "$@" | osd_cat -l 2 -p bottom -o 60 -d "$duration" -A center -c green -s 1 -f "-bitstream-bitstream vera sans-bold-r-normal--19-180-75-75-p-119-*-*" 
+

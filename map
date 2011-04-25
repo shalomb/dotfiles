@@ -157,7 +157,9 @@ sub readlink_f {
 
 
 __DATA__
-~/~/.config/wallpapers/wallpaper.list
+~/.bin/osd_msg
+~/.bin/qterm
+~/.config/wallpapers/wallpaper.list
 ~/.config/zim/accelmap
 ~/.config/zim/default.conf
 ~/.config/zim/mklinks
@@ -187,5 +189,3 @@ __DATA__
 ~/.xinitrc
 ~/.Xmodmap
 ~/.xsession
-~/.bin/qterm
-~/.bin/osd_msg
