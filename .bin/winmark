@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# NAME
+#   wmtag - mark and summon windows.
+
+set -x
+test -t 0 || exec > ~/.tmp/winmark.log 2>&1
+
+cd ~/.tmp/
+if [[ ! -d winmarks ]]; then
+  mkdir -p winmarks || \
+    { echo "Error creating the winmark directory, $!"; exit 2; };
+fi
+cd winmarks
+
+pwd
+
+action="${1:-"mark"}"
+mark="${2:-"'"}"
+duration="${osd_msg_duration:-"10"}"
+
+if   [[ $action = mark ]]; then
+  curwin="$(printf "0x%08x" "$(xprop -root _NET_ACTIVE_WINDOW | grep -Eio "0x[[:xdigit:]]+")")";
+  touch "$curwin";
+  ln -svf "$curwin" "$mark";
+
+duration="${osd_msg_duration:-"3"}"
+wmctrl -lx | \
+  perl -lane '$F[0]=~/'"$curwin"'/ and print join " ", '"$mark"', "=>", $F[2], "|", @F[4..$#F]' | \
+  tee "$curwin" | \
+  osd_cat -l 2 -p bottom -o 0 -d "$duration" -A left -c blue -s 1 -f "-bitstream-bitstream vera sans mono-bold-r-normal--17-*-*-*-*-*-iso8859-1"
+
+elif [[ $action = summon ]]; then
+  winid="$(readlink "$mark")";
+  wmctrl -i -R "${winid##*/}";
+
+elif [[ $action = list ]]; then
+  set +v +x
+  for i in ?; do
+    echo "$i,$(< $i)"
+  done | \
+  osd_cat -l 10 -p bottom -o 100 -d "$duration" -A left -c blue -s 1 -f "-bitstream-bitstream vera sans mono-bold-r-normal--17-*-*-*-*-*-iso8859-1"
+
+fi

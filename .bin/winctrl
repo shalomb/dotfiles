@@ -1,0 +1,236 @@
+#!/bin/bash
+
+# NAME
+#   winctrl - Some window control functions atop wmctrl(1).
+#
+# SYNOPSIS
+#   winctrl [ action_0 | action_1 | ... ]
+#
+# DEPENDENCIES
+#   wmctrl - http://tomas.styblo.name/wmctrl/
+#
+#   A wmctrl supported Window Manager, see http://tomas.styblo.name/wmctrl/ .
+#   wmctrl may support other window managers however.
+#
+# DESCTIPTION
+#   Implement some commonly needed window positioning and resizing functions
+#   using wmctrl(1). All actions influence the currently active window.
+#   A list of supported actions are
+#
+#     ABSOLUTE MOVEMENT
+#       moveto_{left,right,top,bottom,center}    
+#     
+#     RELATIVE MOVEMENT
+#       moveby_x_{left,right,top,bottom}          
+#
+#     ABSOLUTE GROWTH
+#       growto_{left,right,top,bottom}margin      
+#
+#     RELATIVE GROWTH
+#       growby_x_{left,right,top,bottom}          
+#
+#     RESIZING
+#       resizeto_{hmax,vmax,quadrant}             
+#
+# EXAMPLES
+#   winctrl moveto_left resizeto_hmax
+#     Move the currently active window to the left margin and then maximize it
+#     horizontally.
+#
+#   winctrl resizeto_quadrant moveto_center moveto_left
+#     Make the currently active window as big as a quarter of the screen and 
+#     then position it at the center-left of the screen.
+#
+# AUTHOR
+#   Shalom Bhooshi
+#
+# COPYRIGHT
+#   Copyright © 2011 Shalom Bhooshi.  
+#   License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+#   This is free software: you are free to change and redistribute it.
+#   There is NO WARRANTY, to the extent permitted by law.
+
+
+curwin="$(xprop -root _NET_ACTIVE_WINDOW | grep -Eio "0x[[:xdigit:]]+")";
+
+a=($(wmctrl -dxG | awk '$2 ~ /\*/ {$0=$9; sub("x"," "); print; }'));
+set -x
+workspace_w="${a[0]}";
+workspace_h="${a[1]}";
+set +x
+
+
+a=($(xwininfo -id "$curwin" | awk -F: '/Width|Height|Absolute.*[XY]/ {print $2}'));
+set -x
+curwin_x="${a[0]}";
+curwin_y="${a[1]}";
+curwin_w="${a[2]}";
+curwin_h="${a[3]}";
+set +x
+
+
+# wmctrl -i -r "$WINID" \
+#  -e "$window_geometry,$curwin_x,$curwin_y,$curwin_w,$curwin_h"
+
+shopt -s nocasematch
+for op in "$@"; do
+
+  set -x
+  echo "op: $op";
+  case "$op" in 
+
+
+    # Absolute movement
+    moveto_top)
+      curwin_y=0;
+    ;;
+
+    moveto_bottom)
+      curwin_y="$((workspace_h-curwin_h))";
+      curwin_y="$((curwin_y-22))"; # TODO
+    ;;
+
+    moveto_left)
+      curwin_x=0;
+      curwin_y="$((curwin_y-22))"; # TODO
+    ;;
+
+    moveto_right)
+      curwin_x="$((workspace_w-curwin_w))";
+      curwin_y="$((curwin_y-22))"; # TODO
+    ;;
+
+    moveto_center)
+      curwin_x="$(((workspace_w-curwin_w)/2))";
+      curwin_y="$(((workspace_h-curwin_h)/2))";
+    ;;
+
+
+    # Relative movement
+    moveby_x_left)
+      movement_factor="${movement_factor:-10}";
+      curwin_y="$((curwin_y-22))"; # TODO
+      curwin_x="$((curwin_x-(curwin_w/movement_factor)))";
+      curwin_x="$((curwin_x-1))";
+    ;;
+
+    moveby_x_right)
+      movement_factor="${movement_factor:-10}";
+      curwin_y="$((curwin_y-22))"; # TODO
+      curwin_x="$((curwin_x+(curwin_w/movement_factor)))";
+      curwin_x="$((curwin_x-1))";
+    ;;
+
+    moveby_x_top)
+      movement_factor="${movement_factor:-10}";
+      curwin_y="$((curwin_y-(curwin_h/movement_factor)))";
+    ;;
+
+    moveby_x_bottom)
+      curwin_x="$((curwin_x-1))";
+      curwin_y="$((curwin_y-22))"; # TODO
+      movement_factor="${movement_factor:-10}";
+      curwin_y="$((curwin_y+(curwin_h/movement_factor)))";
+    ;;
+
+
+    # Absolute Growth
+    growto_leftmargin)
+      curwin_y="$((curwin_y-22))"; # TODO
+      curwin_w="$((curwin_w+curwin_x))";
+      curwin_x=0;
+    ;;
+
+    growto_rightmargin)
+      curwin_y="$((curwin_y-22))"; # TODO : Is 22 the toolbar height??
+      curwin_w="$((workspace_w-curwin_x))";
+    ;;
+
+    growto_topmargin)
+      curwin_h="$(((curwin_h+curwin_y)-10))";
+      curwin_y=0
+    ;;
+
+    growto_bottommargin)
+      curwin_y="$((curwin_y-22))"; # TODO
+      curwin_h="$((workspace_h-curwin_y))";
+    ;;
+
+
+    # Relative Growth
+    growby_x_left)
+      growth_factor="${growth_factor:-10}"; # +10 here, not -10.
+      curwin_x="$((curwin_x-(workspace_w/growth_factor)))";
+      curwin_y="$((curwin_y-22))"; # TODO
+      curwin_w="$((curwin_w+(workspace_w/growth_factor)))";
+    ;;
+
+    growby_x_right)
+      growth_factor="${growth_factor:-10}";
+      curwin_y="$((curwin_y-22))"; # TODO
+      curwin_w="$((curwin_w+(workspace_w/growth_factor)))";
+    ;;
+
+    growby_x_top)
+      growth_factor="${growth_factor:-10}";
+      curwin_y="$((curwin_y-(curwin_y/growth_factor)))";
+      curwin_h="$((curwin_h+(workspace_h/growth_factor)))";
+    ;;
+
+    growby_x_bottom)
+      growth_factor="${growth_factor:-10}";
+      curwin_y="$((curwin_y-22))"; # TODO
+      curwin_h="$((curwin_h+(workspace_h/growth_factor)))";
+    ;;
+
+
+    # Resize Operations
+    resizeto_hmax)
+      curwin_x=0;
+      curwin_y="$((curwin_y-22))"; # TODO
+      curwin_w="$workspace_w";
+    ;;
+
+    resizeto_vmax)
+      curwin_y=0;
+      curwin_h="$((workspace_h-23))"; # TODO
+    ;;
+
+    resizeto_quadrant)
+      curwin_w="$((workspace_w/2))";
+      curwin_h="$((workspace_h/2))";
+    ;;
+
+
+    *)
+      echo "Unimplemented action '$op'" >&2;
+      exit 2;
+    ;;
+
+  esac
+
+
+  # TODO
+  #  * Extend viewport boundary traversal checks using position and dimensions.
+  #     i.e. effective reach = window width + window X
+  #     This is so that a window does not extend beyond a viewport boundary.
+
+  ((curwin_x < 0))                      && curwin_x="0";
+  ((curwin_y < 0))                      && curwin_y="0";
+
+  ((curwin_w > workspace_w))            && curwin_w="$workspace_w";
+  ((curwin_h > workspace_h))            && curwin_h="$workspace_h";
+
+  ((curwin_w > (workspace_w-curwin_x))) && curwin_w="$((workspace_w-curwin_x))";
+  ((curwin_h > (workspace_h-curwin_y))) && curwin_h="$((workspace_h-curwin_y))";
+
+
+  # Invoke wmctrl
+  window_gravity="${window_gravity:-0}";
+  wmctrl -i -r "$curwin" \
+         -e "$window_gravity,$curwin_x,$curwin_y,$curwin_w,$curwin_h";
+
+done
+
+exit $?;
+

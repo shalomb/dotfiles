@@ -157,8 +157,11 @@ sub readlink_f {
 
 
 __DATA__
+~/.bin/googlize
 ~/.bin/osd_msg
 ~/.bin/qterm
+~/.bin/winctrl
+~/.bin/winmark
 ~/.config/wallpapers/wallpaper.list
 ~/.config/zim/accelmap
 ~/.config/zim/default.conf
@@ -171,6 +174,7 @@ __DATA__
 ~/.fluxbox/keys
 ~/.fluxbox/menu
 ~/.fluxbox/overlay
+~/.fluxbox/slitlist
 ~/.fluxbox/startup
 ~/.fluxbox/windowmenu
 ~/.gitignore

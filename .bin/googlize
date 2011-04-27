@@ -1,0 +1,20 @@
+#!/usr/bin/perl -wl
+use strict;
+use warnings;
+use URI::Escape;
+
+# NAME
+#   googlize - Return the search url for the term on the clipboard.
+#
+# SYNOPIS
+#   googlize
+#
+# DESCRIPTION
+#   googlize can be used in tandem with xdg-open to open the search URL in the 
+#   user's browser.
+
+open my $xclip, "-|", " xclip -o " 
+  or die "E, error opening pipe from xclip, $!";
+
+my $q = uri_escape <$xclip>;
+print "http://www.google.co.uk/search?complete=1&btnG=Google+Search&q=$q";
