@@ -1,10 +1,8 @@
 [begin]
   [iconify]
   [maximize]
-  [close]
   [shade]
   [stick]
-  [separator]
   [submenu] (Advanced)
     [settitledialog]
     [raise]
@@ -14,4 +12,6 @@
     [alpha]
     [extramenus]
   [end]
+  [separator]
+  [close]
 [end]

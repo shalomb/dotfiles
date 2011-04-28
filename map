@@ -193,3 +193,5 @@ __DATA__
 ~/.xinitrc
 ~/.Xmodmap
 ~/.xsession
+~/.pentadactyl/plugins/
+~/.pentadactylrc

@@ -1,0 +1,238 @@
+:js <<EOF
+$ = function (n) { return document.getElementById(n); }
+EOF
+
+" " http://vimperator.org/trac/ticket/73
+" js <<EOF
+" group.mappings.add([modes.NORMAL], ["Y"], 
+"     "Yank the currently selected text",
+"     function () {
+"         buffer.getCurrentWord();
+"         events.feedkeys("<C-v>" + (/^Mac/.test(navigator.platform) ? "<M-c>" : "<C-c>"), true);
+"         setTimeout( function () {
+"           liberator.echo("Yanked " + util.readFromClipboard(), commandline.FORCE_SINGLELINE);
+"         }, 20 );
+"     });
+" EOF
+
+map s <Esc>:g <space>
+map <BS> :back<CR>
+map <M-Left> :back<CR>
+map <S-BS> :forward<CR>
+map <M-Right> :forward<CR>
+
+map <M-Up> :tabprev<CR>
+map <M-Down> :tabnext<CR>
+
+	
+noremap <S-Right> :tabmove! +1<CR>
+noremap <S-Left> :tabmove! -1<CR> 
+
+" set guioptions+=n
+" set guioptions-=m
+
+map <S-H> gH
+" set hlsearch
+set incfind
+set hlfind
+set newtab=all
+
+set! browser.tabs.closeWindowWithLastTab=false
+set! browser.urlbar.clickSelectsAll=false
+set! browser.urlbar.doubleClickSelectsAll=true
+set! browser.fullscreen.autohide=false
+
+" set focuscontent
+map <C-l> :js $("toolbar-menubar").collapsed = false; $("urlbar").select();<CR>
+cmap <C-l> <Esc>:js $("urlbar").select()<CR>
+
+imap <C-w> <Esc>:quit<CR>
+imap <C-t> <Esc>:tabnew<CR>
+
+" mswin.vimp - mappings to make copy/paste in Vimperator behave like Windows
+" Maintainer: Doug Kearns <dougkearns@gmail.com>
+" Last Change: 31 Oct 2008
+
+noremap <C-q> <C-v>
+noremap <C-Q> <C-z>
+" TODO: this should probably be <C-Break> - see :help dos-CTRL-break in Vim
+noremap <C-s> <C-c>
+
+inoremap <C-q> <C-v>
+inoremap <C-Q> <C-z>
+inoremap <C-s> <C-c>
+
+noremap <C-c> <C-v><C-c>
+noremap <C-v> <C-v><C-v>
+noremap <C-x> <C-v><C-x>
+noremap <C-z> <C-v><C-z>
+noremap <C-y> <C-v><C-y>
+
+cnoremap <C-c> <C-v><C-c>
+cnoremap <C-v> <C-v><C-v>
+cnoremap <S-Insert> <C-v><C-v>
+cnoremap <C-x> <C-v><C-x>
+cnoremap <C-z> <C-v><C-z>
+cnoremap <C-y> <C-v><C-y>
+
+inoremap <C-c> <C-v><C-c>
+inoremap <C-v> <C-v><C-v>
+inoremap <S-Insert> <C-v><C-v>
+inoremap <C-x> <C-v><C-x>
+inoremap <C-z> <C-v><C-z>
+inoremap <C-y> <C-v><C-y>
+
+
+:autocmd Fullscreen .* :javascript $("status-bar").style.visibility = "visible";<CR>
+
+" " next and prev to increment/decrement the last number in the URL
+" :js <<EOF
+"   function pad(n, len) { 
+"     var p = ''; 
+"     n = n.toString();
+"     if (len > n.length) 
+"       for (i=0; i < (len-n.length); i++) p += '0'; 
+"     return (p + n).toString(); 
+"   }
+" 
+"   function increment(n,v) { v = v.length ? 1 * v : 1; return 1 * n + v; }
+"   function decrement(n,v) { v = v.length ? 1 * v : 1; return 1 * n - v; }
+" 
+"   group.commands.add(
+"       ['myn[ext]'], "Go to the next page.",
+"       function (inc) {
+"         var href = self.content.location.href;
+"         var t,num,enc;
+"         try { [ t, num, ext ] = href.match(/(\d+)([^\d]*)$/); } catch (e) {}
+"         if (typeof num == 'string')
+"           liberator.open(href.replace(num+ext, pad(increment(num,inc),num.length) + ext));
+"         else
+"           liberator.echoerr("can't increment " + href);
+"       },
+"       {}, true
+"     );
+"   group.commands.add(
+"       ['myprev[ious]','p'], "Go to the previous page.",
+"       function (inc) {
+"         var href = self.content.location.href;
+"         var t,num,enc; 
+"         try { [ t, num, ext ] = href.match(/(\d+)([^\d]*)$/); } catch (e) {}
+"         if (typeof num == 'string')
+"           liberator.open(href.replace(num+ext, pad(decrement(num,inc),num.length) + ext));
+"         else
+"           liberator.echoerr("can't decrement " + href);
+"       },
+"       {}, true
+"     );
+" 
+" EOF
+ 
+" #17  	 Show the feed-button in the statusbar
+javascript <<EOF
+(function(){
+    var feedPanel = document.createElement("statusbarpanel");
+    feedPanel.setAttribute("id", "feed-panel-clone");
+    feedPanel.appendChild(document.getElementById("feed-button"));
+    feedPanel.firstChild.setAttribute("style", "padding: 0; max-height: 16px;");
+    document.getElementById("status-bar")
+            .insertBefore(feedPanel, document.getElementById("security-button"));
+})();
+EOF
+" 
+" 
+" 
+javascript <<EOF
+
+(function(){
+    try{
+      // TODO: this currently requires a browser restart for changes to
+      // be effected.
+      if ( !$('mainmenu') ) {
+        var m = document.createElement('menu');
+        m.setAttribute('id', 'mainmenu');
+        m.setAttribute('accesskey', 'M');
+        m.setAttribute('label', '\u2191M');
+        m.style.fontWeight = 'bold';
+        m.style.color="black";
+        $("menubar-items").style.backgroundColor = "white";
+        $("menubar-items").style.marginRight = "-8px";
+        $("menubar-items").style.marginLeft = "-4px";
+        var mp = document.createElement('menupopup');
+        mp.setAttribute('id', 'mainmenu_popup');
+        m.appendChild(mp);
+
+        var c = $('main-menubar').childNodes;
+        while (typeof c[0] != 'undefined') {
+          c[0].style.fontWeight = 'bold';
+          mp.appendChild(c[0]);
+        }
+
+        var createMenuItem = function (label,command) {
+          var mi = document.createElement('menuitem');
+          mi.setAttribute('label', label);
+          mi.setAttribute('oncommand',command);
+          return mi;
+        }
+        var me = document.createElement('menu');
+          me.setAttribute('id','util_menu');
+          me.setAttribute('label','utils');
+          me.style.fontWeight = 'bold';
+        var mep = document.createElement('menupopup');
+          mep.setAttribute('label','1');
+          mep.setAttribute('accesskey','k');
+          mep.setAttribute('id','util_menu_popup');
+          mep.appendChild(createMenuItem('about:config','liberator.open("about:config")'));
+          mep.appendChild(createMenuItem('Inspect Document', 'inspectDOMDocument(document)'))
+          mep.appendChild(createMenuItem('Toggle GreaseMonkey', 'GM_setEnabled(!GM_getEnabled())'))
+          mep.appendChild(createMenuItem('liberator.startup()', 'liberator.startup()'))
+          me.appendChild(mep);
+          mp.appendChild(me);
+
+      $("main-menubar").appendChild(m);              // on the menubar
+      $("status-bar").insertBefore($("menubar-items"),$("status-bar").childNodes[0]);
+      // $('contentAreaContextMenu').appendChild(m);    // on the context menu
+      }
+    } catch (e) {
+      liberator.echoerr("error creating main menu: " + e)
+    }
+
+})();
+
+// $("browser-bottombox").insertBefore($("toolbar-menubar"), $("browser-bottombox").childNodes[0]);
+// $("liberator-message").parentNode.insertBefore($("toolbar-menubar"), $("liberator-message"));
+//$("urlbar-container").style.border = "1px solid transparent";
+//$("toolbar-menubar").collapsed = true;
+EOF
+ 
+" js <<EOF
+" mappings.addUserMap([modes.NORMAL], ["C-o"], 
+"     "Yank the currently selected text",
+"     function () {
+"       alert("foobar");
+"     });
+" EOF
+" 
+
+:javascript <<EOF
+// #203  	 replace security button with the site identification button
+    (function () {
+        //liberator.log("Moving the identity box to the statusbar...")
+        //let panel = document.createElement("statusbarpanel");
+        let box = document.getElementById("identity-box");
+//        box.maxHeight = "18px";
+//        box.style.margin = "2px";
+//        box.style.marginTop = "4px";
+        box.style.marginLeft = "10px";
+        box.style.marginRight = "2px";
+        //panel.appendChild(box.parentNode.removeChild(box));
+        //panel.maxHeight = "16px";
+        //document.getElementById("status-bar").insertBefore(panel, document.getElementById("security-button"));
+        // document.getElementById("status-bar").insertBefore(panel, document.getElementById("liberator-statusline"));
+  
+        //document.getElementById("status-bar").insertBefore(box, document.getElementById("liberator-statusline"));
+
+        $("status-bar").insertBefore(box,$("status-bar").childNodes[1]);
+        //document.getElementById("security-button").collapsed = true;
+    })();
+EOF
+ 
