@@ -1,4 +1,4 @@
-"""" Pathogen  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""" Pathogen  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 filetype off
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles()
@@ -15,7 +15,6 @@ set backupdir=/tmp          " put backups in /tmp
 set backupdir-=.            " ...and not in cwd
 
 " set background=light       " vim has a dark background when in the console
-set novisualbell            " now that beep is a croak
 set hidden                  " hide, don't close, undisplayed buffers
 set history=256             " keep 50 lines of command history
 set laststatus=2            " always show status line
@@ -31,6 +30,7 @@ set cursorline              " highlight the current line
 " set cursorcolumn            " highlight the current column
 set showcmd                 " show command-in-progress
 set showmode                " mode shown
+set novisualbell            " no visual bell 
 set title                   " do set the xterm title (see 'titleold', set below)
 
 set foldcolumn=2            " no fold column
@@ -128,12 +128,12 @@ function! CD()
     lcd %:p:h
   endif
 endfunction
-" autocmd BufEnter * call CD()
+autocmd BufEnter * call CD()
 
 """" tips """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "  Edits the file named as the argument in the ~/Desktop/info directory.
 function! s:tips(arg)
-  cd ~/Desktop/info/
+  cd ~/Desktop/tips/
   let l:files=split(glob("*".a:arg."*"), "\n")
 
   if len(l:files)
@@ -286,8 +286,8 @@ nnoremap          <F2>                :NERDTreeToggle<CR>
 nnoremap          <F8>                :!xdg-open %:p:h<cr> " open $PWD
 nnoremap          <F9>                :!xdg-open %:p<cr>
 nnoremap <silent> <C-Tab>             <C-W><C-W>    " control-tab to next window
-nnoremap <silent> P                   P`[
-nnoremap <silent> p                   p`[  " jump back to first char of prev changed text
+nnoremap <silent> P                   P`[   " jump back to position after put
+nnoremap <silent> p                   p`[   " jump back to position after put
 nnoremap <silent> Y                   y$
 nnoremap <silent> z/                  :if AutoHighlightToggle()<Bar>set hlsearch<Bar>endif<CR>
 nnoremap <silent> z!                  :set hlsearch!<cr>
@@ -303,6 +303,9 @@ nnoremap <silent> <leader><C-a>       :edit #<cr>
 nnoremap <silent> <leader>c     			:new<cr>:only<cr>
 nnoremap          <leader>e           :edit <C-R>=expand('%:h').'/'<CR>
 nnoremap          <leader>f           :CommandT<cr>
+nnoremap          <leader>ba          :ls<cr>:b<space>
+nnoremap          <leader>be          :LustyBufferExplorer<cr>
+nnoremap          <leader>bg          :LustyBufferGrep<cr>
 nnoremap <silent> <leader>b0          :b 0<cr>
 nnoremap <silent> <leader>b1          :b 1<cr>
 nnoremap <silent> <leader>b2          :b 2<cr>
@@ -314,18 +317,14 @@ nnoremap <silent> <leader>b7          :b 7<cr>
 nnoremap <silent> <leader>b8          :b 8<cr>
 nnoremap <silent> <leader>b9          :b 9<cr>
 nnoremap <silent> <leader>bd          :bdelete<cr>
-nnoremap <silent> <leader>b^          :bfirst<cr>
-nnoremap <silent> <leader>b$          :blast<cr>
-nnoremap          <leader>be          :LustyBufferExplorer<cr>
-nnoremap          <leader>bg          :LustyBufferGrep<cr>
 nnoremap <silent> <leader>bh          :bprevious<cr>
-nnoremap          <leader>ba          :ls<cr>:b<space>
+nnoremap <silent> <leader>bj          :blast<cr>
+nnoremap <silent> <leader>bk          :bfirst<cr>
 nnoremap <silent> <leader>bl          :bnext<cr>
-nnoremap <silent> <leader>d     			:bdelete<cr>
+nnoremap          <leader>bs          :ls<cr>:vsplit #
+nnoremap          <leader>?     			:help 
 nnoremap <silent> <leader>,           :edit #<cr>
 nnoremap <silent> <leader>g     			:silent set visualbell!<cr>
-nnoremap <silent> <leader>?     			:help 
-nnoremap <silent> <leader>k     			:bdelete<cr>
 nnoremap <silent> <leader>lb          :LustyBufferExplorer<cr>
 nnoremap <silent> <leader>lF          :LustyFilesystemExplorer<cr>
 nnoremap <silent> <leader>lf          :LustyFilesystemExplorerFromHere<cr>
@@ -365,7 +364,7 @@ nnoremap <silent> <leader>tx          :tabdo<space>
 nnoremap <silent> <leader>t^          :tabfirst<cr>
 nnoremap <silent> <leader>t$          :tablast<cr>
 nnoremap <silent> <leader>\|          :vnew<cr>
-nnoremap <silent> <leader>v           :vimgrep /<c-r>=expand('<cword>') . '/j **/*' <cr>
+nnoremap <silent> <leader>vg          :vimgrep /<c-r>=expand('<cword>') . '/j **/*' <cr>
 nnoremap <silent> <leader>wh          <C-W>h
 nnoremap <silent> <leader>wj          <C-W>j
 nnoremap <silent> <leader>wk          <C-W>k
@@ -374,14 +373,18 @@ nnoremap          <leader>wr          :update<cr>
 nnoremap <silent> <leader>x           :close<cr>
 nnoremap <silent> <leader>y           "+y   "copy
 
-vnoremap <silent> <leader>D           "+x   "cut
-vnoremap <silent> <leader>d           "+x   "cut
-vnoremap <silent> <leader>x           "+x   "cut
-vnoremap          z/                  y/<C-R>"<CR>
+vnoremap <silent> <leader>y           "+y   " copy
+vnoremap <silent> <leader>D           "+x   " cut
+vnoremap <silent> <leader>d           "+x   " cut
+vnoremap <silent> <leader>x           "+x   " cut
+vnoremap          z/                  y/<C-R>"<CR> " put selected text in the search buffer
 vnoremap          <                   <gv   " move cursor to beginning of visual block move
-vnoremap          >                   >gv
-vnoremap          <leader>#           :s/^/#/<cr>
+vnoremap          >                   >gv   " move cursor to the end of a visual block move
+vnoremap          <leader>##          :s/^/# /<cr>    " shell-type comments
+vnoremap          <leader>#"          :s/^/" /<cr>    " vim-type comments
+vnoremap          <leader>#//         :s@^@\/\/ @<cr> " c-type comments
 vnoremap          <leader>v           :vimgrep <c-r>=expand('<cword>') . ' **/*' <cr>
 vnoremap           <C-S>              <C-C>:update<CR>
+vnoremap <silent> <leader>[     			:silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
 
 
