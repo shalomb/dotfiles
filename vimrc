@@ -92,8 +92,8 @@ set nojoinspaces
 set showmatch               " show matching braces, parantheses, brackets, etc
 set matchpairs+=<:>         " show and % jump matching angle brackets
 set matchpairs+==:;         "                          variable assignments, etc
-set matchtime=5             " Show match for 0.2 sec
-set showcmd                 " show input command??
+set matchtime=5             " Show match for 0.2 sec;
+set showcmd                 " show input command??;
 
 set pastetoggle=<F11>
 
@@ -316,12 +316,14 @@ nnoremap <silent> <leader>b6          :b 6<cr>
 nnoremap <silent> <leader>b7          :b 7<cr>
 nnoremap <silent> <leader>b8          :b 8<cr>
 nnoremap <silent> <leader>b9          :b 9<cr>
+nnoremap <silent> <leader>bc          :close<cr>
 nnoremap <silent> <leader>bd          :bdelete<cr>
 nnoremap <silent> <leader>bh          :bprevious<cr>
 nnoremap <silent> <leader>bj          :blast<cr>
 nnoremap <silent> <leader>bk          :bfirst<cr>
 nnoremap <silent> <leader>bl          :bnext<cr>
 nnoremap          <leader>bs          :ls<cr>:vsplit #
+nnoremap          <leader>bS          :ls<cr>:split #
 nnoremap          <leader>?     			:help 
 nnoremap <silent> <leader>,           :edit #<cr>
 nnoremap <silent> <leader>g     			:silent set visualbell!<cr>
@@ -331,30 +333,21 @@ nnoremap <silent> <leader>lf          :LustyFilesystemExplorerFromHere<cr>
 nnoremap <silent> <leader>lg          :LustyBufferGrep<cr>
 nnoremap <silent> <leader>l     			:redraw<cr>
 nnoremap <silent> <leader>m     			g<  " last set of messages
-nnoremap <silent> <leader>>     			:new /tmp/screen-exchange<cr>ggP`]a<cr><Esc>"_dGgg:w!<cr> " :close<cr>
-nnoremap <Silent> <leader>]     			:new /tmp/screen-exchange<cr>ggyG<Esc>:e #<cr>p
-nnoremap <silent> <leader><     			:new /tmp/screen-exchange<cr>ggyG<Esc>:w!<cr>:close<cr>
+" nnoremap <silent> <leader>>     			:new /tmp/exchange<cr>ggP`]a<cr><Esc>"_dGgg:w!<cr> " :close<cr>
+" nnoremap <silent> <leader><     			:new ~/.tmp/exchange<cr>ggyG<Esc>:w!<cr>:close<cr>
+nnoremap <silent> <leader>>           :write! ~/.tmp/exchange<cr>
+nnoremap <silent> <leader><     			:redir @t<cr>:read ~/.tmp/exchange<cr>:redir END<cr>
 nnoremap <silent> <leader>nh     			:noh<cr>
 nnoremap <silent> <leader>P           "+gP      "paste
 nnoremap <silent> <leader>Q     			:only<cr>
 nnoremap <silent> <leader>r     			:set wrap!<cr>
-nnoremap <silent> <leader>sa          zg
 nnoremap <silent> <leader>S     			:new<cr>
+nnoremap <silent> <leader>sa          zg  " add word to dict
 nnoremap <silent> <leader>sp          :set spell!<cr>
-nnoremap <silent> <leader>t0          0gt
-nnoremap <silent> <leader>t1          1gt
-nnoremap <silent> <leader>t2          2gt
-nnoremap <silent> <leader>t3          3gt
-nnoremap <silent> <leader>t4          4gt
-nnoremap <silent> <leader>t5          5gt
-nnoremap <silent> <leader>t6          6gt
-nnoremap <silent> <leader>t7          7gt
-nnoremap <silent> <leader>t8          8gt
-nnoremap <silent> <leader>t9          9gt
 nnoremap          <leader>ta          :tabs<cr>:normal gt<Left><Left>
 nnoremap <silent> <leader>tc          :tabnew<cr>
 nnoremap <silent> <leader>td          :tabclose<cr>
-nnoremap          <leader>te          :tabedit <C-R>=expand('%:h').'/'<CR>
+nnoremap          <leader>te          :ls<cr>:tabedit <C-R>=expand('%:h').'/'<CR>
 nnoremap          <leader>tf          :tabfind **/*
 nnoremap <silent> <leader>th          :tabprevious<cr>
 nnoremap <silent> <leader>tl          :tabnext<cr>
@@ -365,10 +358,6 @@ nnoremap <silent> <leader>t^          :tabfirst<cr>
 nnoremap <silent> <leader>t$          :tablast<cr>
 nnoremap <silent> <leader>\|          :vnew<cr>
 nnoremap <silent> <leader>vg          :vimgrep /<c-r>=expand('<cword>') . '/j **/*' <cr>
-nnoremap <silent> <leader>wh          <C-W>h
-nnoremap <silent> <leader>wj          <C-W>j
-nnoremap <silent> <leader>wk          <C-W>k
-nnoremap <silent> <leader>wl          <C-W>l
 nnoremap          <leader>wr          :update<cr>
 nnoremap <silent> <leader>x           :close<cr>
 nnoremap <silent> <leader>y           "+y   "copy
