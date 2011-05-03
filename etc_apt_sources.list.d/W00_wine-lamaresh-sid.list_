@@ -1,0 +1,6 @@
+# URL: http://www.winehq.org/download/deblenny
+
+# PUBKEY:
+# wget -O - http://www.lamaresh.net/apt/key.gpg | apt-key add - 
+
+deb http://www.lamaresh.net/apt sid main

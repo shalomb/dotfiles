@@ -1,0 +1,7 @@
+# mysql gui tools
+#  - mysql workbench
+#
+# URL: www.64bitjungle.com/tech/mysql-workbench-513-linux-alpha-testing-on-32-bit-and-64-bit-ubuntu/
+
+deb     ftp://ftp.mysql.com/pub/mysql/download/gui-tools/ubuntu/ jaunty wb51/
+#deb-src ftp://ftp.mysql.com/pub/mysql/download/gui-tools/ubuntu/ jaunty wb51/
