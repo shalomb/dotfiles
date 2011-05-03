@@ -184,6 +184,8 @@ __DATA__
 ~/.idesktop
 ~/.inputrc
 ~/.local/share/applications
+~/.pentadactyl/plugins/
+~/.pentadactylrc
 ~/.profile
 ~/.screenrc
 ~/.tmux.conf
@@ -193,5 +195,3 @@ __DATA__
 ~/.xinitrc
 ~/.Xmodmap
 ~/.xsession
-~/.pentadactyl/plugins/
-~/.pentadactylrc

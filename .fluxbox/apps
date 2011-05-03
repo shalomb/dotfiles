@@ -1,5 +1,5 @@
 [app] (name=gvim) (class=Gvim)
-  [Dimensions]	{641 758}
+  [Dimensions]	{988 563}
   [Close]	{yes}
 [end]
 [app] (name=aqualung) (class=Aqualung)
@@ -8,9 +8,9 @@
   [Close]	{yes}
 [end]
 [app] (name=gmrun) (class=Gmrun)
-  [Position]	(UPPERLEFT)	{290 330}
+  [Position]	(UPPERLEFT)	{270 251}
   [IconHidden]	{yes}
-  [Close]	{no}
+  [Close]	{yes}
 [end]
 [app] (name=gnome-volume-control) (class=Gnome-volume-control)
   [Dimensions]	{536 334}
@@ -46,8 +46,8 @@
   [Dimensions]	{500 364}
 [end]
 [app] (name=qterm) (class=URxvt)
-  [Dimensions]	{1348 724}
-  [Position]	(UPPERLEFT)	{479 297}
+  [Dimensions]	{694 574}
+  [Position]	(UPPERLEFT)	{325 0}
   [Shaded]	{no}
   [Deco]	{TAB}
   [Sticky]	{no}

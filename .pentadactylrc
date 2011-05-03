@@ -15,23 +15,23 @@ EOF
 "     });
 " EOF
 
-map s <Esc>:g <space>
-map <BS> :back<CR>
-map <M-Left> :back<CR>
-map <S-BS> :forward<CR>
-map <M-Right> :forward<CR>
-
-map <M-Up> :tabprev<CR>
-map <M-Down> :tabnext<CR>
-
-	
-noremap <S-Right> :tabmove! +1<CR>
-noremap <S-Left> :tabmove! -1<CR> 
+" map s                 <Esc>:g <space>
+" map <BS>              :back<CR>
+" map <M-Left>          :back<CR>
+" map <S-BS>            :forward<CR>
+" map <M-Right>         :forward<CR>
+" 
+" map <M-Up>            :tabprev<CR>
+" map <M-Down>          :tabnext<CR>
+" 
+" 
+" noremap <S-Right>     :tabmove! +1<CR>
+" noremap <S-Left>      :tabmove! -1<CR>
 
 " set guioptions+=n
 " set guioptions-=m
 
-map <S-H> gH
+" map <S-H> gH
 " set hlsearch
 set incfind
 set hlfind
@@ -46,8 +46,9 @@ set! browser.fullscreen.autohide=false
 map <C-l> :js $("toolbar-menubar").collapsed = false; $("urlbar").select();<CR>
 cmap <C-l> <Esc>:js $("urlbar").select()<CR>
 
-imap <C-w> <Esc>:quit<CR>
-imap <C-t> <Esc>:tabnew<CR>
+" imap <C-w> <Esc>:quit<CR>
+" imap <C-t> <Esc>:tabnew<CR>
+
 
 " mswin.vimp - mappings to make copy/paste in Vimperator behave like Windows
 " Maintainer: Doug Kearns <dougkearns@gmail.com>
