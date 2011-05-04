@@ -6,12 +6,12 @@
 set -x
 test -t 0 || exec > ~/.tmp/winmark.log 2>&1
 
-cd ~/.tmp/
-if [[ ! -d winmarks ]]; then
+if [[ ! -d ~/.tmp/winmarks ]]; then
   mkdir -p winmarks || \
-    { echo "Error creating the winmark directory, $!"; exit 2; };
+    { echo "Error creating the winmarks directory, $!"; exit 2; };
 fi
-cd winmarks
+
+cd ~/.tmp/winmarks
 
 pwd
 
@@ -24,15 +24,15 @@ if   [[ $action = mark ]]; then
   touch "$curwin";
   ln -svf "$curwin" "$mark";
 
-duration="${osd_msg_duration:-"3"}"
-wmctrl -lx | \
-  perl -lane '$F[0]=~/'"$curwin"'/ and print join " ", '"$mark"', "=>", $F[2], "|", @F[4..$#F]' | \
-  tee "$curwin" | \
-  osd_cat -l 2 -p bottom -o 0 -d "$duration" -A left -c blue -s 1 -f "-bitstream-bitstream vera sans mono-bold-r-normal--17-*-*-*-*-*-iso8859-1"
+  duration="${osd_msg_duration:-"3"}"
+  wmctrl -lx | \
+    perl -lane '$F[0]=~/'"$curwin"'/ and print join " ", qw["'"$mark"'"], "\t", "\"$F[2]\"", "\t", @F[4..$#F]' | \
+    tee "$curwin" | \
+    osd_cat -l 2 -p bottom -o 0 -d "$duration" -A left -c blue -s 1 -f "-bitstream-bitstream vera sans mono-bold-r-normal--17-*-*-*-*-*-iso8859-1"
 
 elif [[ $action = summon ]]; then
   winid="$(readlink "$mark")";
-  wmctrl -i -R "${winid##*/}";
+  wmctrl -i -a "${winid##*/}";
 
 elif [[ $action = list ]]; then
   set +v +x

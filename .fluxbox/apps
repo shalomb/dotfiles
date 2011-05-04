@@ -1,5 +1,5 @@
 [app] (name=gvim) (class=Gvim)
-  [Dimensions]	{1680 1026}
+  [Dimensions]	{947 938}
   [Close]	{yes}
 [end]
 [app] (name=aqualung) (class=Aqualung)
@@ -35,7 +35,7 @@
   [Position]	(UPPERLEFT)	{830 177}
 [end]
 [app] (name=dolphin) (class=Dolphin) (role=Dolphin#1)
-  [Dimensions]	{1057 1041}
+  [Dimensions]	{1680 1026}
   [Close]	{yes}
 [end]
 [app] (name=Download) (class=Iceweasel) (role=Manager)
@@ -47,7 +47,7 @@
 [end]
 [app] (name=qterm) (class=URxvt)
   [Dimensions]	{1040 544}
-  [Position]	(UPPERLEFT)	{512 203}
+  [Position]	(UPPERLEFT)	{224 411}
   [Shaded]	{no}
   [Deco]	{TAB}
   [Sticky]	{no}
