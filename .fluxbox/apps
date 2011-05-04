@@ -1,5 +1,5 @@
 [app] (name=gvim) (class=Gvim)
-  [Dimensions]	{988 563}
+  [Dimensions]	{1680 1026}
   [Close]	{yes}
 [end]
 [app] (name=aqualung) (class=Aqualung)
@@ -46,8 +46,8 @@
   [Dimensions]	{500 364}
 [end]
 [app] (name=qterm) (class=URxvt)
-  [Dimensions]	{694 574}
-  [Position]	(UPPERLEFT)	{325 0}
+  [Dimensions]	{1040 544}
+  [Position]	(UPPERLEFT)	{512 203}
   [Shaded]	{no}
   [Deco]	{TAB}
   [Sticky]	{no}

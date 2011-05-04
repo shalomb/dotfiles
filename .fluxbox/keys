@@ -1,4 +1,5 @@
-#
+# vim: foldmethod=marker:foldmarker={{{,}}}
+
 # NAME
 #   ~/.fluxbox/keys - keyboard shortcuts configuration for fluxbox(1).
 #
@@ -15,7 +16,6 @@ Control Menu              :RootMenu
 Control Mod4 Delete       :Reconfigure
 Control Mod4 Shift Delete :Restart
 # }}}
-
 
 #----Workspace Actions----{{{--------------------------------------------------
 Mod1 Menu      :WorkspaceMenu
@@ -34,7 +34,6 @@ Mod4 F8        :Workspace 8
 Mod4 F9        :Workspace 9
 # }}}
 
-
 #----Desktop Actions----{{{----------------------------------------------------
 OnDesktop Mouse1   :HideMenus
 OnDesktop Mouse2   :WorkspaceMenu
@@ -46,7 +45,6 @@ OnDesktop Mouse3   :RootMenu
 OnToolbar Mouse4   :PrevWorkspace  # Scroll on the toolbar
 OnToolbar Mouse5   :NextWorkspace  # to change workspaces
 # }}}
-
 
 #----Window Actions----{{{-----------------------------------------------------
 OnTitlebar Mouse3        :WindowMenu
@@ -200,7 +198,6 @@ MoveMode: r        :MacroCmd { ExecCommand osd_msg "Window Resize Mode" } { KeyM
 MoveMode: w        :MacroCmd { ExecCommand osd_msg "WinCtrl Mode" } { KeyMode winctrlMode }
 #  }}}
 
-
 #----Window ResizeMode----{{{--------------------------------------------------
 Mod4 w r                        :MacroCmd { ExecCommand osd_msg "Window Resize Mode" } { KeyMode ResizeMode }
 
@@ -239,7 +236,7 @@ ResizeMode: m                   :MacroCmd { ExecCommand osd_msg "Window Move Mod
 ResizeMode: w                   :MacroCmd { ExecCommand osd_msg "WinCtrl Mode" } { KeyMode winctrlMode }
 # }}}
 
-#----Set Window Layer Mode----{{{----------------------------------------------
+#----Window Layer Mode----{{{--------------------------------------------------
 Mod4 w l          :MacroCmd { ExecCommand osd_msg "Set Window Layer Mode" } {KeyMode SetWindowLayer}
 
 SetWindowLayer: t :SetLayer Top
@@ -250,92 +247,97 @@ SetWindowLayer: l :LowerLayer
 SetWindowLayer: r :RaiseLayer
 # }}}
 
+#----Window Mark Mode----{{{---------------------------------------------------
+Mod4 w a                    :MacroCmd { ExecCommand osd_msg "Mark Mode" } {KeyMode MarkMode}
 
-#----Tag and Summon Mode----{{{-----------------------------------------------
-Mod4 w a              :MacroCmd { ExecCommand osd_msg "Tag and Summon Mode" } {KeyMode TagAndSummonMode}
+# winmark mark x       # creates mark 'x' pointing at the current window
+# winmark summon x     # activates window associated with mark 'x'
 
-TagAndSummonMode: 0 :ExecCommand winmark mark 0
-TagAndSummonMode: 1 :ExecCommand winmark mark 1
-TagAndSummonMode: 2 :ExecCommand winmark mark 2
-TagAndSummonMode: 3 :ExecCommand winmark mark 3
-TagAndSummonMode: 4 :ExecCommand winmark mark 4
-TagAndSummonMode: 5 :ExecCommand winmark mark 5
-TagAndSummonMode: 6 :ExecCommand winmark mark 6
-TagAndSummonMode: 7 :ExecCommand winmark mark 7
-TagAndSummonMode: 8 :ExecCommand winmark mark 8
-TagAndSummonMode: 9 :ExecCommand winmark mark 9
+MarkMode: Mod1 Tab       :NextWindow {groups}  # Alt-Tab
+MarkMode: Mod1 Shift Tab :PrevWindow {groups}
 
-TagAndSummonMode: a :ExecCommand winmark mark a
-TagAndSummonMode: b :ExecCommand winmark mark b
-TagAndSummonMode: c :ExecCommand winmark mark c
-TagAndSummonMode: d :ExecCommand winmark mark d
-TagAndSummonMode: e :ExecCommand winmark mark e
-TagAndSummonMode: f :ExecCommand winmark mark f
-TagAndSummonMode: g :ExecCommand winmark mark g
-TagAndSummonMode: h :ExecCommand winmark mark h
-TagAndSummonMode: i :ExecCommand winmark mark i
-TagAndSummonMode: j :ExecCommand winmark mark j
-TagAndSummonMode: k :ExecCommand winmark mark k
-TagAndSummonMode: l :ExecCommand winmark mark l
-TagAndSummonMode: m :ExecCommand winmark mark m
-TagAndSummonMode: n :ExecCommand winmark mark n
-TagAndSummonMode: o :ExecCommand winmark mark o
-TagAndSummonMode: p :ExecCommand winmark mark p
-TagAndSummonMode: q :ExecCommand winmark mark q
-TagAndSummonMode: r :ExecCommand winmark mark r
-TagAndSummonMode: s :ExecCommand winmark mark s
-TagAndSummonMode: t :ExecCommand winmark mark t
-TagAndSummonMode: u :ExecCommand winmark mark u
-TagAndSummonMode: v :ExecCommand winmark mark v
-TagAndSummonMode: w :ExecCommand winmark mark w
-TagAndSummonMode: x :ExecCommand winmark mark x
-TagAndSummonMode: y :ExecCommand winmark mark y
-TagAndSummonMode: z :ExecCommand winmark mark z
+MarkMode: 0              :ExecCommand winmark mark   0
+MarkMode: 1              :ExecCommand winmark mark   1
+MarkMode: 2              :ExecCommand winmark mark   2
+MarkMode: 3              :ExecCommand winmark mark   3
+MarkMode: 4              :ExecCommand winmark mark   4
+MarkMode: 5              :ExecCommand winmark mark   5
+MarkMode: 6              :ExecCommand winmark mark   6
+MarkMode: 7              :ExecCommand winmark mark   7
+MarkMode: 8              :ExecCommand winmark mark   8
+MarkMode: 9              :ExecCommand winmark mark   9
 
-Mod4 s 0              :ExecCommand winmark summon 0
-Mod4 s 1              :ExecCommand winmark summon 1
-Mod4 s 2              :ExecCommand winmark summon 2
-Mod4 s 3              :ExecCommand winmark summon 3
-Mod4 s 4              :ExecCommand winmark summon 4
-Mod4 s 5              :ExecCommand winmark summon 5
-Mod4 s 6              :ExecCommand winmark summon 6
-Mod4 s 7              :ExecCommand winmark summon 7
-Mod4 s 8              :ExecCommand winmark summon 8
-Mod4 s 9              :ExecCommand winmark summon 9
+MarkMode: a              :ExecCommand winmark mark   a
+MarkMode: b              :ExecCommand winmark mark   b
+MarkMode: c              :ExecCommand winmark mark   c
+MarkMode: d              :ExecCommand winmark mark   d
+MarkMode: e              :ExecCommand winmark mark   e
+MarkMode: f              :ExecCommand winmark mark   f
+MarkMode: g              :ExecCommand winmark mark   g
+MarkMode: h              :ExecCommand winmark mark   h
+MarkMode: i              :ExecCommand winmark mark   i
+MarkMode: j              :ExecCommand winmark mark   j
+MarkMode: k              :ExecCommand winmark mark   k
+MarkMode: l              :ExecCommand winmark mark   l
+MarkMode: m              :ExecCommand winmark mark   m
+MarkMode: n              :ExecCommand winmark mark   n
+MarkMode: o              :ExecCommand winmark mark   o
+MarkMode: p              :ExecCommand winmark mark   p
+MarkMode: q              :ExecCommand winmark mark   q
+MarkMode: r              :ExecCommand winmark mark   r
+MarkMode: s              :ExecCommand winmark mark   s
+MarkMode: t              :ExecCommand winmark mark   t
+MarkMode: u              :ExecCommand winmark mark   u
+MarkMode: v              :ExecCommand winmark mark   v
+MarkMode: w              :ExecCommand winmark mark   w
+MarkMode: x              :ExecCommand winmark mark   x
+MarkMode: y              :ExecCommand winmark mark   y
+MarkMode: z              :ExecCommand winmark mark   z
 
-Mod4 s a              :ExecCommand winmark summon a
-Mod4 s b              :ExecCommand winmark summon b
-Mod4 s c              :ExecCommand winmark summon c
-Mod4 s d              :ExecCommand winmark summon d
-Mod4 s e              :ExecCommand winmark summon e
-Mod4 s f              :ExecCommand winmark summon f
-Mod4 s g              :ExecCommand winmark summon g
-Mod4 s h              :ExecCommand winmark summon h
-Mod4 s i              :ExecCommand winmark summon i
-Mod4 s j              :ExecCommand winmark summon j
-Mod4 s k              :ExecCommand winmark summon k
-Mod4 s l              :ExecCommand winmark summon l
-Mod4 s m              :ExecCommand winmark summon m
-Mod4 s n              :ExecCommand winmark summon n
-Mod4 s o              :ExecCommand winmark summon o
-Mod4 s p              :ExecCommand winmark summon p
-Mod4 s q              :ExecCommand winmark summon q
-Mod4 s r              :ExecCommand winmark summon r
-Mod4 s s              :ExecCommand winmark summon s
-Mod4 s t              :ExecCommand winmark summon t
-Mod4 s u              :ExecCommand winmark summon u
-Mod4 s v              :ExecCommand winmark summon v
-Mod4 s w              :ExecCommand winmark summon w
-Mod4 s x              :ExecCommand winmark summon x
-Mod4 s y              :ExecCommand winmark summon y
-Mod4 s z              :ExecCommand winmark summon z
+Control Mod4 0           :ExecCommand winmark summon 0
+Control Mod4 1           :ExecCommand winmark summon 1
+Control Mod4 2           :ExecCommand winmark summon 2
+Control Mod4 3           :ExecCommand winmark summon 3
+Control Mod4 4           :ExecCommand winmark summon 4
+Control Mod4 5           :ExecCommand winmark summon 5
+Control Mod4 6           :ExecCommand winmark summon 6
+Control Mod4 7           :ExecCommand winmark summon 7
+Control Mod4 8           :ExecCommand winmark summon 8
+Control Mod4 9           :ExecCommand winmark summon 9
+
+Control Mod4 a           :ExecCommand winmark summon a
+Control Mod4 b           :ExecCommand winmark summon b
+Control Mod4 c           :ExecCommand winmark summon c
+Control Mod4 d           :ExecCommand winmark summon d
+Control Mod4 e           :ExecCommand winmark summon e
+Control Mod4 f           :ExecCommand winmark summon f
+Control Mod4 g           :ExecCommand winmark summon g
+Control Mod4 h           :ExecCommand winmark summon h
+Control Mod4 i           :ExecCommand winmark summon i
+Control Mod4 j           :ExecCommand winmark summon j
+Control Mod4 k           :ExecCommand winmark summon k
+Control Mod4 l           :ExecCommand winmark summon l
+Control Mod4 m           :ExecCommand winmark summon m
+Control Mod4 n           :ExecCommand winmark summon n
+Control Mod4 o           :ExecCommand winmark summon o
+Control Mod4 p           :ExecCommand winmark summon p
+Control Mod4 q           :ExecCommand winmark summon q
+Control Mod4 r           :ExecCommand winmark summon r
+Control Mod4 s           :ExecCommand winmark summon s
+Control Mod4 t           :ExecCommand winmark summon t
+Control Mod4 u           :ExecCommand winmark summon u
+Control Mod4 v           :ExecCommand winmark summon v
+Control Mod4 w           :ExecCommand winmark summon w
+Control Mod4 x           :ExecCommand winmark summon x
+Control Mod4 y           :ExecCommand winmark summon y
+Control Mod4 z           :ExecCommand winmark summon z
 # }}}
 
 #----Command Hotkeys----{{{----------------------------------------------------
-Control Mod4 period  :ExecCommand ~/.bin/qterm skip_taskbar
+Control Mod4 period  :ExecCommand qterm
 Control Shift Escape :ExecCommand urxvtc -name htop -title htop -e htop -u $USER --sort-key CPU%
 
-#Mod4   a            :Claimed by TagAndSummonMode
+#Mod4   a            :Claimed by MarkMode
 Mod4    b            :If { Some Matches (Navigator) } { NextWindow (Navigator) } { ExecCommand xdg-open 'http://www.google.co.uk/webhp?complete=1' }
 Mod4    d            :ToggleCmd { ShowDesktop } { Deiconify }
 Mod4    f            :If { Some Matches (dolphin) } { NextWindow (dolphin) } { ExecCommand xdg-open ~/ }
@@ -343,16 +345,15 @@ Mod4    g            :ExecCommand xdg-open `googlize`  # clipboard keyword searc
 Mod4    Mod1 g       :ExecCommand xdg-open 'http://127.0.0.1:30127/?hl=en_GB&src=14&s=f6gdGknV4MTC5Tya_vD2PdzAcY0'
 Mod4    l            :ExecCommand gnome-screensaver-command --activate && xset s activate && xset dpms force off
 Mod4    r            :If { Some Matches (gmrun) } { NextWindow (gmrun) } { ExecCommand gmrun }
-#Mod4   s            :Claimed by TagAndSummonMode
+#Mod4   s            :Claimed by MarkMode
 #       Mod4 v       :Claimed by SpecialKeys/alsamixergui
 #       Mod4 w       :Claimed by Window Mode
 Mod4    apostrophe   :ExecCommand ~/.bin/summon wfcmgr.Wfcmgr toggle_hidden
 Mod4    End          :ExecCommand gnome-screensaver-command --activate && xset s activate && xset dpms force off
 Mod4    Home         :ExecCommand xdg-open 'http://www.google.co.uk/webhp?complete=1'
-Mod4    period       :If { Some Matches (qterm) } { ToggleCmd { NextWindow (qterm) } { ExecCommand ~/.bin/qterm hidden } }
+Mod4    period       :If { Some Matches (qterm) } { ToggleCmd { NextWindow (qterm) } { ExecCommand qterm toggle } } { ExecCommand qterm hide }
 Mod4    space        :ExecCommand gnome-do --mini --glassframe --quiet
 # }}}
-
 
 #----Special Keys----{{{-------------------------------------------------------
 176       :Exec amixer sset Master,0 1+
