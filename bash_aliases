@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # vi:ftype=bash:sw=2:tw=2:et
 
 # set -v -e -x
@@ -7,7 +8,7 @@
 # except those files under ~/.config/bash/alias.d/. This behaviour must be
 # inherited by those files too.
 
-# If not running interactively, don't do anything but return
+# If not running interactively, return
 [[ -n "$PS1" ]] || return
 test -t 0       || return
 
@@ -22,8 +23,8 @@ fi
 shopt -u nullglob dotglob
 
 function add_alias () {
-  if alias $1 &> /dev/null; then
-   alias $1 >> ~/.bash_aliases
+  if alias "$1" &> /dev/null; then
+   alias "$1" >> ~/.bash_aliases
   fi
 }
 
@@ -31,7 +32,7 @@ alias     ..='cd $(dirname $(pwd -P))'
 function  - () { cd -; }
 
 function  apropos () { man -k "$1" | $PAGER; }
-function  nohup () { $(which nohup) "$@" &> "$(mktemp $TMP/.nohup.$$.XXXXXX)" ; }
+function  nohup () { $(type -p nohup) "$@" &> "$(mktemp "$TMP"/.nohup.$$.XXXXXX)" ; }
 
 alias     ..='cd ..'
 alias     ...='cd ../..'
@@ -59,15 +60,15 @@ function  :h () {
 
 function  f () { find . -name "$@" ; }
 
-alias         grep='grep  --colour=auto'
-alias        egrep='egrep --colour=auto'
-alias            g='egrep --colour=auto'
+alias grep='grep  --colour=auto'
+alias egrep='egrep --colour=auto'
+alias g='egrep --colour=auto'
 
-alias     h='fc -l'
-alias     j='jobs -l'
-alias     p='$PAGER'
-alias     r='fc -s'
-alias     t='tail -n'
+alias h='fc -l'
+alias j='jobs -l'
+alias p='$PAGER'
+alias r='fc -s'
+alias t='tail -n'
 
 # like the perl join
 perljoin () 
@@ -183,11 +184,11 @@ function  press () {
   
   if [[ ! -e "$archive" ]]; then shift; fi
 
-  tar cf - "$@" | bzip2 -9 > "$archive.tbz" && stat -c "%n  %s"  "$archive.tbz";
+  tar cf - "$@" | bzip2 -9v > "$archive.tbz" && stat -c "%n  %s"  "$archive.tbz";
 }
 
 function  _gvim  ()  {
-  local GVIM=$(which gvim)
+  local GVIM=$(type -p gvim)
   if ! $($GVIM --serverlist | grep -iq "^foo$"); then
     $GVIM --servername "foo"
   else
@@ -216,16 +217,26 @@ function  treecp     { tar cpf - "$1" | (cd "$2" ; tar xpf -) ; }
 function  vif        { $PAGER $(lif "$@"); }
 
 function  doc ()    { 
-  { 
-      o=$(builtin type -a "$@")   ; [[ -z "$o" ]] || echo -e "\\n_TYPE_\\n$o"
-      o=$(command whereis "$@")   ; [[ -z "$o" ]] || echo -e "\\n_WHEREIS_\\n$o"
-      o=$(command man -k "$@")    ; [[ -z "$o" ]] || echo -e "\\n_APROPOS_\\n$o"
-      o=$(command dpkg -l "*$@*") ; [[ -z "$o" ]] || echo -e "\\n_PORTLS_\\n$o"
-      o=$(builtin help "$@")      ; [[ -z "$o" ]] || echo -e "\\n_BUILTIN_\\n$o"
-      o=$(command man "$@")       ; [[ -z "$o" ]] || echo -e "\\n_MANPAGE_\\n$o"
-      o=$(command locate "/usr" | egrep -- doc | egrep -- "$@" | sort); 
-                                    [[ -z "$o" ]] || echo -e "\\n_LOCATE_\\n$o";
-      unset o
+  local o;
+  local docfiles;
+  { o=$(builtin type -a "$1")   ; [[ -n $o ]] && echo -e "TYPE\n-----\n$o"
+    o=$(command whereis "$1")   ; [[ -n $o ]] && echo -e "\nWHEREIS\n--------\n$o"
+    (
+      shopt -s nullglob
+      docfiles=( /usr/share/doc/"$1"/* );
+      (( ${#docfiles[@]} > 0 )) && { 
+        echo -e "\nDOCFILES\n---------\n/usr/share/doc/"$1"/";
+        printf "%s\n" "${docfiles[@]##*/}"  | columns; 
+      }
+    );
+    o=$(command man -k "$@")    ; [[ -n $o ]] && echo -e "\nAPROPOS\n--------\n$o"
+    o=$(command dpkg -l | perl -lane '$F[1] =~ /'"$1"'/ and print join " ", @F');
+                                  [[ -n $o ]] && echo -e "\nPACKAGES\n---------\n$o"
+    o=$(dpkg -L $(dpkg -S $(type -p "$1") | awk -F: '{print $1}')); 
+                                  [[ -n $o ]] && echo -e "\nPACKAGE FILES\n--------------\n$o";
+    o=$(builtin help "$@")      ; [[ -n $o ]] && echo -e "\nHELP\n----\n$o"
+    o=$(command man "$@")       ; [[ -n $o ]] && echo -e "\nMANPAGE\n--------\n$o"
+    o=$(command info "$@")      ; [[ -n $o ]] && echo -e "\nINFOPAGE\n---------\n$o"
   } 2>/dev/null | $PAGER;
 }
 
@@ -264,7 +275,7 @@ function  calc () {
       [[ -z $CF ]] && tmp="$TMP/$USER.calc" || tmp="$CF";
       [[ -z $CA || ! -e $tmp ]] && $EDITOR $tmp;
     else
-      tmp=$(mktemp $TMP/calc.$$.XXXXXX)
+      tmp=$(mktemp "$TMP"/calc.$$.XXXXXX)
       cat "$@" > $tmp
     fi
 
@@ -285,10 +296,11 @@ function  sendkey () {
 }
 
 function  tips () {
+set -x
   local files;
   local infodir=~/Desktop/tips/;
 
-  if [[ -z $1 ]]; then set -- bash; fi
+  if [[ -z $1 ]]; then set -- "$infodir"; fi
   
   for f; do files+=( "$infodir"/*"$f"* ); done
   #files=(${files[@]:1})
@@ -301,6 +313,7 @@ function  tips () {
     less "${files[@]}"
   fi
   cd "$OLDPWD";
+  set +x
 }
 
 function  reset_screen () {

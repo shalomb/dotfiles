@@ -6,17 +6,20 @@
 #   for examples                                                               #
  ##############################################################################
 
-export BASHRC_SOURCED="$(date +%s)"
-export BASHRC_SOURCED_BY="$BASHRC_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
-
 # If not running interactively, don't do anything
 [[ -n "$PS1" ]] || return
 test -t 0       || return
 
-# source ~/.profile if it hasn't already been marked as sourced.
-if [[ -z $PROFILE_SOURCED && -r ~/.profile ]]; then
+# source ~/.profile if 
+#  * ~/.bashrc hasn't been sourced before - for interactive shells
+#  * it hasn't already been marked as sourced.
+if [[ -z $BASHRC_SOURCED ]] || \
+   [[ -z $PROFILE_SOURCED && -r ~/.profile ]]; then
   source ~/.profile
 fi
+
+export BASHRC_SOURCED="$(date +%s)"
+export BASHRC_SOURCED_BY="$BASHRC_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
 
 export PAGER=$(which less)
 export MANPAGER="$PAGER"
@@ -68,7 +71,7 @@ set -o vi
 # ulimits
 # echo -n "setting ulimits .. "
 # Limit some inadvertent fork bombs.
-ulimit -Sc 0        # core dump file size i.e. no dump file
+# ulimit -Sc 0        # core dump file size i.e. no dump file
 # ulimit -Sc 128000 # core dump file size
 # ulimit -Sd 512000 # data segment size
 # ulimit -Se 2      # max. nice value
@@ -78,8 +81,8 @@ ulimit -Sc 0        # core dump file size i.e. no dump file
 # ulimit -Ss 128000 # max. stack size
 # ulimit -St 45     # soft max. CPU time in seconds
 # ulimit -Ht 60     # hard max. CPU time in seconds
-ulimit -Su 256      # soft max. user processes
-ulimit -Hu 320      # hard max. user processes
+#ulimit -Su 512      # soft max. user processes
+#ulimit -Hu 768      # hard max. user processes
 # ulimit -Sv 512000 # max. virtual memory
 # ulimit -Hv 768000
 # echo done

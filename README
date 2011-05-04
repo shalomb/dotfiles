@@ -3,7 +3,7 @@
 
 INSTALLATION
   git clone git://github.com/shalomb/.bash.git ~/.config/bash/
-  cd ~/.bash
+  cd ~/.config/bash
   sudo dpkg --set-selections < bash.dpkg
   sudo aptitude install
 
