@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# vi:ftype=bash:sw=2:tw=2:et
+# vi: filetype=sh:sw=2:tw=2:et:foldmethod=marker:foldmarker={{{,}}}
 
 # set -v -e -x
 
