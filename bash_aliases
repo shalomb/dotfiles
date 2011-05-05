@@ -85,33 +85,13 @@ export    LS_OPTS='--color=auto'
 alias     ls='\ls $LS_OPTS'
 alias     l='ls -Fhpqs'
 alias     l1='\ls -1'
-alias     la='ls -aBFilos'
 alias     lA='ls -A'
+alias     la='ls -aBFilos'
 alias     ll='ls -BFilos'
 alias     lr='find . | g $*'
 alias     lt='ls -lt'
 
-#if [[ ${BASH_VERSION%%\(*}
-#function iname () {
-#  local files;
-#  for f; do files+=(-iname "*$f*"); done;
-#  echo "${files[@]:1}"
-#}
-
-function  lsd () { 
-  find . -maxdepth ${FIND_DEPTH:-1} -type d -exec \ls "$@" -d {} +
-}
-function  lsf () {
-  find . -maxdepth ${FIND_DEPTH:-1} -type f -iname "*$1*" | xargs ls -d $2
-}
-function  lsl () {
-  find . -maxdepth ${FIND_DEPTH:-1} -type l -iname "*$1*" | xargs ls -d $2
-}
-function  lso () {
-  find . -maxdepth ${FIND_DEPTH:-1} ! -type f ! -type d ! -type l -iname "*$1*" | xargs ls -dF $2;
-}
-
-function  llr ()  { find -L "$PWD" -iname "*$@*" -exec \ls -lsdF '{}' + | less; }
+function  llr ()  { find "$PWD" -iname "*$@*" -exec ls -lsdF --color=auto '{}' + | less; }
 
 alias     more=less
 
