@@ -1,0 +1,9 @@
+table Icon
+  Caption: Fluxbox
+  Icon: /home/unop/.idesktop/fluxbox.png
+  Height: 48
+  Width: 48
+  X: 178
+  Y: 980
+  Command[0]: fluxbox-remote 'rootmenu'
+end

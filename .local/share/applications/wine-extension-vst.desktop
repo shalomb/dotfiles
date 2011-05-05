@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=A Wine application
+MimeType=image/x-tga
+Exec=wine start /ProgIDOpen VisioViewer.Viewer %f
+NoDisplay=true
+StartupNotify=true

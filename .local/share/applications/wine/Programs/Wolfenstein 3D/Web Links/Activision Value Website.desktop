@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Activision Value Website
+Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\windows\\command\\start.exe" "C:\\Program Files\\Wolfenstein 3D\\Activision.url"
+Type=Application
+StartupNotify=true
+Path=/home/unop/.wine/dosdevices/c:/Program Files/Wolfenstein 3D/
+Icon=/home/unop/.local/share/icons/8c29_copy(2)ofweb.xpm

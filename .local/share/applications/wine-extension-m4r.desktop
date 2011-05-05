@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Spotify
+MimeType=application/x-wine-extension-m4r
+Exec=wine start /ProgIDOpen Spotify.m4r %f
+NoDisplay=true
+StartupNotify=true

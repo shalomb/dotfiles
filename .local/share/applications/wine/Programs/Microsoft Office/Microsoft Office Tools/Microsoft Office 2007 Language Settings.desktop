@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Microsoft Office 2007 Language Settings
+Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\SETLANG.EXE" 
+Type=Application
+StartupNotify=true
+Comment=Change the language settings for Office applications.
+Icon=/home/unop/.local/share/icons/9ede_misc.5.png

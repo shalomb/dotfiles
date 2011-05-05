@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office PowerPoint
+MimeType=application/vnd.ms-officetheme
+Exec=wine start /ProgIDOpen OfficeTheme.12 %f
+NoDisplay=true
+StartupNotify=true

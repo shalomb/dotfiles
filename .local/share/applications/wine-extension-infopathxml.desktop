@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office InfoPath 2007
+MimeType=application/ms-infopath.xml
+Exec=wine start /ProgIDOpen InfoPath.Document.2 %f
+NoDisplay=true
+StartupNotify=true

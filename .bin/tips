@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# vi: filetype=sh:sw=2:tw=2:et:foldmethod=marker:foldmarker={{{,}}}
+
+# NAME
+#   tips - invoke tip files on demand
+#
+# SYNOPSIS
+#   tips [ [-l|--list] | [word|word..]]
+#
+# DESCRIPTION
+
+shopt -s extglob nocaseglob nocasematch
+
+tipsdir=~/Desktop/tips
+
+if [[ ! -d "$tipsdir" ]]; then
+  echo "No such directory '$tipsdir', $!"
+  exit 2
+fi
+
+oldpwd="$PWD"
+cd "$tipsdir"
+
+if [[ $1 = @(-l|--list) ]]; then
+  ls | column | less  # do not parse ls?!?
+  exit 1
+fi
+
+for glob in "$@"; do
+  while read -d $'' file; do
+    files+=( "$file" ) 
+  done < <( find . \( -type d  -name ".?*" -prune \) \
+    -o ! -ipath ".*" -a -ipath "*$glob*" -print0 | sort -z )
+done
+
+if (( ${#files[@]} == 0 )); then
+  if (( $# == 0 )); then
+    files=( . )
+  else
+    files=( "$@" )
+  fi
+fi
+
+files=( "${files[@]//\/\///}" ) 
+files=( "${files[@]//\*/}"    )
+
+for f in "${files[@]}"; do
+  dir="${f%%/*}";
+  if [[ $dir != $f ]] && [[ ! -d $dir ]]; then
+    mkdir -vp "$dir"
+  fi
+done
+
+( IFS=$', '; echo "$PWD: Editing ${files[*]}" );
+
+editor "${files[@]}"  # assuming a sane editor!!
+
+cd "$oldpwd"

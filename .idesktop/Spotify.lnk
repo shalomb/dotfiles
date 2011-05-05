@@ -1,0 +1,9 @@
+table Icon
+  Caption: Spotify
+  Icon: /home/unop/.idesktop/spotify.xpm
+  Height: 28
+  Width: 28
+  X: 810
+  Y: 990
+  Command[0]: wine spotify
+end

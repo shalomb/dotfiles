@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Access
+MimeType=application/x-wine-extension-maq
+Exec=wine start /ProgIDOpen Access.Shortcut.Query.1 %f
+NoDisplay=true
+StartupNotify=true

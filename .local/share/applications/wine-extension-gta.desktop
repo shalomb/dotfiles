@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Groove
+MimeType=application/x-wine-extension-gta
+Exec=wine start /ProgIDOpen GrooveToolArchive %f
+NoDisplay=true
+StartupNotify=true

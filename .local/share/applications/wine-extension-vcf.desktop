@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Outlook
+MimeType=text/directory
+Exec=wine start /ProgIDOpen Outlook.File.vcf %f
+NoDisplay=true
+StartupNotify=true

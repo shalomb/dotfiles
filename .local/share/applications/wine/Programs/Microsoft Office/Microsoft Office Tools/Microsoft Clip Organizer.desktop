@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Microsoft Clip Organizer
+Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\MSTORE.EXE" 
+Type=Application
+StartupNotify=true
+Comment=Import and organize photos, clip art, sounds and motion files using Microsoft Clip Organizer.
+Icon=/home/unop/.local/share/icons/9ede_cagicon.0.png

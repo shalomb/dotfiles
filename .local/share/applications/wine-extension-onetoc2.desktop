@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office OneNote
+MimeType=application/x-wine-extension-onetoc2
+Exec=wine start /ProgIDOpen OneNote.TableOfContents.12 %f
+NoDisplay=true
+StartupNotify=true

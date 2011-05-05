@@ -1,0 +1,123 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use bignum qw[hex oct e PI bexp bpi];
+
+use Data::Dumper;
+  sub d { Dumper @_ }
+
+use File::Spec qw[catfile];
+  sub fsc { File::Spec->catfile(@_) }
+
+use Term::ReadLine;
+
+
+local $|; $|++;
+local $\ = "\n";
+
+
+my (@s, @m, $l, $result);  # result stack;
+
+if (scalar @ARGV) {
+  my $result = join "", @ARGV;
+  $result =~ y/[]/()/;
+  local $,=" = ";
+  print $result, eval $result;
+} 
+else {
+  my $term = Term::ReadLine->new("calc");
+  while( defined( local $_ = $term->readline(q|> |) ) ) {
+
+    if (/^\s*q|quit\s*$/ix) { # quit
+      exit
+    }
+    elsif (/^\s*v\s*/ix) { # open the editor
+      my $tmpfile = fsc($ENV{TMP}, 'calc');
+
+      system {'editor'} 'editor', $tmpfile;
+
+      $_ = do {
+        open my $fh, '<', $tmpfile
+          or die "Error opening $tmpfile, $!\n";
+        local $/ = undef;
+        <$fh>;
+      };
+
+      print ((" ", join "\n ", split /\n+/, $_), "\n");
+    } 
+    elsif (/^\s*m\s*$/ix) { # memorize result
+      push @s, $result;
+      next;
+    }
+
+    {
+      no strict;
+      local $, = " ";
+      $result = eval $_;
+
+      if ($@) {
+        warn $@ 
+      }
+      else {
+        push @s, $result;
+        $l = $s[$#s];
+        print "\$s[$#s] = $result\n";
+      }
+    }
+  }
+}
+
+__END__
+
+if [[ -n "$@" ]]; then
+  perl -le '$_=join"",@ARGV; y/[]/()/; $,=" = ",print $_,eval;' "$@";
+
+elif [[ "$CV" = "eval" ]]; then 
+  perl -MTerm::ReadLine -e '
+  $|++; $t=new Term::ReadLine "calc";
+  while( defined( $_ = $t->readline(q|> |) ) ) {
+    $_ = eval $_;
+    $@ and warn $@ or print "$_\n";
+  }'
+
+elif [[ -n "$CV" ]]; then 
+  perl -le 'print "$ENV{CV} => " . eval "+$ENV{CV}"'
+
+else
+  if [[ -t 0 ]]; then
+    [[ -z $CF ]] && tmp="$TMP/$USER.calc" || tmp="$CF";
+    [[ -z $CA || ! -e $tmp ]] && $EDITOR $tmp;
+  else
+    tmp=$(mktemp "$TMP"/calc.$$.XXXXXX)
+    cat "$@" > $tmp
+  fi
+
+  perl -0777 -lpe '
+  s/(?<!\\|\;)\s*\n+\s*/; /mg;
+  $_ = "$_ # = " . eval " $_ ";
+  ' <$tmp;
+  echo;
+
+  [[ -t 0 ]] || rm -rf "$tmp"
+fi
+exit $?
+
+###
+use strict;
+
+$ENV{"PERL_RL"}="Gnu";
+
+use Term::ReadLine;
+my $term = new Term::ReadLine 'Simple Perl calc';
+my $prompt = "Enter your arithmetic expression: ";
+my $OUT = $term->OUT || \*STDOUT;
+
+while ( defined ($_ = $term->readline($prompt)) ) {
+    my $res = eval($_), "\n";
+    warn $@ if $@;
+    print $OUT $res, "\n" unless $@;
+    $term->addhistory($_) if /\S/;
+}
+
+

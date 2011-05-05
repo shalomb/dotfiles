@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Publisher
+MimeType=application/vnd.ms-publisher
+Exec=wine start /ProgIDOpen Publisher.Document.12 %f
+NoDisplay=true
+StartupNotify=true

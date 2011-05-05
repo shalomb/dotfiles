@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office PowerPoint
+MimeType=application/vnd.ms-powerpoint
+Exec=wine start /ProgIDOpen PowerPoint.Template.8 %f
+NoDisplay=true
+StartupNotify=true

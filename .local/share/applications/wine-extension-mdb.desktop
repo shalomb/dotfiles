@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Access
+MimeType=application/vnd.ms-access
+Exec=wine start /ProgIDOpen Access.MDBFile %f
+NoDisplay=true
+StartupNotify=true

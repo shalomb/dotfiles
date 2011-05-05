@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Groove
+MimeType=application/vnd.groove-vcard
+Exec=wine start /ProgIDOpen GrooveVCard %f
+NoDisplay=true
+StartupNotify=true

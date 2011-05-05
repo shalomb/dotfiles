@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Excel
+MimeType=application/x-wine-extension-xlshtml
+Exec=wine start /ProgIDOpen Excelhtmlfile %f
+NoDisplay=true
+StartupNotify=true

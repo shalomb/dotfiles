@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Outlook
+MimeType=application/x-wine-extension-oft
+Exec=wine start /ProgIDOpen Outlook.Template %f
+NoDisplay=true
+StartupNotify=true

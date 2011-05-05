@@ -157,9 +157,11 @@ sub readlink_f {
 
 
 __DATA__
+~/.bin/calc
 ~/.bin/googlize
 ~/.bin/osd_msg
 ~/.bin/qterm
+~/.bin/tips
 ~/.bin/winctrl
 ~/.bin/winmark
 ~/.config/wallpapers/wallpaper.list

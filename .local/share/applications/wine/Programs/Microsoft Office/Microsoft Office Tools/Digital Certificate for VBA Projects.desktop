@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Digital Certificate for VBA Projects
+Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\SELFCERT.EXE" 
+Type=Application
+StartupNotify=true
+Comment=This program creates a self-signed digital certificate that can be used for personal macros on this machine only.
+Icon=/home/unop/.local/share/icons/9ede_misc.15.xpm

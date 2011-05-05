@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Excel
+MimeType=application/vnd.ms-excel
+Exec=wine start /ProgIDOpen Excel.Backup %f
+NoDisplay=true
+StartupNotify=true

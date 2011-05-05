@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Outlook
+MimeType=application/x-wine-extension-ibc
+Exec=wine start /ProgIDOpen Outlook.File.ibc %f
+NoDisplay=true
+StartupNotify=true

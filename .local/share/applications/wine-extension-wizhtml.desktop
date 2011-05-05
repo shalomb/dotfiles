@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Access
+MimeType=application/x-wine-extension-wizhtml
+Exec=wine start /ProgIDOpen accessthmltemplate %f
+NoDisplay=true
+StartupNotify=true

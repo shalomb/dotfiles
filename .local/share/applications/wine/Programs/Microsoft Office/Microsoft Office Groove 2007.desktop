@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Microsoft Office Groove 2007
+Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\GROOVE.EXE" 
+Type=Application
+StartupNotify=true
+Comment=Create collaborative workspaces to share files and work on projects with your team members using Microsoft Office Groove.
+Icon=/home/unop/.local/share/icons/9ede_grooveicon.png

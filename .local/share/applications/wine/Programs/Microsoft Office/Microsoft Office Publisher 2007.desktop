@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Microsoft Office Publisher 2007
+Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\MSPUB.EXE" 
+Type=Application
+StartupNotify=true
+Comment=Create and edit newsletters, brochures, flyers, and Web sites by using Microsoft Office Publisher.
+Icon=/home/unop/.local/share/icons/9ede_pubs.0.png

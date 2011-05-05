@@ -1,0 +1,9 @@
+table Icon
+  Caption: Windows Vista
+  Icon: /home/unop/.idesktop/winvista.png
+  Height: 28
+  Width: 28
+  X: 1444
+  Y: 990
+  Command[0]: VBoxManage startvm Windows_Vista
+end

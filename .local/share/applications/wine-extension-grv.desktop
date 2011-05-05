@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Microsoft Office Groove
+MimeType=application/vnd.groove-injector
+Exec=wine start /ProgIDOpen GrooveFile %f
+NoDisplay=true
+StartupNotify=true

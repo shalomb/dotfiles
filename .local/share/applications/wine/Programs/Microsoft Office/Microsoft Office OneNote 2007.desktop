@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Microsoft Office OneNote 2007
+Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\ONENOTE.EXE" 
+Type=Application
+StartupNotify=true
+Comment=Gather, organize, find, and share your notes and information using Microsoft Office OneNote.
+Icon=/home/unop/.local/share/icons/9ede_joticon.0.png

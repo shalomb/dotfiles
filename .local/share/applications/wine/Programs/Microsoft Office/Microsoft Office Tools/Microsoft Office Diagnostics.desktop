@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Microsoft Office Diagnostics
+Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Common Files\\Microsoft Shared\\OFFICE12\\OFFDIAG.EXE" 
+Type=Application
+StartupNotify=true
+Comment=Microsoft Office Diagnostics identifies and corrects common causes of instability and poor performance
+Icon=/home/unop/.local/share/icons/9ede_misc.17.xpm
