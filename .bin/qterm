@@ -56,6 +56,9 @@
 #   * tmux
 #   * wmctrl
 #
+# BUGS
+#     been launced. Wierd eh?
+#
 # REFERENCES
 #   * "Console (video game CLI) - Wikipedia"
 #     http://en.wikipedia.org/wiki/Quake-style_console
@@ -71,8 +74,7 @@
 #
 # qterm(1)                         QTERM                                qterm(1)
 
-
-shopt -s nocaseglob nocasematch
+shopt -s extglob nocaseglob nocasematch
 
 if [[ $1 = @(*help|-h) ]]; then
   cat <<EOH >&2
@@ -97,8 +99,6 @@ fi
 
 qtermWinID=$(printf "0x%x" "$(wmctrl -lx | awk '/qterm.URxvt/{print $1}')")
 
-wmctrl -i -r "$qtermWinID" -T qterm   # set its name
-
 if ! kill -0 $(pidof urxvtd) &>/dev/null; then 
   urxvtd -q -o -f || { echo "Error launching urxvtd : $!"; exit 2; };
 fi
@@ -119,8 +119,13 @@ fi
 
 currentWinID=$(printf "0x%x" "$(xprop -root _NET_ACTIVE_WINDOW | awk -F"# " '{print $2}')")
 
-[[ $qtermWinID = $currentWinID ]] && isCurrentWindow=1
+if [[ $qtermWinID = $currentWinID ]]; then
+  isCurrentWindow=1
+fi
 
+if (($# == 0)); then
+  set -- toggle
+fi
 
 for op in "$@"; do
   case "$op" in
@@ -141,6 +146,7 @@ for op in "$@"; do
     hide)
       wmctrl -i -r "$qtermWinID" -b add,hidden
       wmctrl -i -r "$qtermWinID" -b add,skip_taskbar
+      wmctrl -i -r "$qtermWinID" -T qterm   # set its name; placed here as an optimization.
     ;;
 
     skip_taskbar)
@@ -175,7 +181,7 @@ for op in "$@"; do
       wmctrl -i -r "$qtermWinID" -b toggle,fullscreen
     ;;
 
-    *) # disregard parameter and default to emulating toggle.
+    *) # disregard parameter and default to toggle.
       if [[ $isCurrentWindow = 1 ]]; then
         exec "$0" hide
       else
