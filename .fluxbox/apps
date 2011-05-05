@@ -1,5 +1,5 @@
 [app] (name=gvim) (class=Gvim)
-  [Dimensions]	{947 938}
+  [Dimensions]	{830 938}
   [Close]	{yes}
 [end]
 [app] (name=aqualung) (class=Aqualung)
