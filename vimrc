@@ -27,7 +27,7 @@ set cmdheight=2             " Set command height to 2 to avoid netrw pains
 set report=1                " Always report changes
 set ruler                   " display cursor position
 set cursorline              " highlight the current line
-" set cursorcolumn            " highlight the current column
+set cursorcolumn            " highlight the current column
 set showcmd                 " show command-in-progress
 set showmode                " mode shown
 set novisualbell            " no visual bell 
@@ -35,7 +35,7 @@ set title                   " do set the xterm title (see 'titleold', set below)
 
 set foldcolumn=2            " no fold column
 set foldlevelstart=0        " start with all folds closed
-set foldmethod=syntax       " Syntax highlighting items specify folds.
+set modeline                " enable modelines contra debian
 
 set formatoptions=r         " r - re-insert comment leader on newline
 set terse                   " add 's' to 'shortmess'
@@ -347,9 +347,11 @@ nnoremap <silent> <leader>sp          :set spell!<cr>
 nnoremap          <leader>ta          :tabs<cr>:normal gt<Left><Left>
 nnoremap <silent> <leader>tc          :tabnew<cr>
 nnoremap <silent> <leader>td          :tabclose<cr>
-nnoremap          <leader>te          :ls<cr>:tabedit <C-R>=expand('%:h').'/'<CR>
+nnoremap          <leader>te          :ls<cr>:tabedit #
 nnoremap          <leader>tf          :tabfind **/*
 nnoremap <silent> <leader>th          :tabprevious<cr>
+nnoremap <silent> <leader>tj          :tablast<cr>
+nnoremap <silent> <leader>tk          :tabfirst<cr>
 nnoremap <silent> <leader>tl          :tabnext<cr>
 nnoremap <silent> <leader>tm          :tabmove<cr>
 nnoremap <silent> <leader>tp          :tabprevious<cr><cr>

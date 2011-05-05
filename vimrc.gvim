@@ -1,15 +1,21 @@
-set guioptions-=T
+set guioptions-=T   " Remove toolbar, menubar
 " set guioptions-=m
 set guioptions+=i
 set guioptions+=a
 set guioptions+=g
 set guioptions+=t
+set guioptions+=c
 
 set guifont=Bitstream\ Vera\ Sans\ Mono\ 11
 
-" set background=light
 colorscheme koehler
+set background=dark
 
-autocmd BufWritePost .gvimrc source ~/.gvimrc
+" autocmd BufWritePost .gvimrc source ~/.gvimrc
 
-set visualbell
+highlight Folded        guibg=#1f1f1f guifg=blue
+highlight FoldColumn    guibg=#1f1f1f guifg=white
+
+highlight CursorLine    guibg=#0c0c0c
+highlight CursorColumn  guibg=#0c0c0c
+
