@@ -1,3 +1,5 @@
+" vim: filetype=vim
+
 :js <<EOF
 $ = function (n) { return document.getElementById(n); }
 EOF
@@ -49,6 +51,11 @@ cmap <C-l> <Esc>:js $("urlbar").select()<CR>
 " imap <C-w> <Esc>:quit<CR>
 " imap <C-t> <Esc>:tabnew<CR>
 
+noremap <BS>  <C-o>
+
+set mapleader=","
+nnoremap <leader>\'   :b 
+nnoremap <leader>ls   :dialog pageinfo 
 
 " mswin.vimp - mappings to make copy/paste in Vimperator behave like Windows
 " Maintainer: Doug Kearns <dougkearns@gmail.com>
@@ -84,7 +91,7 @@ inoremap <C-z> <C-v><C-z>
 inoremap <C-y> <C-v><C-y>
 
 
-:autocmd Fullscreen .* :javascript $("status-bar").style.visibility = "visible";<CR>
+" :autocmd Fullscreen .* :javascript $("status-bar").style.visibility = "visible";<CR>
 
 " " next and prev to increment/decrement the last number in the URL
 " :js <<EOF
