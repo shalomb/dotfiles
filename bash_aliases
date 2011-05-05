@@ -255,65 +255,10 @@ function  dirs () {
   fi
 }
 
-function  calc () { 
-  if [[ -n "$@" ]]; then
-    perl -le '$_=join"",@ARGV; y/[]/()/; $,=" = ",print $_,eval;' "$@";
-
-  elif [[ "$CV" = "eval" ]]; then 
-    perl -MTerm::ReadLine -e '
-      $|++; $t=new Term::ReadLine "calc";
-      while( defined( $_ = $t->readline(q|> |) ) ) {
-        $_ = eval $_;
-        $@ and warn $@ or print "$_\n";
-      }'
-
-  elif [[ -n "$CV" ]]; then 
-    perl -le 'print "$ENV{CV} => " . eval "+$ENV{CV}"'
-
-  else
-    if [[ -t 0 ]]; then
-      [[ -z $CF ]] && tmp="$TMP/$USER.calc" || tmp="$CF";
-      [[ -z $CA || ! -e $tmp ]] && $EDITOR $tmp;
-    else
-      tmp=$(mktemp "$TMP"/calc.$$.XXXXXX)
-      cat "$@" > $tmp
-    fi
-
-    perl -0777 -lpe '
-        s/(?<!\\|\;)\s*\n+\s*/; /mg;
-        $_ = "$_ # = " . eval " $_ ";
-      ' <$tmp;
-      echo;
-
-    [[ -t 0 ]] || rm -rf "$tmp"
-  fi
-}
-
 function  sendkey () {
     if [[ -n $1 ]]; then
         ssh "$1" 'test -d ~/.ssh || mkdir -p ~/.ssh; cat ->> ~/.ssh/authorized_keys' < ~/.ssh/id_rsa.pub
     fi
-}
-
-function  tips () {
-set -x
-  local files;
-  local infodir=~/Desktop/tips/;
-
-  if [[ -z $1 ]]; then set -- "$infodir"; fi
-  
-  for f; do files+=( "$infodir"/*"$f"* ); done
-  #files=(${files[@]:1})
-  echo "${files[@]}"
-
-  cd "$infodir";
-  if [[ ! -e $files ]]; then
-    vim -p "${files[@]//\*/}"
-  else
-    less "${files[@]}"
-  fi
-  cd "$OLDPWD";
-  set +x
 }
 
 function  reset_screen () {
