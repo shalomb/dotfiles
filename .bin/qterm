@@ -6,7 +6,7 @@
 #   qterm - lighweight {quick,quake} console.
 #
 # SYNOPSIS
-#   qterm
+#   qterm [toggle]
 #
 #   qterm [ toggle | show | hide | shade | raise |
 #           lower | fullscreen | max_horz | max_vert ]
