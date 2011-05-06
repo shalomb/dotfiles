@@ -73,7 +73,7 @@ set linebreak               " soft-break at non-word characters
 set nolist                  " soft-wrap seems to play up if list is set
 set splitright              " create new splits to the right of the current window
 
-set scrolloff=2             " always keep 2 lines from top/bottom margin
+set scrolloff=2             " always keep 2 lines in view at top/bottom margin
 set autoread                " autoload file when modified externally
 set hidden                  " mark modified buffers hidden automatically
 
