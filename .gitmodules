@@ -70,9 +70,6 @@
 [submodule "bundle/manpageview"]
 	path = bundle/manpageview
 	url = https://github.com/vim-scripts/ManPageView.git
-[submodule "bundle/markdown"]
-	path = bundle/markdown
-	url = https://github.com/vim-scripts/Markdown.git
 [submodule "bundle/perforce"]
 	path = bundle/perforce
 	url = https://github.com/vim-scripts/perforce.git
@@ -97,3 +94,9 @@
 [submodule "bundle/genutils"]
 	path = bundle/genutils
 	url = https://github.com/vim-scripts/genutils.git
+[submodule "bundle/vimoutliner"]
+	path = bundle/vimoutliner
+	url = https://github.com/vimoutliner/vimoutliner.git
+[submodule "bundle/markdown"]
+	path = bundle/markdown
+	url = https://github.com/vim-scripts/Markdown.git

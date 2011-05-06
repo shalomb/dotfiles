@@ -14,11 +14,12 @@ set more                    " page on extended output
 set backupdir=/tmp          " put backups in /tmp
 set backupdir-=.            " ...and not in cwd
 
-" set background=light       " vim has a dark background when in the console
+set t_Co=256
+set background=light       " vim has a dark background when in the console
 set hidden                  " hide, don't close, undisplayed buffers
 set history=256             " keep 50 lines of command history
-set laststatus=2            " always show status line
 
+set laststatus=2            " always show status line
 set statusline=%<%9*%F\ %*%M%r\ %h%Y%w\ %{&ff}\ %=%-14.(%l/%L,%c%V\ (%P)%)\ \ %o,0x%O\ \ %b,0x%B\ \ \ %N,%n 
 highlight User9 guifg=red
 
@@ -26,8 +27,6 @@ set shortmess=fimnrwxatIWO  " Get rid of most messages
 set cmdheight=2             " Set command height to 2 to avoid netrw pains
 set report=1                " Always report changes
 set ruler                   " display cursor position
-set cursorline              " highlight the current line
-set cursorcolumn            " highlight the current column
 set showcmd                 " show command-in-progress
 set showmode                " mode shown
 set novisualbell            " no visual bell 
@@ -74,7 +73,7 @@ set linebreak               " soft-break at non-word characters
 set nolist                  " soft-wrap seems to play up if list is set
 set splitright              " create new splits to the right of the current window
 
-set scrolloff=2             " keep cursor in middle of screen
+set scrolloff=2             " always keep 2 lines from top/bottom margin
 set autoread                " autoload file when modified externally
 set hidden                  " mark modified buffers hidden automatically
 

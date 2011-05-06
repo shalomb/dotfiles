@@ -11,11 +11,17 @@ set guifont=Bitstream\ Vera\ Sans\ Mono\ 11
 colorscheme koehler
 set background=dark
 
-" autocmd BufWritePost .gvimrc source ~/.gvimrc
+set cursorline              " highlight the current line
+set cursorcolumn            " highlight the current column
 
 highlight Folded        guibg=#1f1f1f guifg=blue
 highlight FoldColumn    guibg=#1f1f1f guifg=white
 
 highlight CursorLine    guibg=#0c0c0c
 highlight CursorColumn  guibg=#0c0c0c
+
+highlight Pmenu         guibg=#2f2f2f
+highlight PmenuSel      guibg=#3f3f3f gui=bold
+
+" autocmd BufWritePost .gvimrc source ~/.gvimrc
 
