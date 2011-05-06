@@ -1,10 +1,10 @@
-set guioptions-=T   " Remove toolbar, menubar
-" set guioptions-=m
-set guioptions+=i
-set guioptions+=a
-set guioptions+=g
-set guioptions+=t
-set guioptions+=c
+set guioptions-=T   " Remove toolbar
+set guioptions-=m   " remove menubar
+set guioptions+=i   " use the Vim icon
+set guioptions+=a   " own global selection in visual mode
+set guioptions+=g   " grey-out not hide menu items
+set guioptions+=t   " allow tearoffs in menus
+set guioptions+=c   " use console dialogs for questions
 
 set guifont=Bitstream\ Vera\ Sans\ Mono\ 11
 
@@ -22,6 +22,8 @@ highlight CursorColumn  guibg=#0c0c0c
 
 highlight Pmenu         guibg=#2f2f2f
 highlight PmenuSel      guibg=#3f3f3f gui=bold
+
+highlight statusline    guibg=#cfcfcf guifg=#4f4f2f
 
 " autocmd BufWritePost .gvimrc source ~/.gvimrc
 
