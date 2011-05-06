@@ -2,7 +2,9 @@
 
 use strict;
 use warnings;
+
 use bignum qw[hex oct e PI bexp bpi];
+use Math::Trig;
 
 use Data::Dumper;
   sub d { Dumper @_ }
