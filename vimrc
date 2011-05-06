@@ -20,7 +20,7 @@ set hidden                  " hide, don't close, undisplayed buffers
 set history=256             " keep 50 lines of command history
 
 set laststatus=2            " always show status line
-set statusline=%<%9*%F\ %*%M%r\ %h%Y%w\ %{&ff}\ %=%-14.(%l/%L,%c%V\ (%P)%)\ \ %o,0x%O\ \ %b,0x%B\ \ \ %N,%n 
+set statusline=%<%9*%F\ %*%M%r\ %h%Y%w\ %{&ff},%{&fenc}\ %=%-14.(%l/%L,%c%V\ (%P)%)\ \ %o,0x%O\ \ %b,0x%B\ \ \ %N,%n 
 highlight User9 guifg=red
 
 set shortmess=fimnrwxatIWO  " Get rid of most messages
@@ -82,6 +82,7 @@ filetype detect
 syntax on
 syntax enable               " as per user's definition
 set fileformat=unix         " no CR-LF, just plain newlines
+
 set autoindent              " try and be smart about indenting
 set smartindent             " C like indenting
 set cindent                 " done better
