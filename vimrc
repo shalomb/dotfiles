@@ -20,8 +20,8 @@ set hidden                  " hide, don't close, undisplayed buffers
 set history=256             " keep 50 lines of command history
 
 set laststatus=2            " always show status line
-set statusline=%<%9*%F\ %*%M%r\ %h%Y%w\ %{&ff},%{&fenc}\ %=%-14.(%l/%L,%c%V\ (%P)%)\ \ %o,0x%O\ \ %b,0x%B\ \ \ %N,%n 
-highlight User9 guifg=red
+set statusline=%1*%F\ %*\ %n%a%M%R\ %H%Y%W\ %{&ff},%{&fenc}\ %=%-14.(%l/%L,%c%V\ (%P)%)\ \ %<%o,0x%O\ \ %b,0x%B\ \ \ %N\ 
+highlight User1 guifg=red gui=bold
 
 set shortmess=fimnrwxatIWO  " Get rid of most messages
 set cmdheight=2             " Set command height to 2 to avoid netrw pains
@@ -291,16 +291,16 @@ nnoremap <silent> p                   p`[   " jump back to position after put
 nnoremap <silent> Y                   y$
 nnoremap <silent> z/                  :if AutoHighlightToggle()<Bar>set hlsearch<Bar>endif<CR>
 nnoremap <silent> z!                  :set hlsearch!<cr>
-nnoremap          <leader>'     			:ls<cr>:b<space>
-nnoremap          <leader>"     			:ls<cr>:b<space>
-nnoremap <silent> <leader>[     			:silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
+nnoremap          <leader>'           :ls<cr>:b<space>
+nnoremap          <leader>"           :ls<cr>:b<space>
+nnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
 nnoremap <silent> <leader><space>     :edit #<cr>
-nnoremap <silent> <leader><Tab> 			<C-w><C-w>
+nnoremap <silent> <leader><Tab>       <C-w><C-w>
 
 nnoremap <silent> <leader>a           :edit #<cr>
 nnoremap <silent> <leader>A           :execute "set titlestring=".input("Set window title to: ")<cr>
 nnoremap <silent> <leader><C-a>       :edit #<cr>
-nnoremap <silent> <leader>c     			:new<cr>:only<cr>
+nnoremap <silent> <leader>c           :new<cr>:only<cr>
 nnoremap          <leader>e           :edit <C-R>=expand('%:h').'/'<CR>
 nnoremap          <leader>f           :CommandT<cr>
 nnoremap          <leader>ba          :ls<cr>:b<space>
@@ -324,24 +324,24 @@ nnoremap <silent> <leader>bk          :bfirst<cr>
 nnoremap <silent> <leader>bl          :bnext<cr>
 nnoremap          <leader>bs          :ls<cr>:vsplit #
 nnoremap          <leader>bS          :ls<cr>:split #
-nnoremap          <leader>?     			:help 
+nnoremap          <leader>?           :help 
 nnoremap <silent> <leader>,           :edit #<cr>
-nnoremap <silent> <leader>g     			:silent set visualbell!<cr>
+nnoremap <silent> <leader>g           :silent set visualbell!<cr>
 nnoremap <silent> <leader>lb          :LustyBufferExplorer<cr>
 nnoremap <silent> <leader>lF          :LustyFilesystemExplorer<cr>
 nnoremap <silent> <leader>lf          :LustyFilesystemExplorerFromHere<cr>
 nnoremap <silent> <leader>lg          :LustyBufferGrep<cr>
-nnoremap <silent> <leader>l     			:redraw<cr>
-nnoremap <silent> <leader>m     			g<  " last set of messages
-" nnoremap <silent> <leader>>     			:new /tmp/exchange<cr>ggP`]a<cr><Esc>"_dGgg:w!<cr> " :close<cr>
-" nnoremap <silent> <leader><     			:new ~/.tmp/exchange<cr>ggyG<Esc>:w!<cr>:close<cr>
+nnoremap <silent> <leader>l           :redraw<cr>
+nnoremap <silent> <leader>m           g<  " last set of messages
+" nnoremap <silent> <leader>>           :new /tmp/exchange<cr>ggP`]a<cr><Esc>"_dGgg:w!<cr> " :close<cr>
+" nnoremap <silent> <leader><           :new ~/.tmp/exchange<cr>ggyG<Esc>:w!<cr>:close<cr>
 nnoremap <silent> <leader>>           :write! ~/.tmp/exchange<cr>
-nnoremap <silent> <leader><     			:redir @t<cr>:read ~/.tmp/exchange<cr>:redir END<cr>
-nnoremap <silent> <leader>nh     			:noh<cr>
+nnoremap <silent> <leader><           :redir @t<cr>:read ~/.tmp/exchange<cr>:redir END<cr>
+nnoremap <silent> <leader>nh          :noh<cr>
 nnoremap <silent> <leader>P           "+gP      "paste
-nnoremap <silent> <leader>Q     			:only<cr>
-nnoremap <silent> <leader>r     			:set wrap!<cr>
-nnoremap <silent> <leader>S     			:new<cr>
+nnoremap <silent> <leader>Q           :only<cr>
+nnoremap <silent> <leader>r           :set wrap!<cr>
+nnoremap <silent> <leader>S           :new<cr>
 nnoremap <silent> <leader>sa          zg  " add word to dict
 nnoremap <silent> <leader>sp          :set spell!<cr>
 nnoremap          <leader>ta          :tabs<cr>:normal gt<Left><Left>
@@ -376,6 +376,6 @@ vnoremap          <leader>#"          :s/^/" /<cr>    " vim-type comments
 vnoremap          <leader>#//         :s@^@\/\/ @<cr> " c-type comments
 vnoremap          <leader>v           :vimgrep <c-r>=expand('<cword>') . ' **/*' <cr>
 vnoremap           <C-S>              <C-C>:update<CR>
-vnoremap <silent> <leader>[     			:silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
+vnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
 
 
