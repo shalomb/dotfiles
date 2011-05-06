@@ -1,0 +1,9 @@
+! Swap the CAPS and Escape keys around.
+! http://vim.wikia.com/wiki/Map_caps_lock_to_escape_in_XWindows
+
+keycode 66 = Caps_Lock
+keycode 9 = Escape
+remove Lock = Caps_Lock
+add Lock = Escape
+keycode 9 = Caps_Lock
+keycode 66 = Escape
