@@ -90,8 +90,11 @@ set copyindent              " make autoindent use the same characters to indent
 set nojoinspaces      
 
 set showmatch               " show matching braces, parantheses, brackets, etc
-set matchpairs+=<:>         " show and % jump matching angle brackets
-set matchpairs+==:;         "                          variable assignments, etc
+set matchpairs+=<:>         " show and % jump matching brackets
+set matchpairs+=(:)
+set matchpairs+={:}
+set matchpairs+=[:]
+set matchpairs+==:;         " variable assignments, etc
 set matchtime=5             " Show match for 0.2 sec;
 set showcmd                 " show input command??;
 
@@ -99,6 +102,8 @@ set pastetoggle=<F11>
 
 set spelllang=en_gb
 set spellfile=~/.vim/spell/en.utf-8.add
+set dictionary+=/usr/share/dict/words
+set complete-=k             " disable dictionary completion
 
 set iskeyword+=:
 
@@ -272,6 +277,7 @@ let mapleader = ","
 cnoremap <C-$>                        <End>
 cnoremap <C-^>                        <Home>
 cnoremap %%                           <C-R>=expand('%:h').'/'<CR>
+cnoremap w!!                          %!SUDO_ASKPASS=$(which ssh-askpass) sudo -A tee % > /dev/null
 
 inoremap <A-C-Left>                   <esc>:tabprevious<cr>
 inoremap <A-C-Right>                  <esc>:tabnext<cr>
@@ -283,8 +289,6 @@ nnoremap          .                   .`[
 nnoremap          <A-C-Left>          <esc>:tabprevious<cr>
 nnoremap          <A-C-Right>         <esc>:tabnext<cr>
 nnoremap          <F2>                :NERDTreeToggle<CR>
-nnoremap          <F8>                :!xdg-open %:p:h<cr> " open $PWD
-nnoremap          <F9>                :!xdg-open %:p<cr>
 nnoremap <silent> <C-Tab>             <C-W><C-W>    " control-tab to next window
 nnoremap <silent> P                   P`[   " jump back to position after put
 nnoremap <silent> p                   p`[   " jump back to position after put
@@ -296,7 +300,6 @@ nnoremap          <leader>"           :ls<cr>:b<space>
 nnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
 nnoremap <silent> <leader><space>     :edit #<cr>
 nnoremap <silent> <leader><Tab>       <C-w><C-w>
-
 nnoremap <silent> <leader>a           :edit #<cr>
 nnoremap <silent> <leader>A           :execute "set titlestring=".input("Set window title to: ")<cr>
 nnoremap <silent> <leader><C-a>       :edit #<cr>
@@ -304,7 +307,7 @@ nnoremap <silent> <leader>c           :new<cr>:only<cr>
 nnoremap          <leader>e           :edit <C-R>=expand('%:h').'/'<CR>
 nnoremap          <leader>f           :CommandT<cr>
 nnoremap          <leader>ba          :ls<cr>:b<space>
-nnoremap          <leader>be          :LustyBufferExplorer<cr>
+nnoremap          <leader>be          :CommandTBuffer<cr>
 nnoremap          <leader>bg          :LustyBufferGrep<cr>
 nnoremap <silent> <leader>b0          :b 0<cr>
 nnoremap <silent> <leader>b1          :b 1<cr>
@@ -327,6 +330,8 @@ nnoremap          <leader>bS          :ls<cr>:split #
 nnoremap          <leader>?           :help 
 nnoremap <silent> <leader>,           :edit #<cr>
 nnoremap <silent> <leader>g           :silent set visualbell!<cr>
+" lusty-explorer.vim:1760
+" VIM::command "silent! topleft 1split #{@title}"
 nnoremap <silent> <leader>lb          :LustyBufferExplorer<cr>
 nnoremap <silent> <leader>lF          :LustyFilesystemExplorer<cr>
 nnoremap <silent> <leader>lf          :LustyFilesystemExplorerFromHere<cr>
@@ -338,6 +343,14 @@ nnoremap <silent> <leader>m           g<  " last set of messages
 nnoremap <silent> <leader>>           :write! ~/.tmp/exchange<cr>
 nnoremap <silent> <leader><           :redir @t<cr>:read ~/.tmp/exchange<cr>:redir END<cr>
 nnoremap <silent> <leader>nh          :noh<cr>
+nnoremap <silent> <leader>oh          :help <C-r><C-a><cr>
+nnoremap <silent> <leader>od          :Vexplore<cr>
+nnoremap <silent> <leader>oD          :!xdg-open %:h<cr>          
+nnoremap <silent> <leader>of          :!xdg-open %:p<cr>
+nnoremap <silent> <leader>ovk         :vsplit ~/.vimrc<cr>/keybindings<cr>zt
+nnoremap <silent> <leader>otk         :vsplit ~/.tmux.conf<cr>/keybindings<cr>zt
+nnoremap <silent> <leader>ofk         :vsplit ~/.fluxbox/keys<cr>
+" nnoremap <silent> <leader>oh          "zyw:execute ":help ".@z.""<cr>
 nnoremap <silent> <leader>P           "+gP      "paste
 nnoremap <silent> <leader>Q           :only<cr>
 nnoremap <silent> <leader>r           :set wrap!<cr>
@@ -350,6 +363,8 @@ nnoremap <silent> <leader>td          :tabclose<cr>
 nnoremap          <leader>te          :ls<cr>:tabedit #
 nnoremap          <leader>tf          :tabfind **/*
 nnoremap <silent> <leader>th          :tabprevious<cr>
+nnoremap          <leader>tips        :cd ~/Desktop/tips<cr>:CommandTFlush<cr>:CommandT<cr>
+" nnoremap          <leader>tips        :!(cd ~/Desktop/tips/; find * -type f \| column)<cr>:vsplit ~/Desktop/tips/
 nnoremap <silent> <leader>tj          :tablast<cr>
 nnoremap <silent> <leader>tk          :tabfirst<cr>
 nnoremap <silent> <leader>tl          :tabnext<cr>
@@ -358,6 +373,7 @@ nnoremap <silent> <leader>tp          :tabprevious<cr><cr>
 nnoremap <silent> <leader>tx          :tabdo<space>
 nnoremap <silent> <leader>t^          :tabfirst<cr>
 nnoremap <silent> <leader>t$          :tablast<cr>
+nnoremap <silent> <leader>uv          :!x-terminal-emulator -e urlview % <cr>
 nnoremap <silent> <leader>\|          :vnew<cr>
 nnoremap <silent> <leader>vg          :vimgrep /<c-r>=expand('<cword>') . '/j **/*' <cr>
 nnoremap          <leader>wr          :update<cr>
