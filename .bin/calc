@@ -3,9 +3,6 @@
 use strict;
 use warnings;
 
-use bignum qw[hex oct e PI bexp bpi];
-use Math::Trig;
-
 use Data::Dumper;
   sub d { Dumper @_ }
 
@@ -18,7 +15,7 @@ use Term::ReadLine;
 local $|; $|++;
 local $\ = "\n";
 
-
+my $tmpfile = fsc($ENV{TMP}, 'calc');
 my (@s, @m, $l, $result);  # result stack;
 
 if (scalar @ARGV) {
@@ -31,11 +28,14 @@ else {
   my $term = Term::ReadLine->new("calc");
   while( defined( local $_ = $term->readline(q|> |) ) ) {
 
-    if (/^\s*q|quit\s*$/ix) { # quit
-      exit
+    if (/^\s*d\s+(.*)$/) {
+      print Dumper(eval $1); next;
+    }
+    elsif (/^\s*m\s*$/ix) { # memorize result
+      push @m, $result;
+      next;
     }
     elsif (/^\s*v\s*/ix) { # open the editor
-      my $tmpfile = fsc($ENV{TMP}, 'calc');
 
       system {'editor'} 'editor', $tmpfile;
 
@@ -45,18 +45,59 @@ else {
         local $/ = undef;
         <$fh>;
       };
+      if (/^\s*$/s) {
+        print "Error; Nothing to eval.";
+        next;
+      }
 
       print ((" ", join "\n ", split /\n+/, $_), "\n");
     } 
-    elsif (/^\s*m\s*$/ix) { # memorize result
-      push @s, $result;
+    elsif (/^\s*q|quit\s*$/ix) { # quit
+      exit
+    }
+    elsif (/^\s*h|help\s*$/) {
+      print <<"EOHELP";
+ d var    - Dump contents of var.
+ m        - Memorize last result. Use 'd \@m' to view stack.
+ v        - Launch the editor against `$tmpfile' and eval
+            contents once editing has finished.
+ lm       - <Mnemonic: Load Modules>; use 'bignum', 'Math::Trig'
+ lc       - <Mnemonic: Load Constants>; Load some constants.
+ q|quit   - quit.
+ h|help   - launch this message.
+EOHELP
+
+      next;
+    } elsif (/^\s*lm\s*$/) {
+      eval '
+        use bignum qw[hex oct e PI bexp bpi];
+        use Math::Trig;
+        use Math::Complex;
+      ';
+      print $@ if $@; next;
+    }
+    elsif (/^\s*lc\s*$/) {
+      eval '
+        use Math::BigFloat qw[e PI]
+      ';
+      my %consts = (
+        C0 => [ 0.621, "Kilometer-to-mile conversion factor" ],
+        C1 => [ 0.3937007, "Centimeter-to-inch conversion factor" ],
+        C2 => [ 57.295779513, "Degrees in a Radian" ],
+      );
+      no strict 'refs';
+      for (keys %consts) {
+        printf $_ $consts{$_}->[0];
+        *{$_} = sub { $consts{$_}->[0] };
+      }
       next;
     }
 
     {
-      no strict;
-      local $, = " ";
-      $result = eval $_;
+      { no strict;
+        local $, = " ";
+        $result = eval $_;
+      }
 
       if ($@) {
         warn $@ 
@@ -66,7 +107,8 @@ else {
         $l = $s[$#s];
         print "\$s[$#s] = $result\n";
       }
-    }
+    } # end main
+
   }
 }
 
@@ -121,5 +163,3 @@ while ( defined ($_ = $term->readline($prompt)) ) {
     print $OUT $res, "\n" unless $@;
     $term->addhistory($_) if /\S/;
 }
-
-
