@@ -52,7 +52,7 @@ if has("folding")
       " note trailing space on next line
       setlocal fillchars+=fold:\ 
     elseif !exists('b:foldpat') || b:foldpat==0
-      let l:foldtext = ' '.(v:foldend-v:foldstart).' lines folded'.v:folddashes.'|'
+      let l:foldtext = ' '.(v:foldend-v:foldstart).' lines'.v:folddashes.'|'
       let l:endofline = (&textwidth>0 ? &textwidth : 80)
       let l:linetext = strpart(getline(v:foldstart),0,l:endofline-strlen(l:foldtext))
       let l:align = l:endofline-strlen(l:linetext)
