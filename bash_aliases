@@ -37,8 +37,9 @@ function  nohup () { $(type -p nohup) "$@" &> "$(mktemp "$TMP"/.nohup.$$.XXXXXX)
 alias     ..='cd ..'
 alias     ...='cd ../..'
 alias     ....='cd ../../..'
-
 alias     cd..='cd ..'
+alias     cd...='cd ../..'
+
 alias     cls='clear'
 
 alias     e='$EDITOR'
@@ -63,6 +64,8 @@ function  f () { find . -name "$@" ; }
 alias grep='grep  --colour=auto'
 alias egrep='egrep --colour=auto'
 alias g='egrep --colour=auto'
+
+alias gvim='command gvim --remote-silent'
 
 alias h='fc -l'
 alias j='jobs -l'
@@ -127,7 +130,7 @@ function  docbrowse   { find /usr/local/share/ -type f -name "*$@*" | $PAGER; }
 function  help () {  builtin help "$@" | $PAGER ; }
 function  pathgrep () {  perl -le 'print for grep /$ARGV[0]/, map { glob "$_/*" } split /:/, $ENV{PATH}' "$1"; }
 
-function  lif  ()     { [[ -n "$2" ]] && egrep -Rsl $@ || egrep -sl $@ * ; }
+function  lif  ()     { if [[ -n "$2" ]]; then egrep -Rsl "$@"; else egrep -sl "$@" *; fi }
 
 function  man         { LESS= /usr/bin/man -P $PAGER $@; }
 function  manbrowse   { locate \/man\/ | grep "$1" | $PAGER; }
@@ -167,18 +170,6 @@ function  press () {
   tar cf - "$@" | bzip2 -9v > "$archive.tbz" && stat -c "%n  %s"  "$archive.tbz";
 }
 
-function  _gvim  ()  {
-  local GVIM=$(type -p gvim)
-  if ! $($GVIM --serverlist | grep -iq "^foo$"); then
-    $GVIM --servername "foo"
-  else
-    $GVIM --servername "foo" --remote-send "<ESC>:tabnew<CR>"
-  fi
-  if [[ -n "$@" ]]; then
-    $GVIM --servername "foo" --remote "$@" 2>/dev/null
-  fi
-}
-
 function  trmv  ()   { 
   test -n "$NSTR" || NSTR=' '
   test -n "$NREP" || NREP='_'
@@ -189,7 +180,7 @@ function  trmv  ()   {
 
 function  noswp ()   {
   test "$@" && DIR="$@" || DIR="."
-  [[ -d "$DIR" ]] && find "$DIR" -maxdepth 1 -iname "*.sw?" -type f -print0 | xargs -0 rm -v;
+  [[ -d "$DIR" ]] && find "$DIR" -maxdepth 1 -iname "*.sw?" -type f -print -delete;
 }
 
 function  setlocale  { printf '\33]701;%s\007' "$@"; }
