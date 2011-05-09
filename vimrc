@@ -360,7 +360,7 @@ nnoremap <silent> <leader>ovk         :vsplit ~/.vimrc<cr>:1;/keybindings<cr>zt
 nnoremap <silent> <leader>otk         :vsplit ~/.tmux.conf<cr>:1;/keybindings<cr>zt
 nnoremap <silent> <leader>ofk         :vsplit ~/.fluxbox/keys<cr>
 " nnoremap <silent> <leader>oh        "zyw:execute ":help ".@z.""<cr>
-nnoremap <silent> <leader>P           "+gP      "paste from |gui-clipboard|
+nnoremap <silent> <leader>P           "+gP      "paste from gui-clipboard
 nnoremap <silent> <leader>Q           :only<cr>
 nnoremap <silent> <leader>r           :set wrap!<cr>
 nnoremap <silent> <leader>S           :new<cr>
