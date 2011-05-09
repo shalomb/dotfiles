@@ -340,24 +340,33 @@ nnoremap <silent> <leader>l           :redraw<cr>
 nnoremap <silent> <leader>m           g<  " last set of messages
 " nnoremap <silent> <leader>>         :new /tmp/exchange<cr>ggP`]a<cr><Esc>"_dGgg:w!<cr> " :close<cr>
 " nnoremap <silent> <leader><         :new ~/.tmp/exchange<cr>ggyG<Esc>:w!<cr>:close<cr>
-nnoremap <silent> <leader>>           :write! ~/.tmp/exchange<cr>
-nnoremap <silent> <leader><           :redir @t<cr>:read ~/.tmp/exchange<cr>:redir END<cr>
-nnoremap <silent> <leader>nh          :set hlsearch!<cr>
-nnoremap <silent> <leader>nl          :set list!<cr>
+nnoremap <silent> <leader>>           :write! $TMP/exchange<cr>
+nnoremap <silent> <leader><           :split  $TMP/exchange<cr>
+nnoremap <silent> <leader>ncl         :set cursorline!    cursorline?<cr>
+nnoremap <silent> <leader>ncc         :set cursorcolumn!  cursorcolumn?<cr>
+nnoremap <silent> <leader>nh          :set hlsearch!      hlsearch?<cr>
+nnoremap <silent> <leader>nl          :set list!          list?<cr>
+nnoremap <silent> <leader>np          :set paste!         paste?<cr>
+nnoremap <silent> <leader>ns          :set spell!         spell?<cr>
+nnoremap <silent> <leader>nw          :set wrap!          wrap?<cr>
+nnoremap <silent> <leader>nt2         :set ts=2 sw=2 et   ts? sw? et?<cr>
+nnoremap <silent> <leader>nt4         :set ts=4 sw=4 et   ts? sw? et?<cr>
+nnoremap <silent> <leader>nt8         :set ts=8 sw=8 et   ts? sw? et?<cr>
 nnoremap <silent> <leader>oh          :help <C-r><C-a><cr>
 nnoremap <silent> <leader>od          :Vexplore<cr>
 nnoremap <silent> <leader>oD          :!xdg-open %:h<cr>          
 nnoremap <silent> <leader>of          :!xdg-open %:p<cr>
-nnoremap <silent> <leader>ovk         :vsplit ~/.vimrc<cr>/keybindings<cr>zt
-nnoremap <silent> <leader>otk         :vsplit ~/.tmux.conf<cr>/keybindings<cr>zt
+nnoremap <silent> <leader>ovk         :vsplit ~/.vimrc<cr>:1;/keybindings<cr>zt
+nnoremap <silent> <leader>otk         :vsplit ~/.tmux.conf<cr>:1;/keybindings<cr>zt
 nnoremap <silent> <leader>ofk         :vsplit ~/.fluxbox/keys<cr>
 " nnoremap <silent> <leader>oh        "zyw:execute ":help ".@z.""<cr>
-nnoremap <silent> <leader>P           "+gP      "paste
+nnoremap <silent> <leader>P           "+gP      "paste from |gui-clipboard|
 nnoremap <silent> <leader>Q           :only<cr>
 nnoremap <silent> <leader>r           :set wrap!<cr>
 nnoremap <silent> <leader>S           :new<cr>
 nnoremap <silent> <leader>sa          zg  " add word to dict
 nnoremap <silent> <leader>sp          :set spell!<cr>
+nnoremap <silent> <leader>sP          :!x-terminal-emulator -e ispell -x -t %<cr>:redraw<cr>
 nnoremap          <leader>ta          :tabs<cr>:normal gt<Left><Left>
 nnoremap <silent> <leader>tc          :tabnew<cr>
 nnoremap <silent> <leader>td          :tabclose<cr>
