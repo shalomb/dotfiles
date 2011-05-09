@@ -338,11 +338,12 @@ nnoremap <silent> <leader>lf          :LustyFilesystemExplorerFromHere<cr>
 nnoremap <silent> <leader>lg          :LustyBufferGrep<cr>
 nnoremap <silent> <leader>l           :redraw<cr>
 nnoremap <silent> <leader>m           g<  " last set of messages
-" nnoremap <silent> <leader>>           :new /tmp/exchange<cr>ggP`]a<cr><Esc>"_dGgg:w!<cr> " :close<cr>
-" nnoremap <silent> <leader><           :new ~/.tmp/exchange<cr>ggyG<Esc>:w!<cr>:close<cr>
+" nnoremap <silent> <leader>>         :new /tmp/exchange<cr>ggP`]a<cr><Esc>"_dGgg:w!<cr> " :close<cr>
+" nnoremap <silent> <leader><         :new ~/.tmp/exchange<cr>ggyG<Esc>:w!<cr>:close<cr>
 nnoremap <silent> <leader>>           :write! ~/.tmp/exchange<cr>
 nnoremap <silent> <leader><           :redir @t<cr>:read ~/.tmp/exchange<cr>:redir END<cr>
-nnoremap <silent> <leader>nh          :noh<cr>
+nnoremap <silent> <leader>nh          :set hlsearch!<cr>
+nnoremap <silent> <leader>nl          :set list!<cr>
 nnoremap <silent> <leader>oh          :help <C-r><C-a><cr>
 nnoremap <silent> <leader>od          :Vexplore<cr>
 nnoremap <silent> <leader>oD          :!xdg-open %:h<cr>          
@@ -350,7 +351,7 @@ nnoremap <silent> <leader>of          :!xdg-open %:p<cr>
 nnoremap <silent> <leader>ovk         :vsplit ~/.vimrc<cr>/keybindings<cr>zt
 nnoremap <silent> <leader>otk         :vsplit ~/.tmux.conf<cr>/keybindings<cr>zt
 nnoremap <silent> <leader>ofk         :vsplit ~/.fluxbox/keys<cr>
-" nnoremap <silent> <leader>oh          "zyw:execute ":help ".@z.""<cr>
+" nnoremap <silent> <leader>oh        "zyw:execute ":help ".@z.""<cr>
 nnoremap <silent> <leader>P           "+gP      "paste
 nnoremap <silent> <leader>Q           :only<cr>
 nnoremap <silent> <leader>r           :set wrap!<cr>
@@ -364,7 +365,7 @@ nnoremap          <leader>te          :ls<cr>:tabedit #
 nnoremap          <leader>tf          :tabfind **/*
 nnoremap <silent> <leader>th          :tabprevious<cr>
 nnoremap          <leader>tips        :cd ~/Desktop/tips<cr>:CommandTFlush<cr>:CommandT<cr>
-" nnoremap          <leader>tips        :!(cd ~/Desktop/tips/; find * -type f \| column)<cr>:vsplit ~/Desktop/tips/
+" nnoremap          <leader>tips      :!(cd ~/Desktop/tips/; find * -type f \| column)<cr>:vsplit ~/Desktop/tips/
 nnoremap <silent> <leader>tj          :tablast<cr>
 nnoremap <silent> <leader>tk          :tabfirst<cr>
 nnoremap <silent> <leader>tl          :tabnext<cr>
