@@ -9,7 +9,7 @@ set guioptions+=c   " use console dialogs for questions
 set guifont=Bitstream\ Vera\ Sans\ Mono\ 11
 
 colorscheme koehler
-set background=dark
+set background=light
 
 set cursorline              " highlight the current line
 set cursorcolumn            " highlight the current column
@@ -27,3 +27,5 @@ highlight statusline    guibg=#cfcfcf guifg=#4f4f2f
 
 " autocmd BufWritePost .gvimrc source ~/.gvimrc
 
+" keybindings
+nnoremap <silent> <leader>nm          :if &guioptions =~ 'm'<bar>  set guioptions-=m <bar>else<bar>  set guioptions+=m<bar>endif<cr>
