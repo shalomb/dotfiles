@@ -1,0 +1,23 @@
+#!/bin/bash -x
+
+test -t 0 || exec &> /tmp/"${0##*/}".log
+
+if (( $# == 0 )); then
+  echo "No WM Class passed";
+  exit 2;
+fi
+
+
+if (( $# == 2 )); then
+  if [[ $2 == @(r|-r) ]]; then
+    while read display; do 
+      wid="$( DISPLAY=":$display" wmctrl -lxG | awk '$7 ~ /'"$1"'/{print $1}' )"
+      [[ $wid ]] && wmctrl -i -R "$wid"
+    done < <(ps ef | grep -Eio [D]ISPLAY=[^\ ]* | sort -u | awk -F: '{print $2}')
+  fi
+else
+  wid="$(wmctrl -lxG | awk '$7 ~ /'"$1"'/{print $1}')"
+  [[ $wid ]] && wmctrl -i -R "$wid"
+fi
+
+

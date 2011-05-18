@@ -1,9 +1,0 @@
-table Icon
-  Caption: Desktop
-  Icon: /home/unop/.idesktop/desktop.png
-  Height: 28
-  Width: 28
-  X: 93
-  Y: 542
-  Command[0]: dolphin ~/Desktop
-end

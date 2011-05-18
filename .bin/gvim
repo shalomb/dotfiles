@@ -1,0 +1,10 @@
+#!/bin/bash
+
+unset PATH
+
+. /etc/profile
+
+echo "$PATH"
+
+(( $# == 0)) && set -- ""
+exec gvim --remote-silent "$@"

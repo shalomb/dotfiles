@@ -1,6 +1,4 @@
 [app] (name=gvim) (class=Gvim)
-  [Dimensions]	{812 907}
-  [Close]	{yes}
 [end]
 [app] (name=aqualung) (class=Aqualung)
   [Dimensions]	{711 434}
@@ -18,7 +16,7 @@
   [Close]	{yes}
 [end]
 [app] (name=zim) (class=Zim)
-  [Dimensions]	{266 150}
+  [Dimensions]	{408 221}
   [Position]	(UPPERLEFT)	{1091 113}
   [Close]	{yes}
 [end]
@@ -35,7 +33,7 @@
   [Position]	(UPPERLEFT)	{830 177}
 [end]
 [app] (name=dolphin) (class=Dolphin) (role=Dolphin#1)
-  [Dimensions]	{1680 1026}
+  [Dimensions]	{840 955}
   [Close]	{yes}
 [end]
 [app] (name=Download) (class=Iceweasel) (role=Manager)
@@ -46,10 +44,10 @@
   [Dimensions]	{500 364}
 [end]
 [app] (name=qterm) (class=URxvt)
-  [Dimensions]	{1040 544}
-  [Position]	(UPPERLEFT)	{224 411}
+  [Dimensions]	{1339 724}
+  [Position]	(UPPERLEFT)	{89 148}
   [Shaded]	{no}
-  [Deco]	{TAB}
+  [Deco]	{0x244}
   [Sticky]	{no}
   [Layer]	{8}
   [Close]	{yes}
@@ -57,7 +55,7 @@
 [app] (name=rootterm) (class=URxvt)
   [Dimensions]	{789 417}
   [Position]	(UPPERLEFT)	{65 51}
-  [Deco]	{TAB}
+  [Deco]	{0x244}
   [Hidden]	{yes}
   [Sticky]	{yes}
   [Layer]	{12}
@@ -72,7 +70,7 @@
 [end]
 [app] (name=Wfica) (class=Wfica)
   [Workspace]	{1}
-  [Head]	{1}
+  [Head]	{0}
   [Dimensions]	{1920 1200}
   [Position]	(UPPERLEFT)	{0 -40}
   [Shaded]	{no}
@@ -80,9 +78,14 @@
   [Sticky]	{no}
   [Minimized]	{no}
   [Maximized]	{no}
-  [Fullscreen]	{no}
+  [Fullscreen]	{yes}
   [Jump]	{yes}
   [Layer]	{2}
   [Close]	{yes}
   [Alpha]	{208 224}
+[end]
+[app] (name=wfcmgr) (class=Wfcmgr)
+  [Dimensions]	{840 865}
+  [Position]	(UPPERLEFT)	{1048 266}
+  [Close]	{yes}
 [end]
