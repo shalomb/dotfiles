@@ -397,7 +397,7 @@ vnoremap <silent> <leader>y           "+y   " copy
 vnoremap <silent> <leader>D           "+x   " cut
 vnoremap <silent> <leader>d           "+x   " cut
 vnoremap <silent> <leader>x           "+x   " cut
-vnoremap          z/                  y/<C-R>"<CR> " put selected text in the search buffer
+vnoremap          z/                  y/<C-R>"<CR>gv " put selected text in the search buffer
 vnoremap          <                   <gv   " move cursor to beginning of visual block move
 vnoremap          >                   >gv   " move cursor to the end of a visual block move
 vnoremap          <leader>##          :s/^/# /<cr>    " shell-type comments
