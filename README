@@ -26,14 +26,15 @@ INSTALLATION:
     git submodule add   https://github.com/vimoutliner/vimoutliner.git          bundle/vimoutliner
     git submodule add   https://github.com/vim-scripts/css.vim--Streppone.git   bundle/streppone--css.vim
     git submodule add   https://github.com/vim-scripts/DrawIt.git               bundle/drawit
+    git submodule add   https://github.com/vim-scripts/Gundo.git                bundle/gundo
     git submodule add   https://github.com/vim-scripts/iptables.git             bundle/iptables
     git submodule add   https://github.com/vim-scripts/ManPageView.git          bundle/manpageview
     git submodule add   https://github.com/vim-scripts/Markdown.git             bundle/markdown
+    git submodule add   https://github.com/vim-scripts/matchit.zip.git          bundle/matchit
     git submodule add   https://github.com/vim-scripts/netrw.vim.git            bundle/netrw
     git submodule add   https://github.com/vim-scripts/perforce.git             bundle/perforce
     git submodule add   https://github.com/vim-scripts/perl-mauke.vim.git       bundle/mauke-perl.vim
     git submodule add   https://github.com/vim-scripts/perlprove.vim.git        bundle/perlprove.vim
-    git submodule add   https://github.com/vim-scripts/SearchComplete.git       bundle/SearchComplete
     git submodule add   https://github.com/vim-scripts/sharp-Indent.git         bundle/sharp-indent
     git submodule add   https://github.com/vim-scripts/sharp-Syntax.git         bundle/sharp-indent
     git submodule add   https://github.com/vim-scripts/sharp-Syntax--Rim.git    bundle/fsharp-plugin
