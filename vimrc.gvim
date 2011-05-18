@@ -9,10 +9,10 @@ set guioptions+=c   " use console dialogs for questions
 set guifont=Bitstream\ Vera\ Sans\ Mono\ 11
 
 colorscheme koehler
-set background=light
+set background=dark
 
-set cursorline              " highlight the current line
-set cursorcolumn            " highlight the current column
+set nocursorline              " highlight the current line
+set nocursorcolumn            " highlight the current column
 
 highlight Folded        guibg=#1f1f1f guifg=blue
 highlight FoldColumn    guibg=#1f1f1f guifg=white
@@ -24,6 +24,8 @@ highlight Pmenu         guibg=#2f2f2f
 highlight PmenuSel      guibg=#3f3f3f gui=bold
 
 highlight statusline    guibg=#cfcfcf guifg=#4f4f2f
+highlight Search        guibg=#cc6633 guifg=#040404 gui=bold
+highlight Visual        guibg=#303030 gui=bold
 
 " autocmd BufWritePost .gvimrc source ~/.gvimrc
 
