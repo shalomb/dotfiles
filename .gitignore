@@ -49,6 +49,7 @@ src/
 src/*
 tags
 undo/
+undo*
 undo/*
 viminf*
 viminfo
