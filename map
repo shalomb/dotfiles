@@ -21,39 +21,47 @@ sub make_directory;
 sub make_link;
 sub readlink_f;
 
-my $action = $ARGV[0] // 'add';
+my $action = $ARGV[0] // 'store';
 
-chdir dirname "$0"
-  or die "Error changing directory to dirname($0): $!";
-
-my @globs;
-while (<DATA>) {
-  chomp;
-  push @globs, $_;
+if ($action eq 'expose') {
+  shift @ARGV;
+  for my $file (@ARGV) {
+    :
+  }
 }
-close DATA;
+elsif ($action eq 'store') {
 
-for my $glob ( @globs ) {
+  chdir dirname "$0"
+    or die "Error changing directory to dirname($0): $!";
 
-  for my $file ( my @files = bsd_glob $glob ) {
-      
-    my ($relative_file) = ($file =~ m[^\s*$ENV{HOME}\/(.*)$]);
-    my $realfile = readlink $file // $file;
+  my @globs;
+  while (<DATA>) {
+    chomp;
+    push @globs, $_;
+  }
+  close DATA;
 
-    next unless length $relative_file 
-                and -e $realfile;
+  for my $glob ( @globs ) {
 
-    printf "Committing '%s' as '%s'\n", $file, $relative_file
+    for my $file ( my @files = bsd_glob $glob ) {
+
+      my ($relative_file) = ($file =~ m[^\s*$ENV{HOME}\/(.*)$]);
+      my $realfile = readlink $file // $file;
+
+      next unless length $relative_file 
+        and -e $realfile;
+
+      printf "Committing '%s' as '%s'\n", $file, $relative_file
       if not -e $relative_file;
 
-    if ( -d $realfile ) {
-      make_directory ( $relative_file ) 
+      if ( -d $realfile ) {
+        make_directory ( $relative_file ) 
         if not -d $relative_file;
 
-      find { 
+        find { 
           wanted => sub {
             my ($relative_name) = 
-              ($File::Find::name =~ m[^\s*$ENV{HOME}\/(.*)$]);
+            ($File::Find::name =~ m[^\s*$ENV{HOME}\/(.*)$]);
 
             if ( -l (my $realfile = $File::Find::name) or -f _ ) {
               $realfile = readlink_f $File::Find::name if -l _;
@@ -63,48 +71,50 @@ for my $glob ( @globs ) {
               make_directory( $relative_name );
             }
             else {
-              warn "Not processing '$File::Find::name', possible special file.\n";
+              warn "Not processing '$File::Find::name', 
+                    possible special file.\n";
             }
           }, 
           no_chdir => 1
         }, 
         $realfile;
-    }
+      }
 
-    elsif ( $relative_file =~ m[\/] ) { 
-      make_directory  ( dirname($relative_file) ) 
+      elsif ( $relative_file =~ m[\/] ) { 
+        make_directory  ( dirname($relative_file) ) 
         if not -d dirname($relative_file);
 
-      make_link ( $realfile, $relative_file );
+        make_link ( $realfile, $relative_file );
+      }
+
+      else {
+        make_link ( $realfile, $relative_file );
+      }
     }
 
-    else {
-      make_link ( $realfile, $relative_file );
-    }
   }
-
 }
 
 sub make_directory {
   my $directory = shift;
 
   warn "Error creating directory '$directory': $!\n"
-    if (  not -d $directory           and
-          print "mkdir -p $directory" and
-          not make_path($directory)   and
-          return 1
-        ); 
+  if (  not -d $directory       and
+    print "mkdir -p $directory" and
+    not make_path($directory)   and
+    return 1
+  ); 
 }
 
 sub make_link {
   my ($target, $link) = (@_);
 
   warn "Error creating link '$link' to '$target': $!\n"
-    if (  not -f $link                 and 
-          print "ln '$target' '$link'" and
-          not link $target, $link      and
-          return 1
-        );
+  if (  not -f $link             and 
+    print "ln '$target' '$link'" and
+    not link $target, $link      and
+    return 1
+  );
 
 }
 
