@@ -1,3 +1,7 @@
+[user]
+        name = Shalom Bhooshi
+        email = s.bhooshi@gmail.com
+
 [alias]
   st = status
   ci = commit
