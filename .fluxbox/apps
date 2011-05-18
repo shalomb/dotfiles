@@ -44,8 +44,8 @@
   [Dimensions]	{500 364}
 [end]
 [app] (name=qterm) (class=URxvt)
-  [Dimensions]	{1344 724}
-  [Position]	(UPPERLEFT)	{547 416}
+  [Dimensions]	{1339 724}
+  [Position]	(UPPERLEFT)	{89 148}
   [Shaded]	{no}
   [Deco]	{0x244}
   [Sticky]	{no}
