@@ -65,8 +65,6 @@ alias grep='grep  --colour=auto'
 alias egrep='egrep --colour=auto'
 alias g='egrep --colour=auto'
 
-alias gvim='command gvim --remote-silent'
-
 alias h='fc -l'
 alias j='jobs -l'
 alias p='$PAGER'
