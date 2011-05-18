@@ -13,12 +13,14 @@ set background=dark
 
 set nocursorline              " highlight the current line
 set nocursorcolumn            " highlight the current column
+set colorcolumn=+1            " place a soft margin +1 relative to textwidth
 
 highlight Folded        guibg=#1f1f1f guifg=blue
 highlight FoldColumn    guibg=#1f1f1f guifg=white
 
 highlight CursorLine    guibg=#0c0c0c
 highlight CursorColumn  guibg=#0c0c0c
+highlight ColorColumn   guibg=#1c1c1c
 
 highlight Pmenu         guibg=#2f2f2f
 highlight PmenuSel      guibg=#3f3f3f gui=bold
