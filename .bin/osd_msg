@@ -1,6 +1,25 @@
-#!/bin/sh -x
+#!/bin/bash -x
 
+test -t 0 || exec > "$TMP"/osd_msg.log 2>&1
+
+pidfile="$TMP"/osd_msg.pid
 duration="${osd_msg_duration:-"3"}"
 
-echo "$@" | osd_cat -l 2 -p bottom -o 60 -d "$duration" -A center -c green -s 1 -f "-bitstream-bitstream vera sans-bold-r-normal--19-180-75-75-p-119-*-*" 
+if [[ -f $pidfile ]]; then
+  read -r timestamp duration pid < "$pidfile"
+  echo "[$timestamp] [$duration] [$pid]";
+  current_timestamp="$(date +%s)"
+  if (( (timestamp+duration) > current_timestamp )); then
+    kill "$pid"
+  fi
+fi
+
+echo "$@" | \
+  osd_cat -l 2 -p bottom -o 60 \
+  -d "$duration" -A center -c green \
+  -s 1 \
+  -f "-b&h-lucida-bold-r-normal-sans-24-240-75-75-p-152-iso8859-1" \
+  & pid="$!"
+
+echo "$(date +%s) $duration $pid" > "$pidfile"
 
