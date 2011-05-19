@@ -9,7 +9,7 @@ set guioptions+=c   " use console dialogs for questions
 set guifont=Bitstream\ Vera\ Sans\ Mono\ 11
 
 colorscheme koehler
-set background=dark
+set background=dark           " koehler now looks better 
 
 set nocursorline              " highlight the current line
 set nocursorcolumn            " highlight the current column
