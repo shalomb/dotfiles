@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 test -t 0 || exec > "$TMP"/osd_msg.log 2>&1
 
