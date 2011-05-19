@@ -79,8 +79,8 @@ set hidden                  " mark modified buffers hidden automatically
 
 filetype plugin indent on   " try and guess what type of file
 filetype detect
-syntax on
-syntax enable               " as per user's definition
+syntax enable               " enable syntax highlighting
+syntax on                   " start highlighting
 set fileformat=unix         " no CR-LF, just plain newlines
 
 set autoindent              " try and be smart about indenting
@@ -239,16 +239,6 @@ autocmd BufNewFile,Bufread    *.csv     setfiletype csv
 autocmd FileType perl                   setlocal keywordprg=perldoc\ -T\ -f
                                         " Open_a_Perl_module_from_its_module_name
 " autocmd BufWritePost          .vimrc    source ~/.vimrc
-
-"""" GVim tweaks """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" GUI specific tweaks, incase .gvimrc isn't loaded.
-if has("gui_running")
-  colorscheme koehler
-endif
-
-highlight clear
-highlight Normal ctermbg=black ctermfg=grey
-highlight Search ctermbg=DarkRed ctermfg=Gray
 
 """" Set Viminfo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set viminfo='10,\"100,:256,%,n~/.vim/viminfo
@@ -409,4 +399,12 @@ vnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtu
 
 
 " Stuff to do as late as is possible.
-set background=light       " vim has a dark background when in the console
+"""" GVim tweaks """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" GUI specific tweaks, incase .gvimrc isn't loaded.
+"colorscheme koehler
+
+highlight clear
+highlight Normal ctermbg=black ctermfg=grey
+highlight Search ctermbg=DarkRed ctermfg=Gray
+
+set background=dark       " vim has a dark background when in the console
