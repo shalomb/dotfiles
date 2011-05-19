@@ -248,11 +248,13 @@ endif
 
 highlight clear
 highlight Normal ctermbg=black ctermfg=grey
-highlight Search guibg=DarkRed guifg=Gray ctermbg=DarkRed ctermfg=Gray
+highlight Search ctermbg=DarkRed ctermfg=Gray
+
+"""" Set Viminfo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set viminfo='10,\"100,:256,%,n~/.vim/viminfo
 
 """" Reset Cursor Position """"""""""""""""""""""""""""""""""""""""""""""""""""
 " http://vim.wikia.com/wiki/Restore_cursor_to_file_position_in_previous_editing_session
-set viminfo='10,\"100,:256,%,n~/.vim/viminfo
 
 function! ResCur()
   if line("'\"") <= line("$")
@@ -346,6 +348,7 @@ nnoremap <silent> <leader>ncl         :set cursorline!    cursorline?<cr>
 nnoremap <silent> <leader>ncc         :set cursorcolumn!  cursorcolumn?<cr>
 nnoremap <silent> <leader>nh          :set hlsearch!      hlsearch?<cr>
 nnoremap <silent> <leader>nl          :set list!          list?<cr>
+nnoremap <silent> <leader>nm          :if &guioptions =~ 'm'<bar>  set guioptions-=m <bar>else<bar>  set guioptions+=m<bar>endif<cr>
 nnoremap <silent> <leader>np          :set paste!         paste?<cr>
 nnoremap <silent> <leader>ns          :set spell!         spell?<cr>
 nnoremap <silent> <leader>nw          :set wrap!          wrap?<cr>
@@ -394,7 +397,7 @@ vnoremap <silent> <leader>y           "+y   " copy
 vnoremap <silent> <leader>D           "+x   " cut
 vnoremap <silent> <leader>d           "+x   " cut
 vnoremap <silent> <leader>x           "+x   " cut
-vnoremap          z/                  y/<C-R>"<CR> " put selected text in the search buffer
+vnoremap          z/                  y/<C-R>"<CR>gv " put selected text in the search buffer
 vnoremap          <                   <gv   " move cursor to beginning of visual block move
 vnoremap          >                   >gv   " move cursor to the end of a visual block move
 vnoremap          <leader>##          :s/^/# /<cr>    " shell-type comments
