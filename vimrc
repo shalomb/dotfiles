@@ -405,3 +405,5 @@ vnoremap           <C-S>              <C-C>:update<CR>
 vnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
 
 
+" Stuff to do as late as is possible.
+set background=light       " vim has a dark background when in the console
