@@ -3,25 +3,32 @@
   email  = s.bhooshi@gmail.com
 
 [color]
-  diff         = auto
-  status       = auto
   branch       = auto
+  diff         = auto
+  grep         = auto
   interactive  = auto
+  showbranch   = auto
+  status       = auto
+  ui           = auto
 
 [alias]
-  st    = status
-  ci    = commit
-  br    = branch
-  co    = checkout
-  df    = diff
-  dc    = diff --cached
-  lg    = log -p
-  lol   = log --graph --decorate --pretty=oneline --abbrev-commit
-  lola  = log --graph --decorate --pretty=oneline --abbrev-commit --all
-  ls    = ls-files
-
-# Show files ignored by git:
-  ign   = ls-files -o -i --exclude-standard
+  ammend  = commit --amend -C HEAD
+  br      = branch
+  ci      = commit
+  co      = checkout
+  dc      = diff --cached
+  df      = diff
+  ign     = ls-files -o -i --exclude-standard
+  lg      = log -p
+  lola    = log --graph --decorate --pretty=oneline --abbrev-commit --all
+  lol     = log --graph --decorate --pretty=oneline --abbrev-commit
+  ls      = ls-files
+  pom     = push origin master
+  st      = status
+  tree    = log --graph --oneline --decorate
 
 [github]
   user  = shalomb
+  token = 822bb43c9861d41e965eb83b72d4736d
+
+# vim:filetype=gitconfig:sw=2:ts=2:et
