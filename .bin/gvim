@@ -2,9 +2,7 @@
 
 unset PATH
 
-. /etc/profile
-
-echo "$PATH"
+source /etc/profile &> /dev/null
 
 (( $# == 0)) && set -- ""
 exec gvim --remote-silent "$@"

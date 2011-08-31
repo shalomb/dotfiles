@@ -1,0 +1,16 @@
+# Debian GNU/Linux 5.0 wheezy/Testing
+
+#deb      http://ftp.uk.debian.org/debian/              wheezy                  main contrib non-free
+#deb-src  http://ftp.uk.debian.org/debian/              wheezy                  main contrib non-free
+
+deb       http://mirror.ox.ac.uk/debian                 wheezy                  main contrib non-free
+deb-src   http://mirror.ox.ac.uk/debian                 wheezy                  main contrib non-free
+
+#deb      http://mirror.peer1.net/debian                wheezy                  main contrib non-free
+#deb-src  http://mirror.peer1.net/debian                wheezy                  main contrib non-free
+
+deb       http://security.debian.org/                   wheezy/updates          main contrib non-free
+deb-src   http://security.debian.org/                   wheezy/updates          main contrib non-free
+
+#deb       http://volatile.debian.org/debian-volatile    wheezy/volatile         main contrib non-free
+#deb       http://volatile.debian.org/debian-volatile    wheezy/volatile-sloppy  main contrib non-free
