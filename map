@@ -21,12 +21,40 @@ sub make_directory;
 sub make_link;
 sub readlink_f;
 
-my $action = $ARGV[0] // 'store';
+my $action = +shift // '';
 
 if ($action eq 'expose') {
-  shift @ARGV;
-  for my $file (@ARGV) {
-    :
+  my @globs_to_expose = (@ARGV);
+
+  if (not scalar @globs_to_expose) {
+    warn "Eh, what? You need to specify atleast one file to expose...\n";
+  }
+
+  for my $glob (@globs_to_expose) {
+
+    for my $file ( my @files = bsd_glob $glob ) {
+      if (not -e $file) {
+        warn "File `$file' doesn't exist .. \n";
+        next;
+      }
+      if ($file =~ /^\./) {
+        my $source_dir = getcwd;
+        my $target_dir = glob "~";
+
+        my $source_file = fsc($source_dir, $file);
+        my $target_file = fsc($target_dir, $file);
+        # $source_file =~ s/^$target_dir\///;  # relativize
+
+        make_directory( dirname $target_file )
+          if not -d dirname($target_file);
+
+        make_link( $source_file, $target_file, 1);
+      }
+      else {
+        warn "Alien file `$file', refusing to process.\n";
+      }
+    }
+
   }
 }
 elsif ($action eq 'store') {
@@ -34,12 +62,7 @@ elsif ($action eq 'store') {
   chdir dirname "$0"
     or die "Error changing directory to dirname($0): $!";
 
-  my @globs;
-  while (<DATA>) {
-    chomp;
-    push @globs, $_;
-  }
-  close DATA;
+  my @globs = @ARGV;
 
   for my $glob ( @globs ) {
 
@@ -52,11 +75,11 @@ elsif ($action eq 'store') {
         and -e $realfile;
 
       printf "Committing '%s' as '%s'\n", $file, $relative_file
-      if not -e $relative_file;
+        if not -e $relative_file;
 
       if ( -d $realfile ) {
         make_directory ( $relative_file ) 
-        if not -d $relative_file;
+          if not -d $relative_file;
 
         find { 
           wanted => sub {
@@ -82,7 +105,7 @@ elsif ($action eq 'store') {
 
       elsif ( $relative_file =~ m[\/] ) { 
         make_directory  ( dirname($relative_file) ) 
-        if not -d dirname($relative_file);
+          if not -d dirname($relative_file);
 
         make_link ( $realfile, $relative_file );
       }
@@ -94,27 +117,38 @@ elsif ($action eq 'store') {
 
   }
 }
+else {
+  print <<"EOF";
+
+  $0 [store|expose] file1 file2 ...
+EOF
+}
 
 sub make_directory {
   my $directory = shift;
 
   warn "Error creating directory '$directory': $!\n"
-  if (  not -d $directory       and
-    print "mkdir -p $directory" and
-    not make_path($directory)   and
-    return 1
-  ); 
+    if (  not -d $directory       and
+      print "mkdir -p $directory" and
+      not make_path($directory)   and
+      return 1
+    ); 
 }
 
 sub make_link {
-  my ($target, $link) = (@_);
+  my ($target, $link, $force) = (@_, 0);
+
+  if ($force) {
+    print "unlink $link";
+    unlink $link;
+  }
 
   warn "Error creating link '$link' to '$target': $!\n"
-  if (  not -f $link             and 
-    print "ln '$target' '$link'" and
-    not link $target, $link      and
-    return 1
-  );
+    if (  not -f $link             and 
+      print "ln '$target' '$link'" and
+      not link $target, $link      and
+      return 1
+    );
 
 }
 
