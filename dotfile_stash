@@ -48,10 +48,10 @@ for my $file ( map { bsd_glob $_ } @globs ) {
   if    ($action{'import'})   {
     ($dst_file) = ($file =~ m[^\s*$ENV{HOME}\/(.*)$]);
   }
- elsif ($action{'export'})  {
+  elsif ($action{'export'})  {
     ($dst_file) = (fsc($ENV{HOME}, $file));
   }
- else  {
+  else  {
     die "Unknown action, aborting ... "
   }
 
@@ -70,7 +70,7 @@ for my $file ( map { bsd_glob $_ } @globs ) {
       if not -d dirname($dst_file);
     make_link ( $src_file, $dst_file ); 
   }
- else {
+  else {
     make_link ( $src_file, $dst_file ); 
   }
 
