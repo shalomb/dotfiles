@@ -1,0 +1,187 @@
+#!/usr/bin/perl
+
+# NAME
+#   dotfile_stash - import/export dotfiles 
+#
+# SYNOPSIS
+#   dotfile_stash [import|export] files
+
+use strict;
+use warnings;
+
+use Cwd;
+use File::Basename  qw[basename dirname];
+use File::Find; no warnings 'File::Find';
+use File::Glob      qw[:glob];
+use File::Path      qw[make_path];
+use File::Spec      qw[catfile];
+  sub fsc { File::Spec->catfile(@_) }
+use List::Util      qw[reduce];
+
+local $\ = "\n";
+local $|; $|++;
+
+sub usage;
+sub make_directory;
+sub make_link;
+sub readlink_f;
+
+usage() if not scalar @ARGV;
+
+my %action; @action{('import', 'export')} = (0,0);
+$action{ +(shift) } = 1;
+
+usage() if not reduce { our $a + our $b } @action{('import', 'export')};
+
+chdir dirname "$0"
+  or die "Error changing directory to dirname($0): $!";
+
+my @globs = @ARGV;
+
+do { warn "No files to operate on ...\n"; exit 2; }
+  if (not scalar @globs);
+
+
+for my $file ( map { bsd_glob $_ } @globs ) {
+
+  my $dst_file;
+  if    ($action{'import'})   {
+    ($dst_file) = ($file =~ m[^\s*$ENV{HOME}\/(.*)$]);
+  }
+ elsif ($action{'export'})  {
+    ($dst_file) = (fsc($ENV{HOME}, $file));
+  }
+ else  {
+    die "Unknown action, aborting ... "
+  }
+
+  my $src_file = readlink_f $file // $file;
+  
+  next if not length $dst_file or not -e $src_file;
+
+  printf "Committing '%s' as '%s'\n", $file, $dst_file
+    if not -e $dst_file;
+
+  if    ( -d $src_file ) {
+    link_directory_contents($src_file, $dst_file);
+  }
+  elsif ( $dst_file =~ m[\/] ) {
+    make_directory  ( dirname($dst_file) )
+      if not -d dirname($dst_file);
+    make_link ( $src_file, $dst_file ); 
+  }
+ else {
+    make_link ( $src_file, $dst_file ); 
+  }
+
+}
+
+
+sub usage {
+  print <<"EOF";
+$0 [import|export] file1 file2 ...
+EOF
+  exit 3;
+}
+
+sub make_link {
+  my ($target, $link, $force) = (@_, 0);
+
+  if ($force) {
+    print "  rm '$link'";
+    unlink $link;
+  }
+
+  warn "Error creating link '$link' to '$target': $!\n"
+    if (  not -f $link                  and
+      print "  ln '$target' '$link'"    and
+      not link $target, $link           and
+      return 1
+    );
+}
+
+sub make_directory {
+  my $directory = shift;
+
+  warn "Error creating directory '$directory': $!\n"
+    if (  not -d $directory             and
+      print "  mkdir -p '$directory'"   and
+      not make_path($directory)         and
+      return 1
+    );
+}
+
+sub link_directory_contents {
+
+  my ($src_dir, $dst_dir) = (@_);
+  my $src_dir_parent = dirname ($src_dir);
+
+  make_directory ( $dst_dir )
+    if not -d $dst_dir;
+
+  find {
+    wanted => sub {
+      my $src_file = $File::Find::name;
+
+      my ($dst_file) =
+        fsc( $dst_dir, ( $src_file =~ m[^\s*$src_dir\/(.*)$] ));
+
+      if ( -l $src_file or -f _ ) {
+        $src_file = readlink_f $src_file if -l _;
+        make_link( $src_file, $dst_file );
+      }
+      elsif ( -d _ ) {
+        make_directory( $dst_file );
+      }
+      else {
+        warn "Not processing '$src_file', unknown file type.\n";
+      }
+    },
+    no_chdir => 1
+  },
+  $src_dir;
+}
+
+# Courtesy: Randall "Merlyn" Schwartz
+# "Expanding symbolic links (aug 99)"
+#  http://www.stonehenge.com/merlyn/UnixReview/col27.html
+sub readlink_f {
+  my $file = shift;
+
+  my @right = split /\//, $file;
+
+  my @left = do {
+    @right && ($right[0] eq "") ?
+      shift @right :            # quick way
+      split /\//, getcwd;
+  };    # first element always null
+
+  while (@right) {
+    my $item = shift @right;
+    next if $item eq "." or $item eq "";
+
+    if ($item eq "..") {
+      pop @left if @left > 1;
+      next;
+    }
+
+    my $link = readlink fsc(@left, $item);
+
+    if (defined $link) {
+      my @parts = split /\//, $link;
+      if (@parts && ($parts[0] eq "")) { # absolute
+        @left = shift @parts;   # quick way
+      }
+      unshift @right, @parts;
+      next;
+    }
+    else {
+      push @left, $item;
+      next;
+    }
+  }
+
+  return fsc(@left);
+}
+
+
