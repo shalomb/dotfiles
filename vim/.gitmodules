@@ -1,0 +1,114 @@
+[submodule "bundle/drawit"]
+	path = bundle/drawit
+	url = https://github.com/vim-scripts/DrawIt.git
+[submodule "bundle/matchit"]
+	path = bundle/matchit
+	url = https://github.com/vim-scripts/matchit.zip.git
+[submodule "bundle/command-t"]
+	path = bundle/command-t
+	url = https://github.com/wincent/Command-T.git
+[submodule "bundle/netrw"]
+	path = bundle/netrw
+	url = https://github.com/vim-scripts/netrw.vim.git
+[submodule "bundle/tabular"]
+	path = bundle/tabular
+	url = https://github.com/godlygeek/tabular.git
+[submodule "bundle/arpeggio"]
+	path = bundle/arpeggio
+	url = https://github.com/kana/vim-arpeggio.git
+[submodule "bundle/supertab-continued"]
+	path = bundle/supertab-continued
+	url = https://github.com/vim-scripts/SuperTab-continued..git
+[submodule "bundle/repeat"]
+	path = bundle/repeat
+	url = https://github.com/tpope/vim-repeat.git
+[submodule "bundle/taglist"]
+	path = bundle/taglist
+	url = https://github.com/vim-scripts/taglist.vim.git
+[submodule "bundle/lusty"]
+	path = bundle/lusty
+	url = https://github.com/sjbach/lusty.git
+[submodule "bundle/snipmate"]
+	path = bundle/snipmate
+	url = https://github.com/msanders/snipmate.vim.git
+[submodule "bundle/vimwiki"]
+	path = bundle/vimwiki
+	url = https://github.com/vim-scripts/vimwiki.git
+[submodule "bundle/pathogen"]
+	path = bundle/pathogen
+	url = https://github.com/tpope/vim-pathogen.git
+[submodule "bundle/colors-solarized"]
+	path = bundle/colors-solarized
+	url = https://github.com/altercation/vim-colors-solarized.git
+[submodule "vimcse"]
+  path = vimcse
+  url = https://github.com/shalomb/vimcse.git
+[submodule "bundle/vim-tmux"]
+	path = bundle/vim-tmux
+	url = https://github.com/tsaleh/vim-tmux.git
+[submodule "bundle/posh-ftplugin"]
+	path = bundle/posh-ftplugin
+	url = https://github.com/vim-scripts/Windows-PowerShell-File-Type-Plugin.git
+[submodule "bundle/posh-syntax"]
+	path = bundle/posh-syntax
+	url = https://github.com/vim-scripts/Windows-PowerShell-Syntax-File.git
+[submodule "bundle/posh-indent"]
+	path = bundle/posh-indent
+	url = https://github.com/vim-scripts/Windows-PowerShell-indent-enhanced.git
+[submodule "bundle/sharp-indent"]
+	path = bundle/sharp-indent
+	url = https://github.com/vim-scripts/sharp-Indent.git
+[submodule "bundle/sharp-syntax"]
+	path = bundle/sharp-syntax
+	url = https://github.com/vim-scripts/sharp-Syntax.git
+[submodule "bundle/VimOrganizer"]
+	path = bundle/VimOrganizer
+	url = https://github.com/hsitz/VimOrganizer.git
+[submodule "bundle/iptables"]
+	path = bundle/iptables
+	url = https://github.com/vim-scripts/iptables.git
+[submodule "bundle/manpageview"]
+	path = bundle/manpageview
+	url = https://github.com/vim-scripts/ManPageView.git
+[submodule "bundle/perforce"]
+	path = bundle/perforce
+	url = https://github.com/vim-scripts/perforce.git
+[submodule "bundle/mauke-perl.vim"]
+	path = bundle/mauke-perl.vim
+	url = https://github.com/vim-scripts/perl-mauke.vim.git
+[submodule "bundle/SearchComplete"]
+	path = bundle/SearchComplete
+	url = https://github.com/vim-scripts/SearchComplete.git
+[submodule "bundle/fsharp-plugin"]
+	path = bundle/fsharp-plugin
+	url = https://github.com/vim-scripts/sharp-Syntax--Rim.git
+[submodule "bundle/underlinetag"]
+	path = bundle/underlinetag
+	url = https://github.com/vim-scripts/underlinetag.git
+[submodule "bundle/perlprove.vim"]
+	path = bundle/perlprove.vim
+	url = https://github.com/vim-scripts/perlprove.vim.git
+[submodule "bundle/streppone--css.vim"]
+	path = bundle/streppone--css.vim
+	url = https://github.com/vim-scripts/css.vim--Streppone.git
+[submodule "bundle/genutils"]
+	path = bundle/genutils
+	url = https://github.com/vim-scripts/genutils.git
+[submodule "bundle/vimoutliner"]
+	path = bundle/vimoutliner
+	url = https://github.com/vimoutliner/vimoutliner.git
+[submodule "bundle/markdown"]
+	path = bundle/markdown
+	url = https://github.com/vim-scripts/Markdown.git
+[submodule "bundle/surround"]
+	path = bundle/surround
+	url = https://github.com/tpope/vim-surround.git
+[submodule "bundle/unimpaired"]
+	path = bundle/unimpaired
+	url = https://github.com/tpope/vim-unimpaired.git
+[submodule "bundle/ShowMarks"]
+	path = bundle/ShowMarks
+	url = https://github.com/vim-scripts/ShowMarks.git
+[submodule "bundle/gundo"]
+	path = bundle/gundo
+	url = https://github.com/vim-scripts/Gundo.git

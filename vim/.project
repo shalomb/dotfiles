@@ -1,0 +1,11 @@
+﻿
+VIM=~/.vim CD=~/.vim filter="* vimcse/*" {
+ README
+ messages
+ vimrc
+ vimrc.gvim
+ vimcse/README
+ vimcse/annotations.xml
+ vimcse/cse.xml
+ vimcse/promotions.xml
+}
