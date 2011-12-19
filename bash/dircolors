@@ -1,0 +1,641 @@
+# Configuration file for dircolors, a utility to help you set the
+# LS_COLORS environment variable used by GNU ls with the --color option.
+
+# The keywords COLOR, OPTIONS, and EIGHTBIT (honored by the
+# slackware version of dircolors) are recognized but ignored.
+
+# Util #1
+#   Append mimetype to end of line
+#
+#  set +H
+#  cp ~/.dircolors .
+#  while read ext line; do
+#    if [[ $ext = .* ]]; then
+#      comment="$(perl -ane 'BEGIN{$f=0;} next if /^\s*#/ || /^\s*$/; chomp; $mt=shift @F; do { /\b'"${ext##.}"'\b/ and push @mt, $mt } for @F; END{ print join ", ",@mt }' /etc/mime.types)";
+#      [[ -n $comment ]] && set -x && sed -i '/^'"$ext"'/s@$@\t# '"$comment"'@' .dircolors
+#      set +x
+#    fi
+#  done < .dircolors
+
+
+# TestCase #1
+#   Create a list of files of types known to ~/.dircolors
+#
+#   while read ext _; do [[ $ext = .* ]] && touch test"$ext"; done < ~/.dircolors
+#
+#   mkdir test.d001
+#   mkdir test.d.arwx;   chmod a+rwx test.d.arwx
+#   mkdir test.d.setuid; chmod u+s   test.d.setuid
+#   mkdir test.d.setgid; chmod g+s   test.d.setgid
+#   mkdir test.d.sticky; chmod o+s   test.d.sticky
+#
+#   touch file.f.001
+#   touch test.f.x;      chmod +x    test.f.x
+#   touch test.f.o+ws;   chmod o+w,o+s test.f.o+ws
+#   touch test.f.o+rw;   chmod a+rwx test.f.o+rw
+#   touch test.f.a+rwx;  chmod a+rwx test.f.a+rwx
+#   touch test.f.setuid; chmod u+s   test.f.setuid
+#   touch test.f.setgid; chmod g+s   test.f.setgid
+#   touch test.f.sticky; chmod o+s   test.f.sticky
+#
+#   ln    file.f.001  hardlink
+#   ln -s file.f.001  softlink
+#   ln    nonexistent hardlink.nonexistent
+#   ln -s nonexistent softlink.nonexistent
+
+# Below, there should be one TERM entry for each termtype that is colorizable
+
+TERM ansi
+TERM color-xterm
+TERM con132x25
+TERM con132x30
+TERM con132x43
+TERM con132x60
+TERM con80x25
+TERM con80x28
+TERM con80x30
+TERM con80x43
+TERM con80x50
+TERM con80x60
+TERM cons25
+TERM console
+TERM cygwin
+TERM dtterm
+TERM eterm-color
+TERM gnome
+TERM gnome-256color
+TERM linux
+TERM linux-c
+TERM putty
+TERM rxvt
+TERM rxvt-cygwin
+TERM rxvt-cygwin-native
+TERM rxvt-unicode
+TERM screen
+TERM screen-256color
+TERM screen-bce
+TERM screen-w
+TERM screen.linux
+TERM vt100
+TERM xterm
+TERM xterm-16color
+TERM xterm-256color
+TERM xterm-88color
+TERM xterm-color
+TERM xterm-debian
+
+# Below are the color init strings for the basic file types. A color init
+# string consists of one or more of the following numeric codes:
+#
+# ISO 6429 color sequences
+#   Attribute Codes
+#      00      restore default color
+#      01      brighter/bolder colors
+#      04      underlined/underscored text
+#      05      flashing/blinking text
+#      07      reverse video
+#      08      concealed/hidden
+#
+#   Foreground/Text Colour Codes
+#      30      black foreground
+#      31      red foreground
+#      32      green foreground
+#      33      yellow (or brown) foreground
+#      34      blue foreground
+#      35      purple/magenta foreground
+#      36      cyan foreground
+#      37      white (or gray) foreground
+#
+#   Background Color Codes
+#      40      black background
+#      41      red background
+#      42      green background
+#      43      yellow (or brown) background
+#      44      blue background
+#      45      purple/magenta background
+#      46      cyan background
+#      47      white (or gray) background
+
+# Defaults
+NORMAL   00           # no color code at all
+FILE     00           # regular file: use no color at all
+NORMAL   00;38;5;244  # no color code at all
+RESET    0            # reset to "normal" color
+DIR      01;38;5;26   # directory
+LINK     01;38;5;125  # symbolic link. (If you set this to 'target' instead of 
+                      # a # numerical value, the color is as for the file
+                      # pointed to.)
+*       00;37 # the default??
+
+# Special files
+BLK                     01;38;5;94           # block device driver
+CAPABILITY              01;38;5;192          # file with capability
+CHR                     01;38;5;65           # character device driver
+DOOR                    01;38;5;192          # door
+EXEC                    01;38;5;30           # This is for files with execute permission:
+FIFO                    01;38;5;217          # pipe
+HARDLINK                01;38;5;24           # regular file with more than one link
+ORPHAN                  01;38;5;197          # symlink to nonexistent file, or non-stat'able file
+OTHER_WRITABLE          01;38;5;232;48;5;36  # dir that is other-writable (o+w) and not sticky
+SETGID                  01;38;5;232;48;5;167 # file that is setgid (g+s)
+SETUID                  01;38;5;232;48;5;203 # file that is setuid (u+s)
+SOCK                    01;38;5;192          # socket
+STICKY                  01;38;5;232;48;5;137 # dir with the sticky bit set (+t) and not other-writable
+STICKY_OTHER_WRITABLE   01;38;5;202          # dir that is sticky and other-writable (+t,o+w)
+
+
+# Executables
+.bash          01;38;5;43
+.bat           01;38;5;43 # application/x-msdos-program
+.bin           01;38;5;43 # application/octet-stream
+.btm           01;38;5;43
+.cmd           01;38;5;43 # application/x-msdos-program
+.com           01;38;5;43 # application/x-msdos-program
+.cs            01;38;5;43 #
+.csh           01;38;5;43 # application/x-csh, text/x-csh
+.exe           01;38;5;43 # application/x-msdos-program
+.js            01;38;5;43 #
+*Makefile      01;38;5;43
+*Makefile.pl   01;38;5;43
+*Makefile.PL   01;38;5;43
+.pl            01;38;5;43 # text/x-perl
+.pm            01;38;5;43 # text/x-perl
+.pm            01;38;5;43 # text/x-python
+.ps1           01;38;5;43 #
+.py            01;38;5;43 # text/x-python
+.rb            01;38;5;43 # application/x-ruby
+.sh            01;38;5;43 # application/x-sh, text/x-sh
+.sql           01;38;5;43 # text/x-perl
+.vbs           01;38;5;43 #
+.wsh           01;38;5;43 #
+
+# Text, Documents, etc
+.chm    00;38;5;178 # chemical/x-chemdraw
+.doc    00;38;5;180 # application/msword
+.rtf    00;38;5;180 # application/msword
+.docx   00;38;5;89 # application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document
+.gv     00;38;5;89
+.HTM    00;38;5;89 # text/html
+.htm    00;38;5;89 # text/html
+.html   00;38;5;89 # text/html
+.md     00;38;5;89
+.pdf    00;38;5;89 # application/pdf
+.ppt    00;38;5;89 # application/vnd.ms-powerpoint
+.pptx   00;38;5;89 # application/vnd.ms-powerpoint, application/vnd.openxmlformats-officedocument.presentationml.presentation
+.ps     00;38;5;89 # application/postscript
+.text   00;38;5;89 # text/plain
+.txt    00;38;5;186 # text/plain
+.xls    00;38;5;89 # application/vnd.ms-excel
+.xlsx   00;38;5;89 # application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+.xml    00;38;5;89 # application/xml
+.xhtml  00;38;5;89 
+.pod    00;38;5;89 
+.zim    00;38;5;89 # text/plain
+
+# Archives, Compressed formats, etc
+.7z   00;38;5;107 # application/x-7z-compressed
+.ace  00;38;5;107
+.arj  00;38;5;107
+.bz   00;38;5;107
+.bz2  00;38;5;107
+.cpio 00;38;5;107 # application/x-cpio
+.deb  00;38;5;107 # application/x-debian-package
+.dz   00;38;5;107
+.gz   00;38;5;107
+.jar  00;38;5;107 # application/java-archive
+.lzh  00;38;5;107 # application/x-lzh
+.lzma 00;38;5;107
+.rar  00;38;5;107 # application/rar
+.rpm  00;38;5;107 # application/x-redhat-package-manager
+.rz   00;38;5;107
+.tar  00;38;5;107 # application/x-tar
+.taz  00;38;5;107 # application/x-gtar
+.tbz  00;38;5;107
+.tbz2 00;38;5;107
+.tgz  00;38;5;107 # application/x-gtar
+.tz   00;38;5;107
+.z    00;38;5;107
+.Z    00;38;5;107 # application/x-font
+.zip  00;38;5;107 # application/zip
+.zoo  00;38;5;107
+
+# Image formats
+.bmp  00;38;5;166 # image/x-ms-bmp
+.flc  00;38;5;166
+.gif  00;38;5;166 # image/gif
+.jpeg 00;38;5;166 # image/jpeg
+.JPEG 00;38;5;166 # image/jpeg
+.jpg  00;38;5;166 # image/jpeg
+.JPG  00;38;5;166 # image/jpeg
+.ogm  00;38;5;166
+.pbm  00;38;5;166 # image/x-portable-bitmap
+.pcx  00;38;5;166 # image/pcx
+.pgm  00;38;5;166 # image/x-portable-graymap
+.png  00;38;5;166 # image/png
+.ppm  00;38;5;166 # image/x-portable-pixmap
+.svg  00;38;5;166 # image/svg+xml
+.svgz 00;38;5;166 # image/svg+xml
+.tga  00;38;5;166
+.tif  00;38;5;166 # image/tiff
+.tiff 00;38;5;166 # image/tiff
+.vob  00;38;5;166
+.xbm  00;38;5;166 # image/x-xbitmap
+.xcf  00;38;5;166 # application/x-xcf
+.xpm  00;38;5;166 # image/x-xpixmap
+.xwd  00;38;5;166 # image/x-xwindowdump
+.yuv  00;38;5;166
+
+# Audio formats
+# http://wiki.xiph.org/index.php/MIME_Types_and_File_Extensions
+.aac  00;38;5;73
+.au   00;38;5;73 # audio/basic
+.axa  00;38;5;73 # audio/annodex
+.flac 00;38;5;73 # audio/flac
+.ga   00;38;5;73 # audio/ogg
+.gg   00;38;5;73 # audio/ogg
+.gx   00;38;5;73 # application/ogg
+.lac  00;38;5;73 # audio/flac
+.mid  00;38;5;73 # audio/midi
+.midi 00;38;5;73 # audio/mid
+.mka  00;38;5;73
+.mp3  00;38;5;73 # audio/mpeg
+.mpc  00;38;5;73 # chemical/x-mopac-input
+.oga  00;38;5;73 # audio/ogg
+.ogg  00;38;5;73 # audio/ogg
+.px   00;38;5;73 # audio/ogg
+.ra   00;38;5;73 # audio/x-pn-realaudio, audio/x-realaudio
+.rm   00;38;5;73 # audio/x-pn-realaudio
+.rmvb 00;38;5;73 # audio/x-pn-realaudio
+.spx  00;38;5;73 # audio/ogg
+.wav  00;38;5;73 # audio/x-wav
+.xa   00;38;5;73 # audio/annodex
+.spf  00;38;5;73 # application/xspf
+.xspf 00;38;5;73 # application/xspf+xml
+.nx   00;38;5;73 # application/annodex
+.anx  00;38;5;73 # application/annodex
+
+# Video formats
+.ogx  00;38;5;130 # application/ogg
+.asf  00;38;5;130 # video/x-ms-asf
+.avi  00;38;5;130 # video/x-msvideo
+.axv  00;38;5;130 # video/annodex
+.dl   00;38;5;130 # video/dl
+.fli  00;38;5;130 # video/fli
+.flv  00;38;5;130 # video/x-flv
+.gl   00;38;5;130 # video/gl
+.gv   00;38;5;130 # video/ogg
+.m2v  00;38;5;130
+.m4v  00;38;5;130
+.mkv  00;38;5;130 # video/x-matroska
+.mng  00;38;5;130 # video/x-mng
+.mov  00;38;5;130 # video/quicktime
+.mp4  00;38;5;130 # video/mp4
+.mp4v 00;38;5;130 # video/mp4
+.mpeg 00;38;5;130 # video/mpeg
+.mpg  00;38;5;130 # video/mpeg
+.nuv  00;38;5;130
+.ogv  00;38;5;130 # video/ogg
+.qt   00;38;5;130 # video/quicktime
+.xv   00;38;5;130 # video/annodex
+.wmv  00;38;5;130 # video/x-ms-wmv
+
+# Configuration files, etc
+*cfg        01;38;5;244
+*conf       01;38;5;244
+*config     01;38;5;244
+*INSTALL*   01;38;5;244
+*json       01;38;5;244
+*JSON       01;38;5;244
+*log        01;38;5;244
+.map        01;38;5;244
+.map        01;38;5;244
+*project    01;38;5;244
+*projects   01;38;5;244
+.rc         01;38;5;244
+*rc         01;38;5;244
+*rc         01;38;5;244
+*README     01;38;5;244
+*README     01;38;5;244
+.yaml       01;38;5;244
+.yml        01;38;5;244
+*yml*       01;38;5;244
+.YAML       01;38;5;244
+*Manifest   01;38;5;244
+*MANIFEST   01;38;5;244
+*Changes    01;38;5;244
+*ChangeLog  01;38;5;244
+*CHANGELOG  01;38;5;244
+*ChangeList 01;38;5;244
+
+# Backup files, etc
+*~         00;38;5;180
+.backup    00;38;5;180
+.bak       00;38;5;180
+.tmp       00;38;5;180
+.temp      00;38;5;180
+.bkp       00;38;5;180
+*.copy     00;38;5;180
+*errors    00;38;5;180
+.git*      00;38;5;180
+*.git      00;38;5;180
+*history   00;38;5;180
+*log       00;38;5;180
+*.note     00;38;5;180
+*.notes    00;38;5;180
+*.svn      00;38;5;180
+.sw0       00;38;5;180
+*.sw*      00;38;5;180
+.sw0       00;38;5;180
+.sw1       00;38;5;180
+.sw2       00;38;5;180
+.sw3       00;38;5;180
+.sw4       00;38;5;180
+.sw5       00;38;5;180
+.sw6       00;38;5;180
+.sw7       00;38;5;180
+.sw8       00;38;5;180
+.sw9       00;38;5;180
+.swa       00;38;5;180
+*.swap     00;38;5;180
+.swb       00;38;5;180
+.swc       00;38;5;180
+.swd       00;38;5;180
+.swe       00;38;5;180
+.swf       00;38;5;180
+.swg       00;38;5;180
+.swh       00;38;5;180
+.swi       00;38;5;180
+.swj       00;38;5;180
+.swk       00;38;5;180
+.swl       00;38;5;180
+.swm       00;38;5;180
+.swn       00;38;5;180
+.swo       00;38;5;180
+.swp       00;38;5;180
+.swq       00;38;5;180
+.swr       00;38;5;180
+.sws       00;38;5;180
+.swt       00;38;5;180
+.swu       00;38;5;180
+.swv       00;38;5;180
+.sww       00;38;5;180
+.swx       00;38;5;180
+.swy       00;38;5;180
+.swz       00;38;5;180
+
+# 256 Colors test
+#.1     01;38;5;1
+#.2     01;38;5;2
+#.3     01;38;5;3
+#.4     01;38;5;4
+#.5     01;38;5;5
+#.6     01;38;5;6
+#.7     01;38;5;7
+#.8     01;38;5;8
+#.9     01;38;5;9
+#.10    01;38;5;10
+#.11    01;38;5;11
+#.12    01;38;5;12
+#.13    01;38;5;13
+#.14    01;38;5;14
+#.15    01;38;5;15
+#.16    01;38;5;16
+#.17    01;38;5;17
+#.18    01;38;5;18
+#.19    01;38;5;19
+#.20    01;38;5;20
+#.21    01;38;5;21
+#.22    01;38;5;22
+#.23    01;38;5;23
+#.24    01;38;5;24
+#.25    01;38;5;25
+#.26    01;38;5;26
+#.27    01;38;5;27
+#.28    01;38;5;28
+#.29    01;38;5;29
+#.30    01;38;5;30
+#.31    01;38;5;31
+#.32    01;38;5;32
+#.33    01;38;5;33
+#.34    01;38;5;34
+#.35    01;38;5;35
+#.36    01;38;5;36
+#.37    01;38;5;37
+#.38    01;38;5;38
+#.39    01;38;5;39
+#.40    01;38;5;40
+#.41    01;38;5;41
+#.42    01;38;5;42
+#.43    01;38;5;43
+#.44    01;38;5;44
+#.45    01;38;5;45
+#.46    01;38;5;46
+#.47    01;38;5;47
+#.48    01;38;5;48
+#.49    01;38;5;49
+#.50    01;38;5;50
+#.51    01;38;5;51
+#.52    01;38;5;52
+#.53    01;38;5;53
+#.54    01;38;5;54
+#.55    01;38;5;55
+#.56    01;38;5;56
+#.57    01;38;5;57
+#.58    01;38;5;58
+#.59    01;38;5;59
+#.60    01;38;5;60
+#.61    01;38;5;61
+#.62    01;38;5;62
+#.63    01;38;5;63
+#.64    01;38;5;64
+#.65    01;38;5;65
+#.66    01;38;5;66
+#.67    01;38;5;67
+#.68    01;38;5;68
+#.69    01;38;5;69
+#.70    01;38;5;70
+#.71    01;38;5;71
+#.72    01;38;5;72
+#.73    01;38;5;73
+#.74    01;38;5;74
+#.75    01;38;5;75
+#.76    01;38;5;76
+#.77    01;38;5;77
+#.78    01;38;5;78
+#.79    01;38;5;79
+#.80    01;38;5;80
+#.81    01;38;5;81
+#.82    01;38;5;82
+#.83    01;38;5;83
+#.84    01;38;5;84
+#.85    01;38;5;85
+#.86    01;38;5;86
+#.87    01;38;5;87
+#.88    01;38;5;88
+#.89    01;38;5;89
+#.90    01;38;5;90
+#.91    01;38;5;91
+#.92    01;38;5;92
+#.93    01;38;5;93
+#.94    01;38;5;94
+#.95    01;38;5;95
+#.96    01;38;5;96
+#.97    01;38;5;97
+#.98    01;38;5;98
+#.99    01;38;5;99
+#.101   00;38;5;100
+#.101   01;38;5;101
+#.102   01;38;5;102
+#.103   01;38;5;103
+#.104   01;38;5;104
+#.105   01;38;5;105
+#.106   01;38;5;106
+#.107   01;38;5;107
+#.108   01;38;5;108
+#.109   01;38;5;109
+#.110   01;38;5;110
+#.111   01;38;5;111
+#.112   01;38;5;112
+#.113   01;38;5;113
+#.114   01;38;5;114
+#.115   01;38;5;115
+#.116   01;38;5;116
+#.117   01;38;5;117
+#.118   01;38;5;118
+#.119   01;38;5;119
+#.120   01;38;5;120
+#.121   01;38;5;121
+#.122   01;38;5;122
+#.123   01;38;5;123
+#.124   01;38;5;124
+#.125   01;38;5;125
+#.126   01;38;5;126
+#.127   01;38;5;127
+#.128   01;38;5;128
+#.129   01;38;5;129
+#.130   01;38;5;130
+#.131   01;38;5;131
+#.132   01;38;5;132
+#.133   01;38;5;133
+#.134   01;38;5;134
+#.135   01;38;5;135
+#.136   01;38;5;136
+#.137   01;38;5;137
+#.138   01;38;5;138
+#.139   01;38;5;139
+#.140   01;38;5;140
+#.141   01;38;5;141
+#.142   01;38;5;142
+#.143   01;38;5;143
+#.144   01;38;5;144
+#.145   01;38;5;145
+#.146   01;38;5;146
+#.147   01;38;5;147
+#.148   01;38;5;148
+#.149   01;38;5;149
+#.150   01;38;5;150
+#.151   01;38;5;151
+#.152   01;38;5;152
+#.153   01;38;5;153
+#.154   01;38;5;154
+#.155   01;38;5;155
+#.156   01;38;5;156
+#.157   01;38;5;157
+#.158   01;38;5;158
+#.159   01;38;5;159
+#.160   01;38;5;160
+#.161   01;38;5;161
+#.162   01;38;5;162
+#.163   01;38;5;163
+#.164   01;38;5;164
+#.165   01;38;5;165
+#.166   01;38;5;166
+#.167   01;38;5;167
+#.168   01;38;5;168
+#.169   01;38;5;169
+#.170   01;38;5;170
+#.171   01;38;5;171
+#.172   01;38;5;172
+#.173   01;38;5;173
+#.174   01;38;5;174
+#.175   01;38;5;175
+#.176   01;38;5;176
+#.177   01;38;5;177
+#.178   01;38;5;178
+#.179   01;38;5;179
+#.180   01;38;5;180
+#.181   01;38;5;181
+#.182   01;38;5;182
+#.183   01;38;5;183
+#.184   01;38;5;184
+#.185   01;38;5;185
+#.186   01;38;5;186
+#.187   01;38;5;187
+#.188   01;38;5;188
+#.189   01;38;5;189
+#.190   01;38;5;190
+#.191   01;38;5;191
+#.192   01;38;5;192
+#.193   01;38;5;193
+#.194   01;38;5;194
+#.195   01;38;5;195
+#.196   01;38;5;196
+#.197   01;38;5;197
+#.198   01;38;5;198
+#.199   01;38;5;199
+#.201   00;38;5;200
+#.201   01;38;5;201
+#.202   01;38;5;202
+#.203   01;38;5;203
+#.204   01;38;5;204
+#.205   01;38;5;205
+#.206   01;38;5;206
+#.207   01;38;5;207
+#.208   01;38;5;208
+#.209   01;38;5;209
+#.210   01;38;5;210
+#.211   01;38;5;211
+#.212   01;38;5;212
+#.213   01;38;5;213
+#.214   01;38;5;214
+#.215   01;38;5;215
+#.216   01;38;5;216
+#.217   01;38;5;217
+#.218   01;38;5;218
+#.219   01;38;5;219
+#.220   01;38;5;220
+#.221   01;38;5;221
+#.222   01;38;5;222
+#.223   01;38;5;223
+#.224   01;38;5;224
+#.225   01;38;5;225
+#.226   01;38;5;226
+#.227   01;38;5;227
+#.228   01;38;5;228
+#.229   01;38;5;229
+#.230   01;38;5;230
+#.231   01;38;5;231
+#.232   01;38;5;232
+#.233   01;38;5;233
+#.234   01;38;5;234
+#.235   01;38;5;235
+#.236   01;38;5;236
+#.237   01;38;5;237
+#.238   01;38;5;238
+#.239   01;38;5;239
+#.240   01;38;5;240
+#.241   01;38;5;241
+#.242   01;38;5;242
+#.243   01;38;5;243
+#.244   01;38;5;244
+#.245   01;38;5;245
+#.246   01;38;5;246
+#.247   01;38;5;247
+#.248   01;38;5;248
+#.249   01;38;5;249
+#.250   01;38;5;250
+#.251   01;38;5;251
+#.252   01;38;5;252
+#.253   01;38;5;253
+#.254   01;38;5;254
+#.255   01;38;5;255

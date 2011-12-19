@@ -1,0 +1,24 @@
+$include /etc/inputrc
+
+"\C-x\C-r":   re-read-init-file
+
+# PgUp/PgDn
+"\e[5~":      history-search-backward
+"\e[6~":      history-search-forward
+
+C-p:          history-search-backward
+C-n:          history-search-forward
+
+set   bell-style                   none
+# 
+set   editing-mode                 vi
+set   enable-keypad                on
+set   expand-tilde                 off
+# 
+set   mark-symlinked-directories   on
+# 
+# # preserve cursor position
+set   history-preserve-point       on
+# 
+# # unlimited history
+# set   history-size                 0

@@ -1,0 +1,16 @@
+﻿REPOSITORY
+  .bash - Configuration files for bash
+
+INSTALLATION
+  git clone git://github.com/shalomb/.bash.git ~/.config/bash/
+  cd ~/.config/bash
+  sudo dpkg --set-selections < bash.dpkg
+  sudo aptitude install
+
+  # Pay attention to files attempted to be overwritten below, they are not
+  # overwritten and you will need to manually remove the files if they 
+  # already exist.
+  cd ~ && for i in ~/.config/bash/*; do
+    ln -sv "$i" ."${i##*/}";
+  done
+
