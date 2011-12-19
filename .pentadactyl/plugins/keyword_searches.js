@@ -130,7 +130,7 @@ var ABRACADABRA =  {
             dactyl.globalVariables[v.substr(1)];
     }
 
-    return r;
+    return ret;
 
   },
 
