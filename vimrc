@@ -16,7 +16,7 @@ set backupdir-=.            " ...and not in cwd
 
 set t_Co=256
 set background=light       " vim has a dark background when in the console
-set hidden                  " hide, don't close, undisplayed buffers
+"set hidden                  " hide, don't close, undisplayed buffers
 set history=256             " keep 50 lines of command history
 
 set laststatus=2            " always show status line
