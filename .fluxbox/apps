@@ -6,7 +6,7 @@
   [Close]	{yes}
 [end]
 [app] (name=gmrun) (class=Gmrun)
-  [Position]	(UPPERLEFT)	{270 251}
+  [Position]	(UPPERLEFT)	{244 244}
   [IconHidden]	{yes}
   [Close]	{yes}
 [end]
@@ -44,8 +44,8 @@
   [Dimensions]	{500 364}
 [end]
 [app] (name=qterm) (class=URxvt)
-  [Dimensions]	{1339 724}
-  [Position]	(UPPERLEFT)	{89 148}
+  [Dimensions]	{996 472}
+  [Position]	(UPPERLEFT)	{22 15}
   [Shaded]	{no}
   [Deco]	{0x244}
   [Sticky]	{no}
@@ -70,17 +70,17 @@
 [end]
 [app] (name=Wfica) (class=Wfica)
   [Workspace]	{1}
-  [Head]	{0}
-  [Dimensions]	{1920 1200}
-  [Position]	(UPPERLEFT)	{0 -40}
+  [Head]	{1}
+  [Dimensions]	{1024 600}
+  [Position]	(UPPERLEFT)	{0 -12}
   [Shaded]	{no}
   [Deco]	{0x5c0}
   [Sticky]	{no}
-  [Minimized]	{no}
-  [Maximized]	{no}
+  [Minimized]	{yes}
+  [Maximized]	{yes}
   [Fullscreen]	{yes}
   [Jump]	{yes}
-  [Layer]	{2}
+  [Layer]	{12}
   [Close]	{yes}
   [Alpha]	{208 224}
 [end]
