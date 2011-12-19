@@ -356,13 +356,13 @@ Mod4    d            :ToggleCmd { ShowDesktop } { Deiconify }
 Mod4    f            :If { Some Matches (dolphin) } { NextWindow (dolphin) } { ExecCommand xdg-open ~/ }
 Mod4    g            :ExecCommand xdg-open `googlize`  # clipboard keyword search
 Mod4    Mod1 g       :ExecCommand xdg-open 'http://127.0.0.1:30127/?hl=en_GB&src=14&s=f6gdGknV4MTC5Tya_vD2PdzAcY0'
-Mod4    l            :ExecCommand gnome-screensaver-command --activate && xset s activate && xset dpms force off
+Mod4    l            :ExecCommand xset s activate && xset dpms force off && gnome-screensaver-command --activate
 Mod4    r            :If { Some Matches (gmrun) } { NextWindow (gmrun) } { ExecCommand gmrun }
 #Mod4   s            :Claimed by MarkMode
 #       Mod4 v       :Claimed by SpecialKeys/alsamixergui
 #       Mod4 w       :Claimed by Window Mode
 Mod4    apostrophe   :ExecCommand ~/.bin/summon wfcmgr.Wfcmgr toggle_hidden
-Mod4    End          :ExecCommand gnome-screensaver-command --activate && xset s activate && xset dpms force off
+Mod4    End          :ExecCommand xset s activate && xset dpms force off && gnome-screensaver-command --activate
 Mod4    Home         :ExecCommand xdg-open 'http://www.google.co.uk/webhp?complete=1'
 Mod4    period       :If { Some Matches (qterm) } { ToggleCmd { NextWindow (qterm) } { ExecCommand qterm toggle } } { ExecCommand qterm hide }
 Mod4    space        :ExecCommand gnome-do --mini --glassframe --quiet
