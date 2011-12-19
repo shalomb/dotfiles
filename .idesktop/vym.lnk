@@ -1,9 +1,8 @@
 table Icon
   Caption: vym
-  Icon: /home/unop/.idesktop/vym.png
-  Height: 28
-  Width: 28
-  X: 575
+  Icon: /home/unop/.idesktop
+  Height: 32
+  Width: 32
+  X: 591
   Y: 542
-  Command[0]: vym
 end

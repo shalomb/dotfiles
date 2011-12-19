@@ -1,9 +1,8 @@
 table Icon
   Caption: Pidgin
-  Icon: /home/unop/.idesktop/pidgin.png
-  Height: 28
-  Width: 28
-  X: 407
+  Icon: /home/unop/.idesktop
+  Height: 32
+  Width: 32
+  X: 397
   Y: 542
-  Command[0]: pidgin
 end

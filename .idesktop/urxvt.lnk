@@ -1,10 +1,8 @@
 table Icon
   Caption: urxvt
-  Icon: /home/unop/.idesktop/urxvt.png
-  Height: 28
-  Width: 28
-  X: 261
+  Icon: /home/unop/.idesktop
+  Height: 32
+  Width: 32
+  X: 219
   Y: 542
-  Command[0]: urxvt
-  Command[1]: cd /root && gksu urxvt
 end

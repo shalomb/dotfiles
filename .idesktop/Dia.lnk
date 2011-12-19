@@ -1,9 +1,8 @@
 table Icon
   Caption: Dia
-  Icon: /home/unop/.idesktop/dia.xpm
-  Height: 28
-  Width: 28
-  X: 499
+  Icon: /home/unop/.idesktop
+  Height: 32
+  Width: 32
+  X: 507
   Y: 542
-  Command[0]: dia
 end

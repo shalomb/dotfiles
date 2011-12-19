@@ -1,9 +1,8 @@
 table Icon
   Caption: Trash
-  Icon: /home/unop/.idesktop/trash.png
-  Height: 28
-  Width: 28
-  X: 131
+  Icon: /home/unop/.idesktop
+  Height: 32
+  Width: 32
+  X: 67
   Y: 542
-  Command[0]: dolphin 'Trash:///'
 end
