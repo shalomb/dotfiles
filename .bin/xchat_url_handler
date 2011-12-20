@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec xchat -e --url="$1"
