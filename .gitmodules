@@ -1,0 +1,105 @@
+[submodule "vim/bundle/command-t"]
+	path = vim/bundle/command-t
+	url = https://github.com/wincent/Command-T.git
+[submodule ".vim/bundle/tabular"]
+	path = .vim/bundle/tabular
+	url = https://github.com/godlygeek/tabular.git
+[submodule ".vim/bundle/VimOrganizer"]
+	path = .vim/bundle/VimOrganizer
+	url = https://github.com/hsitz/VimOrganizer.git
+[submodule ".vim/bundle/arpeggio"]
+	path = .vim/bundle/arpeggio
+	url = https://github.com/kana/vim-arpeggio.git
+[submodule ".vim/bundle/snipmate"]
+	path = .vim/bundle/snipmate
+	url = https://github.com/msanders/snipmate.vim.git
+[submodule ".vim/bundle/lusty"]
+	path = .vim/bundle/lusty
+	url = https://github.com/sjbach/lusty.git
+[submodule ".vim/bundle/pathogen"]
+	path = .vim/bundle/pathogen
+	url = https://github.com/tpope/vim-pathogen.git
+[submodule ".vim/bundle/repeat"]
+	path = .vim/bundle/repeat
+	url = https://github.com/tpope/vim-repeat.git
+[submodule ".vim/bundle/surround"]
+	path = .vim/bundle/surround
+	url = https://github.com/tpope/vim-surround.git
+[submodule ".vim/bundle/unimpaired"]
+	path = .vim/bundle/unimpaired
+	url = https://github.com/tpope/vim-unimpaired.git
+[submodule ".vim/bundle/vim-tmux"]
+	path = .vim/bundle/vim-tmux
+	url = https://github.com/tsaleh/vim-tmux.git
+[submodule ".vim/bundle/vimoutliner"]
+	path = .vim/bundle/vimoutliner
+	url = https://github.com/vimoutliner/vimoutliner.git
+[submodule ".vim/bundle/streppone--css.vim"]
+	path = .vim/bundle/streppone--css.vim
+	url = https://github.com/vim-scripts/css.vim--Streppone.git
+[submodule ".vim/bundle/drawit"]
+	path = .vim/bundle/drawit
+	url = https://github.com/vim-scripts/DrawIt.git
+[submodule ".vim/bundle/gundo"]
+	path = .vim/bundle/gundo
+	url = https://github.com/vim-scripts/Gundo.git
+[submodule ".vim/bundle/iptables"]
+	path = .vim/bundle/iptables
+	url = https://github.com/vim-scripts/iptables.git
+[submodule ".vim/bundle/manpageview"]
+	path = .vim/bundle/manpageview
+	url = https://github.com/vim-scripts/ManPageView.git
+[submodule ".vim/bundle/markdown"]
+	path = .vim/bundle/markdown
+	url = https://github.com/vim-scripts/Markdown.git
+[submodule ".vim/bundle/matchit"]
+	path = .vim/bundle/matchit
+	url = https://github.com/vim-scripts/matchit.zip.git
+[submodule ".vim/bundle/netrw"]
+	path = .vim/bundle/netrw
+	url = https://github.com/vim-scripts/netrw.vim.git
+[submodule ".vim/bundle/vim-perforce"]
+	path = .vim/bundle/vim-perforce
+	url = https://github.com/pydave/vim-perforce.git
+[submodule ".vim/bundle/mauke-perl.vim"]
+	path = .vim/bundle/mauke-perl.vim
+	url = https://github.com/vim-scripts/perl-mauke.vim.git
+[submodule ".vim/bundle/perlprove.vim"]
+	path = .vim/bundle/perlprove.vim
+	url = https://github.com/vim-scripts/perlprove.vim.git
+[submodule ".vim/bundle/sharp-indent"]
+	path = .vim/bundle/sharp-indent
+	url = https://github.com/vim-scripts/sharp-Indent.git
+[submodule ".vim/bundle/fsharp-plugin"]
+	path = .vim/bundle/fsharp-plugin
+	url = https://github.com/vim-scripts/sharp-Syntax--Rim.git
+[submodule ".vim/bundle/ShowMarks"]
+	path = .vim/bundle/ShowMarks
+	url = https://github.com/vim-scripts/ShowMarks.git
+[submodule ".vim/bundle/supertab-continued"]
+	path = .vim/bundle/supertab-continued
+	url = https://github.com/vim-scripts/SuperTab-continued..git
+[submodule ".vim/bundle/taglist"]
+	path = .vim/bundle/taglist
+	url = https://github.com/vim-scripts/taglist.vim.git
+[submodule ".vim/bundle/underlinetag"]
+	path = .vim/bundle/underlinetag
+	url = https://github.com/vim-scripts/underlinetag.git
+[submodule ".vim/bundle/vimwiki"]
+	path = .vim/bundle/vimwiki
+	url = https://github.com/vim-scripts/vimwiki.git
+[submodule ".vim/bundle/posh-ftplugin"]
+	path = .vim/bundle/posh-ftplugin
+	url = https://github.com/vim-scripts/Windows-PowerShell-File-Type-Plugin.git
+[submodule ".vim/bundle/posh-indent"]
+	path = .vim/bundle/posh-indent
+	url = https://github.com/vim-scripts/Windows-PowerShell-indent-enhanced.git
+[submodule ".vim/bundle/posh-syntax"]
+	path = .vim/bundle/posh-syntax
+	url = https://github.com/vim-scripts/Windows-PowerShell-Syntax-File.git
+[submodule ".vim/bundle/command-t"]
+	path = .vim/bundle/command-t
+	url = https://github.com/wincent/Command-T.git
+[submodule ".vim/bundle/genutils"]
+	path = .vim/bundle/genutils
+	url = https://github.com/vim-scripts/genutils.git
