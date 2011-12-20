@@ -1,3 +1,5 @@
-bash						install
-bash-completion					install
-bash-completion-lib				install
+bash
+bash-builtins
+bash-completion
+bash-doc
+bashdb
