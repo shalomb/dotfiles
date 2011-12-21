@@ -45,7 +45,7 @@
 [end]
 [app] (name=qterm) (class=URxvt)
   [Dimensions]	{996 472}
-  [Position]	(UPPERLEFT)	{22 15}
+  [Position]	(UPPERLEFT)	{26 18}
   [Shaded]	{no}
   [Deco]	{0x244}
   [Sticky]	{no}
@@ -76,7 +76,7 @@
   [Shaded]	{no}
   [Deco]	{0x5c0}
   [Sticky]	{no}
-  [Minimized]	{yes}
+  [Minimized]	{no}
   [Maximized]	{yes}
   [Fullscreen]	{yes}
   [Jump]	{yes}
