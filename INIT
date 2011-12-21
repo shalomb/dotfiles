@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -x
+
+find .[!.]*/ */ -name "INIT" -type f -exec {} \;
+
+find .[!.]* \
+  \( -name ".git" -type d -o -name "*.sw?" -o -name "*~" \) -prune \
+  -o -type f -exec ./dotfile_stash export {} +

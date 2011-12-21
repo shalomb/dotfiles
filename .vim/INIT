@@ -46,8 +46,6 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule update
 )
 
-find .vim .*vim*rc \( -name ".git" -type d  -o -iname "*.sw?" \) -prune -o -type f -exec ./dotfile_stash export {} +
-
 exit $?;
 
 COMMITTING NOTES (Requires Authentication)
