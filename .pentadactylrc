@@ -15,10 +15,26 @@ map -e <A-l> :javascript dactyl.execute("!lynx -dump '" + dactyl.modules.buffer.
 set! browser.tabs.closeButtons=2
 set! dom.disable_open_click_delay=1000
 
-set! general.useragent.override="Mozilla/5.0 (X11; Linux i686; rv:8.0) Gecko/20100101 Firefox/8.0 Iceweasel/8.0 Pentadactyl/hg6692"
+set! general.useragent.override="Mozilla/5.0 (X11; Linux i686; rv:8.0) Gecko/20100101 Firefox/8.0 Iceweasel/8.0 Pentadactyl/hg6694"
 
 set! javascript.options.strict=true
 set! javascript.options.showInConsole=true
 
 set! network.protocol-handler.external.irc=true
 set! network.protocol-handler.app.irc="/usr/bin/xchat -e --url=%s"
+
+set strictfocus='chrome:*':despotic,*:despotic
+set! capability.policy.default.HTMLInputElement.focus="noAccess"
+set! capability.policy.policynames="nofocus"
+set! capability.policy.nofocus.sites="http://www.google.co.uk"
+
+set! browser.dom.window.dump.enabled=true
+"set! nglayout.debug.disable_xul_cache=true
+"set! nglayout.debug.disable_xul_fastload=true
+
+
+"""" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set mapleader=","
+
+nnoremap <silent> <leader>,           :buffer #<cr>
+nnoremap          <leader>\'          :b<space>
