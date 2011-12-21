@@ -98,7 +98,7 @@ FLUXBOX_PID=$!
     nice -n 0 ogg123 ~/.fluxbox/login.ogg 2>/dev/null&
   # sleep 10 && nice -n 5  kmix &
   sleep 10 && nice -n 15 ooffice -quickstart -nodefault -nologo -splash-pipe=5 &
-  setxkbmap -option ctrl:nocaps &
+  # setxkbmap -option ctrl:nocaps &
   superswitcher -C &
 
   dbcli.py status & # dropbox
