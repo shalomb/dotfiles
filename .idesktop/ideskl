@@ -74,9 +74,12 @@ if (@draw_volumes) {
 
 # print join "\n", %md5sum = map { $_, md5sum($_) } glob '*';
 
+print "here";
 create_iconbar( $iconbar_config );
 
 sub create_iconbar {
+
+  print "Creating iconbar ..";
  
   my $iconbar_config_file = $_[0] || $iconbar_config;
   my (@icon_group,  $total_width,  $total_icons);
@@ -100,20 +103,24 @@ sub create_iconbar {
 
       if (!$fields[0] or $fields[0] =~ /^#/) {
         $group++;
-      } else {
+      }
+      else {
         if ($.==1) {
           @field_names = @fields
-        } elsif ($.==2) {
+        } 
+        elsif ($.==2) {
           @config{@field_names} = @fields;
-          for (qw|Iconbar_Y Icon_Width Icon_Height|) { # need keys for Width, Height and Y in the icon table.
+          for (qw|Iconbar_Y Icon_Width Icon_Height|) { #  common attributes in the icon table.
             my $key = $_;
             $key =~ s/.*_//;
             $config{$key} = $config{$_};
           }
           undef @field_names;
-        } elsif ($.==3) {
+        } 
+        elsif ($.==3) {
           @field_names = @fields
-        } else {
+        }
+        else {
           my %icon_tab;
           @icon_tab{@field_names} = @fields;
           $icon_tab{$_} = $icon_tab{$_} || $config{$_}
@@ -194,7 +201,6 @@ sub write_icon_file {
     return;
   };
   
-
   $icon{Icon} = Cwd::realpath(
       File::Spec->rel2abs(
           File::Spec->abs2rel($icon{Icon}, $idesktopdir), 
@@ -202,10 +208,11 @@ sub write_icon_file {
       )
   );
 
+
   local $/ = "\n";
   print $ofh "table Icon";
-    print $ofh "  $_: ", $icon{$_} 
-      for grep $icon{$_},
+  print $ofh "  $_: ", $icon{$_} 
+  for grep $icon{$_},
       ( qw| Caption CaptionTip Icon Height Width X Y Command[0] Command[1] | );
   print $ofh "end";
   close $ofh;
@@ -232,7 +239,6 @@ sub get_desktop_dimensions {
   if (open my $wmctrl, 'wmctrl -d -G |') {
     while (<$wmctrl>) {
       if (/\*\s*DG:\s*(\S*)x(\S*)/i) { 
-        print "return ($1, $2);";
         return ($1, $2); 
       }
     }
@@ -307,6 +313,29 @@ sub verify_ifile {
 
 }
 
+sub get_desktop_dimensions {
+
+  if (open my $wmctrl, 'wmctrl -d -G |') {
+    while (<$wmctrl>) {
+      if (/\*\s*DG:\s*(\S*)x(\S*)/i) { 
+        return ($1, $2); 
+      }
+    }
+  } else { 
+    warn "E, error opening pipe from 'wmctrl -d -G |', $!" 
+  }
+
+  if (open my $randr, "xrandr |") {
+    while (<$randr>) { 
+      if (/\s*(\S*)x(\S*).*\*/) {
+        return ($1, $2);
+      }
+    }
+  } else {
+    warn "E. error opening pipe from 'xrandr |', $!"
+  }
+
+}
 ##
 __END__
 options
