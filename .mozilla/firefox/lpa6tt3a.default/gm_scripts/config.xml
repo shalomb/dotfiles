@@ -3,7 +3,7 @@
 		<Include>http://twitter.com/*</Include>
 		<Include>https://twitter.com/*</Include>
 	</Script>
-	<Script filename="youtube_cinema_size_enla.user.js" name="Youtube Video Sizer" namespace="http://userscripts.org" description="Enhancement of the `Youtube Cinema Size Enlarger' script." version="" enabled="true" runAt="document-end" basedir="youtube_cinema_size_enla" modified="1324489408000" dependhash="da39a3ee5e6b4b0d3255bfef95601890afd80709" checkRemoteUpdates="true" updateAvailable="false" lastUpdateCheck="1324391974000" installurl="http://userscripts.org/scripts/source/73535.user.js" updateurl="http://userscripts.org/scripts/source/73535.meta.js">
+	<Script filename="yt_video_sizer.js" name="Youtube Video Sizer" namespace="http://userscripts.org" description="Enhancement of the `Youtube Cinema Size Enlarger' script." version="" enabled="true" runAt="document-end" basedir="yt_video_sizer">
 		<Include>http://*.youtube.*/*</Include>
 		<Include>http://youtube.*/*</Include>
 		<Include>https://*.youtube.*/*</Include>
