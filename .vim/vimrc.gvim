@@ -33,3 +33,15 @@ highlight Visual        guibg=#303030 gui=bold
 
 " keybindings
 nnoremap <silent> <leader>nm          :if &guioptions =~ 'm'<bar>  set guioptions-=m <bar>else<bar>  set guioptions+=m<bar>endif<cr>
+
+" Stuff to do as late as is possible.
+"""" GVim tweaks """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" GUI specific tweaks, incase .gvimrc isn't loaded.
+"colorscheme koehler
+
+highlight clear
+highlight Normal ctermbg=black ctermfg=grey
+highlight Search ctermbg=DarkRed ctermfg=Gray
+
+set background=dark       " vim has a dark background when in the console
+colorscheme koehler
