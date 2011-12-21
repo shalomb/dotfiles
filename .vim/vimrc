@@ -15,7 +15,7 @@ set backupdir=/tmp          " put backups in /tmp
 set backupdir-=.            " ...and not in cwd
 
 set t_Co=256
-set background=light       " vim has a dark background when in the console
+" set background=light       " vim has a dark background when in the console
 "set hidden                  " hide, don't close, undisplayed buffers
 set history=256             " keep 50 lines of command history
 
@@ -399,13 +399,3 @@ vnoremap           <C-S>              <C-C>:update<CR>
 vnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
 
 
-" Stuff to do as late as is possible.
-"""" GVim tweaks """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" GUI specific tweaks, incase .gvimrc isn't loaded.
-"colorscheme koehler
-
-highlight clear
-highlight Normal ctermbg=black ctermfg=grey
-highlight Search ctermbg=DarkRed ctermfg=Gray
-
-set background=dark       " vim has a dark background when in the console
