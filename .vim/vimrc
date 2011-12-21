@@ -1,9 +1,9 @@
-""" Pathogen  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""" Pathogen  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 filetype off
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles()
 
-"""" Options """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"""" Options """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set more                    " page on extended output
 
 let $PAGER='less'           " less is my pager
@@ -15,9 +15,9 @@ set backupdir=/tmp          " put backups in /tmp
 set backupdir-=.            " ...and not in cwd
 
 set t_Co=256
-" set background=light       " vim has a dark background when in the console
-"set hidden                  " hide, don't close, undisplayed buffers
-set history=256             " keep 50 lines of command history
+" set background=light      " vim has a dark background when in the console
+"set hidden                 " hide, don't close, undisplayed buffers
+set history=256             " lines of command history to keep
 
 set laststatus=2            " always show status line
 set statusline=%1*%F\ %*\ %n%a%M%R\ %H%Y%W\ %{&ff},%{&fenc}\ %=%-14.(%l/%L,%c%V\ (%P)%)\ \ %<%o,0x%O\ \ %b,0x%B\ \ \ %N\ 
@@ -30,7 +30,7 @@ set ruler                   " display cursor position
 set showcmd                 " show command-in-progress
 set showmode                " mode shown
 set novisualbell            " no visual bell 
-set title                   " do set the xterm title (see 'titleold', set below)
+set title                   " set the xterm title (see 'titleold', set below)
 
 set foldcolumn=2            " no fold column
 set foldlevelstart=0        " start with all folds closed
@@ -40,7 +40,7 @@ set formatoptions=r         " r - re-insert comment leader on newline
 set terse                   " add 's' to 'shortmess'
 set timeout                 " allow keys to timeout
 set wildmenu                " enable menu of completions
-set wildmode=full           " Complete longest common string, then each full match
+set wildmode=full           " longest common string, then each full match
 set wildcharm=<C-Z>         " keybinding that charms the wild complete
 
 if has('mouse')
@@ -71,8 +71,8 @@ set wrap                    " wrap long lines
 set wrapmargin=2            " clear 2 at the RHS
 set linebreak               " soft-break at non-word characters
 set nolist                  " soft-wrap seems to play up if list is set
-set splitright              " create new vsplits to the right of the current window
-set splitbelow              " create new splits to the bottom of the current window
+set splitright              " create new vsplits to the right of current window
+set splitbelow              " create new splits to the bottom of current window
 
 set scrolloff=2             " always keep 2 lines in view at top/bottom margin
 set autoread                " autoload file when modified externally
@@ -156,6 +156,8 @@ endfunc
 command! -nargs=1 Tips :silent call s:tips(<q-args>)
 cabbrev tips <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'Tips' : 'tips')<CR>
 
+"""" MyMap """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"" List maps matching argument(s)
 command! -nargs=* MyMap :!grep map.*<q-args> ~/.{g,}vimrc
 cabbrev mymap <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'MyMap' : 'mymap')<CR>
 
@@ -178,7 +180,8 @@ if v:version >= 703   " when undodir was introduced
 
   au BufWritePre /tmp/* setlocal noundofile
   set undolevels=8192       " maximum number of changes that can be undone
-  set undoreload=9216       " maximum number lines to save for undo on a buffer reload
+  set undoreload=9216       " maximum number lines to save for undo
+                            "  on a buffer reload
 
   function! ReadUndo()
     let _undofile = &undodir . expand("%:p") . '.undo'
@@ -223,6 +226,13 @@ function! AutoHighlightToggle()
   endif
 endfunction
 
+"""" Save Windows View """"""""""""""""""""""""""""""""""""""""""""""""""""""""
+"" http://stackoverflow.com/questions/4251533
+if v:version >= 700
+  au BufLeave * let b:winview = winsaveview()
+  au BufEnter * if(exists('b:winview')) | call winrestview(b:winview) | endif
+endif
+
 """" SuperTab tweaks """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " let g:SuperTabMidWordCompletion     = 1
 " let g:SuperTabDefaultCompletionType = "context"
@@ -238,7 +248,7 @@ set printexpr=PrintFile(v:fname_in)
 """" Autocmds """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 autocmd BufNewFile,Bufread    *.csv     setfiletype csv
 autocmd FileType perl                   setlocal keywordprg=perldoc\ -T\ -f
-                                        " Open_a_Perl_module_from_its_module_name
+                                      " Open_a_Perl_module_from_its_module_name
 " autocmd BufWritePost          .vimrc    source ~/.vimrc
 
 """" Set Viminfo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -262,7 +272,7 @@ augroup END
 """" Command-T """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:CommandTMatchWindowAtTop = 1
 
-"""" abbrevs """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"""" abbrevs """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 """" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let mapleader = ","
