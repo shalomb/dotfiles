@@ -1,8 +1,45 @@
-#!/bin/bash
+#!/usr/bin/perl -l
 
-unset PATH
+# ~/.bin/gvim
+#   - wrapper around the real gvim to improve server reuse
+# 
+# Improvements on the SO post 
+#  http://stackoverflow.com/a/8598196/742600
+#
+# (c) 2011, Shalom Bhooshi <s.bhooshi/gmail.com>
 
-source /etc/profile &> /dev/null
+use v5.10;
+use strict;
+use warnings;
+use File::Basename qw[dirname];
+use File::Spec;
+  sub fsc { File::Spec->catfile(@_) }
 
-(( $# == 0)) && set -- ""
-exec gvim --remote-silent "$@"
+my $gvim = fsc(+(
+            grep { -x fsc($_, 'gvim') }
+            grep { $_ ne dirname($0)  }
+            split /:/,  $ENV{PATH}
+          )[0], "gvim");
+
+
+sub gvim {
+  unshift @_, '--servername', $ENV{GVIMSERVER}
+    if exists $ENV{GVIMSERVER};
+  exec { $gvim } $gvim, @_;
+}
+
+
+if (scalar @ARGV) {
+  unshift @ARGV, '--remote-tab-silent' 
+    unless /^(?:--?|\+(?:\d|\/))/ ~~ @ARGV;
+  gvim @ARGV 
+}
+else {
+  chomp(my $serverlist = `gvim --serverlist`);
+  if (my $server = +(split /\n+/, $serverlist)[-1]) {
+    $ENV{GVIMSERVER} = $server;
+    gvim '--remote-send', '<Esc>:tabnew<CR>'
+  }
+  else { gvim }
+}
+
