@@ -1,0 +1,29 @@
+#!/usr/bin/perl -l
+
+use strict;
+use warnings;
+
+my $notesDir = glob '~/Desktop/books/info';
+
+sub displaySections;
+
+displaySections;
+
+sub displaySections {
+  my $notesDir = +(shift) // $notesDir;
+
+  my @notes = do {
+    opendir my $dh, $notesDir or die "error opening $notesDir, $!";
+    my $maxlen = 0;
+    map {
+      $maxlen = length $_ if length $_ > $maxlen;
+      $_ = -d $_ ? "$_/" : "$_";
+    } sort grep !/\.sw.$/i, grep !/^.{1,2}$/, readdir $dh
+  };
+
+  my $c=0;
+  for (@notes) {
+    print "$c)  $_";
+    $c++;
+  }
+}
