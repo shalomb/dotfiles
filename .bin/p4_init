@@ -1,0 +1,47 @@
+#!/bin/bash
+
+
+[[ $@ ]] && echo "ARGS: $@"
+p4_words=()
+
+set -a 
+
+[[ -f $P4CONFIG ]] && source $P4CONFIG
+[[ -f ~/.p4settings ]] && source ~/.p4settings
+
+P4DIFFUNICODE="${P4DIFFUNICODE:-/usr/bin/gvimdiff}"
+P4DIFF="${P4DIFF:-/usr/bin/gvimdiff}"
+P4EDITOR="${P4EDITOR:-/usr/bin/gvim}"
+P4MERGE="${P4MERGE:-"$P4DIFF"}"
+P4MERGEUNICODE="${P4MERGEUNICODE:-"$P4MERGE"}"
+
+P4USER="${P4USER:-shalomb}"
+P4HOST="${P4HOST:-kratos.theos.local}"
+P4CLIENT="${P4CLIENT:-shalomb_kratos}"
+P4PORT="${P4PORT:-devsrc2.eng.citrite.net:2555}"
+
+if [[ "$@" == *reset* ]]; then
+  if [[ "$@" == *all* ]]; then
+    p4_words=(P4DIFFUNICODE P4DIFF P4EDITOR P4MERGE P4MERGEUNICODE)
+  fi
+  p4_words+=(P4USER P4HOST P4CLIENT P4PORT)
+
+  for v in "${p4_words[@]}"; do
+    read -p "set $v [${!v}] : " val
+    if [[ $val ]] && [[ $val != ${!v} ]]; then
+      printf "  %s='%s'\n" "$v" "$val"
+      IFS= read -r "$v" <<<"$val"
+    fi
+  done
+fi
+
+set +a
+
+if p4 login -s || p4 login -p; then
+  p4 login -s
+  p4 tickets
+  p4 set | sort 
+  p4 info
+fi
+
+
