@@ -43,3 +43,14 @@ else {
   else { gvim }
 }
 
+__END__
+
+test cases
+ * gvim
+ * gvim /path/to/file
+ * gvim /path/to/*
+ * gvim --serverlist
+ * gvim +/pattern file
+ * gvim +number file
+ * gvim -p /path/to/file1 /path/to/file2
+ * gvim -t tag filename
