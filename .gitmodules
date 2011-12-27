@@ -103,3 +103,12 @@
 [submodule ".vim/bundle/genutils"]
 	path = .vim/bundle/genutils
 	url = https://github.com/vim-scripts/genutils.git
+[submodule ".vim/bundle/vim-orgmode"]
+	path = .vim/bundle/vim-orgmode
+	url = https://github.com/jceb/vim-orgmode.git
+[submodule ".vim/bundle/vim-speeddating"]
+	path = .vim/bundle/vim-speeddating
+	url = https://github.com/tpope/vim-speeddating.git
+[submodule ".vim/bundle/vst"]
+	path = .vim/bundle/vst
+	url = https://github.com/vim-scripts/VST.git
