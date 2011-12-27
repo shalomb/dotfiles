@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo " - in bashrc."
+
  ##############################################################################
 #   ~/.bashrc: executed by bash(1) for non-login shells.                       #
 #   See /usr/share/doc/bash/examples/startup-files (in the package bash-doc)   #
@@ -34,8 +36,10 @@ export HISTTIMEFORMAT=""
 export IGNOREEOF=5
 export TIMEFORMAT=$'\nReal: %3lR\tUser: %3lU\tSys: %3lS\tCPU: %3lP'
 
-read screen_session _ < <(screen -ls | grep "$PPID\.")
-export screen_session
+if type -P screen &> /dev/null; then
+  read screen_session _ < <(screen -ls | grep "$PPID\.")
+  export screen_session
+fi
 
 export TTY="$(tty)"; TTY="${TTY##/dev/}"
 export RUNLEVEL="${RUNLEVEL##* }"
@@ -123,9 +127,8 @@ else
   PROMPT_COMMAND="set_cdpath"
 fi
 
-# Convenience function around source
+# reload - convenience function around source
 #   * takes multiple arguments,
-#   * defaults to the right stuff
 function reload () {
   if [[ -n "$@" ]]; then
     for f; do
@@ -134,17 +137,22 @@ function reload () {
       }
     done
   else
-    reload ~/.bash_aliases /etc/bash_completion
+    reload  /etc/bash_completion  \
+            ~/.bash/completion    \
+            ~/.bash/aliases
   fi
 }
 
-reload /etc/bash_completion ~/.bash_aliases
+reload  ~/.bash/completion        \
+        ~/.bash/bash_aliases
 
 
-if type -p dircolors &>/dev/null; then
-  if [[ -r ~/.dircolors ]]; then
-    eval "$(dircolors -b ~/.dircolors)"
-  fi
+if type -P dircolors &>/dev/null; then
+  {
+    if [[ -f ~/.dircolors && -r ~/.dircolors ]]; then
+      eval "$(dircolors -b ~/.dircolors)"
+    fi
+  } &> /dev/null
 fi
 
 
