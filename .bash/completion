@@ -5,5 +5,4 @@
 test -t 0       || return
 
 # tips
-echo " - in bash_completion .. "
 reload  ~/.bin/tips_completion.sh
