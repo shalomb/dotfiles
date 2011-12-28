@@ -1,0 +1,344 @@
+#!/usr/bin/perl -l
+
+# ideskl - generate iconfiles for idesk iconbars
+# version: 0.7.5
+# author: shalom bhooshi
+# license: none/public_domain
+#   this peice of work has been released into the public domain.
+#   use it at your own risk.
+
+use strict;
+use warnings;
+
+use Text::CSV;
+use Digest::MD5;
+use Storable;
+use Data::Dumper;
+use Getopt::Long;
+use Cwd;
+use File::Spec;
+  sub fsc { File::Spec->catfile(@_) }
+
+sub md5sum;
+sub parse_iconbar_config;
+sub get_desktop_dimensions;
+sub write_icon_file;
+sub parse_mtab;
+sub device_label;
+
+my $idesktopdir = glob '~/.idesktop';
+my $md5sums = fsc( $idesktopdir, "md5sums" );
+my $iconbar_config = fsc( $idesktopdir, 'iconbar.csv' );
+
+my (%md5sum, @gen_md5sum);
+
+chdir $idesktopdir;
+
+my ($set_iconbar, @draw_volumes, @remove_volumes) = (0,0,0);
+&GetOptions( 
+  'draw_iconbar'      => \$set_iconbar,
+  'draw_volumes=s'    => \@draw_volumes,
+  'remove_volumes=s'  => \@remove_volumes,
+) or die "E, error processing arguments $!";
+
+my ($desktop_width, $desktop_height) = get_desktop_dimensions();
+
+if (@draw_volumes) {
+  my @volumes = grep $_, map { split /\s+/ } @draw_volumes;
+  my %mtab = parse_mtab;
+  my ($volumes_X, $volumes_Y) = ($desktop_width-36-32, 32);
+
+  for my $volume (sort @volumes) {
+    my %itable;
+    
+    @itable{qw|Caption Icon Width Height Command[0] Command[1]|} 
+      = ($mtab{$volume}->[1], 
+        qw|usb_drive.png 32 32|, 
+        "nautilus \"$mtab{$volume}->[1]\"");
+    $itable{filename} = $itable{CaptionTip} =  device_label($mtab{$volume}->[0]);
+    $itable{CaptionTip} .= " $mtab{$volume}->[1]";
+    $itable{CaptionTip} .= " $mtab{$volume}->[0]";
+    $itable{filename} = 'volume.' . $itable{filename} . '.lnk';
+   
+    if ($volumes_Y+68 >= $desktop_height) {
+      $volumes_Y  =  8;
+      $volumes_X  -= 36;
+    }
+    $itable{X} = $volumes_X;
+    $itable{Y} = $volumes_Y;
+    $volumes_Y += 52;
+
+    write_icon_file( \%itable );
+  }
+}
+
+# print join "\n", %md5sum = map { $_, md5sum($_) } glob '*';
+
+print "here";
+create_iconbar( $iconbar_config );
+
+sub create_iconbar {
+
+  print "Creating iconbar ..";
+ 
+  my $iconbar_config_file = $_[0] || $iconbar_config;
+  my (@icon_group,  $total_width,  $total_icons);
+
+  my %config;
+  @config{qw|Iconbar_Y Iconbar_Padding Icon_Width Icon_Height Icon_Padding Icongroup_Padding|}
+    = qw| 712 10 32 32 10 26 |;
+
+  open my $config, '<', $iconbar_config_file or do {
+    warn "E, error opening $iconbar_config_file for parsing, $!";
+    return undef;
+  };
+  
+  my $csv = Text::CSV->new();
+  my $group = 0;
+  my @field_names;
+
+  while ( my $line = <$config> ) {
+    if ( $csv->parse($line) ) {
+      my @fields = $csv->fields();
+
+      if (!$fields[0] or $fields[0] =~ /^#/) {
+        $group++;
+      }
+      else {
+        if ($.==1) {
+          @field_names = @fields
+        } 
+        elsif ($.==2) {
+          @config{@field_names} = @fields;
+          for (qw|Iconbar_Y Icon_Width Icon_Height|) { #  common attributes in the icon table.
+            my $key = $_;
+            $key =~ s/.*_//;
+            $config{$key} = $config{$_};
+          }
+          undef @field_names;
+        } 
+        elsif ($.==3) {
+          @field_names = @fields
+        }
+        else {
+          my %icon_tab;
+          @icon_tab{@field_names} = @fields;
+          $icon_tab{$_} = $icon_tab{$_} || $config{$_}
+            for (qw|Width Height Y|);
+          $icon_tab{'Command[0]'} = $icon_tab{Command} || $icon_tab{'Command[0]'};
+          delete $icon_tab{Command} 
+            if exists $icon_tab{Command};
+          $total_width += $icon_tab{Width};
+          $total_icons++;
+          push @{ $icon_group[$group] }, \%icon_tab;
+
+        }
+      }
+
+    } else {
+      warn "E, error parsing line $line, $!";
+    }
+  }
+
+  close $config;
+
+    print "total icons : ", $total_icons;
+    print "total space used by icons : ", $total_width;
+    print "free space : ", my $free_space = ($desktop_width - $total_width);
+    print "icon groups : ", $#icon_group;
+    print "free space excluding icon padding $config{Icon_Padding} : ", $free_space -= ($total_icons * $config{Icon_Padding});
+    print "free space excluding bar padding $config{Iconbar_Padding} : ", $free_space -= (2 * $config{Iconbar_Padding});
+    print "free space per group $config{Icongroup_Padding} : ", $free_space -= ($#icon_group * $config{Icongroup_Padding});
+    print "free space remaining : ", $free_space;
+
+
+    my $X = int ($free_space/2);
+    my $C = 1;
+    for (@icon_group) {
+        next unless $_;
+        for (my @icons = @{ $_ }) {
+            my %itable = %{ $_ };
+            $itable{X} = $X;
+            # print "Width: ",  $itable{Width}  += int 10*(sin $C++/($total_icons/3))**2;
+            write_icon_file( \%itable ) if (scalar %itable);
+            $X += $itable{Width} + $config{Icon_Padding};
+        }
+        $X +=  int $config{Icongroup_Padding};
+    }
+
+}
+
+sub md5sum {
+  my $file = shift;
+  open my $fh, "<", $file or do {
+    warn "E, error in opening $file while generating md5sum, $!";
+  };
+
+  my $ctx = Digest::MD5->new;
+  $ctx->addfile($fh);
+  return $ctx->hexdigest;
+}
+
+sub write_icon_file {
+  
+  my %icon = %{ +shift };
+  my $ifile = $icon{filename} || fsc($idesktopdir, $icon{Caption} . ".lnk");
+  if (-e $ifile) {
+    my $status = 1;
+    #|| verify_ifile( $ifile )
+    # if -e $md5sums;
+
+    if ($status eq 0) {
+      warn "md5sum mismatch";
+      return;
+    } elsif ($status eq 'error') {
+      warn "error verifying $ifile";
+    }
+  }
+
+  open my $ofh, ">", $ifile or do {
+    warn "E, error writing lnk file ($ifile) for $icon{Caption} $! \n";
+    return;
+  };
+  
+  $icon{Icon} = Cwd::realpath(
+      File::Spec->rel2abs(
+          File::Spec->abs2rel($icon{Icon}, $idesktopdir), 
+          $idesktopdir
+      )
+  );
+
+
+  local $/ = "\n";
+  print $ofh "table Icon";
+  print $ofh "  $_: ", $icon{$_} 
+  for grep $icon{$_},
+      ( qw| Caption CaptionTip Icon Height Width X Y Command[0] Command[1] | );
+  print $ofh "end";
+  close $ofh;
+}
+
+sub parse_mtab {
+  my %info;
+  open my $mtab, "<", "/etc/mtab" or die "E, oops. can't open /etc/mtab. $!";
+  while (<$mtab>) {
+    my @F = split /\s+/, $_;
+    $info{$F[0]} = \@F;
+    $info{$F[1]} = \@F;
+  }
+  return %info;
+}
+
+sub device_label {
+  chomp( my $uuid = `hal-get-property --udi \`hal-find-by-property --key block.device --string "$_[0]"\` --key volume.label` );
+  $uuid;
+}
+
+sub get_desktop_dimensions {
+
+  if (open my $wmctrl, 'wmctrl -d -G |') {
+    while (<$wmctrl>) {
+      if (/\*\s*DG:\s*(\S*)x(\S*)/i) { 
+        return ($1, $2); 
+      }
+    }
+  } else { 
+    warn "E, error opening pipe from 'wmctrl -d -G |', $!" 
+  }
+
+  if (open my $randr, "xrandr |") {
+    while (<$randr>) { 
+      if (/\s*(\S*)x(\S*).*\*/) {
+        return ($1, $2);
+      }
+    }
+  } else {
+    warn "E. error opening pipe from 'xrandr |', $!"
+  }
+
+}
+
+__END__
+
+perl -le '$i=pop; for (0..$i) { print "$_ ", $i-(1/(1/((cos $_/($i/3))**2))) }' 55 | xgraph
+
+$i-(
+    1/
+    (1/
+        (cos $_/($i/3))**2
+    )
+)
+
+sub write_md5sum {
+  my $file = shift;
+  open my $fh, "<", $file or {
+    warn "E, error in opening $file while generating md5sum, $!";
+  };
+  my $ctx = Digest::MD5->new;
+  $ctx->addfile(*$fh);
+  return $ctx->hexdigest eq $md5sum{ $file };
+}
+
+sub verify_ifile {
+
+  return unless (-e $md5sums);
+  %md5sum = retrieve( $md5sums );
+
+  my $file = shift;
+
+  if (!scalar %md5sums) {
+    open my $fh, "<", $md5sums or do {
+      warn "E, error opening $md5sums, $!" if $DEBUG;
+      return "error";
+    };
+    while (<$fh>) {
+      chomp;
+      $md5sum{$2} = $1 if (/^\s*(\S+)\s+(.*?)\s*$/);
+    }
+    close $fh;
+  }
+
+  if (scalar %md5sums) {
+
+    open my $fh, "<", $file or do {
+      warn "E, error opening $file for verification: $!" if $DEBUG;
+      return "error";
+    };
+
+    my $ctx = Digest::MD5->new;
+    $ctx->addfile(*$fh);
+
+    return $ctx->hexdigest eq $md5sum{ $file };
+  }
+
+}
+
+sub get_desktop_dimensions {
+
+  if (open my $wmctrl, 'wmctrl -d -G |') {
+    while (<$wmctrl>) {
+      if (/\*\s*DG:\s*(\S*)x(\S*)/i) { 
+        return ($1, $2); 
+      }
+    }
+  } else { 
+    warn "E, error opening pipe from 'wmctrl -d -G |', $!" 
+  }
+
+  if (open my $randr, "xrandr |") {
+    while (<$randr>) { 
+      if (/\s*(\S*)x(\S*).*\*/) {
+        return ($1, $2);
+      }
+    }
+  } else {
+    warn "E. error opening pipe from 'xrandr |', $!"
+  }
+
+}
+##
+__END__
+options
+ --no-restart
+ --no-delete
+ --delete-icons
