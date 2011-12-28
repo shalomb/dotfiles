@@ -1,3 +1,9 @@
+#!/bin/bash
+
+# tips_completion.sh - completion for the `tips' command.
+
+tips_dir="${tips_dir:- ~/Desktop/tips}"
+
 _tips() {
 
   local cur prev opts
@@ -8,12 +14,13 @@ _tips() {
   opts=""
 
   oldpwd="$PWD"
-  cd ~/Desktop/tips/
+  cd "$tips_dir"
+
   while read f; do 
     COMPREPLY+=( "$f" );
   done < <( find * \( -name ".hg" -type d -o -name ".*" \) -prune -o -type f -iname "*$cur*" -printf '%p\n' )
+  
   cd "$oldpwd";
-
   return 0
 }
 
