@@ -32,9 +32,13 @@ set! browser.dom.window.dump.enabled=true
 "set! nglayout.debug.disable_xul_cache=true
 "set! nglayout.debug.disable_xul_fastload=true
 
+set! noscript.surrogate.nofocus.sources="@.google.com"
+set! noscript.surrogate.nofocus.replacement="HTMLInputElement.prototype.focus=function(){}"
+
 
 """" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set mapleader=","
 
 nnoremap <silent> <leader>,           :buffer #<cr>
 nnoremap          <leader>\'          :b<space>
+nnoremap          <leader>b           :b<space>
