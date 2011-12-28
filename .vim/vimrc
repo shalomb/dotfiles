@@ -288,6 +288,11 @@ inoremap <C-S>                        <C-O>:update<CR>
 inoremap <C-Enter>                    <C-o>o
 inoremap <C-S-Enter>                  <C-o>O
 
+noremap  <buffer> <silent> k          gk
+noremap  <buffer> <silent> j          gj
+noremap  <buffer> <silent> 0          g0
+noremap  <buffer> <silent> $          g$
+
 nnoremap          .                   .`[
 nnoremap          <A-C-Left>          <esc>:tabprevious<cr>
 nnoremap          <A-C-Right>         <esc>:tabnext<cr>
