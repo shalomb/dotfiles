@@ -17,7 +17,7 @@
 [end]
 [app] (name=zim) (class=Zim)
   [Dimensions]	{408 221}
-  [Position]	(UPPERLEFT)	{1091 113}
+  [Position]	(UPPERLEFT)	{616 114}
   [Close]	{yes}
 [end]
 [app] (name=gdl_box)
