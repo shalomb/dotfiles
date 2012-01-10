@@ -1,4 +1,5 @@
 """ Pathogen  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+runtime bundle/pathogen/autoload/pathogen.vim
 filetype off
 call pathogen#helptags()
 call pathogen#runtime_append_all_bundles()
@@ -14,14 +15,49 @@ set more                    " page on extended output
 set backupdir=/tmp          " put backups in /tmp
 set backupdir-=.            " ...and not in cwd
 
-set t_Co=256
-" set background=light      " vim has a dark background when in the console
-"set hidden                 " hide, don't close, undisplayed buffers
+set hidden                  " hide, don't close, undisplayed buffers
 set history=256             " lines of command history to keep
 
 set laststatus=2            " always show status line
-set statusline=%1*%F\ %*\ %n%a%M%R\ %H%Y%W\ %{&ff},%{&fenc}\ %=%-14.(%l/%L,%c%V\ (%P)%)\ \ %<%o,0x%O\ \ %b,0x%B\ \ \ %N\ 
-highlight User1 guifg=red gui=bold
+
+set statusline=
+set statusline+=%1*%F\      " full filename
+set statusline+=%n          " buffer #
+set statusline+=\%<\ \      " Where to truncate a long line
+set statusline+=%a          " argument list status (e.g. 1 of 3)
+set statusline+=\ 
+set statusline+=%M          " modified flag
+set statusline+=%R          " readonly flag
+set statusline+=\ 
+set statusline+=%H          " help buffer flag
+set statusline+=%Y          " filetype
+set statusline+=%W          " preview window flag
+set statusline+=\ \ 
+set statusline+=%{&ff}      " file format
+set statusline+=\ 
+set statusline+=%{strlen(&fenc)?&fenc:&enc}   " file encoding 
+set statusline+=\ \ \ \ 
+set statusline+=%{&fo}      " format options
+set statusline+=\ 
+set statusline+=%{v:register} " last register used
+set statusline+=\ 
+set statusline+=%=          " separation point for RHS items
+set statusline+=%-14.(%l/%L,%c%V\ (%P)%) "line#/#ofLines,col#vCol#.%inFile
+set statusline+=\ 
+set statusline+=%8o,0x%06O   " byte number in file in decimal,hex
+set statusline+=\ 
+set statusline+=%5b,0x%04B   " value of character in decimal,hex
+set statusline+=\ \ 
+set statusline+=%{&sw},%{&ts},%{&et} " shiftwidth, tabstop and expandtab
+set statusline+=\ 
+set statusline+=%{v:foldlevel} " fold level
+set statusline+=, 
+set statusline+=%{indent('.')/&ts} " indent level
+set statusline+=\ \ 
+set statusline+=%N          " Printer page number
+set statusline+=%*
+"highlight User1 guifg=red gui=bold
+hi User1 ctermbg=white
 
 set shortmess=fimnrwxatIWO  " Get rid of most messages
 set cmdheight=2             " Set command height to 2 to avoid netrw pains
@@ -30,11 +66,11 @@ set ruler                   " display cursor position
 set showcmd                 " show command-in-progress
 set showmode                " mode shown
 set novisualbell            " no visual bell 
-set title                   " set the xterm title (see 'titleold', set below)
+set title                   " set the term's window title 
 
-set foldcolumn=2            " no fold column
+set foldcolumn=1            " no fold column
 set foldlevelstart=0        " start with all folds closed
-set modeline                " enable modelines contra debian
+set modeline                " enable modelines contra debian, TODO: secure this
 
 set formatoptions=r         " r - re-insert comment leader on newline
 set terse                   " add 's' to 'shortmess'
@@ -65,7 +101,7 @@ set smarttab                " smart tab size
 set shiftround              " indent rounded to shiftwidth
 
 set number                  " turn on line numbers
-set numberwidth=3           " with 3 digits by default
+set numberwidth=4           " with 3 digits by default
 
 set wrap                    " wrap long lines
 set wrapmargin=2            " clear 2 at the RHS
@@ -293,6 +329,9 @@ noremap  <buffer> <silent> j          gj
 noremap  <buffer> <silent> 0          g0
 noremap  <buffer> <silent> $          g$
 
+noremap  <buffer> <silent> <C-e>      5<C-e>
+noremap  <buffer> <silent> <C-y>      5<C-y>
+
 nnoremap          .                   .`[
 nnoremap          <A-C-Left>          <esc>:tabprevious<cr>
 nnoremap          <A-C-Right>         <esc>:tabnext<cr>
@@ -317,16 +356,6 @@ nnoremap          <leader>f           :CommandT<cr>
 nnoremap          <leader>ba          :ls<cr>:b<space>
 nnoremap          <leader>be          :CommandTBuffer<cr>
 nnoremap          <leader>bg          :LustyBufferGrep<cr>
-nnoremap <silent> <leader>b0          :b 0<cr>
-nnoremap <silent> <leader>b1          :b 1<cr>
-nnoremap <silent> <leader>b2          :b 2<cr>
-nnoremap <silent> <leader>b3          :b 3<cr>
-nnoremap <silent> <leader>b4          :b 4<cr>
-nnoremap <silent> <leader>b5          :b 5<cr>
-nnoremap <silent> <leader>b6          :b 6<cr>
-nnoremap <silent> <leader>b7          :b 7<cr>
-nnoremap <silent> <leader>b8          :b 8<cr>
-nnoremap <silent> <leader>b9          :b 9<cr>
 nnoremap <silent> <leader>bc          :close<cr>
 nnoremap <silent> <leader>bd          :bdelete<cr>
 nnoremap <silent> <leader>bh          :bprevious<cr>
@@ -355,6 +384,7 @@ nnoremap <silent> <leader>ncc         :set cursorcolumn!  cursorcolumn?<cr>
 nnoremap <silent> <leader>nh          :set hlsearch!      hlsearch?<cr>
 nnoremap <silent> <leader>nl          :set list!          list?<cr>
 nnoremap <silent> <leader>nm          :if &guioptions =~ 'm'<bar>  set guioptions-=m <bar>else<bar>  set guioptions+=m<bar>endif<cr>
+nnoremap <silent> <leader>nn          :if &number == 1<bar>  set relativenumber<bar>else<bar>  set number<bar>endif<cr>
 nnoremap <silent> <leader>np          :set paste!         paste?<cr>
 nnoremap <silent> <leader>ns          :set spell!         spell?<cr>
 nnoremap <silent> <leader>nw          :set wrap!          wrap?<cr>
@@ -397,9 +427,9 @@ nnoremap <silent> <leader>\|          :vnew<cr>
 nnoremap <silent> <leader>vg          :vimgrep /<c-r>=expand('<cword>') . '/j **/*' <cr>
 nnoremap          <leader>wr          :update<cr>
 nnoremap <silent> <leader>x           :close<cr>
-nnoremap <silent> <leader>y           "+y   "copy
+nnoremap <silent> <leader>Y           "+y   "copy
 
-vnoremap <silent> <leader>y           "+y   " copy
+vnoremap <silent> <leader>Y           "+y   " copy
 vnoremap <silent> <leader>D           "+x   " cut
 vnoremap <silent> <leader>d           "+x   " cut
 vnoremap <silent> <leader>x           "+x   " cut
@@ -414,3 +444,43 @@ vnoremap           <C-S>              <C-C>:update<CR>
 vnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
 
 
+"""" Aesthetics """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set t_Co=256
+set background=light      
+highlight clear
+colorscheme koehler
+
+" xterm colors: http://vim.wikia.com/wiki/Xterm256_color_names_for_console_Vim
+" Line numbers
+highlight LineNr ctermfg=lightgreen
+" Fold column - left-most column
+highlight FoldColumn ctermbg=NONE
+" ShowMarks Column
+highlight SignColumn ctermbg=NONE
+" Search terms
+highlight Search term=reverse cterm=reverse
+" status line
+highlight User1 term=bold cterm=bold ctermfg=16  ctermbg=166
+
+"""" ShowMarks.vim """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let showmarks_include = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+let g:showmarks_enable = 1
+let g:showmarks_textlower = "'\t"
+let g:showmarks_textupper = "'\t"
+let g:showmarks_textother = "'\t"
+" For marks a-z
+highlight ShowMarksHLl gui=bold ctermfg=Blue   ctermbg=NONE
+" For marks A-Z
+highlight ShowMarksHLu gui=bold ctermfg=Red    ctermbg=NONE
+" For all other marks
+highlight ShowMarksHLo gui=bold ctermfg=Green  ctermbg=NONE
+" For multiple marks on the same line
+highlight ShowMarksHLm gui=bold ctermfg=Yellow ctermbg=NONE
+			
+"set cursorline              " highlight the current line
+"set cursorcolumn            " highlight the current column
+"set colorcolumn=+1            " place a soft margin +1 relative to textwidth
+"highlight CursorLine    ctermbg=lightred
+"highlight CursorColumn  ctermbg=lightred
+"highlight ColorColumn   ctermbg=lightred
+"""" Environmental Variables """""""""""""""""""""""""""""""""""""""""""""""""
