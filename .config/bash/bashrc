@@ -1,7 +1,9 @@
 #!/bin/bash
 
  ##############################################################################
-#   ~/.bashrc: executed by bash(1) for non-login shells.                       #
+#   ~/.config/bash/bashrc: executed by bash(1) for non-login shells.           #
+#     Also nstalled at ~/.bashrc for legacy reasons.                           #
+#                                                                              #
 #   See /usr/share/doc/bash/examples/startup-files (in the package bash-doc)   #
 #   for examples                                                               #
  ##############################################################################
@@ -11,7 +13,7 @@
 test -t 0       || return
 
 # source ~/.profile if 
-#  * ~/.bashrc hasn't been sourced before - for interactive shells
+#  * ~/.config/bashrc hasn't been sourced before - for interactive shells
 #  * it hasn't already been marked as sourced.
 if [[ -z $BASHRC_SOURCED ]] || \
    [[ -z $PROFILE_SOURCED && -r ~/.profile ]]; then
@@ -135,14 +137,15 @@ function reload () {
       }
     done
   else
-    reload  /etc/bash_completion  \
-            ~/.bash/completion    \
-            ~/.bash/aliases
+    reload  /etc/bash_completion       \
+            ~/.config/bash/completion  \
+            ~/.config/bash/aliases
   fi
 }
 
-reload  ~/.bash/completion        \
-        ~/.bash/bash_aliases
+# Source aliases
+reload  ~/.config/bash/completion \
+        ~/.config/bash/aliases
 
 
 if type -P dircolors &>/dev/null; then
@@ -165,7 +168,7 @@ clean_path () {
 clean_path PATH;    export PATH
 clean_path MANPATH; export MANPATH
 
-
+                                                      
 # Right, we're ready to hand over control to the user now!
 # Print some informational trivia.
 echo -e "\n$BASH ${BASH_VERSION}"

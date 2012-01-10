@@ -23,8 +23,8 @@ fi
 shopt -u nullglob dotglob
 
 function add_alias () {
-  if alias "$1" &> /dev/null; then
-   alias "$1" >> ~/.bash_aliases
+  if ! alias "$1" &> /dev/null; then
+   alias "$1" >> ~/.config/bash/aliases
   fi
 }
 
@@ -234,6 +234,15 @@ function  reset_screen () {
   printf "set mouse reporting on  \033[?1000h %d\n" $?; # turn mouse reporting on
   printf "set mouse reporting off \033[?1000l %d\n" $?; # turn mouse reporting off
 }
+
+function which () {
+  target=$(type -P "$1");
+  echo "$target";
+  while [[ -L $target ]]; do
+    target=$(readlink "$target");
+    echo "  $target";
+  done;
+} 
 #__DISABLED__
 #
 # function dfp { df -h | perl -lne 'print "-"x67 if ($.=~/1|2/); printf "|%-12s| %4s | %4s | %5s | %8s | %-15s |\n", split /\s+/,$_'/,$_'; '}              #pretty print df -h

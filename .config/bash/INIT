@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -x
+
+while read pkg status; do
+  echo "$pkg $status" | sudo dpkg --set-selections
+  (( i++ ))
+done < <( comm -13 <(dpkg --get-selections "bash*" | sort) <(sort bash.dpkg) )
+
+(( i > 0 )) && sudo aptitude install
+
+exit;
+
+# Pay attention to files attempted to be overwritten below, they are not
+# overwritten and you will need to manually remove the files if they 
+# already exist.
+
+cd ~ && for i in ~/.config/bash/*; do
+  ln -sv "$i" ."${i##*/}";
+done
+
