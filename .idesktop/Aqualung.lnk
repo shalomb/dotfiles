@@ -1,9 +1,0 @@
-table Icon
-  Caption: Aqualung
-  Icon: /home/unop/.idesktop/aqualung.png
-  Height: 28
-  Width: 28
-  X: 734
-  Y: 990
-  Command[0]: aqualung
-end

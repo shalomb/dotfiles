@@ -1,9 +1,0 @@
-table Icon
-  Caption: Windows XP
-  Icon: /home/unop/.idesktop/winxp.png
-  Height: 28
-  Width: 28
-  X: 1406
-  Y: 990
-  Command[0]: VBoxManage startvm Windows_XP_SP3
-end

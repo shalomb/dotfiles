@@ -1,8 +1,0 @@
-table Icon
-  Caption: Gnome Control Center
-  Icon: /home/unop/.idesktop
-  Height: 32
-  Width: 32
-  X: 109
-  Y: 542
-end

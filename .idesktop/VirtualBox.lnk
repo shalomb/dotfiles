@@ -1,9 +1,0 @@
-table Icon
-  Caption: VirtualBox
-  Icon: /home/unop/.idesktop/virtualbox.png
-  Height: 28
-  Width: 28
-  X: 1368
-  Y: 990
-  Command[0]: VirtualBox
-end

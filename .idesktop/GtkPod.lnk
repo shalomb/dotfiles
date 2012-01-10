@@ -1,9 +1,0 @@
-table Icon
-  Caption: GtkPod
-  Icon: /home/unop/.idesktop/gtkpod.png
-  Height: 28
-  Width: 28
-  X: 848
-  Y: 990
-  Command[0]: gtkpod
-end

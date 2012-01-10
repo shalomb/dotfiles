@@ -1,9 +1,0 @@
-table Icon
-  Caption: Chrome
-  Icon: /home/unop/.idesktop/google_chrome.png
-  Height: 28
-  Width: 28
-  X: 550
-  Y: 990
-  Command[0]: google-chrome
-end

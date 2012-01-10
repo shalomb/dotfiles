@@ -1,9 +1,0 @@
-table Icon
-  Caption: 
-  Icon: /home/unop/.idesktop/bar.png
-  Height: 20
-  Width: 1024
-  X: 0
-  Y: 554
-  Command[0]: fluxbox-remote 'rootmenu'
-end

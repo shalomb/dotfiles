@@ -1,9 +1,0 @@
-table Icon
-  Caption: Picasa
-  Icon: /home/unop/.idesktop/google_picasa.png
-  Height: 28
-  Width: 28
-  X: 1162
-  Y: 990
-  Command[0]: picasa
-end
