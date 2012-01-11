@@ -64,7 +64,7 @@
 #     http://en.wikipedia.org/wiki/Quake-style_console
 #
 # AUTHOR
-#   Shalom Bhooshi
+#   Shalom Bhooshi <s.bhooshi/gmail.com>
 #
 # COPYRIGHT
 #   Copyright © 2011 Shalom Bhooshi.  
@@ -103,16 +103,14 @@ if ! kill -0 $(pidof urxvtd) &>/dev/null; then
   urxvtd -q -o -f || { echo "Error launching urxvtd : $!"; exit 2; };
 fi
 
-if [[ $qtermWinID = 0x0 ]]; then # window is non-existent
+if [[ $qtermWinID = 0x0 ]]; then     # window is non-existent
   qtermSession="$(tmux ls | grep -Eio "^qterm:")"
   if [[ -z $qtermSession ]]; then
-    urxvtc -name qterm -title qterm           \
-      -tr -tint black -fg \#dfdfdf -sh 60 -e  \
-      tmux new-session -s qterm &
+    urxvtc -name qterm -title qterm  \
+       -e  tmux new-session -s qterm &
   else
-    urxvtc -name qterm -title qterm           \
-      -tr -tint black -fg \#dfdfdf -sh 60 -e  \
-      tmux attach -t "$qtermSession" &
+    urxvtc -name qterm -title qterm     \
+      -e tmux attach -t "$qtermSession" &
   fi
   exit;
 fi
