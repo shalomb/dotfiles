@@ -1,4 +1,4 @@
-*dpi:                   82
+*dpi:                   76
 
 URxvt*termName:         rxvt
 URxvt*saveLines:        16384
@@ -10,7 +10,7 @@ URxvt*cursorColor2:     #3399cc
 
 URxvt*inheritPixmap:    true
 URxvt*transparent:      true
-URxvt*shading:          20
+URxvt*shading:          10
 URxvt*tintColor:        #ffffff
 URxvt*foreground:       #cfcfcf
 URxvt*background:       #000000
