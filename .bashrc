@@ -1,24 +1,24 @@
 #!/bin/bash
 
  ##############################################################################
-#   ~/.bashrc: executed by bash(1) for non-login shells.                       #
+#   ~/.config/bash/bashrc: executed by bash(1) for non-login shells.           #
+#     Also nstalled at ~/.bashrc for legacy reasons.                           #
+#                                                                              #
 #   See /usr/share/doc/bash/examples/startup-files (in the package bash-doc)   #
 #   for examples                                                               #
  ##############################################################################
 
-# If not running interactively, don't do anything
-[[ -n "$PS1" ]] || return
-test -t 0       || return
+[[ ${-//[!i]/} ]] || return
 
 # source ~/.profile if 
-#  * ~/.bashrc hasn't been sourced before - for interactive shells
+#  * ~/.config/bashrc hasn't been sourced before - for interactive shells
 #  * it hasn't already been marked as sourced.
 if [[ -z $BASHRC_SOURCED ]] || \
    [[ -z $PROFILE_SOURCED && -r ~/.profile ]]; then
   source ~/.profile
 fi
 
-export BASHRC_SOURCED="$(date +%s)"
+export BASHRC_SOURCED="$BASHRC_SOURCED|$(date +%s)"
 export BASHRC_SOURCED_BY="$BASHRC_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
 
 export PAGER=$(which less)
@@ -135,14 +135,15 @@ function reload () {
       }
     done
   else
-    reload  /etc/bash_completion  \
-            ~/.bash/completion    \
-            ~/.bash/aliases
+    reload  /etc/bash_completion       \
+            ~/.config/bash/completion  \
+            ~/.config/bash/aliases
   fi
 }
 
-reload  ~/.bash/completion        \
-        ~/.bash/bash_aliases
+# Source aliases
+reload  ~/.config/bash/completion \
+        ~/.config/bash/aliases
 
 
 if type -P dircolors &>/dev/null; then
@@ -165,7 +166,7 @@ clean_path () {
 clean_path PATH;    export PATH
 clean_path MANPATH; export MANPATH
 
-
+                                                      
 # Right, we're ready to hand over control to the user now!
 # Print some informational trivia.
 echo -e "\n$BASH ${BASH_VERSION}"
