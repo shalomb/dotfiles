@@ -5,6 +5,7 @@
   [stick]
   [layer] 
   [sendto]
+  [SendToNextHead] (Next Head)
   [submenu] (Advanced)
     [settitledialog]
     [raise]
