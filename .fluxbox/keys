@@ -20,7 +20,7 @@ Control Mod4 Shift Delete :Restart
 #----Display Actions----{{{---------------------------------------------------
 Control Mod4 Left         :ExecCommand switchscreen
 Control Mod4 Right        :ExecCommand switchscreen && DISPLAY=:0.0 invoke_window_by_wm_class "VirtualBox"
-}}}
+# }}}
 
 #----Workspace Actions----{{{--------------------------------------------------
 Mod1 Menu      :WorkspaceMenu
