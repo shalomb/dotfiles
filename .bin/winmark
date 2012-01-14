@@ -4,7 +4,9 @@
 #   wminmark - mark and summon windows.
 
 set -x
-test -t 0 || exec > ~/.tmp/winmark.log 2>&1
+
+# [[ ${-//[!i]/} ]] &&
+#   exec > >(tee -a ~/.tmp/wmarks.log) 2>&1
 
 if [[ ! -d ~/.tmp/winmarks ]]; then
   mkdir -p ~/.tmp/winmarks || \
@@ -13,14 +15,12 @@ fi
 
 cd ~/.tmp/winmarks
 
-pwd
-
 action="${1:-"mark"}"
 mark="${2:-"'"}"
 duration="${osd_msg_duration:-"10"}"
+curwin="$(printf "0x%08x" "$(xprop -root _NET_ACTIVE_WINDOW | grep -Eio "0x[[:xdigit:]]+")")";
 
 if   [[ $action = mark ]]; then
-  curwin="$(printf "0x%08x" "$(xprop -root _NET_ACTIVE_WINDOW | grep -Eio "0x[[:xdigit:]]+")")";
   touch "$curwin";
   ln -svf "$curwin" "$mark";
 
@@ -38,12 +38,26 @@ if   [[ $action = mark ]]; then
 
 elif [[ $action = summon ]]; then
   winid="$(readlink "$mark")";
-  wmctrl -i -a "${winid##*/}";
+  winid="${winid##*/}"
+
+  if [[ -f $winid ]]; then
+    if [[ $winid = $curwin ]]; then
+      wmctrl -i -r "$winid" -b toggle,hidden
+    else
+      wmctrl -i -r "$winid" -b remove,hidden
+      wmctrl -i -a "$winid"
+    fi
+  else
+    exec "$0" "mark" "$mark"
+  fi
 
 elif [[ $action = list ]]; then
   set +v +x
-  for i in ?; do
-    printf "%s %s %s %s\n" "$i" $(< $i)
+  for link in ?; do
+    target=$(readlink -f "$link")
+    target="${target##*/}"
+    [[ -f $target ]] || continue
+    printf "%s %s %s\n" "$link" "$target" "$(< $link)"
   done 
 
 fi
