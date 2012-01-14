@@ -69,6 +69,7 @@ FLUXBOX_PID=$!
 
 {
   wpset &
+  nitrogen --restore &
   # xbindkeys
   # fetchmail
 
