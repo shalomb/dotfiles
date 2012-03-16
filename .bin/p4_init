@@ -18,7 +18,7 @@ P4MERGEUNICODE="${P4MERGEUNICODE:-"$P4MERGE"}"
 P4USER="${P4USER:-shalomb}"
 P4HOST="${P4HOST:-kratos.theos.local}"
 P4CLIENT="${P4CLIENT:-shalomb_kratos}"
-P4PORT="${P4PORT:-devsrc2.eng.citrite.net:2555}"
+P4PORT="${P4PORT:-camsrc.eng.citrite.net:2555}"
 
 if [[ "$@" == *reset* ]]; then
   if [[ "$@" == *all* ]]; then
