@@ -24,7 +24,7 @@ max_lines=16384  # 2*$HISTSIZE as HISTTIMEFORMAT takes up odd lines
 
 linecount=$(wc -l < ~/"$HISTFILE")
 
-if (($linecount > $max_lines)); then
+if [[ $linecount ]] && (($linecount > $max_lines)); then
   prune_lines=$(($linecount - $max_lines))
   head -$prune_lines ~/"$HISTFILE" >> "$HISTFILE".archive \
     && sed -e "1,${prune_lines}d"  "$HISTFILE" > "$HISTFILE".tmp$$ \
