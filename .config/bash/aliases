@@ -103,9 +103,25 @@ alias     pu='ps au -U $USER'
 alias     px='ps aux -U $USER'
 
 alias     tmp='cd $TMP'
-alias     timestamp='date +"%Y%m%d.%H%M%S"'
+alias     timestamp='date +%s'
+alias     timestamp_simple='date +"%Y%m%dT%H%M%S"'
+alias     timestamp_rfc3339='date --rfc-3339=seconds | tr " " T'
 
-alias     udate='date +"%s"'
+function timein() { 
+  # http://www.linuxjournal.com/content/add-your-city-linuxs-list-time-zones
+  ( 
+    shopt -s nocasematch
+    cd /usr/share/zoneinfo  || cd /usr/lib/zoneinfo
+    local search_str="$1"
+    local tzs=( */* )
+
+    for tz in "${tzs[@]}"; do
+      if [[ $tz = *$search_str* ]]; then
+        printf "%-24s %s\n" "$tz" "$(TZ="$tz" date)"
+      fi
+    done
+  )
+}
 
 alias     d2h="perl -e 'printf qq|%X|, int( shift )'"
 alias     d2o="perl -e 'printf qq|%o|, int( shift )'"
@@ -235,6 +251,10 @@ function  reset_screen () {
   printf "set mouse reporting off \033[?1000l %d\n" $?; # turn mouse reporting off
 }
 
+# 'reset' terminal after text becomes garbled due to charset change
+# http://www.in-ulm.de/~mascheck/various/alternate_charset/
+alias vtn='echo "X[mX(BX)0OX[?5lX7X[rX8" | tr "XO" "\033\017"'
+
 function which () {
   target=$(type -P "$1");
   echo "$target";
@@ -264,3 +284,5 @@ alias techne='ssh-x -Y techne'
 alias theos.ath.cx='ssh-x -Y theos.ath.cx'
 alias theos='ssh-x -Y theos.ath.cx'
 alias foobar='echo foobar'
+alias p4_init='source ~/.bin/p4_init'
+alias ssh_init='source ~/.bin/update_ssh_agent_info'
