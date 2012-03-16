@@ -8,4 +8,4 @@ fi
 
 type -P p4 &> /dev/null || exit 0
 
-p4 ${1+$@}
+p4 "$@"
