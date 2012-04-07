@@ -9,8 +9,7 @@
  ##############################################################################
 
 # If not running interactively, don't do anything
-[[ -n "$PS1" ]] || return
-test -t 0       || return
+[[ ${-//[!i]/} ]] || return
 
 # source ~/.profile if 
 #  * ~/.config/bashrc hasn't been sourced before - for interactive shells
