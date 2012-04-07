@@ -269,6 +269,18 @@ function which () {
 # printf '\33]701;%s\007' en_GB.UTF-8                 # set the locale
 # printf '\33]50;%s\007' "8x13,xft:Kochi Gothic"      # set funky fonts
 
+# ==================================#
+# Source other named files          #
+# ==================================#
+aliases_files=(
+  ~/.config/bash/aliases.d/* \
+  ~/.config/bash/aliases.host/"$(hostname -s)" \
+  ~/.config/bash/aliases.host/"$(hostname -f)" \
+);
+
+for aliases_file in "${aliases_files[@]}"; do
+  [[ -r $aliases_file ]] && source "$aliases_file"
+done
 
 # ==================================#
 # *  aliases added via add_alias  * #
