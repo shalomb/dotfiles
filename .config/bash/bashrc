@@ -179,3 +179,5 @@ echo ""
 
 fortune
 echo ""
+
+source ~/.bin/update_ssh_agent_info
