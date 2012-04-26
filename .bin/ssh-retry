@@ -1,0 +1,29 @@
+#!/bin/bash
+
+host="$1"
+retry="${t:-"$2"}"
+
+source ~/.bin/update_ssh_agent_info
+
+echo "$(whoami)@$(hostname):$(pwd)($(pwd -P)) "
+
+retry_floor=1
+retry_ceil=32
+retry_interval="$retry_floor"
+
+while :; do
+  echo -ne "$(date)  "
+  ssh -2 -A -t -oConnectTimeout=5 "$host"
+
+  if (( $? != 0 )); then
+    if [[ $retry ]]; then
+      retry_interval="$retry"
+    else
+      retry_interval=$( perl -le '($r,$c)=(@ARGV); print $r >= $c ? $c : $r*=2' "$retry_interval" "$retry_ceil" )
+    fi
+  else
+    retry_interval="$retry_floor"
+  fi
+  
+  sleep "${retry_interval:-$retry_floor}"
+done
