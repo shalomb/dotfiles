@@ -3,7 +3,7 @@
 host="$1"
 retry="${t:-"$2"}"
 
-source ~/.bin/update_ssh_agent_info
+type -P update_ssh_agent_info &>/dev/null && source "$( type -P update_ssh_agent_info )"
 
 echo "$(whoami)@$(hostname):$(pwd)($(pwd -P)) "
 
