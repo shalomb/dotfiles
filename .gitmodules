@@ -112,3 +112,6 @@
 [submodule ".vim/bundle/vst"]
 	path = .vim/bundle/vst
 	url = https://github.com/vim-scripts/VST.git
+[submodule ".vim/bundle/csapprox"]
+	path = .vim/bundle/csapprox
+	url = https://github.com/godlygeek/csapprox.git
