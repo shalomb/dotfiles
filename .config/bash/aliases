@@ -5,18 +5,16 @@
 # set -v -e -x
 
 # This file is to be treated as a stub i.e. it must not source any other files
-# except those files under ~/.config/bash/alias.d/. This behaviour must be
+# except those files under ~/.config/bash/aliases.d/. This behaviour must be
 # inherited by those files too.
 
-# If not running interactively, return
-[[ -n "$PS1" ]] || return
-test -t 0       || return
+[[ ${-//[!i]/} ]] || return
 
-export BASH_ALIASES_SOURCED="$(date +%s)"
+export BASH_ALIASES_SOURCED="$(date +%s)|$BASH_ALIASES_SOURCED"
 export BASH_ALIASES_SOURCED_BY="$BASH_ALIASES_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
 
-shopt -s nullglob dotglob
-alias_files=( ~/.config/bash/alias.d/* );
+shopt -s nullglob dotglob extglob
+alias_files=( ~/.config/bash/aliases.d/* );
 if (( ${#alias_files[@]} > 0 )); then
   reload "${alias_files[@]}";
 fi
@@ -24,7 +22,9 @@ shopt -u nullglob dotglob
 
 function add_alias () {
   if ! alias "$1" &> /dev/null; then
-   alias "$1" >> ~/.config/bash/aliases
+    alias "$1" >> ~/.config/bash/aliases
+  else
+    echo "alias '$1' != null failed."
   fi
 }
 
@@ -92,7 +92,9 @@ alias     ll='ls -BFilos'
 alias     lr='find . | g $*'
 alias     lt='ls -lt'
 
-function  llr ()  { find "$PWD" -iname "*$@*" -exec ls -lsdF --color=auto '{}' + | less; }
+function  llr ()  {
+  find "$PWD" -iname "*$@*" -exec ls -lsdF --color=auto '{}' + | less;
+}
 
 alias     more=less
 
@@ -263,4 +265,3 @@ alias iris='ssh-x -Y iris'
 alias techne='ssh-x -Y techne'
 alias theos.ath.cx='ssh-x -Y theos.ath.cx'
 alias theos='ssh-x -Y theos.ath.cx'
-alias foobar='echo foobar'
