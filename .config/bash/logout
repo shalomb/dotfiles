@@ -4,7 +4,7 @@
 
 # when leaving the console clear the screen to increase privacy
 if [[ "$SHLVL" = 1 ]]; then
-  type -p clear_console && clear_console -q
+  type -P clear_console &> /dev/null && clear_console -q
   clear   # as a fallback
 fi
 
@@ -20,13 +20,13 @@ history -a;
 #  http://mywiki.wooledge.org/BashFAQ/088
 
 umask 077
-max_lines=16384  # 2*$HISTSIZE as HISTTIMEFORMAT takes up odd lines 
+max_lines=$((2 * HISTSIZE))  # 2 * $HISTSIZE as HISTTIMEFORMAT takes up odd lines 
 
-linecount=$(wc -l < ~/"$HISTFILE")
+linecount=$(wc -l < "$HISTFILE")
 
 if (($linecount > $max_lines)); then
   prune_lines=$(($linecount - $max_lines))
-  head -$prune_lines ~/"$HISTFILE" >> "$HISTFILE".archive \
-    && sed -e "1,${prune_lines}d"  "$HISTFILE" > "$HISTFILE".tmp$$ \
-    && mv "$HISTFILE".tmp$$ "$HISTFILE"
+  head -$prune_lines ~/"$HISTFILE" >> "$HISTFILE".archive && \
+    sed -e "1,${prune_lines}d"  "$HISTFILE" > "$HISTFILE".tmp$$ && \
+    mv "$HISTFILE".tmp$$ "$HISTFILE"
 fi
