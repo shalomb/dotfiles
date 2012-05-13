@@ -1,9 +1,11 @@
 #!/bin/bash
 
-unset PATH
+unset PATH; source /etc/profile &> /dev/null
 
-source /etc/profile &> /dev/null
+if [[ -z $P4PORT ]]; then
+  [[ -f ~/.bin/p4_init ]] && source ~/.bin/p4_init
+fi
 
-(( $# == 0)) && set -- ""
+type -P p4 &> /dev/null || exit 0
 
-type -a p4 || exit 0
+p4 "$@"

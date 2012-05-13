@@ -3,7 +3,8 @@
 # NAME
 #   wminmark - mark and summon windows.
 
-set -x
+# set -x
+shopt -s extglob
 
 # [[ ${-//[!i]/} ]] &&
   exec > >(tee -a ~/.tmp/winmarks/winmark.log) 2>&1
@@ -20,7 +21,7 @@ mark="${2:-"'"}"
 duration="${osd_msg_duration:-"10"}"
 curwin="$(printf "0x%08x" "$(xprop -root _NET_ACTIVE_WINDOW | grep -Eio "0x[[:xdigit:]]+")")";
 
-if   [[ $action = mark ]]; then
+if   [[ $action = @(mark|add) ]]; then
   touch "$curwin";
   ln -svf "$curwin" "$mark";
 
@@ -29,14 +30,14 @@ if   [[ $action = mark ]]; then
     perl -lane '
         $F[0]=~/'"$curwin"'/ and 
           print join " ", 
-            qw["'"$mark"'"], "\t",
-            "\"$F[2]\"", "\t",
+            qw['"$mark"'], "\t",
+            "$F[2]", "\t",
             q/"/, (join " ", @F[4..$#F]), q/"/
       ' | \
     tee "$curwin" | \
     osd_msg "$( < /dev/stdin )"
 
-elif [[ $action = summon ]]; then
+elif [[ $action = @(summon|call) ]]; then
   winid="$(readlink "$mark")";
   winid="${winid##*/}"
 
@@ -51,13 +52,28 @@ elif [[ $action = summon ]]; then
     exec "$0" "mark" "$mark"
   fi
 
-elif [[ $action = list ]]; then
+elif [[ $action = @(ls|list) ]]; then
   set +v +x
   for link in ?; do
     target=$(readlink -f "$link")
     target="${target##*/}"
     [[ -f $target ]] || continue
-    printf "%s %s %s\n" "$link" "$target" "$(< $link)"
+    printf "%s %s %s\n" "$link" "$target" "$(< $link)" \
+      | sed 's/\s\+/ /g' \
+      | sed 's/"//g'     \
+      | while read n w n c d; do 
+          printf "%s %s %-20s %s\n" "$n" "$w" "$c" "$d"
+        done
   done 
 
+elif [[ $action = @(rm|remove) ]]; then
+  set -x
+    rm "$mark"
+  set +x
+
+elif [[ $action = @(reset|remark) ]]; then
+  set -x
+  rm "$mark"
+  exec "$0" 'mark' "$mark"
+  
 fi

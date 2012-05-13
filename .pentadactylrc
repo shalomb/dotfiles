@@ -35,6 +35,10 @@ set! capability.policy.nofocus.sites="http://www.google.co.uk"
 set! noscript.surrogate.nofocus.sources="@.google.com"
 set! noscript.surrogate.nofocus.replacement="HTMLInputElement.prototype.focus=function(){}"
 
+set maxitems=16
+
+highlight -a CmdLine  color:lightgrey;
+highlight -a Hint     font-size:10pt !important;
 
 """" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set mapleader=","

@@ -8,6 +8,7 @@
 #   for examples                                                               #
  ##############################################################################
 
+# If not running interactively, don't do anything
 [[ ${-//[!i]/} ]] || return
 
 # source ~/.profile if 
@@ -18,7 +19,7 @@ if [[ -z $BASHRC_SOURCED ]] || \
   source ~/.profile
 fi
 
-export BASHRC_SOURCED="$BASHRC_SOURCED|$(date +%s)"
+export BASHRC_SOURCED="$(date +%s)"
 export BASHRC_SOURCED_BY="$BASHRC_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
 
 export PAGER=$(which less)
@@ -177,3 +178,5 @@ echo ""
 
 fortune
 echo ""
+
+source ~/.bin/update_ssh_agent_info

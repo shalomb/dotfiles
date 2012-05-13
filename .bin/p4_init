@@ -1,12 +1,12 @@
 #!/bin/bash
 
-
 [[ $@ ]] && echo "ARGS: $@"
 p4_words=()
 
 set -a 
 
 [[ -f $P4CONFIG ]] && source $P4CONFIG
+[[ -f ~/.config/p4settings ]] && source ~/.config/p4settings
 [[ -f ~/.p4settings ]] && source ~/.p4settings
 
 P4DIFFUNICODE="${P4DIFFUNICODE:-/usr/bin/gvimdiff}"
@@ -18,7 +18,7 @@ P4MERGEUNICODE="${P4MERGEUNICODE:-"$P4MERGE"}"
 P4USER="${P4USER:-shalomb}"
 P4HOST="${P4HOST:-kratos.theos.local}"
 P4CLIENT="${P4CLIENT:-shalomb_kratos}"
-P4PORT="${P4PORT:-devsrc2.eng.citrite.net:2555}"
+P4PORT="${P4PORT:-camsrc.eng.citrite.net:2555}"
 
 if [[ "$@" == *reset* ]]; then
   if [[ "$@" == *all* ]]; then
@@ -27,7 +27,7 @@ if [[ "$@" == *reset* ]]; then
   p4_words+=(P4USER P4HOST P4CLIENT P4PORT)
 
   for v in "${p4_words[@]}"; do
-    read -p "set $v [${!v}] : " val
+    read -p "$(printf 'set %-8s [%s] : ' "$v" "${!v}")" val
     if [[ $val ]] && [[ $val != ${!v} ]]; then
       printf "  %s='%s'\n" "$v" "$val"
       IFS= read -r "$v" <<<"$val"
@@ -37,11 +37,19 @@ fi
 
 set +a
 
-if p4 login -s || p4 login -p; then
+if p4 login -s &> /dev/null || p4 login -p; then
   p4 login -s
-  p4 tickets
-  p4 set | sort 
-  p4 info
+  p4 tickets | while IFS=" )(" read -r h u t; do
+    echo "$u@${h,,} $t"
+  done | column -t
+
+  p4 set | sort | while IFS="=" read -r k v; do 
+    printf '  %-18s %s\n' "$k" "$v"
+  done
+
+  p4 info | while IFS=":" read -r k v; do 
+    printf '  %-18s%s\n' "$k" "$v"
+  done
 fi
 
 

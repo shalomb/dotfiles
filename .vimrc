@@ -460,7 +460,7 @@ highlight SignColumn ctermbg=NONE
 " Search terms
 highlight Search term=reverse cterm=reverse
 " status line
-highlight User1 term=bold cterm=bold ctermfg=16  ctermbg=166
+highlight User1 term=bold cterm=bold ctermfg=22 ctermbg=232
 
 """" ShowMarks.vim """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let showmarks_include = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
