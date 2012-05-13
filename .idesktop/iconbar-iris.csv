@@ -8,7 +8,7 @@
 "Gnome Control Center","gnome-control-center.png",,28,28,"gnome-control-center","gksu gnome-control-center"
 ,,,,,,
 "GVim","gvim.png",,28,28,"gvim -c 'colorscheme koehler'","gvim -c 'colorscheme darkblue'"
-"urxvt","urxvt.png",,28,28,"urxvt","cd /root && gksu urxvt"
+"urxvt","urxvt.png",,28,28,"urxvtc || urxvt","cd /root && gksu urxvt"
 ,,,,,,
 "Firefox","firefox.png",,28,28,"firefox",
 ,,,,,,
