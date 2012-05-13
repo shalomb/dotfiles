@@ -77,7 +77,7 @@ for my $file ( map { bsd_glob $_ } @globs ) {
 
 sub usage {
   print <<"EOF";
-$0 [import|export] file1 file2 ...
+[df_force=1] $0 [import|export] file1 file2 ...
 EOF
   exit 3;
 }
