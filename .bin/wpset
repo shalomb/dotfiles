@@ -1,0 +1,119 @@
+#!/usr/bin/perl -Wl
+#
+# wpset - set a random wallpaper from a collection
+# version: 0.6.1
+# author: shalom bhooshi
+# license: none/public_domain
+#   this peice of work has been released into the public domain
+#   use it at your own risk
+#
+# requires: imagemagick, feh, Text::CSV
+
+use strict;
+use Storable;
+use File::Spec;
+use File::Find;
+  sub fsc { File::Spec->catfile(@_) }
+
+local $| and $|++;
+
+sub getWallpapers;
+sub setWallpaper;
+
+sub which { (grep -e, map { $_ = fsc($_, $_[0]) } split /:/, $ENV{PATH})[0] }
+
+my $wpsetter    = 'feh';
+my $fbsetbg     = which 'fbsetbg';
+
+my $wallpaper_log  = glob "~/.config/wallpapers/last_wallpapers";
+my $wallpaper_list = glob '~/.config/wallpapers/wallpaper.list';
+
+my @wallpaper_directories = grep -d, map glob("$_"), ('~/.config/wallpapers/');
+
+{
+  my @wallpapers;
+
+  if ( $ARGV[0] ) {
+    if ( -e $ARGV[0] and -f _ and -r _ ) {
+      exit setWallpaper($ARGV[0]);
+    } else {
+      die "E, $0: setwallpaper $ARGV[0] failed"
+    }
+  }
+
+  if (-e $wallpaper_list) {
+    eval { 
+      @wallpapers = @{ retrieve($wallpaper_list) } 
+    }; if ($@) {
+      warn "$@";
+      $@ =~ /Magic number checking on storable file failed/ 
+        and unlink $wallpaper_list;
+    }
+  }
+
+    my $wallpaper = do {
+      my $pic;
+      until ($pic) {
+        my $i = int rand ($#wallpapers+1);
+        unless (scalar @wallpapers) {
+          push @wallpapers, getWallpapers($_)
+            for grep -d $_, @wallpaper_directories;
+          if (my $count = scalar @wallpapers) {
+            printf "$0: %s wallpapers now in cache\n", $count;
+          } else {
+            die "$0: E, no wallpapers found in [@wallpaper_directories]\n"
+          }
+        } else {
+          $pic = $wallpapers[$i];
+          delete $wallpapers[$i];
+          @wallpapers = grep $_, @wallpapers;
+        }
+        store \@wallpapers, $wallpaper_list;
+      }
+      $pic
+    };
+
+    exit setWallpaper( $wallpaper );
+
+}
+
+sub setWallpaper {
+  my $wp = shift;
+  
+  print "$0 setwallpaper $wp";
+
+  $ENV{wpsetters} = $wpsetter;
+  system { $fbsetbg } $fbsetbg, $wp;
+  system { "ln" } "ln", "-svf", "$wp", fsc($ENV{HOME}, '.fluxbox', 'wallpaper');
+
+  if ($? == -1) {
+    warn "E, error setting wallpaper $wp $!";
+  } else {
+    open my $wp_log, ">>", $wallpaper_log 
+      or warn "E, error opening wp_log $wallpaper_log for writing, $!\n";
+    printf $wp_log "%s %s", time, $wp;
+  }
+
+  return $? >> 8;
+}
+
+sub getWallpapers {
+
+  my $dir = shift;
+  print " getWallpapers $dir ";
+  my (@wallpapers, @directories);
+
+  chdir $dir              or do { warn "E, $0: chdir    $dir failed, $!"; return };
+  opendir my $dfh, $dir   or do { warn "E, $0: opendir  $dir failed, $!"; return };
+
+  for ( readdir $dfh ) {
+    if ( -e $_ and -d _ and !/^\.{1,2}$/ ) {
+      push @directories, $_;
+    } elsif ( -e _ and -f _ and -r _ and /\.(jpe?g|png|bmp|gif|tga)$/i ) {
+      push @wallpapers, fsc($dir, $_);
+    }
+  }
+
+  push @wallpapers, getWallpapers( fsc($dir, $_) ) for @directories;
+  return @wallpapers 
+}
