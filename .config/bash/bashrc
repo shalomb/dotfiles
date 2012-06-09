@@ -8,10 +8,7 @@
 #   for examples                                                               #
  ##############################################################################
 
-<<<<<<< HEAD
-=======
 # If not running interactively, don't do anything
->>>>>>> bf5840acfbc5623f3b8e28bf8d05df6f68202c77
 [[ ${-//[!i]/} ]] || return
 
 # source ~/.profile if 
