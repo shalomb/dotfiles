@@ -27,6 +27,9 @@ export MANPAGER="$PAGER"
 
 export FCEDIT="$EDITOR"
 
+export GREP_OPTIONS='--color=auto'
+export GREP_COLOR='1;32'
+
 export HISTCONTROL=ignoredups
 export HISTFILESIZE=8192
 export HISTIGNORE='&:ls: ls *:[bf]g'
@@ -167,6 +170,11 @@ clean_path () {
 clean_path PATH;    export PATH
 clean_path MANPATH; export MANPATH
 
+for script in ~/.config/bash/rc.d/{,.}*; do
+  if [[ -f $script && -r $script ]]; then
+    source "$script"
+  fi
+done
                                                       
 # Right, we're ready to hand over control to the user now!
 # Print some informational trivia.
@@ -179,4 +187,3 @@ echo ""
 fortune
 echo ""
 
-source ~/.bin/update_ssh_agent_info
