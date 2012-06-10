@@ -1,0 +1,33 @@
+#!/bin/bash
+
+ssh_hostkey() {
+
+  action="add"; (( $# >= 1 )) && action=$1;
+
+  if (( $# == 2 )); then
+    ip=$2
+  else
+    ip="$(history | tail -n 2 | sed -n 1p | perl -lne 'print for /((?:\d{1,3}(?:\.|\b)){4})/')"
+  fi
+
+  echo "$0 $action $ip" >&2
+
+  case "$action" in
+    add)
+      if ssh-keyscan "$ip" &>/dev/null; then
+        ssh-keyscan "$ip" >> ~/.ssh/known_hosts 2>/dev/null
+      else
+        echo "Error scanning '$ip'" >&2
+      fi
+      ;;
+    remove)
+      ssh-keygen -R "$ip"
+      ;;
+    *)
+      echo "Unknown action '$action' for '$ip'." >&2
+  esac
+}
+
+alias ssh_add_key='ssh_hostkey add'
+alias ssh_remove_key='ssh_hostkey remove'
+
