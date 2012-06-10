@@ -7,7 +7,7 @@
 shopt -s extglob
 
 # [[ ${-//[!i]/} ]] &&
-#   exec > >(tee -a ~/.tmp/wmarks.log) 2>&1
+  exec > >(tee -a ~/.tmp/winmarks/winmark.log) 2>&1
 
 if [[ ! -d ~/.tmp/winmarks ]]; then
   mkdir -p ~/.tmp/winmarks || \

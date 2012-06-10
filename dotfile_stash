@@ -11,9 +11,10 @@ use warnings;
 
 use Cwd;
 use File::Basename  qw[basename dirname];
-use File::Find; no warnings 'File::Find';
+use File::Find; 
+  no warnings 'File::Find';
 use File::Glob      qw[:glob];
-use File::Path      qw[make_path];
+use File::Path      qw[make_path remove_tree];
 use File::Spec      qw[catfile];
   sub fsc { File::Spec->catfile(@_) }
 use List::Util      qw[reduce];
@@ -63,12 +64,12 @@ for my $file ( map { bsd_glob $_ } @globs ) {
     link_directory_contents($src_file, $dst_file);
   }
   elsif ( $dst_file =~ m[\/] ) {
-    make_directory  ( dirname($dst_file) )
+    make_directory  ( dirname($dst_file) , $ENV{df_force} ? 1 : 0 )
       if not -d dirname($dst_file);
-    make_link ( $src_file, $dst_file ); 
+    make_link( $src_file, $dst_file, $ENV{df_force} ? 1 : 0 );
   }
   else {
-    make_link ( $src_file, $dst_file ); 
+    make_link( $src_file, $dst_file, $ENV{df_force} ? 1 : 0 );
   }
 
 }
@@ -76,7 +77,7 @@ for my $file ( map { bsd_glob $_ } @globs ) {
 
 sub usage {
   print <<"EOF";
-$0 [import|export] file1 file2 ...
+[df_force=1] $0 [import|export] file1 file2 ...
 EOF
   exit 3;
 }
@@ -84,9 +85,8 @@ EOF
 sub make_link {
   my ($target, $link, $force) = (@_, 0);
 
-  if ($force) {
-    print "  rm '$link'";
-    unlink $link;
+  if ($force and -e $target) {
+    unlink $link and print "  rm '$link'";
   }
 
   warn "Error creating link '$link' to '$target': $!\n"
@@ -98,7 +98,12 @@ sub make_link {
 }
 
 sub make_directory {
-  my $directory = shift;
+  my ($directory, $force) = (@_);
+
+  if ($force and -d $directory) {
+    remove_tree $directory, { keep_root => 1 }
+      or warn "remove_tree($directory, { keep_root=>1 }) failed.";
+  }
 
   warn "Error creating directory '$directory': $!\n"
     if (  not -d $directory             and
@@ -112,7 +117,7 @@ sub link_directory_contents {
 
   my ($src_dir, $dst_dir) = (@_);
 
-  make_directory ( $dst_dir )
+  make_directory ( $dst_dir, $ENV{df_force} ? 1 : 0 )
     if not -d $dst_dir;
 
   find {
@@ -124,10 +129,10 @@ sub link_directory_contents {
 
       if ( -l $src_file or -f _ ) {
         $src_file = readlink_f $src_file if -l _;
-        make_link( $src_file, $dst_file );
+        make_link( $src_file, $dst_file, $ENV{df_force} ? 1 : 0 );
       }
       elsif ( -d _ ) {
-        make_directory( $dst_file );
+        make_directory( $dst_file, $ENV{df_force} ? 1 : 0 );
       }
       else {
         warn "Not processing '$src_file', unknown file type.\n";

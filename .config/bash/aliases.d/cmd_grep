@@ -1,0 +1,41 @@
+#!/bin/bash
+
+mygrep () {
+  # filter on input from stdin
+  perl -lne 'print "  $_" if /$ENV{re}/i' 
+}
+
+function_grep() {
+  re="${1:-$re}" mygrep < <( set | grep "^[^ ]" | awk '/\(\)/{print $1}' )
+}
+
+expand_function() {
+ set | perl -0ne 'BEGIN{$/=undef} print for map {$_="$_\n\n"} /^'"$1"'\s+\(\s*\).*?\n}$/gsmx'
+}
+
+alias_grep() {
+ re="${1:-$re}" mygrep < <( alias | awk -F" |=" '{print $2}' )
+}
+
+command_grep() {
+  pathgrep "${1:-$re}" | sed 's/^/  /'
+}
+
+cmdgrep() (
+  {
+    export re="$1"
+    if [[ -n $2 ]]; then
+      action="$2"
+      [[ $action = *es ]] && action="${action%es}"
+      [[ $action = functions ]] && action="function"
+      echo re=$re "$action"_grep >&2
+      "$action"_grep
+    else
+      echo functions ..;  function_grep
+      echo aliases ..;    alias_grep
+      echo commands ..;   command_grep 
+    fi
+  } | "$PAGER"
+);
+  
+

@@ -10,19 +10,19 @@
 #   * Key Bindings       - http://fluxbox.sourceforge.net/docbook/en/html/c296.html
 #   * Actions            - http://fluxbox.sourceforge.net/docbook/en/html/x359.html
 
-#----Fluxbox Actions----{{{----------------------------------------------------
+#----Fluxbox Actions--------------------------------------------------------{{{
 Control Escape            :RootMenu
 Control Menu              :RootMenu
 Control Mod4 Delete       :Reconfigure
 Control Mod4 Shift Delete :Restart
 # }}}
 
-#----Display Actions----{{{---------------------------------------------------
+#----Display Actions--------------------------------------------------------{{{
 Control Mod4 Left         :ExecCommand switchscreen
 Control Mod4 Right        :ExecCommand switchscreen && DISPLAY=:0.0 invoke_window_by_wm_class "VirtualBox"
 # }}}
 
-#----Workspace Actions----{{{--------------------------------------------------
+#----Workspace Actions------------------------------------------------------{{{
 Mod1 Menu      :WorkspaceMenu
 Mod4 Menu      :ClientMenu
 
@@ -39,7 +39,7 @@ Mod4 F8        :Workspace 8
 Mod4 F9        :Workspace 9
 # }}}
 
-#----Desktop Actions----{{{----------------------------------------------------
+#----Desktop Actions--------------------------------------------------------{{{
 OnDesktop Mouse1   :HideMenus
 OnDesktop Mouse2   :WorkspaceMenu
 OnDesktop Mouse3   :RootMenu
@@ -51,7 +51,7 @@ OnToolbar Mouse4   :PrevWorkspace  # Scroll on the toolbar
 OnToolbar Mouse5   :NextWorkspace  # to change workspaces
 # }}}
 
-#----Window Actions----{{{-----------------------------------------------------
+#----Window Actions---------------------------------------------------------{{{
 OnTitlebar Mouse3        :WindowMenu
 Mod1 space               :WindowMenu
 OnTitlebar Mouse1        :MacroCmd {Focus} {Raise} {ActivateTab}
@@ -117,7 +117,7 @@ Mod4 8                   :GoToWindow 8  {static groups} (iconhidden=no)
 Mod4 9                   :GoToWindow 9  {static groups} (iconhidden=no)
 # }}}
 
-#----Tab Actions----{{{--------------------------------------------------------
+#----Tab Actions------------------------------------------------------------{{{
 OnTitlebar Mouse2        :StartTabbing
 
 Mod4 Tab                 :NextTab
@@ -139,7 +139,7 @@ Mod4 t 8                 :Tab 8
 Mod4 t 9                 :Tab 9
 # }}}
 
-#----Window winctrlMode----{{{-------------------------------------------------
+#----Window winctrlMode-----------------------------------------------------{{{
 Mod4 w w                         :MacroCmd { ExecCommand osd_msg "WinCtrl Mode" } { KeyMode winctrlMode }
 
 winctrlMode: Mod1 Tab            :NextWindow {groups} (workspace=[current])  # Alt-Tab !! FBCV13 !!
@@ -181,7 +181,7 @@ winctrlMode: m                   :MacroCmd { ExecCommand osd_msg "Window Move Mo
 winctrlMode: r                   :MacroCmd { ExecCommand osd_msg "Window Resize Mode" } { KeyMode ResizeMode }
 # }}}
 
-#----Window MoveMode----{{{----------------------------------------------------
+#----Window MoveMode--------------------------------------------------------{{{
 Mod4 w m           :MacroCmd { ExecCommand osd_msg "Window Move Mode" } { KeyMode MoveMode }
 
 MoveMode: h        :MoveLeft   5
@@ -209,7 +209,7 @@ MoveMode: r        :MacroCmd { ExecCommand osd_msg "Window Resize Mode" } { KeyM
 MoveMode: w        :MacroCmd { ExecCommand osd_msg "WinCtrl Mode" } { KeyMode winctrlMode }
 #  }}}
 
-#----Window ResizeMode----{{{--------------------------------------------------
+#----Window ResizeMode------------------------------------------------------{{{
 Mod4 w r                        :MacroCmd { ExecCommand osd_msg "Window Resize Mode" } { KeyMode ResizeMode }
 
 ResizeMode: h                   :ResizeHorizontal -1
@@ -247,7 +247,7 @@ ResizeMode: m                   :MacroCmd { ExecCommand osd_msg "Window Move Mod
 ResizeMode: w                   :MacroCmd { ExecCommand osd_msg "WinCtrl Mode" } { KeyMode winctrlMode }
 # }}}
 
-#----Window Layer Mode----{{{--------------------------------------------------
+#----Window Layer Mode------------------------------------------------------{{{
 Mod4 w l          :MacroCmd { ExecCommand osd_msg "Set Window Layer Mode" } {KeyMode SetWindowLayer}
 
 SetWindowLayer: t :SetLayer Top
@@ -258,7 +258,7 @@ SetWindowLayer: l :LowerLayer
 SetWindowLayer: r :RaiseLayer
 # }}}
 
-#----Window Mark Mode----{{{---------------------------------------------------
+#----Window Mark Mode-------------------------------------------------------{{{
 Mod4 w a                    :MacroCmd { ExecCommand osd_msg "Mark Mode" } {KeyMode MarkMode}
 
 # winmark mark x       # creates mark 'x' pointing at the current window
@@ -343,10 +343,15 @@ Control Mod4 x           :ExecCommand winmark summon x
 Control Mod4 y           :ExecCommand winmark summon y
 Control Mod4 z           :ExecCommand winmark summon z
 
+Control Mod4 Up          :MacroCmd{ FocusUp     } { ExecCommand curwin }
+Control Mod4 Right       :MacroCmd{ FocusiRight } { ExecCommand curwin }
+Control Mod4 Down        :MacroCmd{ FocusDown   } { ExecCommand curwin }
+Control Mod4 Left        :MacroCmd{ FocusLeft   } { ExecCommand curwin }
+
 Control Mod4 Period      :If { Some Matches (qterm) } { ToggleCmd { NextWindow (qterm) } { ExecCommand qterm toggle } } { ExecCommand qterm hide }
 # }}}
 
-#----Command Hotkeys----{{{----------------------------------------------------
+#----Command Hotkeys--------------------------------------------------------{{{
 Control Mod4 period  :ExecCommand qterm
 Control Shift Escape :ExecCommand urxvtc -name htop -title htop -e htop -u $USER --sort-key CPU%
 
@@ -367,7 +372,7 @@ Mod4    period       :If { Some Matches (qterm) } { ToggleCmd { NextWindow (qter
 Mod4    space        :ExecCommand gnome-do --mini --glassframe --quiet
 # }}}
 
-#----Special Keys----{{{-------------------------------------------------------
+#----Special Keys-----------------------------------------------------------{{{
 176       :Exec amixer sset Master,0 1+
 174       :Exec amixer sset Master,0 1-
 

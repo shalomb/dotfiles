@@ -4,10 +4,6 @@
  *  Install a wikipedia command
  */
 
-var INFO = 
-<plugin>
-</plugin>;
-
 // Object Literal
 var Abra =  {
 
@@ -66,20 +62,26 @@ var Abra =  {
     args = args.length ? args.map(function (arg){ 
           arg = arg.toString();
 
-          arg = arg.match(/\$/) 
+          arg = arg.match(/\$[\w\d_]+/) 
                 ? Abra.expandVariables(arg) // expand it
                 : arg;
 
-          arg = arg.match(/\s/) 
-                ? '"' + arg + '"'  // quote it
-                : arg; 
+          // arg = arg.match(/\s/) 
+          //       ? '"' + arg + '"'  // quote it
+          //       : arg; 
 
           return arg;
         }) : [ window.content.window.getSelection() ];
 
-    return unescape( args.join(" ") );
+    var c = [];
+    args.forEach(function(e){
+      //e = e.replace(/^"|"$/g, '')
+      e.split(/\s+/).forEach(function(s){
+        c.push(s)
+      })
+    })
+    return unescape( c.join(" ") );
   },
-
 }
 
 
@@ -90,7 +92,7 @@ group.commands.add(
   "Search Extensions",
   function (args) {
     var cmd = Abra.searchString(args);
-    dactyl.open(cmd);
+    dactyl.execute(cmd);
     dactyl.echo(cmd, commandline.FORCE_MULTILINE);
   },
   {

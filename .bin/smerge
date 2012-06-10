@@ -1,0 +1,145 @@
+#!/bin/bash
+
+set -e -u # -x # -v
+dbfile="$DBFILE"
+
+function new() {
+  dbfile="$1"
+  dbfile="${dbfile:-="$(mktemp -t smergeXXXXXXXX.db)"}"
+
+  sqlite3 -echo "$dbfile" << EOSCHEMA
+  BEGIN;
+    drop table if exists src;
+    drop table if exists dst;
+    create table src (hash char(40) primary key, name varchar ); 
+    create table dst (hash char(40) primary key, name varchar );
+    create index i_srchash on src(hash);
+    create index i_dsthash on dst(hash);
+  COMMIT;
+EOSCHEMA
+}
+
+function populate() {
+  prefix="$1"; shift; 
+  tmpfile="$(mktemp -t smergeXXXXXXXX.db)"
+
+  echo "BEGIN;" > "$tmpfile"
+
+  for dir in "$@"; do
+    while read hash name; do
+      printf "insert into %s (name, hash) values ('%s', '%s'); \n" \
+        "$prefix" "$name" "$hash"
+    done < <( find "$dir" -type f -exec sha1sum {} + ) >> "$tmpfile"
+  done
+
+  echo "END;" >> "$tmpfile"
+  sqlite3 -echo "$dbfile" < "$tmpfile"
+}
+
+function show() {
+  local prefix="${1:-src}"
+  local sql
+  printf -v sql "select * from %s;" "$prefix"
+  sqlite3 "$dbfile" <<<"$sql"
+}
+
+function reset() {
+  local prefix="${1:-src}"
+  local sql
+  printf -v sql "delete from %s;" "$prefix"
+  sqlite3 "$dbfile" <<<"$sql"
+}
+
+function run() {
+  local sql;
+  printf -v sql 'select s.name from src s where s.hash not in (select d.hash from dst d);\n'
+  printf -v sql 'select s.name from src s left outer join dst d on s.hash=d.hash where d.hash is null;'
+  sqlite3 "$dbfile" <<<"$sql"
+}
+
+
+case "$1" in
+
+  new) 
+    new "$dbfile"
+  ;;
+
+  src) 
+    populate "$@"
+  ;;
+
+  dst) 
+    populate "$@"
+  ;;
+
+  show)
+    shift; show "$@"
+  ;;
+  
+  run) 
+    shift; run "$@"
+  ;;
+
+  reset)
+    reset "$@"
+  ;;
+  
+  *)
+    echo "Function $1 ($@) unimplemented." >&2
+  ;;
+
+esac
+
+
+exit $?
+
+
+smerge new [ file ]
+smerge src [ dir1 dir2 ... ]
+smerge dst [ dir1 dir2 ... ]
+smerge yield
+smerge run
+
+src=$(readlink -f "$1")
+dst=$(readlink -f "$2")
+tgt=$(readlink -f "$3")
+
+fdupes -f -R "$src"/ "$dst"/ | tee > "$tmpfile"
+
+cat "$tmpfile";
+exit 1;
+
+sqlite3 foo.db:
+__END__
+
+f1=
+f2=
+
+while read line; do 
+
+  # [[ -z $line && -z $f1 && -z $f2 ]] || continue
+
+  if [[ $line = $src* ]]; then
+    f1="$line"
+  read -p 'bp1'; echo $f1
+    continue
+  fi
+
+  if [[ $line = $dst* ]]; then
+    f2="$line"
+  read -p 'bp2'; echo $f2
+    continue
+  fi
+
+  read -p 'bp3';
+  echo "$f1 $f2"
+  if [[ -z $line && -n $f1 && -n $f2 ]]; then
+    destination="$tgt"/"${f2##$dst}"
+    mkdir -v "${destination##*/}"
+    rsync -avP "$f1" "$destination"
+    unset f1 f2
+  fi
+
+done < "$tmpfile"
+
+set -x
