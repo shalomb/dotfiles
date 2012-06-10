@@ -79,8 +79,8 @@ set wildmenu                " enable menu of completions
 set wildmode=full           " longest common string, then each full match
 set wildcharm=<C-Z>         " keybinding that charms the wild complete
 
+set mouse=a                 " mouse is available in all modes
 if has('mouse')
-  set mouse=a                 " mouse is available in all modes
   set mousemodel=popup_setpos
   set mousehide               " hide the mouse when busy
 endif
