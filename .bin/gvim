@@ -16,10 +16,12 @@ use File::Spec;
   sub fsc { File::Spec->catfile(@_) }
 
 my $gvim = fsc(+(
+            map  { fsc($_, 'gvim')    } 
             grep { -x fsc($_, 'gvim') }
             grep { $_ ne dirname($0)  }
             split /:/,  $ENV{PATH}
-          )[0], "gvim");
+          )[0]) 
+    // die "gvim not installed in \$PATH ($ENV{PATH})?\n";
 
 
 sub gvim {
