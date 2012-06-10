@@ -288,24 +288,15 @@ done
 # *  aliases added via add_alias  * #
 # ==================================#
 
-alias todo='$EDITOR ~/Desktop/Documents/Notes/TODO.txt'
-alias ssh-x='ssh -c arcfour,blowfish-cbc -XC '
-alias shu='ssh-x -Y a8037915@homepages.shu.ac.uk'
+alias foobar='echo foobar'
 alias hera='ssh-x -Y hera'
 alias hermes='ssh-x -Y hermes'
 alias iris='ssh-x -Y iris'
+alias p4_init='source ~/.bin/p4_init'
+alias shu='ssh-x -Y a8037915@homepages.shu.ac.uk'
+alias ssh_init='source ~/.bin/update_ssh_agent_info'
+alias ssh-x='ssh -c arcfour,blowfish-cbc -XC '
 alias techne='ssh-x -Y techne'
 alias theos.ath.cx='ssh-x -Y theos.ath.cx'
 alias theos='ssh-x -Y theos.ath.cx'
-<<<<<<< HEAD
-alias foobar='echo foobar'
-alias p4_init='source ~/.bin/p4_init'
-alias ssh_init='source ~/.bin/update_ssh_agent_info'
-=======
-<<<<<<< HEAD
-=======
-alias foobar='echo foobar'
-alias p4_init='source ~/.bin/p4_init'
-alias ssh_init='source ~/.bin/update_ssh_agent_info'
->>>>>>> bf5840acfbc5623f3b8e28bf8d05df6f68202c77
->>>>>>> f88944dc2c4ba679792f216aabc6b27dc9498d13
+alias todo='$EDITOR ~/Desktop/Documents/Notes/TODO.txt'
