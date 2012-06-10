@@ -1,6 +1,7 @@
 [begin] (Fluxbox Menu) 
 	[exec]  (Web Browser)  {firefox}  </usr/share/pixmaps/mozilla-firefox.png>
 	[exec]  (Terminal)  {urxvt}  </usr/share/pixmaps/gnome-term-night.png>
+	[CommandDialog) {Fluxbox Dialog}
     [separator] (--------)
   [submenu] (Locations) {} </usr/share/icons/oxygen/./16x16/mimetypes/inode-directory.png>
     [exec] (Home) {xdg-open ~} </usr/share/icons/oxygen/./16x16/mimetypes/inode-directory.png>
