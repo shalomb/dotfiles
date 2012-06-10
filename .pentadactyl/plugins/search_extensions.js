@@ -4,10 +4,6 @@
  *  Install a wikipedia command
  */
 
-var INFO = 
-<plugin>
-</plugin>;
-
 // Object Literal
 var Abra =  {
 

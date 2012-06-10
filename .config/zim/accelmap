@@ -1,6 +1,7 @@
 ; zim GtkAccelMap rc-file         -*- scheme -*-
 ; this file is an automated accelerator map dump
 ;
+; (gtk_accel_path "<Actions>/TaskListPlugin/show_task_list" "")
 ; (gtk_accel_path "<Actions>/PageView/find_previous" "<Shift><Control>g")
 ; (gtk_accel_path "<Actions>/PageView/edit_object" "<Control>e")
 ; (gtk_accel_path "<Actions>/PageView/apply_format_strike" "<Control>k")
