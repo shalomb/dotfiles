@@ -1,0 +1,14 @@
+#!/bin/bash
+
+env_file="$TMP/env"
+if [[ "$@" = *write* ]]; then
+  export -p | awk '
+    /^declare -x (DISPLAY|XDG|XAUTH|DBUS|VISUAL|SSH|GNOME|EDIT).*"$/ { print $0 }
+  ' | sed 's/^declare -x //' > "$env_file"
+  echo "$env_file"
+elif [[ "$@" = *read* || "$@" = "" ]]; then
+  set -a
+  source "$env_file"
+  xhost - &> /dev/null
+  type -P ssh_init &> /dev/null && ssh_init
+fi
