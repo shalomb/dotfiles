@@ -20,8 +20,16 @@ P4HOST="${P4HOST:-kratos.theos.local}"
 P4CLIENT="${P4CLIENT:-shalomb_kratos}"
 P4PORT="${P4PORT:-camsrc.eng.citrite.net:2555}"
 
-if [[ "$@" == *reset* ]]; then
-  if [[ "$@" == *all* ]]; then
+function usage {
+cat <<EOF
+  p4_init [help|reset [all]]
+EOF
+}
+
+if   [[ "$@" = *help* ]]; then
+  usage; return
+elif [[ "$@" = *reset* ]]; then
+  if [[ "$@" = *all* ]]; then
     p4_words=(P4DIFFUNICODE P4DIFF P4EDITOR P4MERGE P4MERGEUNICODE)
   fi
   p4_words+=(P4USER P4HOST P4CLIENT P4PORT)
