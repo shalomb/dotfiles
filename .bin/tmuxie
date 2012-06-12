@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -eu
+
+if ! type -P tmux &> /dev/null; then
+  echo "tmux not installed (in \$PATH)?" >&2
+  exit 2
+fi
+
+while read -r session; do 
+  sessions+=( "$session" )
+done < <( tmux ls )
+
+(( ${#sessions[@]} == 0 )) && exit 1
+
+for i in "${!sessions[@]}"; do
+  echo "$i. ${sessions[i]}"
+done
+
+printf 'Which one? '; read n
+
+set -vx
+if [[ -z $n ]]; then exit 1; fi
+
+if [[ $n = *[!0-9]* ]] || (( n < 0 || n > ${#sessions[@]}-1 )); then
+  echo "No such session. $n";
+  exit 2;
+fi
+
+exec tmux attach -t "${sessions[n]//:*/:}"
