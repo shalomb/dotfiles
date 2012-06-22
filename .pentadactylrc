@@ -15,7 +15,9 @@ map -e <A-l> :javascript dactyl.execute("!lynx -dump '" + dactyl.modules.buffer.
 set! browser.tabs.closeButtons=2
 set! dom.disable_open_click_delay=1000
 
-set! general.useragent.override="Mozilla/5.0 (X11; Linux i686; rv:8.0) Gecko/20100101 Firefox/8.0 Iceweasel/8.0 Pentadactyl/hg6694"
+
+set! general.useragent.override="Mozilla/5.0 (X11; Linux i686; rv:8.0) Gecko/20100101 Firefox/10.0.5"
+set! general.useragent.extra.firefox="Firefox/2.0.0.1"
 
 set! javascript.options.strict=true
 "set! javascript.options.showInConsole=true
