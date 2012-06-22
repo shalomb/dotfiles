@@ -6,6 +6,8 @@ set incfind
 set newtab=all
 
 autocmd PageLoad '^https?://(?:www\.)?google\.(?:co.uk|com)' :normal! gi
+set passkeys+='mail\.google\.com':c/jkhnpouelxsfra#`[]z?\*nrtgidIU+-=<Tab><Return>
+set passkeys+='rememberthemilk\.com':tcpdfgsuiyrz1234ankjihm<Esc><Del>+-=<Tab><Return>
 
 " noremap <C-f> <PageUp>
 
