@@ -59,7 +59,7 @@ xset fp rehash      # rehash the font path
 test -r ~/.Xresources && xrdb -merge ~/.Xresources
 test -r ~/.Xmodmap    && xmodmap ~/.Xmodmap
 
-eval `ssh-agent -s -t 7200`;
+eval `ssh-agent -s`;
 
 } &
 
