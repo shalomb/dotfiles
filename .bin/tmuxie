@@ -7,16 +7,23 @@ if ! type -P tmux &> /dev/null; then
   exit 2
 fi
 
+sessions=()
 while read -r session; do 
   sessions+=( "$session" )
 done < <( tmux ls )
 
-(( ${#sessions[@]} == 0 )) && exit 1
+if (( ${#sessions[@]} == 0 )); then
+  printf 'No sessions, launch new one? [y/N] '; read n
+  if [[ -z $n || $n = [nN] ]]; then 
+    exit 1; 
+  else
+    exec tmux
+  fi
+fi
 
 for i in "${!sessions[@]}"; do
   echo "$i. ${sessions[i]}"
 done
-
 printf 'Which one? '; read n
 
 set -vx
