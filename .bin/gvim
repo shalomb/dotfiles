@@ -31,18 +31,20 @@ sub gvim {
 }
 
 
-if (scalar @ARGV) {
+if (scalar @ARGV) { # args passed, reuse existing server
   unshift @ARGV, '--remote-tab-silent' 
-    unless /^(?:--?|\+(?:\d|\/))/ ~~ @ARGV;
-  gvim @ARGV 
+    unless /^(?:--?|\+(?:\d|\/))/ ~~ @ARGV; # unless --options passed
+  gvim @ARGV;
 }
-else {
+else { # no args, so reuse existing servers
   chomp(my $serverlist = `gvim --serverlist`);
   if (my $server = +(split /\n+/, $serverlist)[-1]) {
     $ENV{GVIMSERVER} = $server;
-    gvim '--remote-send', '<Esc>:tabnew<CR>'
+    gvim '--remote-send', '<Esc>:tabnew<CR>' # new tab
   }
-  else { gvim }
+  else { 
+    gvim  # no servers, just invoke gvim
+  }
 }
 
 __END__
