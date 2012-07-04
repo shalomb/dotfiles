@@ -71,7 +71,8 @@ reload_ssh_agent () {
 
 # Another shell might have spawned an agent and added identities to it
 #  we'll piggyback on its efforts if we can.
-source "$SSH_AGENT_INFO_FILE" &>/dev/null
+[[ -f SSH_AGENT_INFO_FILE ]] &&
+  source "$SSH_AGENT_INFO_FILE" &>/dev/null
 
 if { ! kill -0 "$SSH_AGENT_PID" ; } &>/dev/null; then
   rm "$SSH_AGENT_INFO_FILE";
