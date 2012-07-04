@@ -1,0 +1,97 @@
+#!/bin/bash
+
+# update_ssh_agent_info
+# Wed Oct 27 11:29:12 BST 2010
+#  - first revision
+#  - creates a socket for the ssh-agent to be used by any process with permissions
+#  - creates a shell script that can be sourced into other scripts
+#  - exports the SSH_AUTH_SOCK, SSH_AGENT_PID and SSH_AGENT_INFO_FILE envvars
+
+[[ ${-//[!e]/} ]] && sete=1
+shopt nullglob | grep -iq on && nullglob=1
+shopt extglob  | grep -iq on && extglob=1
+
+set -x
+set -e
+shopt -s nullglob extglob
+
+trap '' 1 2 3 6
+
+SSH_AGENT_INFO_FILE="$HOME"/.ssh/agent.info
+
+reload_ssh_agent () {
+
+  local sock_file=()
+  while read -r pid; do
+    sock_file+=(  "$TMP"/*/agent."$((pid-1))" /tmp/*/agent."$((pid-1))" \
+                  "$TMP"/*/agent."$pid" /tmp/*/agent."$pid" )
+    if [[ -e $sock_file ]] && kill -0 "$pid"; then
+      { echo "SSH_AGENT_PID='$pid';       export SSH_AGENT_PID";
+        echo "SSH_AUTH_SOCK='$sock_file'; export SSH_AUTH_SOCK";
+        echo "SSH_AGENT_INFO_FILE='$SSH_AGENT_INFO_FILE'; export SSH_AGENT_INFO_FILE;"
+      } > "$SSH_AGENT_INFO_FILE"
+      source "$SSH_AGENT_INFO_FILE" 
+      # Don't return just yet, we still need to validate that the agent has
+      # atleast one identity added (via `ssh-add -L`).
+    fi
+  done < <( pgrep ssh-agent )
+
+  if ! kill -0 $SSH_AGENT_PID &>/dev/null; then
+    { ssh-agent -s;
+      agent_spawned_this_session="$SSH_AGENT_PID"
+      echo -e "SSH_AGENT_INFO_FILE='$SSH_AGENT_INFO_FILE'; export SSH AGENT_INFO;" ;
+    } > "$SSH_AGENT_INFO_FILE"
+  else
+    { echo "SSH_AGENT_PID='$SSH_AGENT_PID';   export SSH_AGENT_PID";
+      echo "SSH_AUTH_SOCK='$SSH_AUTH_SOCK';   export SSH_AUTH_SOCK";
+      echo "SSH_AGENT_INFO_FILE='$SSH_AGENT_INFO_FILE'; export SSH_AGENT_INFO_FILE;"
+    } > "$SSH_AGENT_INFO_FILE"
+  fi
+
+  echo "Unlocking ssh keys for [$SSH_AGENT_PID | $SSH_AUTH_SOCK] .."
+  if ! ssh-add -L &>/dev/null; then
+    [[ -t 0 ]] || return  # If we're not interactive, abort.
+    if ! ssh-add &> /dev/null; then
+      if [[ -n $agent_spawned_this_session ]]; then
+        kill "$SSH_AGENT_PID"
+        rm "$SSH_AGENT_INFO_FILE"
+      fi
+      unset SSH_AGENT_PID SSH_AUTH_SOCK SSH_AGENT_INFO
+      return
+    fi
+  fi
+
+  unset agent_spawned_this_session
+  export SSH_AUTH_SOCK SSH_AGENT_PID SSH_AGENT_INFO_FILE
+
+  echo "Keys unlocked .. "
+  ssh-add -l
+
+}
+
+# Another shell might have spawned an agent and added identities to it
+#  we'll piggyback on its efforts if we can.
+source "$SSH_AGENT_INFO_FILE" &>/dev/null
+
+if { ! kill -0 "$SSH_AGENT_PID" ; } &>/dev/null; then
+  rm "$SSH_AGENT_INFO_FILE";
+fi
+
+# if we have no identities loaded
+# if the agent is not running
+# if the agent socket is missing
+# if the agent info file is not readable
+if  ! ssh-add -L                &> /dev/null  || \
+    ! kill -0 "$SSH_AGENT_PID"  &> /dev/null  || \
+    [[ ! -S $SSH_AUTH_SOCK  ]]                || \
+    [[ ! -r $SSH_AGENT_INFO_FILE ]] ; then
+  reload_ssh_agent;
+fi
+
+(( nullglob == 1 )) || shopt -u nullglob
+(( extglob == 1 ))  || shopt -u extglob
+(( sete == 1 ))     || set +e
+unset nullglob extglob sete
+unset -f reload_ssh_agent
+
+trap - 1 2 3 6
