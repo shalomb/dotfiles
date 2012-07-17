@@ -1,0 +1,80 @@
+#!/bin/bash
+
+set -e
+
+shopt -s nullglob extglob;
+
+action=''
+for arg; do
+  case "$arg" in
+    --@(list|ls)) 
+      ls -1 "$HOME/.local/share/rdp2/hosts"
+      exit $?
+    ;;
+    --@(less|view))
+      action='less'
+    ;;
+    --@(verbose|vb))
+      set -vx
+    ;;
+    *)
+      target_hosts+=( "$arg" )
+    ;;
+  esac
+done
+
+
+if (( ${#target_hosts[@]} == 0 )); then
+  echo "No target hosts specified." >&2
+  exit 2
+fi
+
+if [[ -e "$HOME/.local/share/rdp2/default.spec" ]]; then
+  source "$HOME/.local/share/rdp2/default.spec"
+fi
+
+for target in "${target_hosts[@]}"; do
+
+  candidates=( "$HOME/.local/share/rdp2/hosts/$target"{,.*} "$target" )
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      if source "$candidate"; then
+        colour_depth="${color_depth:-$colour_depth}"
+        break
+      else
+        echo "Error sourcing '$candidate'." >&2
+        exit 2
+      fi
+    elif [[ $candidate != */* ]]; then
+      hostname="$candidate"
+      [[ $hostname ]] && break
+    fi
+  done
+
+  if [[ $action = 'less' ]]; then
+    "${PAGER:-less}" "${candidate}"
+    exit $?;
+  else
+    args=(  -0 -5     
+            -D -K     
+            -x l      
+            -r "${clipboard_options}"   
+            -k "${keyboard_map}"        
+            -g "${geometry}"            
+            -a "${colour_depth:-$color_depth}" 
+            -r "${sound_opts}"         
+            -d "${domain}"             
+            -u "${username}"           
+            -p "-"                     
+            -T "${title:-$hostname}"    
+            -s "${login_shell}"         
+            "${hostname}"               
+        );
+    echo "rdp2 ${args[@]}"
+    [[ -z $password || $password = '-' ]] && [[ -t 0 ]] && read -p 'Enter password: ' password
+
+    echo "$password" | \
+      exec -a rdp2 rdesktop "${args[@]}"
+  fi
+
+done
