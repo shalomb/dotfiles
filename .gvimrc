@@ -1,1 +1,1 @@
-/home/unop/.vim/vimrc.gvim
+.vim/vimrc.gvim

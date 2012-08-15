@@ -1,1 +1,1 @@
-/home/unop/.config/bash/bashrc
+.config/bash/bashrc

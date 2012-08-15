@@ -1,1 +1,1 @@
-/home/unop/.config/bash/profile
+.config/bash/profile

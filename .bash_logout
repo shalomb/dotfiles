@@ -1,1 +1,1 @@
-/home/unop/.config/bash/logout
+.config/bash/logout

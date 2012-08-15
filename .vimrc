@@ -1,1 +1,1 @@
-/home/unop/.vim/vimrc
+.vim/vimrc
