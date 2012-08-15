@@ -6,6 +6,6 @@ if [[ -z $P4PORT ]]; then
   [[ -f ~/.bin/p4_init ]] && source ~/.bin/p4_init
 fi
 
-type -P p4 &> /dev/null || exit 0
+p4="$(type -P p4 2> /dev/null)"
 
-p4 "$@"
+"$p4" "$@"
