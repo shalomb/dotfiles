@@ -26,6 +26,7 @@
   pom     = push origin master
   st      = status
   tree    = log --graph --oneline --decorate
+  vimdiff = difftool -y -t vimdiff
 
 [github]
   user  = shalomb
