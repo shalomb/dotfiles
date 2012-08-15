@@ -1,63 +1,96 @@
 #!/bin/bash
 
-[[ $@ ]] && echo "ARGS: $@"
 p4_words=()
+this_script="${BASH_SOURCE##*/}"
 
-set -a 
+[[ ${-//[!a]/} ]]             && set_a=1
+[[ ${-//[!v]/} ]]             && set_v=1
+[[ ${-//[!x]/} ]]             && set_x=1
+shopt nullglob | grep -iq on  && nullglob=1
+shopt extglob  | grep -iq on  && extglob=1
 
-[[ -f $P4CONFIG ]] && source $P4CONFIG
-[[ -f ~/.config/p4settings ]] && source ~/.config/p4settings
-[[ -f ~/.p4settings ]] && source ~/.p4settings
+set -a
 
-P4DIFFUNICODE="${P4DIFFUNICODE:-/usr/bin/gvimdiff}"
-P4DIFF="${P4DIFF:-/usr/bin/gvimdiff}"
-P4EDITOR="${P4EDITOR:-/usr/bin/gvim}"
+[[ -f ~/.config/p4/p4settings ]] && source ~/.config/p4/p4settings
+[[ -f $P4CONFIG ]]    && source $P4CONFIG
+[[ -f $P4SETTINGS ]]  && source $P4SETTINGS
+
+
+P4DIFFUNICODE="${P4DIFFUNICODE:-/usr/bin/vimdiff}"
+P4DIFF="${P4DIFF:-/usr/bin/vimdiff}"
+P4EDITOR="${P4EDITOR:-/usr/bin/vim}"
 P4MERGE="${P4MERGE:-"$P4DIFF"}"
 P4MERGEUNICODE="${P4MERGEUNICODE:-"$P4MERGE"}"
 
-P4USER="${P4USER:-shalomb}"
-P4HOST="${P4HOST:-kratos.theos.local}"
-P4CLIENT="${P4CLIENT:-shalomb_kratos}"
-P4PORT="${P4PORT:-camsrc.eng.citrite.net:2555}"
 
 function usage {
-cat <<EOF
-  p4_init [help|reset [all]]
+  cat <<EOF
+${BASH_SOURCE##*/} [--help|--show|--reset [--all]]
 EOF
 }
 
-if   [[ "$@" = *help* ]]; then
-  usage; return
-elif [[ "$@" = *reset* ]]; then
-  if [[ "$@" = *all* ]]; then
-    p4_words=(P4DIFFUNICODE P4DIFF P4EDITOR P4MERGE P4MERGEUNICODE)
-  fi
-  p4_words+=(P4USER P4HOST P4CLIENT P4PORT)
 
-  for v in "${p4_words[@]}"; do
-    read -p "$(printf 'set %-8s [%s] : ' "$v" "${!v}")" val
-    if [[ $val ]] && [[ $val != ${!v} ]]; then
-      printf "  %s='%s'\n" "$v" "$val"
-      IFS= read -r "$v" <<<"$val"
-    fi
-  done
+if [[ $0 != '-bash' && -n $0 && $0 != $BASH_SOURCE ]]; then
+  return || exit
 fi
 
-set +a
+case "$@" in
+  *'--help'*)  usage; return
+  ;;
+
+  *'--reset'*)
+    if [[ "$@" = *'--all'* ]]; then
+      p4_words=(P4DIFFUNICODE P4DIFF P4EDITOR P4MERGE P4MERGEUNICODE)
+    fi
+    p4_words+=(P4USER P4HOST P4CLIENT P4PORT)
+
+    for v in "${p4_words[@]}"; do
+      read -p "$(printf 'set %-8s [%s] : ' "$v" "${!v}")" val
+      if [[ $val ]] && [[ $val != ${!v} ]]; then
+        printf "  %s='%s'\n" "$v" "$val"
+        IFS= read -r "$v" <<<"$val"
+      fi
+    done
+  ;;
+
+  *'--show'*)
+    p4 login -s
+    p4 tickets | while IFS=" )(" read -r h u t; do
+      echo "$u@${h,,} $t"
+    done | column -t
+
+    p4 set | sort | while IFS="=" read -r k v; do 
+      printf '  %-18s %s\n' "$k" "$v"
+    done
+
+    p4 info | while IFS=":" read -r k v; do 
+      printf '  %-18s%s\n' "$k" "$v"
+    done
+
+    return $? 2>/dev/null || exit $?
+  ;;
+
+  ?*)
+    if [[ -x "$1" && -f "$1" ]] || type -P "$1" 2> /dev/null; then
+      p4_init_cmd="$1"; shift;
+      "$p4_init_cmd" "$@"
+    else
+      echo "$this_script : Unimplemented option(s) : '$@'" >&2
+      return 2 2>/dev/null || exit 2
+    fi
+  ;;
+esac
+
+(( set_a    == 1 )) || set +a
+(( set_v    == 1 )) || set +v
+(( set_x    == 1 )) || set +x
+(( nullglob == 1 )) || shopt -u nullglob
+(( extglob  == 1 )) || shopt -u extglob
+unset set_a set_v set_x nullglob extglob
 
 if p4 login -s &> /dev/null || p4 login -p; then
-  p4 login -s
-  p4 tickets | while IFS=" )(" read -r h u t; do
-    echo "$u@${h,,} $t"
-  done | column -t
-
-  p4 set | sort | while IFS="=" read -r k v; do 
-    printf '  %-18s %s\n' "$k" "$v"
-  done
-
-  p4 info | while IFS=":" read -r k v; do 
-    printf '  %-18s%s\n' "$k" "$v"
-  done
+  "$this_script" --show
+  exit_code="$?"
 fi
 
-
+return "$exit_code" 2>/dev/null || exit "$exit_code"
