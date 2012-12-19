@@ -1,24 +1,60 @@
 #!/bin/bash
 
 cd /tmp
+mkdir -pv "$TMP/$USER/wfica"
+cd        "$TMP/$USER/wfica"
 
-wfica=/opt/Citrix/ICAClient/wfica.sh
-
-DesiredHRES=1280
-DesiredVRES=1024
+exec >> >(tee -a wfica.log) 2>&1
 
 set -xv
 
-res=( $(xrandr | awk 'BEGIN{max=0}$2 ~ /[0-9]\*/{split($1, res, "x"); if(res[1] > max) max=res[1]" "res[2]}END{print max}') )
-DesiredHRES="${res[0]}"
-DesiredVRES="${res[1]}"
-
+ICAROOT=/opt/Citrix/ICAClient 
+export ICAROOT
 ica_file="$1"
 
-cp -vf "$ica_file" "last.ica"
+# Some defaults
+#  ScreenPercent=100 # TODO, not currently supported
+#  DesiredHRES=1280
+#  DesiredVRES=1024
+
+# Source our own wfica conf file if it exists
+[[ -r $XDG_DATA_HOME/wfica/wfica.conf ]] && \
+  source "$XDG_DATA_HOME/wfica/wfica.conf"
+
+
+if [[ -z $DesiredVRES || -z $DesiredHRES ]]; then
+  # Get the largest current resolution of this $DISPLAY
+  res=( $(xrandr | \
+          awk '
+            BEGIN{ max=0 } 
+            $2 ~ /[0-9]\*/{ 
+              split($1, res, "x"); 
+              if(res[1] > max) max=res[1]" "res[2] 
+            } 
+            END{ print max }' \
+        ) );
+
+  DesiredHRES="${res[0]}"
+  DesiredVRES="${res[1]}"
+fi
+
+(
+  set +xv
+  echo "#---- ICA File below ----"
+  cat -et "$ica_file" 
+  echo '--------'
+)
+
+# Make our substitutions
 sed -i \
-  -e 's@DesiredVRES=.*@DesiredVRES='"$DesiredVRES"'@' \
   -e 's@DesiredHRES=.*@DesiredHRES='"$DesiredHRES"'@' \
+  -e 's@DesiredVRES=.*@DesiredVRES='"$DesiredVRES"'@' \
   "$ica_file"
 
-"$wfica" "$ica_file"
+# Pass on to wfica
+exec -a wfica "$ICAROOT/wfica" \
+  -file "$ica_file" \
+  -geometry "$DesiredHRES"x"$DesiredVRES"+0+0 \
+  -log
+
+#  -fileparam "$HOME/" # File not accessible by remote programs??
