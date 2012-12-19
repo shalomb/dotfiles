@@ -1,0 +1,24 @@
+#!/bin/bash
+
+cd /tmp
+
+wfica=/opt/Citrix/ICAClient/wfica.sh
+
+DesiredHRES=1280
+DesiredVRES=1024
+
+set -xv
+
+res=( $(xrandr | awk 'BEGIN{max=0}$2 ~ /[0-9]\*/{split($1, res, "x"); if(res[1] > max) max=res[1]" "res[2]}END{print max}') )
+DesiredHRES="${res[0]}"
+DesiredVRES="${res[1]}"
+
+ica_file="$1"
+
+cp -vf "$ica_file" "last.ica"
+sed -i \
+  -e 's@DesiredVRES=.*@DesiredVRES='"$DesiredVRES"'@' \
+  -e 's@DesiredHRES=.*@DesiredHRES='"$DesiredHRES"'@' \
+  "$ica_file"
+
+"$wfica" "$ica_file"
