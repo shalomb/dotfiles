@@ -4,11 +4,11 @@
 
 # NAME
 #   tips - invoke tip files on demand
-#
+
 # SYNOPSIS
 #   tips [word|word..]]
 #   tips / shell_command args
-#
+
 # DESCRIPTION
 
 shopt -s extglob nocaseglob nocasematch 
@@ -22,7 +22,7 @@ fi
 
 oldpwd="$PWD"
 cd "$tipsdir"
-if (( $# == 0 )) || [[ $1 = @(-l|--list) ]]; then
+if (( $# == 0 )) || [[ $1 = @(-l|--ls|--list) ]]; then
   find * .[!.]* \( -name ".hg" -type d -o -iname "*sw?" \) \
     -prune -o -type f -printf '%p\n' \
     | column | less
