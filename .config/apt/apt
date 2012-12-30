@@ -1,0 +1,17 @@
+﻿apt-file
+aptitude
+apt-listbugs
+apt-listchanges
+apt-show-source
+apt-show-versions
+apt-utils
+deporphan
+dlocate
+dselect
+localepurge
+debconf
+debconf-i18n
+debhelper
+debianutils
+debian-faq
+debian-archive-keyring

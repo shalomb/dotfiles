@@ -1,0 +1,16 @@
+﻿acroread
+acroread-data					install
+acroread-debian-files				install
+acroread-dictionary-en				install
+acroread-escript				install
+acroread-l10n-en				install
+acroread-plugin-speech				install
+acroread-plugins				install
+alltray
+alsamixergui
+aqualung
+vlc
+dia
+lyx
+dictionaries-common
+xdg-utils
