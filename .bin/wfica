@@ -41,6 +41,10 @@ fi
 
 (
   set +xv
+  echo "# ---- ICA file : $ica_file -------------------"
+  base64 -d <<<"$ica_file"
+  echo "# ---- Env ------------------------------------"
+  env
   echo "# ---- ICA file ($ica_file) original below ----"
   cat -et "$ica_file"
   echo '# ---------------------------------------------'
