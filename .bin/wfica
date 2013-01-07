@@ -1,8 +1,7 @@
 #!/bin/bash
 
-cd /tmp
-mkdir -pv "$TMP/$USER/wfica"
-cd        "$TMP/$USER/wfica"
+TMP=$( mktemp -d --tmpdir="${TMP:-/tmp}" wfica.XXXXXXXX )
+cd "$TMP"
 
 exec >> >(tee -a wfica.log) 2>&1
 
