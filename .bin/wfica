@@ -39,15 +39,22 @@ if [[ -z $DesiredVRES || -z $DesiredHRES ]]; then
   DesiredVRES="${res[1]}"
 fi
 
+mv -v "$ica_file" .
+ica_file="$PWD/${ica_file##*/}"
+
 (
   set +xv
   echo "# ---- ICA file : $ica_file -------------------"
-  base64 -d <<<"$ica_file"
+  base64_string="${ica_file##*/}"
+  base64 -d <<< "${base64_string%%.ica}"
+  echo ''
   echo "# ---- Env ------------------------------------"
   env
+  echo ''
   echo "# ---- ICA file ($ica_file) original below ----"
   cat -et "$ica_file"
   echo '# ---------------------------------------------'
+  echo ''
 );
 
 # Make our substitutions to the ica file
@@ -58,9 +65,11 @@ sed -i.orig \
 
 (
   set +xv
+  echo ''
   echo "# ---- ICA file ($ica_file) diff below --------"
-  diff "$ica_file"{,.orig}
+  diff "$ica_file"{.orig,}
   echo '# ---------------------------------------------'
+  echo ''
 );
 
 # Pass on to wfica
