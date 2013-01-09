@@ -2,6 +2,8 @@
 
 set -eu
 
+
+
 if ! type -P tmux &> /dev/null; then
   echo "tmux not installed (in \$PATH)?" >&2
   exit 2
@@ -11,15 +13,29 @@ function select_session_by_name() {
   local sessions=()
   local session_name;
 
+  # Current Sessions
   while read -r session; do 
     sessions+=( "$session" )
   done < <( tmux ls 2> /dev/null )
 
-  if (( ${#sessions[@]} == 0 )); then
-    return 0
-  fi
+  # Prepared Sessions
+  for d in "$HOME"/.etc /etc "$HOME"/.config; do 
+    if [[ -d "$d"/tmuxie/sessions/ ]]; then
+      sessions+=( "$d"/tmuxie/sessions/* );
+    fi
+  done
 
-  perl -le 'for (@ARGV) { @_=split /\s+/; printf "%2s: %-12s %s\n", $c++, $_[0], (join " ", @_[1..$#_]) }' "${sessions[@]}" >&2
+  (( ${#sessions[@]} == 0 )) && return 0
+
+  local c=0
+  while read name rest; do
+    if [[ -f $name ]]; then
+      printf "%s: %-16s %s\n" "$((c++))" "${name##*/}"  "$name" >&2
+    else
+      printf "%s: %-16s %s\n" "$((c++))" "${name%%:}"   "$rest" >&2
+    fi
+  done < <( printf "%s\n" "${sessions[@]}")
+
   printf 'Which one? ' >&2; 
   read reply
 
@@ -45,12 +61,17 @@ else
   exit 1
 fi
 
+echo "session_name: $session_name"
 
-if [[ -n $session_name ]] && tmux ls 2>/dev/null | awk 'BEGIN{ec=1}$1 ~ /'"$session_name"'/{ec=0}END{exit ec}'; then
-  exec tmux attach -t "$session_name"
+if  [[ -f $session_name ]]; then
+  exec "$session_name"  # is a file representing a prepared session
+elif [[ -n $session_name ]] && tmux ls 2>/dev/null | awk 'BEGIN{e_c=1}$1 ~ /'"$session_name"'/{e_c=0}END{exit e_c}'; then
+  exec tmux attach -t "$session_name" # attach to an existing session
 elif [[ -n $session_name ]]; then
-  :
-elif test -t 0; then
+  echo "Session '$session_name' doesn't exist .. aborting.";
+  exit 3;
+elif [[ -z $session_name ]] && test -t 0; then
+  # We have no session name and we are interactive
   printf 'Enter session name or RETURN to abort. ' >&2 ; read reply
   if [[ -z $reply ]]; then 
     exit 1;
