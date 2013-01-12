@@ -1,15 +1,13 @@
 #!/bin/bash
 
-cd /tmp
-mkdir -pv "$TMP/$USER/wfica"
-cd        "$TMP/$USER/wfica"
+TMP=$( mktemp -d --tmpdir="${TMP:-/tmp}" wfica.XXXXXXXX )
+cd "$TMP"
 
 exec >> >(tee -a wfica.log) 2>&1
 
 set -xv
 
-ICAROOT=/opt/Citrix/ICAClient 
-export ICAROOT
+export ICAROOT=/opt/Citrix/ICAClient 
 ica_file="$1"
 
 # Some defaults
@@ -18,12 +16,15 @@ ica_file="$1"
 #  DesiredVRES=1024
 
 # Source our own wfica conf file if it exists
+#  We hope DesiredVRES and DesiredHRES are set within it
 [[ -r $XDG_DATA_HOME/wfica/wfica.conf ]] && \
   source "$XDG_DATA_HOME/wfica/wfica.conf"
 
 
 if [[ -z $DesiredVRES || -z $DesiredHRES ]]; then
-  # Get the largest current resolution of this $DISPLAY
+  # If DesiredHRES and DesiredVRES are not set (from within the conf file),
+  # get the largest current resolution of this $DISPLAY and use those
+  # values instead.
   res=( $(xrandr | \
           awk '
             BEGIN{ max=0 } 
@@ -38,18 +39,38 @@ if [[ -z $DesiredVRES || -z $DesiredHRES ]]; then
   DesiredVRES="${res[1]}"
 fi
 
+mv -v "$ica_file" .
+ica_file="$PWD/${ica_file##*/}"
+
 (
   set +xv
-  echo "#---- ICA File below ----"
-  cat -et "$ica_file" 
-  echo '--------'
-)
+  echo "# ---- ICA file : $ica_file -------------------"
+  base64_string="${ica_file##*/}"
+  base64 -d <<< "${base64_string%%.ica}"
+  echo ''
+  echo "# ---- Env ------------------------------------"
+  env
+  echo ''
+  echo "# ---- ICA file ($ica_file) original below ----"
+  cat -et "$ica_file"
+  echo '# ---------------------------------------------'
+  echo ''
+);
 
-# Make our substitutions
-sed -i \
+# Make our substitutions to the ica file
+sed -i.orig \
   -e 's@DesiredHRES=.*@DesiredHRES='"$DesiredHRES"'@' \
   -e 's@DesiredVRES=.*@DesiredVRES='"$DesiredVRES"'@' \
   "$ica_file"
+
+(
+  set +xv
+  echo ''
+  echo "# ---- ICA file ($ica_file) diff below --------"
+  diff "$ica_file"{.orig,}
+  echo '# ---------------------------------------------'
+  echo ''
+);
 
 # Pass on to wfica
 exec -a wfica "$ICAROOT/wfica" \
