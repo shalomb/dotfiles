@@ -1,0 +1,151 @@
+#!/bin/bash
+
+function assert_is_installed {
+  if ! type -P "$1" &>/dev/null; then
+    echo "'$1' is not installed and is required." >&2
+    echo "  $2" >&2
+    exit 3
+  fi
+}
+
+assert_is_installed 'wget' 'Install the wget package.'
+assert_is_installed 'dig'  'Install the dnsutils package.'
+assert_is_installed 'ip'   'Install the iproute/iproute2 packages.'
+
+function get_host_addresses {
+  ip address show | int="${2:-.}" proto="${1:-.}" addr_filter="${3:-.}" perl -Mstrict -Wle '
+    my (%int, $i);
+    while (<>) {
+      /^\d+:\s*(\S+):/ and $i=$1;
+      if (/inet ([\d.\/]+)/) {
+        push @{$int{ipv4}{$i}}, $1
+      }
+      if (/inet6 ([[:xdigit:]:\/]+)/) {
+        push @{$int{ipv6}{$i}}, $1
+      }
+    }
+    END {
+      for my $p (reverse sort grep /$ENV{proto}/i, keys %int) {
+        for my $int ("lo", sort grep !/lo/i, grep /$ENV{int}/i, keys %{$int{$p}}) {
+          for (grep /$ENV{addr_filter}/i, @{$int{$p}{$int}}) {
+            print
+          }
+        }
+      }
+    }
+  '
+}
+
+function get_routers {
+  { 
+    ip -4 route list match 0/0
+    ip -6 route list match ::/0
+  } | awk '{print $3}'
+}
+
+function extract_v4_address {
+  perl -ne 'print for /((?:\d{1,3}(?:\.|\b)){4})/' -
+}
+
+function extract_v6_address {
+  perl -ne 'print for /((?:[[:xdigit:]]{1,4}(?::{1,2}|\b)){2,8})/'
+}
+
+function get_external_v4_addresses {
+           local addr=$( wget -q4 'http://ident.me/' )
+  [[ $addr ]] || addr=$( wget -q4 'http://checkip.dns.he.net/'       -O - | extract_v4_address )
+  [[ $addr ]] || addr=$( wget -q4 'http://checkip.dyndns.com/'       -O - | extract_v4_address )
+  [[ $addr ]] || addr=$( wget -q4 'http://checkip.dyndns.com:8245/'  -O - | extract_v4_address )
+  [[ $addr ]] || addr=$( wget -q4 'http://checkip.zerigo.com/'       -O - | extract_v4_address )
+  echo "$addr"
+}
+
+function get_external_v6_addresses {
+           local addr=$( wget -q6 'http://ident.me/' )
+  [[ $addr ]] || addr=$( wget -q6 'http://ident.me/'                -O - | extract_v6_address )
+  [[ $addr ]] || addr=$( wget -q6 'http://checkip.dns.he.net/'      -O - | extract_v6_address )
+  [[ $addr ]] || addr=$( wget -q6 'http://checkip.zerigo.com/'      -O - | extract_v6_address )
+  echo "$addr"
+}
+
+function resolve_address {
+  local addr="${1%/*}"
+  printf "%-16s %s\n" "$addr" "$(dig -x "$addr" | awk '$1 !~ /^;/ && $1 !~ /^$/{print $1"\t"$5}')"
+}
+
+function show_help {
+  cat<<EOF
+${0##*/} - List known IP Addresses
+
+  -e - Show external addresses (default).
+  -i - Show internal addresses
+  -p - Show DNS pointers.
+  -f - Run internal function.
+  -F - List internal functions.
+  -4 - Show IPv4 addresses.
+  -6 - Show IPv6 addresses.
+EOF
+
+}
+
+# Set default command line options
+(( $# == 0 )) && set -- '-e4'
+
+# Get command line options
+while getopts ":iep46fF" opt; do
+  case "$opt" in
+    i)  show_internal_addresses=1
+    ;;
+    e)  show_external_addresses=1
+    ;;
+    p)  show_pointer=1
+    ;;
+    f)  run_internal_function=1
+    ;;
+    F)  list_internal_functions=1
+    ;;
+    4)  show_ipv4=1
+    ;;
+    6)  show_ipv6=1
+    ;;
+    h|\?)  show_help; exit;
+    ;;
+  esac
+done
+
+
+# Validate options and combinations
+[[ -z $show_ipv6  &&  -z $show_ipv4 ]] && show_ipv6=1 && show_ipv4=1
+[[ -z $show_internal_addresses ]] && [[ -z $show_external_addresses ]] && show_external_addresses=1
+
+if (( list_internal_functions == 1 )); then
+  set | awk '/ \(\)/{print $1}'
+  exit
+fi
+
+if (( run_internal_function )); then
+  shift; # remove -f
+  func=$1; shift;
+  "$func" "$@"
+  exit "$?"
+fi
+
+addresses=()
+if (( show_external_addresses == 1 )); then
+  (( show_ipv6 == 1 )) && addresses+=( $(get_external_v6_addresses) )
+  (( show_ipv4 == 1 )) && addresses+=( $(get_external_v4_addresses) )
+fi
+
+if (( show_internal_addresses == 1 )); then
+  (( show_ipv6 == 1 )) && addresses+=( $(get_host_addresses 'ipv6') )
+  (( show_ipv4 == 1 )) && addresses+=( $(get_host_addresses 'ipv4') )
+fi
+
+for addr in ${addresses[@]}; do
+  if (( show_pointer == 1 )); then
+    resolve_address "$addr"
+  else
+    echo "$addr";
+  fi
+done
+

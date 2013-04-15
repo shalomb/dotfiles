@@ -41,14 +41,15 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/vim-scripts/taglist.vim.git         .vim/bundle/taglist
   git submodule add -f https://github.com/vim-scripts/underlinetag.git        .vim/bundle/underlinetag
   git submodule add -f https://github.com/vim-scripts/vimwiki.git             .vim/bundle/vimwiki
-  git submodule add -f https://github.com/vim-scripts/VST.git                  .vim/bundle/vst # Vim reStructured Text
+  git submodule add -f https://github.com/vim-scripts/VST.git                 .vim/bundle/vst # Vim reStructured Text
   git submodule add -f https://github.com/vim-scripts/Windows-PowerShell-File-Type-Plugin.git  .vim/bundle/posh-ftplugin
   git submodule add -f https://github.com/vim-scripts/Windows-PowerShell-indent-enhanced.git   .vim/bundle/posh-indent
   git submodule add -f https://github.com/vim-scripts/Windows-PowerShell-Syntax-File.git       .vim/bundle/posh-syntax
-  git submodule add -f https://github.com/wincent/Command-T.git                .vim/bundle/command-t
+  git submodule add -f https://github.com/wincent/Command-T.git               .vim/bundle/command-t
 
   git submodule init
   git submodule update
+  git submodule -q foreach git pull -q origin master
 )
 
 exit $?;
