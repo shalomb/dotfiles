@@ -300,3 +300,5 @@ alias techne='ssh-x -Y techne'
 alias theos.ath.cx='ssh-x -Y theos.ath.cx'
 alias theos='ssh-x -Y theos.ath.cx'
 alias todo='$EDITOR ~/Desktop/Documents/Notes/TODO.txt'
+
+alias env_init='source ~/.bin/env_init'
