@@ -69,11 +69,10 @@ FLUXBOX_PID=$!
 
 {
   wpset &
-  nitrogen --restore &
   # xbindkeys
   # fetchmail
 
-  nice -n 5   idesk &
+  # nice -n 5   idesk &
   
   nice -n 0   urxvtd -q -f -o && \
 #    nice -n 0 urxvtc -name qterm -title qterm \
@@ -107,6 +106,9 @@ FLUXBOX_PID=$!
   sleep 10 && xset b on           # Turn the bell on
   sleep 10 && xset b 10 100 50    # Turn beeps into croaks
   sleep 10 && xset r rate 175 30  # Set the keyboard repeat-rate:
+
+  disper -e -t "left" &
+  nitrogen --restore &
 } >> "$FBLOG" 2>&1 &
 
 wait $FLUXBOX_PID;
