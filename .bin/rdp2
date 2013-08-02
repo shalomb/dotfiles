@@ -69,6 +69,42 @@ OPTIONS
 EOF
 }
 
+declare -A rdesktop_exit_code=(                                                                                    
+     [0]='rdesktop exited normally.'                                                      
+     [1]='Server initiated disconnect (also returned for logoff by XP joined to a domain)'
+     [2]='Server initiated logoff'                                                        
+     [3]='Server idle timeout reached'                                                    
+     [4]='Server logon timeout reached'                                                   
+     [5]='The session was replaced'                                                       
+     [5]='The session was replaced'                                                       
+     [6]='The server is out of memory'                                                    
+     [7]='The server denied the connection'                                               
+     [8]='The server denied the connection for security reason'                           
+    [16]='Internal licensing error'                                                       
+    [17]='No license server available'                                                    
+    [18]='No valid license available'                                                     
+    [19]='Invalid licensing message'                                                      
+    [20]="Hardware id doesn't match software license"                                     
+    [21]='Client license error'                                                           
+    [22]='Network error during licensing protocol'                                        
+    [23]='Licensing protocol was not completed'                                           
+    [24]='Incorrect client license enryption'                                             
+    [25]="Can't upgrade license"                                                          
+    [26]='The server is not licensed to accept remote connections'                        
+    [62]='The local client window was closed'                                             
+    [63]='Some other, unknown error occured'                                              
+    [64]='Command line usage error'                                                       
+    [69]='A service or resource (such as memory) is unavailable'                          
+    [70]='An internal software error has been detected'                                   
+    [71]='Operating system error'                                                         
+    [76]='Protocol error or unable to connect to remote host.'                            
+)
+
+function rdesktop_exit_code {
+  local exit_code="$1"
+  echo "${rdesktop_exit_code[$exit_code]}"
+}
+
 action=''
 for arg; do
   case "$arg" in
@@ -94,14 +130,14 @@ for arg; do
       exit $?
     ;;
     *)
-      set -xv
       target_args+=( "$arg" )
-      echo "target_args: ${target_args[@]}"
-      set +xv
     ;;
   esac
 done
 
+if [[ "${-//[!vx]/}" ]]; then
+  echo "target_args: ${target_args[@]}"
+fi
 
 if (( ${#target_args[@]} == 0 )); then
   echo "No target hosts specified." >&2
@@ -168,15 +204,16 @@ for target in "${target_args[@]}"; do
         -s  "${login_shell}"         
             "${hostname}"               
       );
-    echo "rdp2 ${rdesktop_args[@]}"
-    [[ -z $password || $password = '-' ]] && [[ -t 0 ]] && read -s -p 'Enter password: ' password
 
-    set -xv +ue
-    echo "args: ${rdesktop_args[@]}"
+    [[ -z $password || $password = '-' ]] && [[ -t 0 ]] && read -s -p 'Enter password: ' password
+    if [[ "${-//[!vx]/}" ]]; then
+      echo "rdp2 ${rdesktop_args[@]}"
+    fi
     echo "$password" | \
       exec -a rdp2 rdesktop "${rdesktop_args[@]}"
-      echo "exit_code: $?"
-    set +xv
+    echo "$(rdesktop_exit_code "$?")" >&2
   fi
 
 done
+
+
