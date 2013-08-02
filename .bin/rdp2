@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+#set -eu
 
 shopt -s nullglob extglob;
 rdp2_data_home="$XDG_DATA_HOME/rdp2"
@@ -169,12 +169,13 @@ for target in "${target_args[@]}"; do
             "${hostname}"               
       );
     echo "rdp2 ${rdesktop_args[@]}"
-    [[ -z $password || $password = '-' ]] && [[ -t 0 ]] && read -p 'Enter password: ' password
+    [[ -z $password || $password = '-' ]] && [[ -t 0 ]] && read -s -p 'Enter password: ' password
 
     set -xv +ue
     echo "args: ${rdesktop_args[@]}"
     echo "$password" | \
       exec -a rdp2 rdesktop "${rdesktop_args[@]}"
+      echo "exit_code: $?"
     set +xv
   fi
 
