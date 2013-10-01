@@ -162,6 +162,7 @@ STICKY_OTHER_WRITABLE   01;38;5;202          # dir that is sticky and other-writ
 .pm            01;38;5;43 # text/x-perl
 .pm            01;38;5;43 # text/x-python
 .ps1           01;38;5;43 #
+.psm1          01;38;5;43 # PowerShell Module
 .py            01;38;5;43 # text/x-python
 .rb            01;38;5;43 # application/x-ruby
 .sh            01;38;5;43 # application/x-sh, text/x-sh
