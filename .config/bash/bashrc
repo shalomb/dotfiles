@@ -11,17 +11,19 @@
 # If not running interactively, don't do anything
 [[ ${-//[!i]/} ]] || return
 
+set -xv
+
 # source ~/.profile if 
 #  * ~/.config/bashrc hasn't been sourced before - for interactive shells
 #  * it hasn't already been marked as sourced.
-if [[ -z $BASHRC_SOURCED ]] || \
-   [[ -z $PROFILE_SOURCED && -r ~/.profile ]]; then
-  source ~/.profile
+if [[ -z $BASHRC_SOURCED ]] || [[ -z $PROFILE_SOURCED ]]; then
+  if [[ -f ~/.profile ]]; then
+    source ~/.profile && $PROFILE_SOURCED=1
+  fi
 fi
 
 export BASHRC_SOURCED="$BASHRC_SOURCED|$(date +%s)"
 export BASHRC_SOURCED_BY="$BASHRC_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
-
 export PAGER=$(which less)
 export MANPAGER="$PAGER"
 
@@ -98,15 +100,22 @@ if [[ -z "$debian_chroot" && -r /etc/debian_chroot ]]; then
     debian_chroot="$(</etc/debian_chroot)"
 fi
 
+sumarker=
+if [[ $EUID == 0 || $UID == 0 ]]; then
+  sumarker='\[\033[00;31m\]\$\[\033[00;00m\]'
+else 
+  sumarker='\[\033[00;35m\]\$\[\033[00;00m\]'
+fi
 
 case "$TERM" in
   screen*)
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;35m\]\!\[\033[01;32m\]\T\[\033[01;34m\]\W\[\033[00;35m\]\$\[\033[00;00m\] '
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;35m\]\!\[\033[01;32m\]\T\[\033[01;34m\]\W'"$sumarker"' '
     ;;
   *)
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00;37m\]:\[\033[00;34m\]\W\[\033[00;35m\]\$\[\033[00;00m\] '
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00;37m\]:\[\033[00;34m\]\W'"$sumarker"' '
 ;;
 esac
+
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in screen*|xterm*|*rxvt*)
