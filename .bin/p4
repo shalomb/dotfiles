@@ -24,4 +24,4 @@ if [[ -z $P4PORT ]]; then
 fi
 
 # Delegate subcommands to the real p4
-[[ $p4 ]] && echo "$p4" "$@"
+[[ $p4 ]] && "$p4" "$@"
