@@ -16,7 +16,7 @@
 #  * it hasn't already been marked as sourced.
 if [[ -z $BASHRC_SOURCED ]] || [[ -z $PROFILE_SOURCED ]]; then
   if [[ -f ~/.profile ]]; then
-    source ~/.profile && $PROFILE_SOURCED=1
+    source ~/.profile && PROFILE_SOURCED=1
   fi
 fi
 
