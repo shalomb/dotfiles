@@ -11,8 +11,6 @@
 # If not running interactively, don't do anything
 [[ ${-//[!i]/} ]] || return
 
-set -xv
-
 # source ~/.profile if 
 #  * ~/.config/bashrc hasn't been sourced before - for interactive shells
 #  * it hasn't already been marked as sourced.
