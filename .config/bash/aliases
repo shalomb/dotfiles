@@ -265,6 +265,11 @@ function which () {
     echo "  $target";
   done;
 } 
+
+function asciitab {
+  man ascii 2>/dev/null | awk 'BEGIN{RS="\n\n"}NR==10'
+}
+
 #__DISABLED__
 #
 # function dfp { df -h | perl -lne 'print "-"x67 if ($.=~/1|2/); printf "|%-12s| %4s | %4s | %5s | %8s | %-15s |\n", split /\s+/,$_'/,$_'; '}              #pretty print df -h
