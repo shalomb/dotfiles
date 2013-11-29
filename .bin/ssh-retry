@@ -1,29 +1,49 @@
 #!/bin/bash
 
-host="$1"
-retry="${t:-"$2"}"
+retry_floor=2                         # Minimum time to wait before a retry if ssh was unsucessful
+retry_ceil=20                         # Maximum time to wait before a retry if ssh was unsuccessful
+retry_interval="$retry_floor"         # How often to retry if ssh was unsuccessful
+retry_multiplier=1.15                 # Multiplier for backoff algorithm to ease traffic/load
+retry_preference="$retry_preference"  # Avoid the backoff algorithm altogether and use this constant time between retries
 
+set -- -A -t -oConnectTimeout=5 "$@"
+
+# Setup
 type -P update_ssh_agent_info &>/dev/null && source "$( type -P update_ssh_agent_info )"
 
-echo "$(whoami)@$(hostname):$(pwd)($(pwd -P)) "
+stderr=$(mktemp -u)
+mkfifo "$stderr"
 
-retry_floor=1
-retry_ceil=32
-retry_interval="$retry_floor"
-
+exit_code=1
 while :; do
-  echo -ne "$(date)  "
-  ssh -2 -A -t -oConnectTimeout=5 "$host"
-
-  if (( $? != 0 )); then
-    if [[ $retry ]]; then
-      retry_interval="$retry"
+  if (( $exit_code != 0 )); then
+    if [[ $retry_preference ]]; then
+      retry_interval="$retry_preference"
     else
-      retry_interval=$( perl -le '($r,$c)=(@ARGV); print $r >= $c ? $c : $r*=2' "$retry_interval" "$retry_ceil" )
+      retry_interval=$( perl -Wle '($c,$r,$m)=(@ARGV); print +(($r*$m) >= $c ? $c : $r*$m);' "$retry_ceil" "$retry_interval" "$retry_multiplier" )
     fi
   else
+    set +xv
     retry_interval="$retry_floor"
   fi
   
-  sleep "${retry_interval:-$retry_floor}"
+  printf "%s  %s %s %04.1f : " "$(date --rfc-3339=seconds | tr ' ' T)" "${0##*/}" "$*" "$retry_interval"
+  ssh "$@" 2> >( tee "$stderr" )
+  exit_code=$?
+
+  if (( $exit_code != 0 )); then
+    read errmsg < "$stderr";
+    if [[ $last_errmsg ]] && [[ $errmsg != $last_errmsg ]]; then
+      # Something changed on the host and it's possibly becoming ready to accept connections
+      # let's fall back to the floor and start the with smaller retry intervals
+      retry_interval="$retry_floor"
+    fi
+    last_errmsg="$errmsg"
+  else
+    # ssh exited successfully, drop back to the floor
+    retry_interval="$retry_floor"
+  fi
+  
+  sleep "$retry_interval"
 done
+
