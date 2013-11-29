@@ -3,21 +3,19 @@ isGlobalModule = true;
 
 XML.prettyPrinting   = false;
 XML.ignoreWhitespace = false;
-var INFO =
-<plugin name="http-headers" version="0.5"
-        href="http://dactyl.sf.net/pentadactyl/plugins#http-headers-plugin"
-        summary="HTTP header info"
-        xmlns={NS}>
-    <author email="maglione.k@gmail.com">Kris Maglione</author>
-    <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
-    <project name="Pentadactyl" min-version="1.0"/>
-    <p>
-        Adds request and response headers to the <ex>:pageinfo</ex>
-        command, with the keys <em>h</em> and <em>H</em> respectively.
-        See also <o>pageinfo</o>.
-    </p>
-    <example><ex>:pageinfo hH</ex></example>
-</plugin>;
+// var INFO =
+// <plugin name="http-headers" version="0.5" href="http://dactyl.sf.net/pentadactyl/plugins#http-headers-plugin" summary="HTTP header info"
+//         xmlns={NS}>
+//     <author email="maglione.k@gmail.com">Kris Maglione</author>
+//     <license href="http://opensource.org/licenses/mit-license.php">MIT</license>
+//     <project name="Pentadactyl" min-version="1.0"/>
+//     <p>
+//         Adds request and response headers to the <ex>:pageinfo</ex>
+//         command, with the keys <em>h</em> and <em>H</em> respectively.
+//         See also <o>pageinfo</o>.
+//     </p>
+//     <example><ex>:pageinfo hH</ex></example>
+// </plugin>;
 
 var { Buffer } = require("buffer");
 
