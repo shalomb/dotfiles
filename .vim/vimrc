@@ -2,10 +2,11 @@
 runtime bundle/pathogen/autoload/pathogen.vim
 filetype off
 call pathogen#helptags()
-call pathogen#runtime_append_all_bundles()
+call pathogen#incubate()
 
 """" Options """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set more                    " page on extended output
+" set nocompatible            " 
 
 let $PAGER='less'           " less is my pager
 let $LESS=$PAGER            " to reiterate - less is my pager
@@ -21,7 +22,7 @@ set history=256             " lines of command history to keep
 set laststatus=2            " always show status line
 
 set statusline=
-set statusline+=%1*%F\      " full filename
+set statusline+=%1*%t\      " filename (tail)
 set statusline+=%n          " buffer #
 set statusline+=\%<\ \      " Where to truncate a long line
 set statusline+=%a          " argument list status (e.g. 1 of 3)
@@ -64,7 +65,7 @@ set cmdheight=2             " Set command height to 2 to avoid netrw pains
 set report=1                " Always report changes
 set ruler                   " display cursor position
 set showcmd                 " show command-in-progress
-set showmode                " mode shown
+set showmode                " mode shown in lower left
 set novisualbell            " no visual bell 
 set title                   " set the term's window title 
 
@@ -72,12 +73,14 @@ set foldcolumn=1            " no fold column
 set foldlevelstart=0        " start with all folds closed
 set modeline                " enable modelines contra debian, TODO: secure this
 
+set nostartofline           " try and keep cursor from moving to BOL
 set formatoptions=r         " r - re-insert comment leader on newline
 set terse                   " add 's' to 'shortmess'
 set timeout                 " allow keys to timeout
 set wildmenu                " enable menu of completions
-set wildmode=full           " longest common string, then each full match
+set wildmode=longest,list,full " longest common string, then each full match
 set wildcharm=<C-Z>         " keybinding that charms the wild complete
+set completeopt=longest,menuone,preview
 
 set mouse=                  " mouse is available in all modes
 if has('mouse')
@@ -111,6 +114,8 @@ set splitright              " create new vsplits to the right of current window
 set splitbelow              " create new splits to the bottom of current window
 
 set scrolloff=2             " always keep 2 lines in view at top/bottom margin
+set sidescroll=2            " ss: only scroll horizontally little by little
+set sidescrolloff=2         " siso: places a couple columns between the current column and the screen edge
 set autoread                " autoload file when modified externally
 set hidden                  " mark modified buffers hidden automatically
 
@@ -157,6 +162,7 @@ if has("multi_byte")
   setglobal fileencoding=utf-8 bomb
   set fileencodings=ucs-bom,utf-8,latin1
 endif
+
 
 """" Calc """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " VT1235 - a calc command
@@ -283,6 +289,8 @@ set printexpr=PrintFile(v:fname_in)
 
 """" Autocmds """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 autocmd BufNewFile,Bufread    *.csv     setfiletype csv
+autocmd BufNewFile,Bufread    *.ps1     setfiletype ps1
+autocmd BufNewFile,Bufread    *.psm1    setfiletype ps1
 autocmd FileType perl                   setlocal keywordprg=perldoc\ -T\ -f
                                       " Open_a_Perl_module_from_its_module_name
 " autocmd BufWritePost          .vimrc    source ~/.vimrc
@@ -305,9 +313,6 @@ augroup resCur
   autocmd BufWinEnter * call ResCur()
 augroup END
 
-"""" Command-T """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-let g:CommandTMatchWindowAtTop = 1
-
 """" abbrevs """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 """" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -323,6 +328,8 @@ inoremap <A-C-Right>                  <esc>:tabnext<cr>
 inoremap <C-S>                        <C-O>:update<CR>
 inoremap <C-Enter>                    <C-o>o
 inoremap <C-S-Enter>                  <C-o>O
+inoremap <C-U>                        <C-G>u<C-U>
+inoremap <C-W>                        <C-G>u<C-W>
 
 noremap  <buffer> <silent> k          gk
 noremap  <buffer> <silent> j          gj
@@ -342,8 +349,9 @@ nnoremap <silent> p                   p`[   " jump back to position after put
 nnoremap <silent> Y                   y$
 nnoremap <silent> z/                  :if AutoHighlightToggle()<Bar>set hlsearch<Bar>endif<CR>
 nnoremap <silent> z!                  :set hlsearch!<cr>
+nnoremap          <leader>.           :ls<cr>:b<space>
 nnoremap          <leader>'           :ls<cr>:b<space>
-nnoremap          <leader>"           :ls<cr>:b<space>
+nnoremap          <leader>"           :ls<cr>:vs<space>#
 nnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
 nnoremap <silent> <leader><space>     :edit #<cr>
 nnoremap <silent> <leader><Tab>       <C-w><C-w>
@@ -369,6 +377,7 @@ nnoremap <silent> <leader>,           :edit #<cr>
 nnoremap <silent> <leader>g           :silent set visualbell!<cr>
 " lusty-explorer.vim:1760
 " VIM::command "silent! topleft 1split #{@title}"
+nnoremap <silent> <leader>lb          :ls<cr>:LustyBufferExplorer<cr>
 nnoremap <silent> <leader>lb          :LustyBufferExplorer<cr>
 nnoremap <silent> <leader>lF          :LustyFilesystemExplorer<cr>
 nnoremap <silent> <leader>lf          :LustyFilesystemExplorerFromHere<cr>
@@ -446,8 +455,8 @@ vnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtu
 
 """" Aesthetics """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set t_Co=256
-set background=light      
 highlight clear
+set background=light      
 colorscheme koehler
 
 " xterm colors: http://vim.wikia.com/wiki/Xterm256_color_names_for_console_Vim
@@ -483,4 +492,10 @@ highlight ShowMarksHLm gui=bold ctermfg=Yellow ctermbg=NONE
 "highlight CursorLine    ctermbg=lightred
 "highlight CursorColumn  ctermbg=lightred
 "highlight ColorColumn   ctermbg=lightred
+
+"""" ctrlp.vim """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:16,results:16'
+let g:ctrlp_switch_buffer = 'Et'
+let g:ctrlp_reuse_window = 'netrw\|help\|quickfix'
+
 """" Environmental Variables """""""""""""""""""""""""""""""""""""""""""""""""
