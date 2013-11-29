@@ -16,8 +16,8 @@
   [Close]	{yes}
 [end]
 [app] (name=zim) (class=Zim)
-  [Dimensions]	{408 221}
-  [Position]	(UPPERLEFT)	{616 114}
+  [Dimensions]	{788 803}
+  [Position]	(UPPERLEFT)	{927 241}
   [Close]	{yes}
 [end]
 [app] (name=gdl_box)
@@ -33,7 +33,7 @@
   [Position]	(UPPERLEFT)	{830 177}
 [end]
 [app] (name=dolphin) (class=Dolphin) (role=Dolphin#1)
-  [Dimensions]	{840 955}
+  [Dimensions]	{1071 1001}
   [Close]	{yes}
 [end]
 [app] (name=Download) (class=Iceweasel) (role=Manager)
@@ -44,8 +44,8 @@
   [Dimensions]	{500 364}
 [end]
 [app] (name=qterm) (class=URxvt)
-  [Dimensions]	{984 454}
-  [Position]	(UPPERLEFT)	{26 70}
+  [Dimensions]	{1648 694}
+  [Position]	(UPPERLEFT)	{37 193}
   [Shaded]	{no}
   [Deco]	{0x244}
   [Sticky]	{no}
@@ -67,10 +67,11 @@
 [end]
 [app] (name=rdesktop) (class=rdesktop)
   [Dimensions]	{1800 1100}
+  [Position]	(UPPERLEFT)	{1921 3}
 [end]
 [app] (name=Wfica) (class=Wfica)
-  [Workspace]	{1}
-  [Head]	{1}
+  [Workspace]	{0}
+  [Head]	{0}
   [Dimensions]	{1024 600}
   [Position]	(UPPERLEFT)	{0 -12}
   [Shaded]	{no}
@@ -80,7 +81,7 @@
   [Maximized]	{yes}
   [Fullscreen]	{yes}
   [Jump]	{yes}
-  [Layer]	{12}
+  [Layer]	{2}
   [Close]	{yes}
   [Alpha]	{208 224}
 [end]
@@ -88,4 +89,29 @@
   [Dimensions]	{840 865}
   [Position]	(UPPERLEFT)	{1048 266}
   [Close]	{yes}
+[end]
+[app] (name=gimp) (class=Gimp) (role=gimp-query-box)
+  [Position]	(UPPERLEFT)	{891 364}
+[end]
+[app] (name=urxvt) (class=URxvt)
+  [Dimensions]	{1368 809}
+  [Position]	(UPPERLEFT)	{404 156}
+[end]
+[app] (name=inkscape) (class=Inkscape)
+  [Dimensions]	{1545 999}
+  [Position]	(UPPERLEFT)	{123 68}
+[end]
+[app] (name=Navigator) (class=Firefox) (role=browser)
+  [Dimensions]	{1425 1023}
+  [Position]	(UPPERLEFT)	{216 138}
+[end]
+[app] (name=Browser) (class=Firefox) (role=Preferences)
+  [Position]	(UPPERLEFT)	{461 294}
+[end]
+[app] (name=chromium) (class=Chromium) (role=browser)
+  [Dimensions]	{1381 1057}
+  [Position]	(UPPERLEFT)	{295 63}
+[end]
+[app] (name=Dialog) (class=Firefox)
+  [Position]	(UPPERLEFT)	{724 315}
 [end]

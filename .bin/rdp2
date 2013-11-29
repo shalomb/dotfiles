@@ -23,7 +23,7 @@ domain_name="${domain_name#*.}"
 
 # RDP2 Environment Variables                                            # rdesktop(1) option
 # ------------------------------------------------------------------    # ----------------
-  colour_depth="${colour_depth:-24}"                                    # -a
+  colour_depth="${colour_depth:-32}"                                    # -a
   geometry="${geometry:-$(xrandr | awk '/[0-9]\*/{print $1}')}"         # -g
   keyboard_map="${keyboard_map:-en-gb}"                                 # -k
   clipboard_options="${clipboard_options:-clipboard:PRIMARYCLIPBOARD}"  # -r
