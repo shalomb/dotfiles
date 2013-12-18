@@ -45,6 +45,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/vim-scripts/Windows-PowerShell-File-Type-Plugin.git  .vim/bundle/posh-ftplugin
   git submodule add -f https://github.com/vim-scripts/Windows-PowerShell-indent-enhanced.git   .vim/bundle/posh-indent
   git submodule add -f https://github.com/vim-scripts/Windows-PowerShell-Syntax-File.git       .vim/bundle/posh-syntax
+  git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    .vim/bundle/vim-tmux-navigator
 
   git submodule init
   git submodule update
