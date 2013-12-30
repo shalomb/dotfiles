@@ -1,0 +1,70 @@
+#!/bin/bash
+
+shopt -s nullglob extglob
+
+[[ $verbose ]] && set -xv
+set -ue
+
+VERSION=0.01
+script_basename="${0##*/}"
+
+umask 077
+
+noip_etc_dir=~/.etc/noip
+[[ -d $noip_etc_dir ]]   ||  mkdir -p "$noip_etc_dir"
+noip_hosts_dir="$noip_etc_dir"/hosts/
+[[ -d $noip_hosts_dir ]] || mkdir -p "$noip_hosts_dir"
+noip_state_dir="/tmp/$script_basename"
+[[ -d $noip_state_dir ]] || mkdir -p "$noip_state_dir"
+
+noip_passwd_file="$noip_etc_dir"/passwd
+if [[ -e $noip_passwd_file ]]; then
+  source "$noip_passwd_file"
+else
+  echo "passwd file ($noip_passwd_file) not found." >&2
+  exit 3
+fi
+
+ipv4_address=$(whatismyip -4)
+
+if [[ -z $ipv4_address ]]; then
+  echo "Could not determine IPv4 Address through 'whatismyip -4'" >&2
+  exit 3
+fi
+
+for file in "$noip_hosts_dir"/*; do
+  source "$file"
+
+  host="${file##*/}"
+  host_address_file="$noip_state_dir/$host.ipv4.address"
+
+  old_ipv4_address='UNKNOWN'
+  if [[ -e $host_address_file ]]; then
+    old_ipv4_address="$( < "$host_address_file" )"
+  fi
+  
+  noip_url="https://dynupdate.no-ip.com/nic/update?hostname=${host}&myip=${ipv4_address}" 
+  user_agent_string="$script_basename update agent for $host/$VERSION $email_address"
+  base64_credentials=$( base64 <<<"$email_address:$password" )
+
+  if [[ $old_ipv4_address = $ipv4_address ]]; then 
+    logger -i -s -t "$0" "$host no_ipv4_address_change $ipv4_addres"
+  else
+    curl_output=$( curl -s -A "$user_agent_string" "$noip_url"	       \
+			-H  "Host:          dynupdate.no-ip.com"       \
+			-H  "Authorization: Basic $base64_credentials" \
+			-H  "User-Agent:    $user_agent_string" 2>&1 )
+
+    logger -i -s -t "$0" "$host ipv4_address_change ($ipv4_address != $old_ipv4_address) $noip_url $curl_output" 
+
+    if [[ $curl_output = @(good|nochg)* ]]; then
+      logger -i -s -t "$0" "$host record_ipv4_address $ipv4_address $host_address_file" 
+      echo "$ipv4_address" > "$host_address_file"
+    else
+      logger -i -s -t "$0" "$host failed_update $curl_output" 
+      [[ -e $host_address_file ]] && rm "$host_address_file"
+    fi
+  fi
+
+done
+
