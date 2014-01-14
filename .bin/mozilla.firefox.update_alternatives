@@ -1,0 +1,34 @@
+#!/bin/bash
+
+
+# set -u
+
+target_dir=$(dirname "$(type -P x-www-browser)")
+new_firefox="$1"
+user_bin_directory="${2:-$HOME/.bin}"
+
+hash -r
+source /etc/profile
+echo "$PATH"
+
+for component in 'x-www-browser' 'gnome-www-browser' 'sensible-browser' 'firefox' 'iceweasel'; do
+
+  component_target="$(type -P "$component")"
+  echo "Configuring component $component ($component_target) to '$new_firefox'"
+
+  if [[ ! -L $target_dir/$component ]]; then
+    echo "Moving " $target_dir/$component{,.orig}
+    mv -vi -- "$target_dir/$component"{,.orig}
+  fi
+
+
+  ( set -xv
+    dpkg-divert --remove "$component_target"
+    update-alternatives --install "$target_dir/$component"  "$component" "$new_firefox" 100
+    update-alternatives --set                               "$component" "$new_firefox"
+    ln -svf "$component_target" "$user_bin_directory"
+  );
+  echo ""
+
+done
+
