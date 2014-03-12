@@ -5,6 +5,7 @@ retry_ceil="${max:-20}"               # Maximum time to wait before a retry if s
 retry_interval="$retry_floor"         # How often to retry if ssh was unsuccessful
 retry_multiplier=1.15                 # Multiplier for backoff algorithm to ease traffic/load
 retry_preference="$retry_preference"  # Avoid the backoff algorithm altogether and use this constant time between retries
+quiet="${quiet:-0}"                   # no continuous logs, useful for invoking apps like top(1), etc.
 
 set -- -A -t -oConnectTimeout=5 "$@"
 
@@ -26,7 +27,9 @@ while :; do
     retry_interval="$retry_floor"
   fi
   
-  printf "%s  %s %s #%04.1f : " "$(date --rfc-3339=seconds | tr ' ' T)" "${0##*/}" "$*" "$retry_interval"
+  (( quiet == 1 )) || \
+    printf "%s  %s %s #%04.1f : " "$(date --rfc-3339=seconds | tr ' ' T)" "${0##*/}" "$*" "$retry_interval"
+
   ssh "$@" 2> >( tee "$stderr" )
   exit_code=$?
 
