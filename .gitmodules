@@ -88,15 +88,6 @@
 [submodule ".vim/bundle/vimwiki"]
 	path = .vim/bundle/vimwiki
 	url = https://github.com/vim-scripts/vimwiki.git
-[submodule ".vim/bundle/posh-ftplugin"]
-	path = .vim/bundle/posh-ftplugin
-	url = https://github.com/vim-scripts/Windows-PowerShell-File-Type-Plugin.git
-[submodule ".vim/bundle/posh-indent"]
-	path = .vim/bundle/posh-indent
-	url = https://github.com/vim-scripts/Windows-PowerShell-indent-enhanced.git
-[submodule ".vim/bundle/posh-syntax"]
-	path = .vim/bundle/posh-syntax
-	url = https://github.com/vim-scripts/Windows-PowerShell-Syntax-File.git
 [submodule ".vim/bundle/command-t"]
 	path = .vim/bundle/command-t
 	url = https://github.com/wincent/Command-T.git
