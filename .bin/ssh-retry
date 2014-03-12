@@ -1,7 +1,7 @@
 #!/bin/bash
 
-retry_floor=2                         # Minimum time to wait before a retry if ssh was unsucessful
-retry_ceil=20                         # Maximum time to wait before a retry if ssh was unsuccessful
+retry_floor="${min:-2}"               # Minimum time to wait before a retry if ssh was unsucessful
+retry_ceil="${max:-20}"               # Maximum time to wait before a retry if ssh was unsuccessful
 retry_interval="$retry_floor"         # How often to retry if ssh was unsuccessful
 retry_multiplier=1.15                 # Multiplier for backoff algorithm to ease traffic/load
 retry_preference="$retry_preference"  # Avoid the backoff algorithm altogether and use this constant time between retries
@@ -23,7 +23,6 @@ while :; do
       retry_interval=$( perl -Wle '($c,$r,$m)=(@ARGV); print +(($r*$m) >= $c ? $c : $r*$m);' "$retry_ceil" "$retry_interval" "$retry_multiplier" )
     fi
   else
-    set +xv
     retry_interval="$retry_floor"
   fi
   
