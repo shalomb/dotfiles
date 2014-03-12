@@ -1,0 +1,62 @@
+#!/bin/bash
+
+function show_help {
+    cat <<EOF
+${0##*/} - Manage SSH host keys in the known_hosts file.
+${0##*/} <subcommand> <hostname|ip_address>
+
+Subcommands:
+  add     - Add a remote host's hostkey.
+  remove  - Remove a remote host's hostkey.
+  refresh - Remove, then add a host's hostkey.
+  copyid  - Copy the current ~/.ssh/id_rsa.pub to 
+            the remote host's ~/.ssh/authorized_keys file.
+  sendkey - Alias for copyid.
+  --help  - Show this help message.
+  -h|-?   - Aliases for --help.
+EOF
+}
+
+set -eu
+
+if (( $# == 0 )); then 
+  echo -e "Arguments expected.\n" >&2
+  show_help; 
+  exit; 
+fi
+action="$1"
+host="$2"
+
+case "$action" in 
+  add)
+    keyscan=$(ssh-keyscan "$host" 2>/dev/null)
+    if [[ $keyscan ]]; then
+      echo "$keyscan" >> ~/.ssh/known_hosts 2> /dev/null;
+    else
+      echo "Error scanning '$host'" 1>&2;
+    fi
+    ;;
+  remove)
+    ssh-keygen -R "$host" 2> >( grep -v -e '^Original contents' -e 'updated.$' )
+    ;;
+  refresh)
+    "$0" remove "$host"
+    "$0" add    "$host"
+    ;;
+  copyid|sendkey)
+    if type -P ssh-copy-id >/dev/null 2>&1; then
+      ssh-copy-id "$host"
+    else
+      ssh "$host" ' umask 077; 
+                    test -d ~/.ssh || mkdir -p ~/.ssh; 
+                    cat ->> ~/.ssh/authorized_keys; ' < ~/.ssh/id_rsa.pub
+    fi
+    ;;
+  -h|-?|--help|help)
+    show_help; exit 3;
+    ;;
+  *)
+    echo "Unknown action '$action' for '$host'." 1>&2
+    ;;
+esac
+
