@@ -54,23 +54,33 @@
 curwin="$(xprop -root _NET_ACTIVE_WINDOW | grep -Eio "0x[[:xdigit:]]+")";
 
 a=($(wmctrl -dxG | awk '$2 ~ /\*/ {$0=$9; sub("x"," "); print; }'));
-set -x
 workspace_w="${a[0]}";
 workspace_h="${a[1]}";
-set +x
-
 
 a=($(xwininfo -id "$curwin" | awk -F: '/Width|Height|Absolute.*[XY]/ {print $2}'));
-set -x
 curwin_x="${a[0]}";
 curwin_y="${a[1]}";
 curwin_w="${a[2]}";
 curwin_h="${a[3]}";
-set +x
 
 
 # wmctrl -i -r "$WINID" \
 #  -e "$window_geometry,$curwin_x,$curwin_y,$curwin_w,$curwin_h"
+
+function help {
+cat <<EOF
+  moveto
+  moveby
+  growto
+  growby
+  resizeto
+EOF
+}
+
+if (( $# == 0 )); then
+  echo "No sub-command passed."
+  help; exit 3;
+fi
 
 shopt -s nocasematch
 for op in "$@"; do
