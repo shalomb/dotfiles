@@ -27,7 +27,7 @@ while :; do
     retry_interval="$retry_floor"
   fi
   
-  printf "%s  %s %s %04.1f : " "$(date --rfc-3339=seconds | tr ' ' T)" "${0##*/}" "$*" "$retry_interval"
+  printf "%s  %s %s #%04.1f : " "$(date --rfc-3339=seconds | tr ' ' T)" "${0##*/}" "$*" "$retry_interval"
   ssh "$@" 2> >( tee "$stderr" )
   exit_code=$?
 
