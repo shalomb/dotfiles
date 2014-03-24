@@ -287,18 +287,7 @@ function! PrintFile(fname)
 endfunc
 set printexpr=PrintFile(v:fname_in)
 
-"""" Autocmds """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-autocmd BufNewFile,Bufread    *.csv     setfiletype csv
-autocmd BufNewFile,Bufread    *.ps1     setfiletype ps1
-autocmd BufNewFile,Bufread    *.psm1    setfiletype ps1
-autocmd FileType perl                   setlocal keywordprg=perldoc\ -T\ -f
-                                      " Open_a_Perl_module_from_its_module_name
-" autocmd BufWritePost          .vimrc    source ~/.vimrc
-
-"""" Set Viminfo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-set viminfo='10,\"100,:256,%,n~/.vim/viminfo
-
-"""" Reset Cursor Position """"""""""""""""""""""""""""""""""""""""""""""""""""
+""""" Reset Cursor Position """"""""""""""""""""""""""""""""""""""""""""""""""""
 " http://vim.wikia.com/wiki/Restore_cursor_to_file_position_in_previous_editing_session
 
 function! ResCur()
@@ -313,6 +302,18 @@ augroup resCur
   autocmd BufWinEnter * call ResCur()
 augroup END
 
+""" Autocmds """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+autocmd BufNewFile,Bufread    *.csv     setfiletype csv
+autocmd BufNewFile,Bufread    *.ps1     setfiletype ps1
+autocmd BufNewFile,Bufread    *.psm1    setfiletype ps1
+autocmd FileType perl                   setlocal keywordprg=perldoc\ -T\ -f
+                                      " Open_a_Perl_module_from_its_module_name
+autocmd FileType sh                     set fileformat=unix fileencoding=ascii nobomb
+" autocmd BufWritePost          .vimrc    source ~/.vimrc
+
+"""" Set Viminfo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set viminfo='10,\"100,:256,%,n~/.vim/viminfo
+
 """" abbrevs """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 """" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -320,11 +321,13 @@ let mapleader = ","
 
 cnoremap <C-$>                        <End>
 cnoremap <C-^>                        <Home>
-cnoremap %%                           <C-R>=expand('%:h').'/'<CR>
+cnoremap %%                           <C-R>=expand('%:p:h').'/'<CR>
 cnoremap w!!                          %!SUDO_ASKPASS=$(which ssh-askpass) sudo -A tee % > /dev/null
 
 inoremap <A-C-Left>                   <esc>:tabprevious<cr>
 inoremap <A-C-Right>                  <esc>:tabnext<cr>
+inoremap <C-Left>                     <esc>:tabprevious<cr>
+inoremap <C-Right>                    <esc>:tabnext<cr>
 inoremap <C-S>                        <C-O>:update<CR>
 inoremap <C-Enter>                    <C-o>o
 inoremap <C-S-Enter>                  <C-o>O
@@ -394,6 +397,7 @@ nnoremap <silent> <leader>nh          :set hlsearch!      hlsearch?<cr>
 nnoremap <silent> <leader>nl          :set list!          list?<cr>
 nnoremap <silent> <leader>nm          :if &guioptions =~ 'm'<bar>  set guioptions-=m <bar>else<bar>  set guioptions+=m<bar>endif<cr>
 nnoremap <silent> <leader>nn          :if &number == 1<bar>  set relativenumber<bar>else<bar>  set number<bar>endif<cr>
+nnoremap <silent> <leader>no          :if &number == 1<bar>  set number!<bar>       else<bar>  set number<bar>endif<cr>
 nnoremap <silent> <leader>np          :set paste!         paste?<cr>
 nnoremap <silent> <leader>ns          :set spell!         spell?<cr>
 nnoremap <silent> <leader>nw          :set wrap!          wrap?<cr>
