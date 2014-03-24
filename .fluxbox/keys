@@ -10,19 +10,19 @@
 #   * Key Bindings       - http://fluxbox.sourceforge.net/docbook/en/html/c296.html
 #   * Actions            - http://fluxbox.sourceforge.net/docbook/en/html/x359.html
 
-#----Fluxbox Actions--------------------------------------------------------{{{
+#----Fluxbox Actions----{{{----------------------------------------------------
 Control Escape            :RootMenu
 Control Menu              :RootMenu
 Control Mod4 Delete       :Reconfigure
 Control Mod4 Shift Delete :Restart
 # }}}
 
-#----Display Actions--------------------------------------------------------{{{
+#----Display Actions----{{{---------------------------------------------------
 Control Mod4 Left         :ExecCommand switchscreen
 Control Mod4 Right        :ExecCommand switchscreen && DISPLAY=:0.0 invoke_window_by_wm_class "VirtualBox"
 # }}}
 
-#----Workspace Actions------------------------------------------------------{{{
+#----Workspace Actions----{{{--------------------------------------------------
 Mod1 Menu      :WorkspaceMenu
 Mod4 Menu      :ClientMenu
 
@@ -39,7 +39,7 @@ Mod4 F8        :Workspace 8
 Mod4 F9        :Workspace 9
 # }}}
 
-#----Desktop Actions--------------------------------------------------------{{{
+#----Desktop Actions----{{{----------------------------------------------------
 OnDesktop Mouse1   :HideMenus
 OnDesktop Mouse2   :WorkspaceMenu
 OnDesktop Mouse3   :RootMenu
@@ -51,7 +51,7 @@ OnToolbar Mouse4   :PrevWorkspace  # Scroll on the toolbar
 OnToolbar Mouse5   :NextWorkspace  # to change workspaces
 # }}}
 
-#----Window Actions---------------------------------------------------------{{{
+#----Window Actions----{{{-----------------------------------------------------
 OnTitlebar Mouse3        :WindowMenu
 Mod1 space               :WindowMenu
 OnTitlebar Mouse1        :MacroCmd {Focus} {Raise} {ActivateTab}
@@ -117,7 +117,7 @@ Mod4 8                   :GoToWindow 8  {static groups} (iconhidden=no)
 Mod4 9                   :GoToWindow 9  {static groups} (iconhidden=no)
 # }}}
 
-#----Tab Actions------------------------------------------------------------{{{
+#----Tab Actions----{{{--------------------------------------------------------
 OnTitlebar Mouse2        :StartTabbing
 
 Mod4 Tab                 :NextTab
@@ -139,7 +139,7 @@ Mod4 t 8                 :Tab 8
 Mod4 t 9                 :Tab 9
 # }}}
 
-#----Window winctrlMode-----------------------------------------------------{{{
+#----Window winctrlMode----{{{-------------------------------------------------
 Mod4 w w                         :MacroCmd { ExecCommand osd_msg "WinCtrl Mode" } { KeyMode winctrlMode }
 
 winctrlMode: Mod1 Tab            :NextWindow {groups} (workspace=[current])  # Alt-Tab !! FBCV13 !!
@@ -152,11 +152,6 @@ winctrlMode: l                   :ExecCommand winctrl moveto_right
 winctrlMode: k                   :ExecCommand winctrl moveto_top
 winctrlMode: j                   :ExecCommand winctrl moveto_bottom
 
-winctrlMode: Left                :ExecCommand winctrl moveto_left
-winctrlMode: Right               :ExecCommand winctrl moveto_right
-winctrlMode: Up                  :ExecCommand winctrl moveto_top
-winctrlMode: Down                :ExecCommand winctrl moveto_bottom
-
 winctrlMode: Control Return      :ExecCommand winctrl resizeto_quadrant
 
 winctrlMode: Shift h             :ExecCommand winctrl growto_leftmargin
@@ -164,10 +159,10 @@ winctrlMode: Shift l             :ExecCommand winctrl growto_rightmargin
 winctrlMode: Shift k             :ExecCommand winctrl growto_topmargin
 winctrlMode: Shift j             :ExecCommand winctrl growto_bottommargin
 
-winctrlMode: Control Left        :ExecCommand winctrl growto_leftmargin
-winctrlMode: Control Right       :ExecCommand winctrl growto_rightmargin
-winctrlMode: Control Up          :ExecCommand winctrl growto_topmargin
-winctrlMode: Control Down        :ExecCommand winctrl growto_bottommargin
+winctrlMode: Control h           :ExecCommand winctrl growto_leftmargin
+winctrlMode: Control l           :ExecCommand winctrl growto_rightmargin
+winctrlMode: Control k           :ExecCommand winctrl growto_topmargin
+winctrlMode: Control j           :ExecCommand winctrl growto_bottommargin
 
 winctrlMode: Shift Control Left  :ResizeHorizontal -10
 winctrlMode: Shift Control Right :MoveRight         10
@@ -181,7 +176,7 @@ winctrlMode: m                   :MacroCmd { ExecCommand osd_msg "Window Move Mo
 winctrlMode: r                   :MacroCmd { ExecCommand osd_msg "Window Resize Mode" } { KeyMode ResizeMode }
 # }}}
 
-#----Window MoveMode--------------------------------------------------------{{{
+#----Window MoveMode----{{{----------------------------------------------------
 Mod4 w m           :MacroCmd { ExecCommand osd_msg "Window Move Mode" } { KeyMode MoveMode }
 
 MoveMode: h        :MoveLeft   5
@@ -209,7 +204,7 @@ MoveMode: r        :MacroCmd { ExecCommand osd_msg "Window Resize Mode" } { KeyM
 MoveMode: w        :MacroCmd { ExecCommand osd_msg "WinCtrl Mode" } { KeyMode winctrlMode }
 #  }}}
 
-#----Window ResizeMode------------------------------------------------------{{{
+#----Window ResizeMode----{{{--------------------------------------------------
 Mod4 w r                        :MacroCmd { ExecCommand osd_msg "Window Resize Mode" } { KeyMode ResizeMode }
 
 ResizeMode: h                   :ResizeHorizontal -1
@@ -247,7 +242,7 @@ ResizeMode: m                   :MacroCmd { ExecCommand osd_msg "Window Move Mod
 ResizeMode: w                   :MacroCmd { ExecCommand osd_msg "WinCtrl Mode" } { KeyMode winctrlMode }
 # }}}
 
-#----Window Layer Mode------------------------------------------------------{{{
+#----Window Layer Mode----{{{--------------------------------------------------
 Mod4 w l          :MacroCmd { ExecCommand osd_msg "Set Window Layer Mode" } {KeyMode SetWindowLayer}
 
 SetWindowLayer: t :SetLayer Top
@@ -258,7 +253,7 @@ SetWindowLayer: l :LowerLayer
 SetWindowLayer: r :RaiseLayer
 # }}}
 
-#----Window Mark Mode-------------------------------------------------------{{{
+#----Window Mark Mode----{{{---------------------------------------------------
 Mod4 w a                    :MacroCmd { ExecCommand osd_msg "Mark Mode" } {KeyMode MarkMode}
 
 # winmark mark x       # creates mark 'x' pointing at the current window
@@ -305,6 +300,44 @@ MarkMode: x              :ExecCommand winmark mark   x
 MarkMode: y              :ExecCommand winmark mark   y
 MarkMode: z              :ExecCommand winmark mark   z
 
+Control Mod1 Mod4 0      :ExecCommand winmark mark   0
+Control Mod1 Mod4 1      :ExecCommand winmark mark   1
+Control Mod1 Mod4 2      :ExecCommand winmark mark   2
+Control Mod1 Mod4 3      :ExecCommand winmark mark   3
+Control Mod1 Mod4 4      :ExecCommand winmark mark   4
+Control Mod1 Mod4 5      :ExecCommand winmark mark   5
+Control Mod1 Mod4 6      :ExecCommand winmark mark   6
+Control Mod1 Mod4 7      :ExecCommand winmark mark   7
+Control Mod1 Mod4 8      :ExecCommand winmark mark   8
+Control Mod1 Mod4 9      :ExecCommand winmark mark   9
+
+Control Mod1 Mod4 a      :ExecCommand winmark mark   a
+Control Mod1 Mod4 b      :ExecCommand winmark mark   b
+Control Mod1 Mod4 c      :ExecCommand winmark mark   c
+Control Mod1 Mod4 d      :ExecCommand winmark mark   d
+Control Mod1 Mod4 e      :ExecCommand winmark mark   e
+Control Mod1 Mod4 f      :ExecCommand winmark mark   f
+Control Mod1 Mod4 g      :ExecCommand winmark mark   g
+Control Mod1 Mod4 h      :ExecCommand winmark mark   h
+Control Mod1 Mod4 i      :ExecCommand winmark mark   i
+Control Mod1 Mod4 j      :ExecCommand winmark mark   j
+Control Mod1 Mod4 k      :ExecCommand winmark mark   k
+Control Mod1 Mod4 l      :ExecCommand winmark mark   l
+Control Mod1 Mod4 m      :ExecCommand winmark mark   m
+Control Mod1 Mod4 n      :ExecCommand winmark mark   n
+Control Mod1 Mod4 o      :ExecCommand winmark mark   o
+Control Mod1 Mod4 p      :ExecCommand winmark mark   p
+Control Mod1 Mod4 q      :ExecCommand winmark mark   q
+Control Mod1 Mod4 r      :ExecCommand winmark mark   r
+Control Mod1 Mod4 s      :ExecCommand winmark mark   s
+Control Mod1 Mod4 t      :ExecCommand winmark mark   t
+Control Mod1 Mod4 u      :ExecCommand winmark mark   u
+Control Mod1 Mod4 v      :ExecCommand winmark mark   v
+Control Mod1 Mod4 w      :ExecCommand winmark mark   w
+Control Mod1 Mod4 x      :ExecCommand winmark mark   x
+Control Mod1 Mod4 y      :ExecCommand winmark mark   y
+Control Mod1 Mod4 z      :ExecCommand winmark mark   z
+
 Control Mod4 0           :ExecCommand winmark summon 0
 Control Mod4 1           :ExecCommand winmark summon 1
 Control Mod4 2           :ExecCommand winmark summon 2
@@ -343,15 +376,10 @@ Control Mod4 x           :ExecCommand winmark summon x
 Control Mod4 y           :ExecCommand winmark summon y
 Control Mod4 z           :ExecCommand winmark summon z
 
-Control Mod4 Up          :MacroCmd{ FocusUp     } { ExecCommand curwin }
-Control Mod4 Right       :MacroCmd{ FocusiRight } { ExecCommand curwin }
-Control Mod4 Down        :MacroCmd{ FocusDown   } { ExecCommand curwin }
-Control Mod4 Left        :MacroCmd{ FocusLeft   } { ExecCommand curwin }
-
 Control Mod4 Period      :If { Some Matches (qterm) } { ToggleCmd { NextWindow (qterm) } { ExecCommand qterm toggle } } { ExecCommand qterm hide }
 # }}}
 
-#----Command Hotkeys--------------------------------------------------------{{{
+#----Command Hotkeys----{{{----------------------------------------------------
 Control Mod4 period  :ExecCommand qterm
 Control Shift Escape :ExecCommand urxvtc -name htop -title htop -e htop -u $USER --sort-key CPU%
 
@@ -361,7 +389,7 @@ Mod4    d            :ToggleCmd { ShowDesktop } { Deiconify }
 Mod4    f            :If { Some Matches (dolphin) } { NextWindow (dolphin) } { ExecCommand xdg-open ~/ }
 Mod4    g            :ExecCommand xdg-open `googlize`  # clipboard keyword search
 Mod4    Mod1 g       :ExecCommand xdg-open 'http://127.0.0.1:30127/?hl=en_GB&src=14&s=f6gdGknV4MTC5Tya_vD2PdzAcY0'
-Mod4    l            :ExecCommand sleep 1 && xset s activate && xset dpms force off && sleep 1 && gnome-screensaver-command --lock
+Mod4    l            :ExecCommand xset s activate && xset dpms force off && gnome-screensaver-command --lock
 Mod4    r            :If { Some Matches (gmrun) } { NextWindow (gmrun) } { ExecCommand gmrun }
 #Mod4   s            :Claimed by MarkMode
 #       Mod4 v       :Claimed by SpecialKeys/alsamixergui
@@ -372,7 +400,7 @@ Mod4    period       :If { Some Matches (qterm) } { ToggleCmd { NextWindow (qter
 Mod4    space        :ExecCommand gnome-do --mini --glassframe --quiet
 # }}}
 
-#----Special Keys-----------------------------------------------------------{{{
+#----Special Keys----{{{-------------------------------------------------------
 176       :Exec amixer sset Master,0 1+
 174       :Exec amixer sset Master,0 1-
 
