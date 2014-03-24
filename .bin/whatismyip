@@ -2,8 +2,11 @@
 
 function assert_is_installed {
   if ! type -P "$1" &>/dev/null; then
-    echo "'$1' is not installed and is required." >&2
-    echo "  $2" >&2
+    echo "'$1' is not installed/available and is required.(PATH=$PATH)" >&2
+    shift
+    if [[ $@ ]]; then 
+      echo "$@" >&2
+    fi
     exit 3
   fi
 }
@@ -36,41 +39,132 @@ function get_host_addresses {
   '
 }
 
-function get_routers {
-  { 
-    ip -4 route list match 0/0
-    ip -6 route list match ::/0
-  } | awk '{print $3}'
+function get_default_gateways {
+  local proto="$1"
+  [[ $proto = *6 ]] && { ip -6 route list match ::/0  | awk '{print $3}'; }
+  [[ $proto = *4 ]] && { ip -4 route list match  0/0  | awk '{print $3}'; } 
+}
+
+function get_default_interfaces {
+  local proto="$1"
+  [[ $proto = *6 ]] && { ip -6 route list match ::/0  | awk '{print $5}'; }
+  [[ $proto = *4 ]] && { ip -4 route list match  0/0  | awk '{print $5}'; } 
 }
 
 function extract_v4_address {
-  perl -ne 'print for /((?:\d{1,3}(?:\.|\b)){4})/' -
+  perl -nle 'print for /((?:\d{1,3}(?:\.|\b)){4})/' -
 }
 
 function extract_v6_address {
-  perl -ne 'print for /((?:[[:xdigit:]]{1,4}(?::{1,2}|\b)){2,8})/'
+  perl -nle 'print for /((?:[[:xdigit:]]{1,4}(?::{1,2}|\b)){2,8})/' -
 }
 
 function get_external_v4_addresses {
-           local addr=$( wget -q4 'http://ident.me/' )
-  [[ $addr ]] || addr=$( wget -q4 'http://checkip.dns.he.net/'       -O - | extract_v4_address )
-  [[ $addr ]] || addr=$( wget -q4 'http://checkip.dyndns.com/'       -O - | extract_v4_address )
-  [[ $addr ]] || addr=$( wget -q4 'http://checkip.dyndns.com:8245/'  -O - | extract_v4_address )
-  [[ $addr ]] || addr=$( wget -q4 'http://checkip.zerigo.com/'       -O - | extract_v4_address )
+           local addr=$( wget -q4 'http://ident.me/'                  -O - )
+  [[ $addr ]] || addr=$( wget -q4 'http://www.telize.com/ip'          -O - )
+  [[ $addr ]] || addr=$( wget -q4 'http://checkip.dns.he.net/'        -O - | extract_v4_address )
+  [[ $addr ]] || addr=$( wget -q4 'http://checkip.dyndns.com/'        -O - | extract_v4_address )
+  [[ $addr ]] || addr=$( wget -q4 'http://checkip.dyndns.com:8245/'   -O - | extract_v4_address )
+  [[ $addr ]] || addr=$( wget -q4 'http://checkip.zerigo.com/'        -O - | extract_v4_address )
   echo "$addr"
 }
 
 function get_external_v6_addresses {
-           local addr=$( wget -q6 'http://ident.me/' )
-  [[ $addr ]] || addr=$( wget -q6 'http://ident.me/'                -O - | extract_v6_address )
-  [[ $addr ]] || addr=$( wget -q6 'http://checkip.dns.he.net/'      -O - | extract_v6_address )
-  [[ $addr ]] || addr=$( wget -q6 'http://checkip.zerigo.com/'      -O - | extract_v6_address )
+           local addr=$( wget -q6 'http://ident.me/'                  -O - )
+  [[ $addr ]] || addr=$( wget -q6 'http://www.telize.com/ip'          -O - )
+  [[ $addr ]] || addr=$( wget -q6 'http://checkip.dns.he.net/'        -O - | extract_v6_address )
+  [[ $addr ]] || addr=$( wget -q6 'http://checkip.dyndns.com/'        -O - | extract_v4_address )
+  [[ $addr ]] || addr=$( wget -q6 'http://checkip.dyndns.com:8245/'   -O - | extract_v4_address )
+  [[ $addr ]] || addr=$( wget -q6 'http://checkip.zerigo.com/'        -O - | extract_v6_address )
   echo "$addr"
+}
+
+function get_dns_nameservers {
+  local proto="${1:-46}"
+  [[ $proto = *6  ]] && { cat /etc/resolv.conf | extract_v6_address ; }
+  [[ $proto = *4  ]] && { cat /etc/resolv.conf | extract_v4_address ; }
+  [[ $proto = *46 ]] && { cat /etc/resolv.conf | extract_v4_address ; }
 }
 
 function resolve_address {
   local addr="${1%/*}"
   printf "%-16s %s\n" "$addr" "$(dig -x "$addr" | awk '$1 !~ /^;/ && $1 !~ /^$/{print $1"\t"$5}')"
+}
+
+function get_dhcp_client_lease {
+  local int="$1"
+  local lease_file=$(find /var/lib/dhcp/dhclient* -iname "*${int}*" -type f -printf '%T@ %p\n' | \
+                      sort -n | awk 'END{print $2}')
+  if [[ $lease_file ]]; then
+    { echo -e "file\t$lease_file"
+      sed -e '/}/d' -e 's/^lease.*/\n/g' "$lease_file" | awk 'BEGIN{RS="\n\n"} END{print}' ; 
+    } | \
+      sed -e 's/option\ \+/@@/g' | column -t | \
+      sed -r -e 's/@@/  /g' -e 's/;//g' -e 's/ ([0-9])\ +/ \1 /g' -e 's/^/  /g' -e 's/"//g'
+  else
+    echo 'No lease files found.' >&2
+  fi
+}
+
+function get_geoip_info {
+  local ip="${1:-$(get_external_v4_addresses)}"
+  html_file="/tmp/${ip}.geoinfo.html"
+  if [[ ! -e $html_file ]]; then
+    wget -q 'http://ip-api.com/' -O "$html_file"
+  fi
+  if [[ -e $html_file ]]; then
+    grep '<tr>' "$html_file" | \
+    perl -ne '
+      chomp; s/^[\ \t]+//g; 
+      @_=grep $_, split /:?<[^>]+>/; 
+      printf "%-14s : %s\n", $_[0], (splice @_, 1)
+    ' 
+  fi
+}
+
+function get_geoip_info2 {
+  local ip="${1:-$(get_external_v4_addresses)}"
+  json_file="/tmp/${ip}.geoip.json"
+  if [[ ! -e $json_file ]]; then
+    wget -q 'http://freegeoip.net/json/' -O - > "$json_file"
+  fi
+  if [[ -e $json_file ]]; then
+    perl -nle '
+      use JSON; $g = from_json($_); 
+      @keys=qw[ip latitude longitude city zipcode areacode metro_code region_name region_code country_name country_code];
+      for (@keys) { printf "%-16s : %s\n", $_, $g->{$_} }
+    ' < "$json_file"
+  fi
+}
+
+function get_geobytes_info {
+  local ip="${1:-$(get_external_v4_addresses)}"
+  html_file="/tmp/${ip}.geobytes.html"
+  if [[ ! -e $html_file ]]; then
+    wget -q "http://www.geobytes.com/IpLocator.htm?GetLocation&template=php3.txt&IpAddress=$ip" -O - > "$html_file"
+  fi
+  grep -i '^<meta' "$html_file" | sed -r  -e 's/.*name="//' -e 's/\ +content="/\t/' \
+                                          -e 's/"\t/\t/' -e 's/">//' -e 's///g' | \
+    while read k v; do
+      printf "%-18s : %s\n" "$k" "$v"
+    done
+}
+
+function get_whois_info {
+  local ip="${1:-$(get_external_v4_addresses)}"
+  whois_file="/tmp/${ip}.whois.txt"
+  if [[ ! -e $whois_file ]]; then
+    whois -B "$ip" | grep . > "$whois_file"
+  fi
+  grep -viE -e '^%$|e-mail|@|mnt-by|mnt-lower|remarks|address|version|service|rpsl|database update|terms.*cond|been filtered' \
+    "$whois_file" | \
+    while IFS=: read -r k v; do
+      if [[ $k = '%'* ]]; then
+        echo "$k"
+      else
+        printf "    %-12s : %s\n" "$k" "$(sed 's/^\ \+//' <<< "$v")"
+      fi
+    done
 }
 
 function show_help {
@@ -80,10 +174,14 @@ ${0##*/} - List known IP Addresses
   -e - Show external addresses (default).
   -i - Show internal addresses
   -p - Show DNS pointers.
+  -d - Show DNS nameservers.
+  -D - Show DHCP client lease information.
+  -g - List IP Gateways.
   -f - Run internal function.
   -F - List internal functions.
   -4 - Show IPv4 addresses.
   -6 - Show IPv6 addresses.
+  -v - Enable trace debugging.
 EOF
 
 }
@@ -92,13 +190,19 @@ EOF
 (( $# == 0 )) && set -- '-e4'
 
 # Get command line options
-while getopts ":iep46fF" opt; do
+while getopts ":iedDgpfF64v" opt; do
   case "$opt" in
     i)  show_internal_addresses=1
     ;;
     e)  show_external_addresses=1
     ;;
+    d)  show_dns_nameservers=1
+    ;;
+    D)  get_dhcp_client_lease; exit "$?"
+    ;;
     p)  show_pointer=1
+    ;;
+    g)  show_routers=1
     ;;
     f)  run_internal_function=1
     ;;
@@ -108,6 +212,8 @@ while getopts ":iep46fF" opt; do
     ;;
     6)  show_ipv6=1
     ;;
+    v)  [[ ${i//[!x]/} ]] && set -v; set -x;
+    ;;
     h|\?)  show_help; exit;
     ;;
   esac
@@ -116,7 +222,9 @@ done
 
 # Validate options and combinations
 [[ -z $show_ipv6  &&  -z $show_ipv4 ]] && show_ipv6=1 && show_ipv4=1
-[[ -z $show_internal_addresses ]] && [[ -z $show_external_addresses ]] && show_external_addresses=1
+if (( show_routers != 1 )) || (( show_dns_nameservers != 1 )); then
+  [[ -z $show_internal_addresses ]] && [[ -z $show_external_addresses ]] && show_external_addresses=1
+fi
 
 if (( list_internal_functions == 1 )); then
   set | awk '/ \(\)/{print $1}'
@@ -130,7 +238,9 @@ if (( run_internal_function )); then
   exit "$?"
 fi
 
+
 addresses=()
+
 if (( show_external_addresses == 1 )); then
   (( show_ipv6 == 1 )) && addresses+=( $(get_external_v6_addresses) )
   (( show_ipv4 == 1 )) && addresses+=( $(get_external_v4_addresses) )
@@ -139,6 +249,16 @@ fi
 if (( show_internal_addresses == 1 )); then
   (( show_ipv6 == 1 )) && addresses+=( $(get_host_addresses 'ipv6') )
   (( show_ipv4 == 1 )) && addresses+=( $(get_host_addresses 'ipv4') )
+fi
+
+if (( show_routers == 1 )); then
+  (( show_ipv6 == 1 )) && addresses+=( $(get_default_gateways 'ipv6') )
+  (( show_ipv4 == 1 )) && addresses+=( $(get_default_gateways 'ipv4') )
+fi
+
+if (( show_dns_nameservers == 1 )); then
+  (( show_ipv6 == 1 )) && addresses+=( $(get_dns_nameservers 'ipv6') )
+  (( show_ipv4 == 1 )) && addresses+=( $(get_dns_nameservers 'ipv4') )
 fi
 
 for addr in ${addresses[@]}; do

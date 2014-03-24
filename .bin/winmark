@@ -7,14 +7,21 @@
 shopt -s extglob
 
 # [[ ${-//[!i]/} ]] &&
-  exec > >(tee -a ~/.tmp/winmarks/winmark.log) 2>&1
 
-if [[ ! -d ~/.tmp/winmarks ]]; then
-  mkdir -p ~/.tmp/winmarks || \
+winmarks_dir="$HOME/.config/winmarks"
+
+if [[ ! -d "$winmarks_dir" ]]; then
+  mkdir -p "$winmarks_dir" || \
     { echo "Error creating the winmarks directory, $!"; exit 2; };
 fi
 
-cd ~/.tmp/winmarks
+cd "$winmarks_dir"
+
+exec > >(tee -a "$winmarks_dir"/winmark.log) 2>&1
+
+function get_last_winmark {
+  find . -type l -iname "?" -printf "%T@ %p\0" | sort -zn | grep -zom 1 ".$"
+}
 
 action="${1:-"mark"}"
 mark="${2:-"'"}"
@@ -38,6 +45,9 @@ if   [[ $action = @(mark|add) ]]; then
     osd_msg "$( < /dev/stdin )"
 
 elif [[ $action = @(summon|call) ]]; then
+
+  # [[ "$mark" = "L" ]] && mark=$(get_last_winmark)
+
   winid="$(readlink "$mark")";
   winid="${winid##*/}"
 
