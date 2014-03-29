@@ -9,13 +9,16 @@ ln -svf .vim/vimrc  .vimrc
 ln -svf .vim/gvimrc .gvimrc
 
 (
+  git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    .vim/bundle/vim-tmux-navigator
   git submodule add -f https://github.com/godlygeek/tabular.git                 .vim/bundle/tabular
   git submodule add -f https://github.com/hsitz/VimOrganizer.git                .vim/bundle/VimOrganizer
   git submodule add -f https://github.com/jceb/vim-orgmode.git                  .vim/bundle/vim-orgmode
   git submodule add -f https://github.com/kana/vim-arpeggio.git                 .vim/bundle/arpeggio
   git submodule add -f https://github.com/kien/ctrlp.vim.git                    .vim/bundle/ctrlp
   git submodule add -f https://github.com/majutsushi/tagbar.git                 .vim/bundle/tagbar
+  git submodule add -f https://github.com/mileszs/ack.vim.git                   .vim/bundle/ack
   git submodule add -f https://github.com/msanders/snipmate.vim.git             .vim/bundle/snipmate
+  git submodule add -f https://github.com/PProvost/vim-ps1.git                  .vim/bundle/vim-ps1
   git submodule add -f https://github.com/pydave/vim-perforce.git               .vim/bundle/vim-perforce
   git submodule add -f https://github.com/shalomb/vimcse.git                    .vim/vimcse
   git submodule add -f https://github.com/tomasr/molokai.git                    .vim/bundle/molokai
@@ -44,11 +47,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/vim-scripts/taglist.vim.git           .vim/bundle/taglist
   git submodule add -f https://github.com/vim-scripts/underlinetag.git          .vim/bundle/underlinetag
   git submodule add -f https://github.com/vim-scripts/vimwiki.git               .vim/bundle/vimwiki
-  git submodule add -f https://github.com/vim-scripts/VST.git                   .vim/bundle/vst # Vim reStructured Text
-  git submodule add -f https://github.com/vim-scripts/Windows-PowerShell-File-Type-Plugin.git  .vim/bundle/posh-ftplugin
-  git submodule add -f https://github.com/vim-scripts/Windows-PowerShell-indent-enhanced.git   .vim/bundle/posh-indent
-  git submodule add -f https://github.com/vim-scripts/Windows-PowerShell-Syntax-File.git       .vim/bundle/posh-syntax
-  git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    .vim/bundle/vim-tmux-navigator
+  git submodule add -f https://github.com/vim-scripts/VST.git                   .vim/bundle/vst     # Vim reStructured Text
 
   git submodule init
   git submodule update
