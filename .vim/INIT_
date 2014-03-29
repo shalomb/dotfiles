@@ -27,7 +27,6 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/tpope/vim-speeddating.git             .vim/bundle/vim-speeddating
   git submodule add -f https://github.com/tpope/vim-surround.git                .vim/bundle/surround
   git submodule add -f https://github.com/tpope/vim-unimpaired.git              .vim/bundle/unimpaired
-  git submodule add -f https://github.com/tsaleh/vim-tmux.git                   .vim/bundle/vim-tmux
   git submodule add -f https://github.com/vimoutliner/vimoutliner.git           .vim/bundle/vimoutliner
   git submodule add -f https://github.com/vim-scripts/css.vim--Streppone.git    .vim/bundle/streppone--css.vim
   git submodule add -f https://github.com/vim-scripts/DrawIt.git                .vim/bundle/drawit
