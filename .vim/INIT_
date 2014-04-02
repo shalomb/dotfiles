@@ -22,6 +22,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/pydave/vim-perforce.git               .vim/bundle/vim-perforce
   git submodule add -f https://github.com/shalomb/vimcse.git                    .vim/vimcse
   git submodule add -f https://github.com/tomasr/molokai.git                    .vim/bundle/molokai
+  git submodule add -f https://github.com/tpope/vim-abolish.git                 .vim/bundle/abolish
   git submodule add -f https://github.com/tpope/vim-pathogen.git                .vim/bundle/pathogen
   git submodule add -f https://github.com/tpope/vim-repeat.git                  .vim/bundle/repeat
   git submodule add -f https://github.com/tpope/vim-speeddating.git             .vim/bundle/vim-speeddating
@@ -47,6 +48,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/vim-scripts/underlinetag.git          .vim/bundle/underlinetag
   git submodule add -f https://github.com/vim-scripts/vimwiki.git               .vim/bundle/vimwiki
   git submodule add -f https://github.com/vim-scripts/VST.git                   .vim/bundle/vst     # Vim reStructured Text
+  git submodule add -f https://github.com/wikitopian/hardmode.git               .vim/bundle/hardmode
 
   git submodule init
   git submodule update
