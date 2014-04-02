@@ -133,3 +133,9 @@
 [submodule ".vim/bundle/ack"]
 	path = .vim/bundle/ack
 	url = https://github.com/mileszs/ack.vim.git
+[submodule ".vim/bundle/abolish"]
+	path = .vim/bundle/abolish
+	url = https://github.com/tpope/vim-abolish.git
+[submodule ".vim/bundle/hardmode"]
+	path = .vim/bundle/hardmode
+	url = https://github.com/wikitopian/hardmode.git
