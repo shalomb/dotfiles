@@ -44,8 +44,8 @@
   [Dimensions]	{500 364}
 [end]
 [app] (name=qterm) (class=URxvt)
-  [Dimensions]	{1648 694}
-  [Position]	(UPPERLEFT)	{37 193}
+  [Dimensions]	{1648 1024}
+  [Position]	(UPPERLEFT)	{168 14}
   [Shaded]	{no}
   [Deco]	{0x244}
   [Sticky]	{no}
@@ -81,7 +81,7 @@
   [Maximized]	{yes}
   [Fullscreen]	{yes}
   [Jump]	{yes}
-  [Layer]	{2}
+  [Layer]	{12}
   [Close]	{yes}
   [Alpha]	{208 224}
 [end]
@@ -114,4 +114,10 @@
 [end]
 [app] (name=Dialog) (class=Firefox)
   [Position]	(UPPERLEFT)	{724 315}
+[end]
+[app] (name=sun-awt-X11-XDialogPeer) (class=sun-applet-PluginMain)
+  [Position]	(UPPERLEFT)	{690 430}
+[end]
+[app] (name=sun-awt-X11-XFramePeer) (class=sun-applet-PluginMain)
+  [Position]	(UPPERLEFT)	{534 367}
 [end]

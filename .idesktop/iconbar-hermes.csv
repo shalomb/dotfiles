@@ -1,8 +1,6 @@
 Iconbar_Y,Iconbar_Padding,Iconbar_Spacing,Icon_Width,Icon_Height,Icon_Padding,Icongroup_Padding
-1146,10,compact,24,24,10,16
+1020,10,compact,24,24,6,12
 Caption,Icon,Y,Width,Height,Command[0],Command[1]
-Fluxbox,fluxbox.png,1134,48,48,fluxbox-remote 'rootmenu',
-,,,,,,
 Desktop,desktop.png,,28,28,dolphin ~/Desktop,
 Trash,trash.png,,28,28,dolphin 'Trash:///',
 Gnome Control Center,gnome-control-center.png,,28,28,gnome-control-center,gksu gnome-control-center
