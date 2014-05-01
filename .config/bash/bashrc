@@ -189,8 +189,9 @@ echo -e "\n$USER@$HOSTNAME/$TTY $BASH ($$|$PPID) ${BASH_VERSION} $MACHTYPE"
 uname -a
 
 echo ''
-echo -n "last login: "
-lastlog -u unop | tail -n +2 | tail -n 1 | sed 's/\ \ \ */ on /g'
+echo -n "last login "
+lastlog -u "${USER}" | tail -n 1 | sed -r -e 's/  +/ /g'
+uptime
 echo ''
 
 fortune
