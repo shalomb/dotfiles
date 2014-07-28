@@ -1,14 +1,29 @@
 #!/bin/bash 
 
+set -eu
+
 if [[ ! -d .vim ]]; then
   echo "No .vim directory found." >&2
   exit 3
 fi
 
+pkgs_to_install=()
+type -P ack-grep &>/dev/null  || pkgs_to_install+=( 'ack-grep' )
+type -P par &>/dev/null       || pkgs_to_install+=( 'par' )
+type -P sudo &>/dev/null      || pkgs_to_install+=( 'sudo' )
+type -P ctags &>/dev/null     || pkgs_to_install+=( 'exuberant-ctags' )
+type -P git &>/dev/null       || pkgs_to_install+=( 'git' )
+type -P hg &>/dev/null        || pkgs_to_install+=( 'mercurial' )
+
+if (( ${#pkgs_to_install[@]} >= 1 )); then
+  echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
+  (set -xv; sudo aptitude install ${pkgs_to_install[@]})
+fi
+
 ln -svf .vim/vimrc  .vimrc
 ln -svf .vim/gvimrc .gvimrc
 
-(
+( set +e
   git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    .vim/bundle/vim-tmux-navigator
   git submodule add -f https://github.com/godlygeek/tabular.git                 .vim/bundle/tabular
   git submodule add -f https://github.com/hsitz/VimOrganizer.git                .vim/bundle/VimOrganizer
@@ -35,6 +50,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/vim-scripts/Gundo.git                 .vim/bundle/gundo
   git submodule add -f https://github.com/vim-scripts/iptables.git              .vim/bundle/iptables
   git submodule add -f https://github.com/vim-scripts/Markdown.git              .vim/bundle/markdown
+  git submodule add -f https://github.com/jtratner/vim-flavored-markdown.git    .vim/bundle/ghmarkdown
   git submodule add -f https://github.com/vim-scripts/matchit.zip.git           .vim/bundle/matchit
   git submodule add -f https://github.com/vim-scripts/netrw.vim.git             .vim/bundle/netrw
   git submodule add -f https://github.com/vim-scripts/perl-mauke.vim.git        .vim/bundle/mauke-perl.vim
