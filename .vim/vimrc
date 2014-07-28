@@ -6,7 +6,7 @@ call pathogen#incubate()
 
 """" Options """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set more                    " page on extended output
-" set nocompatible            " 
+" set nocompatible            "
 
 let $PAGER='less'           " less is my pager
 let $LESS=$PAGER            " to reiterate - less is my pager
@@ -311,6 +311,11 @@ autocmd FileType perl                   setlocal keywordprg=perldoc\ -T\ -f
 autocmd FileType sh                     set fileformat=unix fileencoding=ascii nobomb
 " autocmd BufWritePost          .vimrc    source ~/.vimrc
 
+augroup markdown
+  au!
+  au BufNewFile,BufRead *.md,*.markdown setlocal filetype=ghmarkdown
+augroup END
+
 """" Set Viminfo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set viminfo='10,\"100,:256,%,n~/.vim/viminfo
 
@@ -333,6 +338,18 @@ inoremap <C-Enter>                    <C-o>o
 inoremap <C-S-Enter>                  <C-o>O
 inoremap <C-U>                        <C-G>u<C-U>
 inoremap <C-W>                        <C-G>u<C-W>
+
+" nnoremap <buffer>          ;          :
+" nnoremap <buffer>          :          ;
+
+nnoremap <buffer>     /               /\v
+nnoremap <buffer>     <leader>sr      :,%s@\v@@gci<Left><Left><Left><Left><Left>
+
+cnoremap %% <C-R>=fnameescape(expand('%:h:p')).'/'<cr>
+map <leader>ee    :edit     %%
+map <leader>es    :split    %%
+map <leader>ev    :vsplit   %%
+map <leader>et    :tabedit  %%
 
 noremap  <buffer> <silent> k          gk
 noremap  <buffer> <silent> j          gj
@@ -460,7 +477,7 @@ vnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtu
 """" Aesthetics """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set t_Co=256
 highlight clear
-set background=light      
+set background=light
 colorscheme koehler
 
 " xterm colors: http://vim.wikia.com/wiki/Xterm256_color_names_for_console_Vim
@@ -504,5 +521,130 @@ let g:ctrlp_match_window      = 'bottom,order:btt,min:1,max:16,results:16'
 let g:ctrlp_reuse_window      = 'netrw\|help\|quickfix'
 let g:ctrlp_switch_buffer     = 'Et'
 let g:ctrlp_working_path_mode = 'c'
+
+"""" Hardmode.vim """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:HardMode_level = 'wannabe'
+autocmd VimEnter,BufNewFile,BufReadPost * silent! call HardMode()
+nnoremap <leader>hmm <Esc>:call ToggleHardMode()<CR>
+nnoremap <leader>hmh <Esc>:call HardMode()<CR>
+nnoremap <leader>hme <Esc>:call EasyMode()<CR>
+
+"""" IBV2013 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+call matchadd('ColorColumn','\%81v',100)
+highlight ColorColumn ctermbg=magenta
+
+
+"====[ Make the 81st column stand out ]====================
+
+    " EITHER the entire 81st column, full-screen...
+    highlight ColorColumn ctermbg=magenta
+    " set colorcolumn=81
+
+    " OR ELSE just the 81st column of wide lines...
+    highlight ColorColumn ctermbg=magenta
+    call matchadd('ColorColumn', '\%81v', 100)
+
+    " OR ELSE on April Fools day...
+    highlight ColorColumn ctermbg=red ctermfg=blue
+    " exec 'set colorcolumn=' . join(range(2,80,3), ',')
+
+
+"=====[ Highlight matches when jumping to next ]=============
+
+  " This rewires n and N to do the highlighing...
+  nnoremap <silent> n   n:call HLNext(0.4)<cr>
+  nnoremap <silent> N   N:call HLNext(0.4)<cr>
+
+  " OR ELSE just highlight the match in red...
+  function! HLNext (blinktime)
+    highlight WhiteOnRed ctermfg=white ctermbg=red
+    let [bufnum, lnum, col, off] = getpos('.')
+    let matchlen = strlen(matchstr(strpart(getline('.'),col-1),@/))
+    let target_pat = '\c\%#'.@/
+    let ring = matchadd('WhiteOnRed', target_pat, 101)
+    redraw
+    exec 'sleep ' . float2nr(a:blinktime * 1000) . 'm'
+    call matchdelete(ring)
+    redraw
+  endfunction
+
+
+"====[ Make tabs, trailing whitespace, and non-breaking spaces visible ]======
+
+    exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~"
+    set list
+
+
+"====[ Swap : and ; to make colon commands easier to type ]======
+
+    " nnoremap  ;  :
+    " nnoremap  :  ;
+
+
+"====[ Swap v and CTRL-V, because Block mode is more useful that Visual mode "]======
+
+    nnoremap    v   <C-V>
+    nnoremap <C-V>     v
+
+    vnoremap    v   <C-V>
+    vnoremap <C-V>     v
+
+
+"====[ Always turn on syntax highlighting for diffs ]=========================
+
+    " EITHER select by the file-suffix directly...
+    augroup PatchDiffHighlight
+        autocmd!
+        autocmd BufEnter  *.patch,*.rej,*.diff   syntax enable
+    augroup END
+
+    " OR ELSE use the filetype mechanism to select automatically...
+    filetype on
+    augroup PatchDiffHighlight
+        autocmd!
+        autocmd FileType  diff   syntax enable
+    augroup END
+
+
+"====[ Open any file with a pre-existing swapfile in readonly mode "]=========
+
+    augroup NoSimultaneousEdits
+        autocmd!
+        autocmd SwapExists * let v:swapchoice = 'o'
+        autocmd SwapExists * echohl ErrorMsg
+        autocmd SwapExists * echo 'Duplicate edit session (readonly)'
+        autocmd SwapExists * echohl None
+        autocmd SwapExists * sleep 2
+    augroup END
+
+    " Also consider the autoswap_mac.vim plugin (but beware its limitations)
+
+
+"====[ Mappings to activate spell-checking alternatives ]================
+
+    nmap  <Leader>s     :set invspell spelllang=en<CR>
+    nmap  <Leader>ss    :set    spell spelllang=en-basic<CR>
+
+    " To create the en-basic (or any other new) spelling list:
+    "
+    "     :mkspell  ~/.vim/spell/en-basic  basic_english_words.txt
+    "
+    " See :help mkspell
+
+
+"====[ Make CTRL-K list diagraphs before each digraph entry ]===============
+
+    inoremap <expr> <C-K> call ShowDigraphs()
+
+    function! ShowDigraphs ()
+        digraphs
+        call getchar()
+        return "\<C-K>"
+    endfunction
+
+    " But also consider the hudigraphs.vim and betterdigraphs.vim plugins,
+    " which offer smarter and less intrusive alternatives
+    " œ ŋ  ß
+
 
 """" Environmental Variables """""""""""""""""""""""""""""""""""""""""""""""""
