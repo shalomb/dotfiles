@@ -45,8 +45,8 @@ highlight -a CmdLine  color:lightgrey;
 highlight -a Hint     font-size:10pt !important;
 
 """" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-set mapleader=","
+" set mapleader=","
 
-nnoremap <silent> <leader>,           :buffer #<cr>
-nnoremap          <leader>\'          :b<space>
-nnoremap          <leader>b           :b<space>
+nmap <silent> ,,           :buffer #<cr>
+nmap          ,\'          :b<space>
+nmap          ,b           :b<space>
