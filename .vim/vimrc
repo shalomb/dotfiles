@@ -332,6 +332,8 @@ set viminfo='10,\"100,:256,%,n~/.vim/viminfo
 """" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let mapleader = ","
 
+nnoremap <CR>                         o<Esc>k
+
 cnoremap <C-$>                        <End>
 cnoremap <C-^>                        <Home>
 cnoremap %%                           <C-R>=expand('%:p:h').'/'<CR>
