@@ -316,6 +316,13 @@ augroup markdown
   au BufNewFile,BufRead *.md,*.markdown setlocal filetype=ghmarkdown
 augroup END
 
+augroup xml
+  au!
+  let g:xml_syntax_folding=1
+  au FileType xml setlocal foldmethod=syntax
+  syntax on
+augroup END
+
 """" Set Viminfo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set viminfo='10,\"100,:256,%,n~/.vim/viminfo
 
@@ -648,3 +655,5 @@ highlight ColorColumn ctermbg=magenta
 
 
 """" Environmental Variables """""""""""""""""""""""""""""""""""""""""""""""""
+
+"""" 
