@@ -8,12 +8,13 @@ if [[ ! -d .vim ]]; then
 fi
 
 pkgs_to_install=()
-type -P ack-grep &>/dev/null  || pkgs_to_install+=( 'ack-grep' )
-type -P par &>/dev/null       || pkgs_to_install+=( 'par' )
-type -P sudo &>/dev/null      || pkgs_to_install+=( 'sudo' )
-type -P ctags &>/dev/null     || pkgs_to_install+=( 'exuberant-ctags' )
-type -P git &>/dev/null       || pkgs_to_install+=( 'git' )
-type -P hg &>/dev/null        || pkgs_to_install+=( 'mercurial' )
+type -P ack-grep &>/dev/null || pkgs_to_install+=( 'ack-grep' )
+type -P ctags    &>/dev/null || pkgs_to_install+=( 'exuberant-ctags' )
+type -P git      &>/dev/null || pkgs_to_install+=( 'git' )
+type -P hg       &>/dev/null || pkgs_to_install+=( 'mercurial' )
+type -P jq       &>/dev/null || pkgs_to_install+=( 'jq' )
+type -P par      &>/dev/null || pkgs_to_install+=( 'par' )
+type -P sudo     &>/dev/null || pkgs_to_install+=( 'sudo' )
 
 if (( ${#pkgs_to_install[@]} >= 1 )); then
   echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
@@ -24,37 +25,40 @@ ln -svf .vim/vimrc  .vimrc
 ln -svf .vim/gvimrc .gvimrc
 
 ( set +e
-  git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    .vim/bundle/vim-tmux-navigator
+  git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    .vim/bundle/tmux-navigator
   git submodule add -f https://github.com/godlygeek/tabular.git                 .vim/bundle/tabular
   git submodule add -f https://github.com/hsitz/VimOrganizer.git                .vim/bundle/VimOrganizer
-  git submodule add -f https://github.com/jceb/vim-orgmode.git                  .vim/bundle/vim-orgmode
+  git submodule add -f https://github.com/jceb/vim-orgmode.git                  .vim/bundle/orgmode
+  git submodule add -f https://github.com/jtratner/vim-flavored-markdown.git    .vim/bundle/ghmarkdown
   git submodule add -f https://github.com/kana/vim-arpeggio.git                 .vim/bundle/arpeggio
   git submodule add -f https://github.com/kien/ctrlp.vim.git                    .vim/bundle/ctrlp
+  git submodule add -f https://github.com/Lokaltog/vim-easymotion.git           .vim/bundle/easymotion
   git submodule add -f https://github.com/majutsushi/tagbar.git                 .vim/bundle/tagbar
   git submodule add -f https://github.com/mileszs/ack.vim.git                   .vim/bundle/ack
   git submodule add -f https://github.com/msanders/snipmate.vim.git             .vim/bundle/snipmate
-  git submodule add -f https://github.com/PProvost/vim-ps1.git                  .vim/bundle/vim-ps1
-  git submodule add -f https://github.com/pydave/vim-perforce.git               .vim/bundle/vim-perforce
+  git submodule add -f https://github.com/PProvost/vim-ps1.git                  .vim/bundle/ps1
+  git submodule add -f https://github.com/pydave/vim-perforce.git               .vim/bundle/perforce
   git submodule add -f https://github.com/shalomb/vimcse.git                    .vim/vimcse
   git submodule add -f https://github.com/tomasr/molokai.git                    .vim/bundle/molokai
   git submodule add -f https://github.com/tpope/vim-abolish.git                 .vim/bundle/abolish
   git submodule add -f https://github.com/tpope/vim-pathogen.git                .vim/bundle/pathogen
+  git submodule add -f https://github.com/tpope/vim-ragtag.git                  .vim/bundle/ragtag
   git submodule add -f https://github.com/tpope/vim-repeat.git                  .vim/bundle/repeat
-  git submodule add -f https://github.com/tpope/vim-speeddating.git             .vim/bundle/vim-speeddating
+  git submodule add -f https://github.com/tpope/vim-sleuth.git                  .vim/bundle/sleuth
+  git submodule add -f https://github.com/tpope/vim-speeddating.git             .vim/bundle/speeddating
   git submodule add -f https://github.com/tpope/vim-surround.git                .vim/bundle/surround
   git submodule add -f https://github.com/tpope/vim-unimpaired.git              .vim/bundle/unimpaired
   git submodule add -f https://github.com/vimoutliner/vimoutliner.git           .vim/bundle/vimoutliner
-  git submodule add -f https://github.com/vim-scripts/css.vim--Streppone.git    .vim/bundle/streppone--css.vim
+  git submodule add -f https://github.com/vim-scripts/css.vim--Streppone.git    .vim/bundle/streppone--css
   git submodule add -f https://github.com/vim-scripts/DrawIt.git                .vim/bundle/drawit
-  git submodule add -f https://github.com/vim-scripts/genutils.git              .vim/bundle/genutils 
+  git submodule add -f https://github.com/vim-scripts/genutils.git              .vim/bundle/genutils
   git submodule add -f https://github.com/vim-scripts/Gundo.git                 .vim/bundle/gundo
   git submodule add -f https://github.com/vim-scripts/iptables.git              .vim/bundle/iptables
   git submodule add -f https://github.com/vim-scripts/Markdown.git              .vim/bundle/markdown
-  git submodule add -f https://github.com/jtratner/vim-flavored-markdown.git    .vim/bundle/ghmarkdown
   git submodule add -f https://github.com/vim-scripts/matchit.zip.git           .vim/bundle/matchit
   git submodule add -f https://github.com/vim-scripts/netrw.vim.git             .vim/bundle/netrw
-  git submodule add -f https://github.com/vim-scripts/perl-mauke.vim.git        .vim/bundle/mauke-perl.vim
-  git submodule add -f https://github.com/vim-scripts/perlprove.vim.git         .vim/bundle/perlprove.vim
+  git submodule add -f https://github.com/vim-scripts/perl-mauke.vim.git        .vim/bundle/mauke-perl
+  git submodule add -f https://github.com/vim-scripts/perlprove.vim.git         .vim/bundle/perlprove
   git submodule add -f https://github.com/vim-scripts/sharp-Indent.git          .vim/bundle/sharp-indent
   git submodule add -f https://github.com/vim-scripts/sharp-Syntax.git          .vim/bundle/sharp-indent
   git submodule add -f https://github.com/vim-scripts/sharp-Syntax--Rim.git     .vim/bundle/fsharp-plugin

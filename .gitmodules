@@ -142,3 +142,36 @@
 [submodule ".vim/bundle/ghmarkdown"]
 	path = .vim/bundle/ghmarkdown
 	url = https://github.com/jtratner/vim-flavored-markdown.git
+[submodule ".vim/bundle/ragtag"]
+	path = .vim/bundle/ragtag
+	url = https://github.com/tpope/vim-ragtag.git
+[submodule ".vim/bundle/sleuth"]
+	path = .vim/bundle/sleuth
+	url = https://github.com/tpope/vim-sleuth.git
+[submodule ".vim/bundle/tmux-navigator"]
+	path = .vim/bundle/tmux-navigator
+	url = https://github.com/christoomey/vim-tmux-navigator.git
+[submodule ".vim/bundle/orgmode"]
+	path = .vim/bundle/orgmode
+	url = https://github.com/jceb/vim-orgmode.git
+[submodule ".vim/bundle/easymotion"]
+	path = .vim/bundle/easymotion
+	url = https://github.com/Lokaltog/vim-easymotion.git
+[submodule ".vim/bundle/ps1"]
+	path = .vim/bundle/ps1
+	url = https://github.com/PProvost/vim-ps1.git
+[submodule ".vim/bundle/perforce"]
+	path = .vim/bundle/perforce
+	url = https://github.com/pydave/vim-perforce.git
+[submodule ".vim/bundle/speeddating"]
+	path = .vim/bundle/speeddating
+	url = https://github.com/tpope/vim-speeddating.git
+[submodule ".vim/bundle/streppone--css"]
+	path = .vim/bundle/streppone--css
+	url = https://github.com/vim-scripts/css.vim--Streppone.git
+[submodule ".vim/bundle/mauke-perl"]
+	path = .vim/bundle/mauke-perl
+	url = https://github.com/vim-scripts/perl-mauke.vim.git
+[submodule ".vim/bundle/perlprove"]
+	path = .vim/bundle/perlprove
+	url = https://github.com/vim-scripts/perlprove.vim.git
