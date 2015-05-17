@@ -2,7 +2,7 @@
 runtime bundle/pathogen/autoload/pathogen.vim
 filetype off
 call pathogen#helptags()
-call pathogen#incubate()
+call pathogen#infect('bundle/{}')
 
 """" Options """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 set more                    " page on extended output
@@ -435,9 +435,10 @@ nnoremap <silent> <leader>oh          :help <C-r><C-a><cr>
 nnoremap <silent> <leader>od          :Vexplore<cr>
 nnoremap <silent> <leader>oD          :!xdg-open %:h<cr>          
 nnoremap <silent> <leader>of          :!xdg-open %:p<cr>
-nnoremap <silent> <leader>ovk         :vsplit ~/.vimrc<cr>:1;/keybindings<cr>zt
-nnoremap <silent> <leader>otk         :vsplit ~/.tmux.conf<cr>:1;/keybindings<cr>zt
 nnoremap <silent> <leader>ofk         :vsplit ~/.fluxbox/keys<cr>
+nnoremap <silent> <leader>ogk         :vsplit ~/.gitconfig<cr>:1;/\[alias\]<cr>zt
+nnoremap <silent> <leader>otk         :vsplit ~/.tmux.conf<cr>:1;/keybindings<cr>zt
+nnoremap <silent> <leader>ovk         :vsplit ~/.vimrc<cr>:1;/keybindings<cr>zt
 " nnoremap <silent> <leader>oh        "zyw:execute ":help ".@z.""<cr>
 nnoremap <silent> <leader>P           "+gP      "paste from gui-clipboard
 nnoremap <silent> <leader>Q           :only<cr>
@@ -502,6 +503,9 @@ highlight Search term=reverse cterm=reverse
 " status line
 highlight User1 term=bold cterm=bold ctermfg=22 ctermbg=232
 
+" Highlight matching paranthesis with a better colour
+highlight MatchParen cterm=none ctermbg=green ctermfg=black
+
 """" ShowMarks.vim """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let showmarks_include = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 let g:showmarks_enable = 1
@@ -516,7 +520,7 @@ highlight ShowMarksHLu gui=bold ctermfg=Red    ctermbg=NONE
 highlight ShowMarksHLo gui=bold ctermfg=Green  ctermbg=NONE
 " For multiple marks on the same line
 highlight ShowMarksHLm gui=bold ctermfg=Yellow ctermbg=NONE
-			
+
 "set cursorline              " highlight the current line
 "set cursorcolumn            " highlight the current column
 "set colorcolumn=+1            " place a soft margin +1 relative to textwidth
@@ -601,6 +605,12 @@ highlight ColorColumn ctermbg=magenta
 
 
 "====[ Always turn on syntax highlighting for diffs ]=========================
+
+    if &diff
+      colorscheme default
+      colorscheme ron
+      set background=dark
+    endif
 
     " EITHER select by the file-suffix directly...
     augroup PatchDiffHighlight
