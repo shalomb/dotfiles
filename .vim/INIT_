@@ -72,8 +72,8 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/wikitopian/hardmode.git               .vim/bundle/hardmode
 
   git submodule init
-  git submodule update
   git submodule -q foreach git pull -q origin master
+  git submodule update
 )
 
 exit $?;
