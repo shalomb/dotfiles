@@ -12,8 +12,10 @@ function assert_is_installed {
 }
 
 assert_is_installed 'wget' 'Install the wget package.'
+assert_is_installed 'curl' 'Install the curl package.'
 assert_is_installed 'dig'  'Install the dnsutils package.'
 assert_is_installed 'ip'   'Install the iproute/iproute2 packages.'
+assert_is_installed 'jq'   'Install the jq package (http://stedolan.github.io/jq).'
 
 function get_host_addresses {
   ip address show | int="${2:-.}" proto="${1:-.}" addr_filter="${3:-.}" perl -Mstrict -Wle '
@@ -120,6 +122,16 @@ function get_geoip_info {
       printf "%-14s : %s\n", $_[0], (splice @_, 1)
     ' 
   fi
+}
+
+function get_freegeoip_info {
+  local ip="${1:-$(get_external_v4_addresses)}"
+  curl -fsSL 'http://freegeoip.net/json' | jq -S .
+}
+
+function get_ipapi_info {
+  local ip="${1:-$(get_external_v4_addresses)}"
+  curl -fsSL 'http://ip-api.com/json' | jq -S .
 }
 
 function get_geoip_info2 {
