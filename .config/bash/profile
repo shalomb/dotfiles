@@ -20,8 +20,10 @@ umask 022
 
 setterm -blength 0
 
-if [[ -r ~/.config/bash/bashrc ]]; then
-  source ~/.config/bash/bashrc
+if [[ -z $BASHRC_SOURCED ]]; then
+  if [[ -r ~/.config/bash/bashrc ]]; then
+    source ~/.config/bash/bashrc && BASHRC_SOURCED=1
+  fi
 fi
 
 if [[ ${TTY:-$(tty | sed 's@/dev/@@')} == tty1 ]]; then
