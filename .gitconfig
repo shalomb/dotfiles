@@ -18,12 +18,17 @@
   co      = checkout
   dc      = diff --cached
   df      = diff
+  ec      = config -e
   ign     = ls-files -o -i --exclude-standard
+  k       = !gitk
   lg      = log -p
-  lola    = log --graph --decorate --pretty=oneline --abbrev-commit --all
+  lgp     = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
   lol     = log --graph --decorate --pretty=oneline --abbrev-commit
+  lola    = log --graph --decorate --pretty=oneline --abbrev-commit --all
   ls      = ls-files
   pom     = push origin master
+  pum     = pull origin master
+  s       = status --porcelain
   st      = status
   tree    = log --graph --oneline --decorate
   vimdiff = difftool -y -t vimdiff
