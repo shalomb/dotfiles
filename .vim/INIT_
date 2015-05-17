@@ -37,7 +37,6 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/msanders/snipmate.vim.git             .vim/bundle/snipmate
   git submodule add -f https://github.com/PProvost/vim-ps1.git                  .vim/bundle/ps1
   git submodule add -f https://github.com/pydave/vim-perforce.git               .vim/bundle/perforce
-  git submodule add -f https://github.com/Raimondi/delimitMate.git              .vim/bundle/delimitMate
   git submodule add -f https://github.com/shalomb/vimcse.git                    .vim/vimcse
   git submodule add -f https://github.com/tomasr/molokai.git                    .vim/bundle/molokai
   git submodule add -f https://github.com/tpope/vim-abolish.git                 .vim/bundle/abolish
