@@ -175,3 +175,6 @@
 [submodule ".vim/bundle/dragvisuals"]
 	path = .vim/bundle/dragvisuals
 	url = https://github.com/shinokada/dragvisuals.vim.git
+[submodule ".vim/bundle/vis"]
+	path = .vim/bundle/vis
+	url = https://github.com/vim-scripts/vis.git
