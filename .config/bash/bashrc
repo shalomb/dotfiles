@@ -15,7 +15,7 @@
 #  * ~/.config/bashrc hasn't been sourced before - for interactive shells
 #  * it hasn't already been marked as sourced.
 if [[ -z $PROFILE_SOURCED ]]; then
-  if [[ -e ~/config/.profile ]]; then
+  if [[ -e ~/.config/.profile ]]; then
     source ~/.config/.profile && PROFILE_SOURCED=1
   fi
 fi
