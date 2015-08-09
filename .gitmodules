@@ -172,3 +172,6 @@
 [submodule ".vim/bundle/perlprove"]
 	path = .vim/bundle/perlprove
 	url = https://github.com/vim-scripts/perlprove.vim.git
+[submodule ".vim/bundle/dragvisuals"]
+	path = .vim/bundle/dragvisuals
+	url = https://github.com/shinokada/dragvisuals.vim.git
