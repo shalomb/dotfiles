@@ -67,6 +67,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/vim-scripts/taglist.vim.git           .vim/bundle/taglist
   git submodule add -f https://github.com/vim-scripts/underlinetag.git          .vim/bundle/underlinetag
   git submodule add -f https://github.com/vim-scripts/vimwiki.git               .vim/bundle/vimwiki
+  git submodule add -f https://github.com/vim-scripts/vis.git                   .vim/bundle/vis
   git submodule add -f https://github.com/vim-scripts/VST.git                   .vim/bundle/vst     # Vim reStructured Text
   git submodule add -f https://github.com/wikitopian/hardmode.git               .vim/bundle/hardmode
 
