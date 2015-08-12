@@ -69,7 +69,7 @@ alias h='fc -l'
 alias j='jobs -l'
 alias p='$PAGER'
 alias r='fc -s'
-alias t='tail -n'
+# alias t='tail -n'
 
 # like the perl join
 perljoin () 
@@ -304,6 +304,6 @@ alias ssh-x='ssh -c arcfour,blowfish-cbc -XC '
 alias techne='ssh-x -Y techne'
 alias theos.ath.cx='ssh-x -Y theos.ath.cx'
 alias theos='ssh-x -Y theos.ath.cx'
-alias todo='$EDITOR ~/Desktop/Documents/Notes/TODO.txt'
+alias todo='t '
 
 alias env_init='source ~/.bin/env_init'
