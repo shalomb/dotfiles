@@ -8,7 +8,7 @@
 #   for examples                                                               #
  ##############################################################################
 
-# If not running interactively, don't do anything
+# If not running interactively, don't do anything, just return
 [[ ${-//[!i]/} ]] || return
 
 # source ~/.profile if 
