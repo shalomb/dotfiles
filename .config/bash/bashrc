@@ -142,7 +142,9 @@ function reload () {
   if [[ -n "$@" ]]; then
     for f; do
       [[ -f "$f" && -r "$f" ]] && {
-        source "$f"
+        if ! file -i "$f" | grep -iq binary; then
+          source "$f"
+        fi
       }
     done
   else
@@ -182,7 +184,7 @@ for script in ~/.config/bash/rc.d/{,.}*; do
     source "$script"
   fi
 done
-                                                      
+
 # Right, we're ready to hand over control to the user now!
 # Print some informational trivia.
 echo -e "\n$USER@$HOSTNAME/$TTY $BASH ($$|$PPID) ${BASH_VERSION} $MACHTYPE"
