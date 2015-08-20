@@ -187,7 +187,7 @@ done
 
 # Right, we're ready to hand over control to the user now!
 # Print some informational trivia.
-echo -e "\n$USER@$HOSTNAME/$TTY $BASH ($$|$PPID) ${BASH_VERSION} $MACHTYPE"
+echo -e "$USER@$HOSTNAME/$TTY $BASH ($$|$PPID) ${BASH_VERSION} $MACHTYPE ${TMUX+"$(tmux -V) ($TMUX_PANE)"}"
 uname -a
 
 echo ''
