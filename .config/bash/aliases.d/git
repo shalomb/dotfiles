@@ -48,6 +48,7 @@ function gcm {
 }
 
   alias gc='gcm '
+ alias gca='ga; gc '
   alias gk='gitk --all&'
   alias gx='gitx --all'
 
