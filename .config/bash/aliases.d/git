@@ -1,13 +1,53 @@
 #!/bin/bash
 
-alias gs='git status '
-alias ga='git add '
-alias gb='git branch '
-alias gc='git commit'
-alias gd='git diff'
-alias go='git checkout '
-alias gk='gitk --all&'
-alias gx='gitx --all'
+# SYNOPSIS
+#   git(1) aliases
 
-alias got='git '
-alias get='git '
+_git_cmd=''
+_git_args=()
+
+function _git_alias_cmd_wrapper {
+  local cmd="$1"; shift;
+  local args=( "$@" )
+
+  if (( ${#args[@]} == 0 )); then
+    hist_index=$((HISTCMD-2))
+    # Don't go messing around with history -p unless you
+    # really know what it is doing.
+    args=( $( history -p "!$hist_index:1*" &>/dev/null ) );
+    # echo "args: ${args[@]} || ${#args[@]}"
+    if [[ -n ${args[0]} ]]; then
+      :;
+    else
+      args=( "${_git_args[@]}" )
+    fi
+  fi
+  _git_args=( "${args[@]}" )
+
+  ( set -xv; git "$cmd" "${args[@]}" )
+}
+
+function ga  { _git_alias_cmd_wrapper "add"      "$@"; }
+function gb  { _git_alias_cmd_wrapper "branch  " "$@"; }
+function gco { _git_alias_cmd_wrapper "checkout" "$@"; }
+function gd  { _git_alias_cmd_wrapper "diff"     "$@"; }
+function gl  { _git_alias_cmd_wrapper "log"      "$@"; }
+function gs  { _git_alias_cmd_wrapper "status"   "$@"; }
+
+function gcm {
+  local args=( "$@" )
+
+  if (( ${#args[@]} == 0 )); then
+    git commit
+  else
+    if [[ ${args[0]} = '-m' ]]; then
+      args=( "${args[@]:1}" )
+    fi
+    git commit -m "${args[@]}"
+  fi
+}
+
+  alias gc='gcm '
+  alias gk='gitk --all&'
+  alias gx='gitx --all'
+
