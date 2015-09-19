@@ -24,7 +24,7 @@ function _git_alias_cmd_wrapper {
   fi
   _git_args=( "${args[@]}" )
 
-  ( set -xv; git "$cmd" "${args[@]}" )
+  git "$cmd" "${args[@]}"
 }
 
 function ga  { _git_alias_cmd_wrapper "add"      "$@"; }
@@ -34,14 +34,15 @@ function gd  { _git_alias_cmd_wrapper "diff"     "$@"; }
 function gl  { _git_alias_cmd_wrapper "log"      "$@"; }
 function gs  { _git_alias_cmd_wrapper "status"   "$@"; }
 
+function git { (echo "+ git $@"; command git "$@"); }
 function gcm {
   local args=( "$@" )
 
   if (( ${#args[@]} == 0 )); then
     git commit
   else
-    if [[ ${args[0]} = '-m' ]]; then
-      args=( "${args[@]:1}" )
+    if [[ ${args[0]} != '-'* ]]; then
+      args=( "'${args[*]}'" )
     fi
     git commit -m "${args[@]}"
   fi
