@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Export colors
+
+ standout=$(tput smso)
+    reset=$(tput sgr0)
+     bold=$(tput bold)
+underline=$(tput sgr 0 1)
+
+if [[ $(tput colors) -ge 256 ]] 2>/dev/null; then
+   base00=$(tput setaf 241)
+   base01=$(tput setaf 240)
+   base02=$(tput setaf 235)
+   base03=$(tput setaf 234)
+   base04=$(tput setaf 244)
+    base0=$(tput setaf 244)
+    base1=$(tput setaf 245)
+    base2=$(tput setaf 254)
+    base3=$(tput setaf 230)
+     blue=$(tput setaf 33)
+     cyan=$(tput setaf 37)
+    green=$(tput setaf 190)
+  magenta=$(tput setaf 125)
+   orange=$(tput setaf 172)
+   purple=$(tput setaf 141)
+      red=$(tput setaf 160)
+   violet=$(tput setaf 61)
+    white=$(tput setaf 256)
+   yellow=$(tput setaf 136)
+fi

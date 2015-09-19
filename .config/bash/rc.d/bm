@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# SYNOPSIS
+#   bm - Simple Bookmark Manager
+
+function bm() {
+  local filter="$1";
+  local dirs=();
+  while read -r d; do
+    if [[ $d =~ $filter ]]; then
+      dirs+=("$d");
+    fi;
+  done < <( jq -c -e -r -S '.dirs[]' ~/.config/bookmarks/dirs.json );
+
+  if [[ -t 0 ]]; then
+    fmt="$bold%2d$reset. %s\n";
+    prompt="${base04}Which one? [$reset$bold$i$base04]$reset ";
+  else
+    fmt="%2d. %s\n";
+    prompt="Which one? [$i] ";
+  fi;
+
+  for i in "${!dirs[@]}";
+  do
+    printf "$fmt" "$i" "${dirs[i]}";
+  done;
+  read -p "$prompt";
+
+
+  local dir;
+  case "$REPLY" in
+    [!0-9][a-zA-Z_])
+      ;;
+    [!0-9])
+      return
+      ;;
+    [0-9])
+      dir="${dirs[REPLY]}"
+      ;;
+    '')
+      dir="${dirs[i]}"
+      ;;
+  esac;
+
+  dir=("$(perl -e 'print join $",glob pop' "$dir")");
+  if [[ $dir =~ \$ ]]; then
+    if [[ $dir =~ \$[^$/a-zA-Z_]+$ ]]; then
+      echo "Won't expand '$dir'" >&2
+      return
+    else
+      dir=$(eval echo "$dir")
+    fi
+  fi
+
+  if [[ -z $BM ]]; then
+    cd "$dir";
+  else
+    "$BM" "$dir";
+  fi
+
+}

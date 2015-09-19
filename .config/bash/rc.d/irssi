@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# SYNOPSIS
+#   irssi functionality for tmux
+
+irssi_d=~/.irssi
+irssi_nicklistfifo="$irssi_d/nicklistfifo"
+
+[[ -d $irssi_d ]] || mkdir -p "$irssi_d"
+[[ ! -e $irssi_nicklistfifo ]] && mkfifo "$irssi_nicklistfifo"
+irssi_nicklistfifo_width=24
+
+# create the pane with irssi's nicklist
+function irssi_setup_nickpane() {
+set -xv
+  w=( $(tmux list-panes | awk -F[]x[] '{print $2}') )
+  if (( ${#w[@]} == 2 )); then
+    echo "irssi_nicklistfifo_width : $irssi_nicklistfifo_width ($COLUMNS)"
+    if (( ${w[1]} != irssi_nicklistfifo_width )); then
+      { tmux list-panes
+        echo "Second pane may not be the nicklist pane."
+        read -p "Kill pane? [N/y] "
+        if [[ $REPLY = [Yy] ]]; then
+          tmux kill-pane -t 1
+          tmux split-window -h
+        fi
+      } >&2
+    fi
+  else
+    tmux split-window -h # "cat '$irssi_nicklistfifo'"
+  fi
+  tmux resize-pane -t 1 -x "$irssi_nicklistfifo_width"
+  tmux respawn-pane -k -t 1 "cat '$irssi_nicklistfifo'"
+  # tmux -q setw main-pane-width $(( total_width - (irssi_nicklistfifo_width+1) ))
+  # tmux -q select-layout main-vertical >/dev/null
+  tmux select-window -t irssi
+  tmux select-pane -t 0
+}
+
+# irssi wrapper
+function irssi() {
+  set -xv
+  tmux rename-window irssi
+  irssi_setup_nickpane
+  command irssi
+}
+
+# repair running irssi's nicklist pane
+function irssi_repair_nickpane() {
+  tmux select-window -t irssi
+  tmux select-pane -t 0
+  tmux kill-pane -a
+  irssi_setup_nickpane
+}
+
