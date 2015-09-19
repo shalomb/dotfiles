@@ -2,6 +2,13 @@
 
 set -x
 
+( set -exv
+  git submodule init
+  git submodule update --init --recursive
+  git submodule -q foreach git pull -q origin master
+  git submodule status
+)
+
 find .[!.]*/ */ -name "INIT" -type f -exec {} \;
 
 find .[!.]* \
