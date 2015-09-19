@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="/home/unop/.config/dotfiles/pandoc/pandoc.css" type="text/css" />
+</head>
+<body>
+<p>function! ToggleHeading(level)<br /> let level = a:level<br /> if getline('.') =~ &quot;^#&quot;<br /> s/^\v\s<em>#+\s</em>//<br /> endif<br /> call setline('.', (repeat('#',a:level) . ' ' . getline('.')))<br /> normal! $<br />endfunction</p>
+<p>function! PrependBlockWithChars(chars)<br /> call setline('.', a:chars . getline('.'))<br />endfunction</p>
+<p>function! ConvertToBlockQuote()<br /> call PrependBlockWithChars('&gt; ')<br />endfunction</p>
+<p>function! ConvertToUL()<br /> if getline('.') !~ &quot;^\ <em>\</em>&quot;<br /> call PrependBlockWithChars('* ')<br /> endif<br />endfunction</p>
+<p>function! SetProgressIndicatorValue(linenr, value)<br /> exe a:linenr . &quot;perldo s/\s*⎡[^][]+⎦$//&quot;<br /> exe a:linenr . &quot;perldo s{$}{ ⎡&quot; . a:value . &quot;⎦}&quot;<br />endfunction</p>
+<p>function! IsListItem(linenr)<br /> let line = getline(a:linenr)<br /> &quot; if line =~ &quot;^\s<em>\</em>\s<em>\[[^][]\]&quot;<br /> if line =~ &quot;^\s</em>\<em>\s</em>&quot;<br /> return 1<br /> endif<br /> return 0<br />endfunction</p>
+<p>function! GetTodoItemLevel(linenr)<br /> let line = getline(a:linenr)<br /> if line =~ &quot;^\s<em>\</em>&quot;<br /> return strlen(substitute(line, '\S.*$', '', ''))<br /> endif<br />endfunction</p>
+<p>function! GetTodoItemStatus(linenr)<br /> let line = getline(a:linenr)<br /> &quot;return ( !(line =~ &quot;^\s<em>\</em>\s<em>\[[\s\?]\]\s</em>&quot;) )<br /> &quot; &quot;^\s<em>\</em>\s<em>\[[\ \?]*\]&quot;<br /> if line =~ &quot;^\s</em>\<em>\s</em>\[[^\ \?]*\]&quot;<br /> let a = substitute(line, &quot;^\s<em>\</em>\s<em>\[\|\].</em>&quot;, '', 'g')<br /> return a<br /> endif<br /> return 0<br />endfunction</p>
+<p>function! EvalPerl(expr)<br /> echom expr<br /> sleep 20m<br /> let result = system(&quot;perl -e 'print+(&quot; . a:expr . &quot;)'&quot;)<br /> return result<br />endfunction</p>
+<p>function! UpdateProgressIndicator()<br /> let current_level = GetTodoItemLevel('.')<br /> let current_line = line('.')</p>
+<p>let begin_line = current_line<br /> while begin_line &gt; line('^')<br /> if IsListItem(begin_line) &amp;&amp; GetTodoItemLevel(begin_line) &lt; current_level<br /> break<br /> endif<br /> let begin_line -= 1<br /> endwhile</p>
+<p>let end_line = current_line<br /> while end_line &lt; line('$')<br /> if IsListItem(end_line) &amp;&amp; GetTodoItemLevel(end_line) &lt; current_level<br /> break<br /> endif<br /> let end_line += 1<br /> endwhile<br /> let end_line -= 1</p>
+<p>let complete=0<br /> let total=0<br /> for i in range((begin_line+1), end_line)<br /> if IsListItem(i)<br /> let status = GetTodoItemStatus(i)<br /> if status =~ &quot;[xX+*✖✕✔✓]&quot;<br /> let complete = EvalPerl( 'sprintf &quot;%0.2&quot;, ' . complete . '+ 1' )<br /> elseif status =~ &quot;\d/\d&quot;<br /> let complete = EvalPerl( 'sprintf &quot;%0.2f&quot;, ' .<br /> \ complete . '+ (' . status . ')' )<br /> elseif status =~ &quot;\d&quot;<br /> let complete = EvalPerl( 'sprintf &quot;%0.2f&quot;, ' .<br /> \ complete . '+ (' . status . '/100)' )<br /> endif<br /> echom 'complete : ' . complete<br /> echom 20m<br /> let total+=1<br /> endif<br /> endfor</p>
+<p>let expr = 'sprintf &quot;%.3f&quot;, 100 * (' . complete . '/(' . total . '))'<br /> let progress = EvalPerl(expr)<br /> echom begin_line . ' -&gt; ' . end_line .<br /> \ ' ' . complete . '/' . (total) . ' ' . progress . ' ' . expr<br /> call SetProgressIndicatorValue(begin_line,<br /> \ complete . '/' . (total) . '=' . progress . '%')<br />endfunction</p>
+<p>function! MarkTodoItem(mark)<br /> exe '.perldo s/<br /><span class="math">. * ?</span><br />/[' . a:mark . ']/'<br />endfunction</p>
+<p>function! CompleteTodoItem()<br /> call MarkTodoItem('x')<br />endfunction</p>
+<p>function! ConvertToTodoList()<br /> .perldo s/^(\s<em>[*-+])\s</em>/$1 [ ] /<br />endfunction</p>
+<p>function! SelectListSection()<br /> normal! vipo</p>
+<p>let s:startpos = getpos(&quot;'&lt;&quot;)<br /> let s:endpos = getpos(&quot;'&gt;&quot;)</p>
+<p>for i in range(s:startpos[1], s:endpos[1])<br /> if getline(i) =~ &quot;^#&quot;<br /> let s:startpos[1] = i + 1<br /> break<br /> endif<br /> endfor</p>
+<p>echom join(s:startpos) . ' -&gt; ' . join(s:endpos)</p>
+<p>call setpos(&quot;'&lt;&quot;, s:startpos)<br /> call setpos(&quot;'&gt;&quot;, s:endpos)<br /> normal! gv<br />endfunction</p>
+<p>function! InsertHyperLink()<br /> normal! a<a href=""></a>2h<br /> startinsert<br />endfunction</p>
+<p>function! ConvertToHyperLink()<br /> let current_word = expand(&quot;<cword>&quot;)<br /> if empty(current_word) || current_word =~ &quot;\s&quot;<br /> normal! xa()<br /> normal! %<br /> else<br /> normal ysiW)<br /> endif<br /> normal! i[]<br /> startinsert<br />endfunction</p>
+<p>function! Strip(str, re)<br /> return substitute(a:str, a:re, '', '')<br />endfunction</p>
+<p>function! GetDate(...)<br /> let request_fmt = a:0 &gt;= 1 ? a:1 : '%FT%T%z'<br /> let start_date = a:0 &gt;= 2 ? a:2 : ''<br /> let display_fmt = a:0 &gt;= 3 ? a:3 : '%FT%T%z'<br /> if request_fmt =~ &quot;^+&quot;<br /> let str = system('date +&quot;'. display_fmt<br /> \ .'&quot; -d &quot;'. start_date .' '. request_fmt .'&quot; 2&gt;/dev/null')<br /> else<br /> let str = strftime(request_fmt)<br /> endif<br /> return substitute(str, '\n$', '', '')<br />endfunction</p>
+<p>function! AddTime(datefmt)<br /> let current_date = expand(&quot;<cWORD>&quot;)<br /> let str = GetDate(a:datefmt, current_date)<br /> if !empty(str)<br /> normal! ciW<br /> exec &quot;normal! a&quot; . str<br /> endif<br />endfunction</p>
+<p>function! InsertDate(datefmt)<br /> let str = GetDate(a:datefmt)<br /> if !empty(str)<br /> exe &quot;normal! a&quot; . str<br /> endif<br />endfunction</p>
+<p>function! ConvertToFencedBlock()<br /> &quot;normal! <br /> let mode = mode()<br /> if mode =~ &quot;v&quot;<br /> let s:startpos = getpos(&quot;'&lt;&quot;)<br /> let s:endpos = getpos(&quot;'&gt;&quot;)<br /> else<br /> let s:startpos = getpos(&quot;.&quot;)<br /> let s:endpos = s:startpos<br /> endif<br /> keepjumps call setpos(&quot;.&quot;, s:endpos)<br /> keepjumps normal! o<code>keepjumps call setpos(&quot;.&quot;, s:startpos)   keepjumps normal! O</code><br /> syntax sync fromstart<br />endfunction</p>
+<p>function! SelectBlock()<br /> let s:startpos = getpos('.')<br /> let block_begin_linenr = line('.')<br /> let block_end_linenr = line('.')</p>
+<p>let begin_re = &quot;^\s*#&quot;<br /> while block_begin_linenr &gt; line('^') &amp;&amp;<br /> \ getline(block_begin_linenr) !~ begin_re<br /> let block_begin_linenr -= 1<br /> endwhile</p>
+<p>let header_line = getline(block_begin_linenr)<br /> let header_level = strlen(substitute(header_line, '[^#].*', '', ''))</p>
+<p>let end_re = &quot;^\s*#\{1,&quot; . (header_level) . &quot;\}[^#]&quot;<br /> while block_end_linenr &lt; line('$') &amp;&amp;<br /> \ getline(block_end_linenr+1) !~ end_re<br /> let block_end_linenr += 1<br /> endwhile</p>
+<p>if block_begin_linenr &lt;= 0<br /> let block_begin_linenr=1<br /> if block_end_linenr &gt;= 0<br /> let block_end_linenr -= 1<br /> endif<br /> endif</p>
+<p>echom &quot;h/f : &quot; . block_begin_linenr . &quot; &quot; . block_end_linenr<br /> call setpos(&quot;'&lt;&quot;, [s:startpos[0], block_begin_linenr, 0])<br /> call setpos(&quot;'&gt;&quot;, [s:startpos[0], block_end_linenr, 0])<br /> normal! gvo<br />endfunction</p>
+<p>function! InsertTodoDate()<br /> normal $a<C-R>=strftime(&quot;%Ft%T&quot;)<cr><br />endfunction</p>
+<p>function! MarkDownFoldText()<br /> let l1 = getline(v:foldstart)<br /> if l:l1[0] != '#'<br /> return l:l1 . repeat(' ', 78-strlen(l:l1))<br /> else<br /> return l:l1 . ' ' . repeat(' ', 78-strlen(l:l1))<br /> endif<br />endfunction</p>
+<p>func! MarkDownFoldExpr(lnum)<br /> let theline = getline(v:lnum)<br /> let nextline = getline(v:lnum+1)<br /> if theline =~ '^# '<br /> &quot; begin a fold of level one here<br /> return &quot;&gt;1&quot;<br /> elseif theline =~ '^## '<br /> &quot; begin a fold of level two here<br /> return &quot;&gt;2&quot;<br /> elseif theline =~ '^### '<br /> &quot; begin a fold of level three here<br /> return &quot;&gt;3&quot;<br /> elseif nextline =~ '^===<em>'<br /> &quot; elseif the next line starts with at least two ==<br /> return &quot;&gt;1&quot;<br /> elseif nextline =~ '^---</em>'<br /> &quot; elseif the line ends with at least two --<br /> return &quot;&gt;2&quot;<br /> elseif foldlevel(v:lnum-1) != &quot;-1&quot;<br /> return foldlevel(v:lnum-1)<br /> else<br /> return &quot;=&quot;<br /> endif<br />endfunc</p>
+<p>nmap <leader>h1 :call ToggleHeading(1)<cr><br />nmap <leader>h2 :call ToggleHeading(2)<cr><br />nmap <leader>h3 :call ToggleHeading(3)<cr><br />nmap <leader>h4 :call ToggleHeading(4)<cr><br />nmap <leader>h5 :call ToggleHeading(5)<cr><br />nmap <leader>h6 :call ToggleHeading(6)<cr></p>
+<p>vmap <leader>ul :call ConvertToUL()<cr><br />nmap <leader>sl :call SelectListSection()<cr><br />nmap <leader>mB :call SelectBlock()<cr><br />nmap <leader>hl :call ConvertToHyperLink()<cr></p>
+<p>vmap <leader>fb :<c-u>call ConvertToFencedBlock()<cr></p>
+<p>function! SurroundWithChar(char)<br /> let char = a:char<br /> let mode = mode()<br /> if mode =~ &quot;v&quot;<br /> normal! gv&quot;xy<br /> let @x = char . @x .char<br /> normal! gvd&quot;xP<br /> else<br /> let word = char . expand(&quot;<cWORD>&quot;) . char<br /> normal! ciW<br /> exe &quot;normal! a&quot; . word<br /> endif<br />endfunction</p>
+<p>map <leader>mc :<c-u>call SurroundWithChar('`')<cr><br />map <leader>me :<c-u>call SurroundWithChar('_')<cr><br />map <leader>ms :<c-u>call SurroundWithChar('__')<cr><br />&quot; map <leader>mt :<c-u>call SurroundWithChar('~~')<cr><br />map <leader>mb :call ConvertToBlockQuote()<cr><br />map <leader>ml :call InsertHyperLink()<cr></p>
+<p>augroup markdown<br /> autocmd!<br /> autocmd BufRead,BufNewFile <em>.md,</em>.mkd,*.markdown<br /> \ setfiletype markdown<br /> autocmd filetype markdown<br /> \ setlocal foldtext=MarkDownFoldText()<br /> \ foldexpr=MarkDownFoldExpr(v:lnum)<br /> \ foldlevel=1<br /> \ foldcolumn=0<br /> \ foldmethod=expr<br /> \ foldenable<br /> \ formatprg=par\ -jw80<br /> autocmd BufWritePost <buffer><br /> \ silent :!pandoc -c ~/.config/dotfiles/pandoc/pandoc.css<br /> \ --toc --from markdown_github % &gt; %:r.html<br />augroup END</p>
+<p>syn match myDate /\v\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/<br />syn match myDate /\<em>\s</em>[\zs[^][]+/<br />hi myDate ctermfg=Red</p>
+<p>syn match CompletedTodoItem /\<em>\s</em>[\zs[x]+/<br />hi CompletedTodoItem ctermfg=green cterm=bold</p>
+<p>&quot; echom &quot;markdown_tweaks.vim complete&quot;</p>
+</body>
+</html>
