@@ -1,31 +1,11 @@
 #!/bin/sh
 # fluxbox startup-script:
 
-
-echo "pid:$$ ppid:$PPID DISPLAY:$DISPLAY" > /tmp/vt
-ps -o command= -p $(pidof X) | perl -lne '
-    BEGIN { ($display) = $ENV{DISPLAY} =~ /(:[0-9]+)/ } 
-    print /$display\b.*(vt[0-9]+)/ || 
-      /(vt[0-9]+).*$display\b/
-  ' >> /tmp/vt
-
-PATH="$HOME/.bin:$PATH:/usr/local/sbin:/usr/sbin:/sbin"; export PATH;
-TTY="$(date +%s)"; export TTY;
+source ~/.profile
 
 TMP="/tmp/${USER}/${DISPLAY}/"; export TMP;
 mkdir -p "$TMP";
-# TODO, fix this
-# if [ -e "$TMP" ]; then
-#   if [ ! -d "$TMP" ]; then
-#     TMP="/tmp/${USER}.d/${DISPLAY}/"; export TMP;
-#      mkdir -p "$TMP";
-#   fi
-# else
-#   mkdir "$TMP"
-# fi
-# chmod 700 "$TMP";
-
-GNOME_DESKTOP_SESSION_ID='fluxbox0';  export GNOME_DESKTOP_SESSION_ID;
+chmod 700 "$TMP";
 
 FBLOGDIR="$TMP/fluxbox/"; mkdir "$FBLOGDIR";
 FBLOG="$FBLOGDIR/fluxbox.log";
@@ -59,7 +39,9 @@ xset fp rehash      # rehash the font path
 test -r ~/.Xresources && xrdb -merge ~/.Xresources
 test -r ~/.Xmodmap    && xmodmap ~/.Xmodmap
 
-eval `ssh-agent -s`;
+if ! kill -0 "$SSH_AGENT_PID"; then
+  eval `ssh-agent -s`;
+fi
 
 } &
 
@@ -67,13 +49,13 @@ eval `ssh-agent -s`;
 exec fluxbox -log "$FBLOG" &
 FLUXBOX_PID=$!
 
-{
+
   wpset &
   # xbindkeys
   # fetchmail
 
   # nice -n 5   idesk &
-  
+
   nice -n 0   urxvtd -q -f -o && \
 #    nice -n 0 urxvtc -name qterm -title qterm \
 #    -tr -tint black -fg \#dfdfdf -sh 60 -e screen -S qterm &

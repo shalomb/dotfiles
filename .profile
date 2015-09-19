@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
  ##############################################################################
 #   ~/.profile: executed by the command interpreter for login shells           #
@@ -31,14 +31,8 @@ export PROFILE_SOURCED_BY;
 umask 022
 
 SHELL="`readlink -f /proc/$$/exe`";       export SHELL
-
-# source ~/.bashrc if we're under bash and it hasn't been sourced before
-#if [ -n "$BASH_VERSION" ]; then
-#  if [[ -z $BASHRC_SOURCED && -r ~/.bashrc ]]; then
-#    source "$HOME/.bashrc"
-#  fi
-#fi
-
+TTY=`tty`;                                export TTY
+VT=`ps -o command= -p $(pidof X) | sed -r 's/.*(vt[0-9]+).*/\1/'`
 
 # Environment Variables
 XDG_CACHE_HOME="$HOME/.cache";            export XDG_CACHE_HOME;
@@ -70,6 +64,8 @@ SAL_USE_VCLPLUGIN='gnome';                export SAL_USE_VCLPLUGIN;
 #HOME="`getent passwd "$USER" | awk -F: '{print $6}'`";
 #                                         export HOME;
 #HOMEPATH="${HOME}";                      export HOMEPATH;
+# Fix for being unable to access the accessibility bus
+NO_AT_BRIDGE=1
 
 HOSTNAME="${HOSTNAME:-"`cat /etc/hostname`"}";
 HOSTNAME="${HOSTNAME:-"`hostname -s`"}";  export HOSTNAME;
@@ -80,9 +76,9 @@ LC_ALL="en_GB.UTF-8";                     export LC_ALL;
 TZ='Europe/London';                       export TZ;
 
 if [ -d "$HOME/.bin" ] ; then PATH="$HOME/.bin:$PATH"; fi
-PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin:/usr/share/openoffice/bin/:/usr/share/mc/bin/:/usr/local/bin/:/usr/lib/pm-utils/bin/:/usr/lib/klibc/bin/:/usr/lib/jvm/java-6-sun-1.6.0.06/jre/bin/:/usr/lib/jvm/java-6-sun-1.6.0.06/bin/:/usr/lib/Adobe/Reader8/Reader/intellinux/bin/:/usr/lib/Adobe/Reader8/bin/:/usr/lib/Adobe/HelpViewer/1.0/intellinux/bin/"; 
+PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin"
+PATH="$PATH:/usr/local/bin/:/usr/lib/pm-utils/bin/"; 
                                           export PATH;
-
 
 # Redirect $TMP to ~/.tmp
 TMP=/tmp/"$USER"
@@ -133,6 +129,7 @@ export LESS_TERMCAP_ue=$'\E[0m';          export LESS_TERMCAP_ue;
 export LESS_TERMCAP_us=$'\E[01;32m';      export LESS_TERMCAP_us;
 
 MANPAGER="${PAGER:-"less"}";              export MANPAGER;
-MANPATH="$MANPATH:/usr/share/man/:/var/cache/man/:/usr/share/doc/libncurses5-dev/html/man/:/usr/lib/jvm/java-6-sun-1.6.0.06/man/:/usr/lib/jvm/java-6-sun-1.6.0.06/jre/man/"; 
-                                          export MANPATH;
+MANPATH="$MANPATH:/usr/share/man/:/var/cache/man/"; export MANPATH
+
+GNOME_DESKTOP_SESSION_ID='profile0';      export GNOME_DESKTOP_SESSION_ID;
 
