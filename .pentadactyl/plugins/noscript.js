@@ -357,7 +357,8 @@ group.options.add(["script"],
 group.styles.add("noscript-menu-order", ["chrome://browser/content/browser.xul"],
                  literal(/*
         #noscript-tbb-popup .scrollbox-innerbox {
-            -moz-box-direction: reverse;
+            -moz-box-direction: inherit !important;
+            border : 1px solid lightgray;
         }
     */));
 
