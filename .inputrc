@@ -1,24 +1,74 @@
+# http://web.mit.edu/gnu/doc/html/rlman_1.html
 $include /etc/inputrc
+
+set  bell-style                      none
+set  blink-matching-paren            on
+set  colored-stats                   on
+set  completion-ignore-case          on
+set  completion-map-case             on
+set  echo-control-characters         off
+set  enable-keypad                   on
+set  expand-tilde                    off
+set  history-preserve-point          on
+set  horizontal-scroll-mode          on
+set  mark-directories                on
+set  mark-symlinked-directories      on
+set  menu-complete-display-prefix    on
+set  print-completions-horizontally  on
+# set  show-all-if-ambiguous           on
+set  skip-completed-text             on
+set  visible-stats                   on
 
 "\C-x\C-r":   re-read-init-file
 
-# PgUp/PgDn
-"\e[5~":      history-search-backward
-"\e[6~":      history-search-forward
+$if mode=vi
+  "\eOD":  ""
+  "\e[D":  ""
+  "\eOC":  ""
+  "\e[C":  ""
+  "\eOA":  ""
+  "\e[A":  ""
+  "\eOB":  ""
+  "\e[B":  ""
+$endif
 
-C-p:          history-search-backward
-C-n:          history-search-forward
+$if Bash
+  # http://www.gnu.org/software/bash/manual/html_node/Readline-Init-File-Syntax.html#Readline-Init-File-Syntax
+  set  show-mode-in-prompt           on
+  Space: magic-space
+  "\C-0": "\e0 "
+  "\C-e": glob-expand-word
+  "\C-j": ""                         # taken up by tmux
+$endif
 
-set   bell-style                   none
-# 
-set   editing-mode                 vi
-set   enable-keypad                on
-set   expand-tilde                 off
-# 
-set   mark-symlinked-directories   on
-# 
-# # preserve cursor position
-set   history-preserve-point       on
-# 
-# # unlimited history
-# set   history-size                 0
+# man 3 readline | less +/"VI Mode bindings"
+set editing-mode vi
+$if mode=vi
+  set keymap vi-command
+    "\C-l":     clear-screen
+    "j":        history-search-forward
+    "k":        history-search-backward
+    "\C-n":     history-search-forward
+    "\C-p":     history-search-backward
+    "\ep":      yank-last-arg
+    "\C-x\C-m": set-mark
+    "\C-xp":    "\ei$(xsel -b)"
+    "G":        end-of-history
+    "gg":       beginning-of-history
+    "?":        reverse-search-history
+    # TODO, sort out copy-paste
+      # "C-v":      "\C-E#\C-b\C-k#\C-x\C-?\"$(xclip -o -selection c)\"\e\C-e\C-x\C-m\C-a\C-y\C-?\C-e\C-y\ey\C-x\C-x\C-d"
+      # "\C-y":     "\e$a | xclip\e\C-j"
+      # "\ee":      shell-expand-line  # TODO, bash only?
+      # "\ex":      "\ei$(xsel -b)\ee"
+
+  set keymap vi-insert
+    # "\e-o":    "\e0eli " # TODO, find an alternative, C-o already used.
+    "\C-h":    backward-char
+    "\C-l":    forward-char
+    "\C-n":    history-search-forward
+    "\C-p":    history-search-backward
+    # "\C-[":    "\e"                         # is already mapped
+    "\ep":     yank-last-arg
+$endif
+
