@@ -48,8 +48,11 @@ function gcm {
   fi
 }
 
-  alias gc='gcm '
- alias gca='ga; gc '
-  alias gk='gitk --all&'
-  alias gx='gitx --all'
+    alias g=git
+complete -o bashdefault -o default -o nospace -F __git_wrap__git_main g
+
+  alias gca='ga; gcm '
+ alias gpom='git push origin master'
+   alias gk='gitk --all &'
+   alias gx='gitx --all'
 
