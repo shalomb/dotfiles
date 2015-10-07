@@ -12,46 +12,53 @@
 
 group.commands.add(
     ['googl','goo','gl'],
-    "goo.gl command",
+    "goo.gl url shortener",
     function(args) {
-        if (args.length == 0) {
-          args = dactyl.modules.buffer.selection.toString();
 
-          if (! args.length)
-            args = dactyl.modules.buffer.documentURI.spec; // document.href
-        }
+      if (args.length == 0) {
+        args = dactyl.modules.buffer.selection.toString();
 
-        if (args.length) {
-            var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                        .createInstance(Components.interfaces.nsIXMLHttpRequest); 
+        if (! args.length)
+          args = dactyl.modules.buffer.documentURI.spec; // document.href
+      }
 
-            req.open('POST', "https://www.googleapis.com/urlshortener/v1/url", true);
-            req.setRequestHeader("Content-type", "application/json");
+      if (args.length) {
+        var req = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+          .createInstance(Components.interfaces.nsIXMLHttpRequest); 
 
-            req.onreadystatechange = function (e) {
-                if (req.readyState == 4) {
-                    if(req.status == 200) {
-                        var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
-                            getService(Components.interfaces.nsIClipboardHelper);
+        config = JSON.parse(
+                  io.File('~/.pentadactyl/plugins/google.api.json').read()
+                )
 
-                        var response = eval( '(' + req.responseText + ')' );
+        req.open( 'POST',
+                  'https://www.googleapis.com/urlshortener/v1/url?key=' +
+                    config.google.api.translate.key,
+                  true
+                );
 
-                        clipboard.copyString(response.id);
-                        dactyl.echo("goo.gl: " + response.id + " " + response.longUrl);
-                    }
-                    else {
-                        dactyl.echoerr("Error. goo.gl status : " + req.status + "\n");
-                    }
-                }
-            };
-            req.send("{'longUrl': '" + args + "'}");
-        }
-        else {
-            dactyl.echoerr("Error. Invalid set of arguments passed. \n");
-        }
+        req.setRequestHeader("Content-type", "application/json");
+        req.setRequestHeader("Accept",       "application/json");
+
+        req.onreadystatechange = function (e) {
+          if (req.readyState == 4) {
+            if(req.status == 200) {
+              var response = eval( '(' + req.responseText + ')' );
+              dactyl.clipboardWrite(response.id, true);
+              dactyl.echo('goo.gl: ' + response.id + ' -> ' + response.longUrl);
+            }
+            else {
+              alert("req: " + req);
+              dactyl.echoerr("Error. goo.gl status : " + req.status + "\n");
+            }
+          }
+        };
+        req.send('{"longUrl": "' + args + '"}');
+      }
+      else {
+        dactyl.echoerr("Error. Invalid set of arguments passed. \n");
+      }
     },
-    {
-      argCount: '?',
+    { argCount: '?',
       literal  : Number.MAX_VALUE,
     },
     true
