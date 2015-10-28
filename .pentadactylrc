@@ -5,29 +5,36 @@ set hlfind
 set incfind
 set newtab=all
 
-autocmd PageLoad '^https?://(?:www\.)?google\.(?:co.uk|com)' :normal! gi
+"""" Sites """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+autocmd PageLoad !'.*google.co.*q=\w.*','^https://(?:www|encrypted\.)?google\.(?:co.uk|com)' :normal! gi
+
+set strictfocus='google.com':laissez-faire,*:moderate,'chrome:*':laissez-faire,*:moderate
+set passkeys+=mail\.google\.com:jkv<CR>rau#T/<space><S-space>?,gi,gl,*u,*i,*n,gi,gc,gl
 set passkeys+='mail\.google\.com':c/jkhnpouelxsfra#`[]z?\*nrtgidIU+-=<Tab><Return>
 set passkeys+='rememberthemilk\.com':tcpdfgsuiyrz1234ankjihm<Esc><Del>+-=<Tab><Return>
 
 " noremap <C-f> <PageUp>
 
 " Dump current Site w/o layout, format, etc. just plain text
-map -e <A-l> :javascript dactyl.execute("!lynx -dump '" + dactyl.modules.buffer.URL + "' > '" + dactyl.modules.buffer.title + "'");
+map -e <A-l> :javascript dactyl.execute("!lynx -dump '" + dactyl.modules.buffer.URL + "' > $TMP/'" + dactyl.modules.buffer.title + "'");
 
 set! browser.tabs.closeButtons=2
 set! dom.disable_open_click_delay=1000
 
 
-set! general.useragent.override="Mozilla/5.0 (X11; Linux i686; rv:8.0) Gecko/20100101 Firefox/10.0.5"
-set! general.useragent.extra.firefox="Firefox/2.0.0.1"
+" set! general.useragent.override="Mozilla/5.0 (X11; Linux i686; rv:8.0) Gecko/20100101 Firefox/10.0.5"
+" set! general.useragent.extra.firefox="Firefox/2.0.0.1"
 
 set! javascript.options.strict=true
 "set! javascript.options.showInConsole=true
 
+set! browser.startup.homepage="https://encrypted.google.com/search?complete=1&q="
+set! browser.tabs.closeButtons=2
+
 set! network.protocol-handler.external.irc=true
 set! network.protocol-handler.app.irc="/usr/bin/xchat -e --url=%s"
 
-set strictfocus='chrome:*':despotic,*:despotic
+set strictfocus+='chrome:*':despotic,*:despotic
 set! capability.policy.default.HTMLInputElement.focus="noAccess"
 set! capability.policy.policynames="nofocus"
 set! capability.policy.nofocus.sites="http://www.google.co.uk"
@@ -42,7 +49,16 @@ set! noscript.surrogate.nofocus.replacement="HTMLInputElement.prototype.focus=fu
 set maxitems=16
 
 highlight -a CmdLine  color:lightgrey;
+highlight -a CmdLine  background-color: black;
+highlight -a CmdLine  margin-left: 2px;
+
 highlight -a Hint     font-size:10pt !important;
+
+"""" Styling """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+highlight Hint font-family: sans-serif; font-size: 13px; font-weight: normal; color: black; background-color: #fffcc8 !important; border: 1px solid black; padding: 2px; line-height: 13px; text-transform: none;
+highlight HintActive background-color: rgba(0,0,0,0) !important;
+highlight HintElem background-color: rgba(0,0,0,0) !important;
+set hintkeys=ghjktyufdresawqioplbvcn
 
 """" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " set mapleader=","
@@ -50,3 +66,38 @@ highlight -a Hint     font-size:10pt !important;
 nmap <silent> ,,           :buffer #<cr>
 nmap          ,\'          :b<space>
 nmap          ,b           :b<space>
+
+map           <C-w>        <Nop>
+map           <C-w><C-w>   <C-^>
+nmap          <C-w>l       <C-n>
+nmap          <C-w>h       <C-p>
+nmap          <C-w>p       <C-p>
+nmap          <C-w>n       <C-n>
+nmap          <C-w>m       :tabmove<Space>
+nmap          <C-w>t       -ex tabnew
+
+nmap -builtin j            <C-d>
+nmap -builtin k            <C-u>
+
+cmap -builtin <C-b>        <Home>
+cmap -builtin <C-e>        <End>
+cmap -builtin <C-h>        <Left>
+cmap -builtin <C-l>        <Right>
+
+nmap          ,ym          -ex :clip $m
+nmap          ,yd          -ex :clip $fqdn
+nmap          ,yu          -ex :clip $u
+nmap          ,ys          -ex :clip $sel
+
+nmap           <Left>       <Nop>
+nmap           <Up>         <Nop>
+nmap           <Down>       <Nop>
+nmap           <Right>      <Nop>
+
+cmap -builtin  <C-p>        <Up>
+cmap -builtin  <C-n>        <Down>
+
+cmap           <Left>       <Nop>
+cmap           <Up>         <Nop>
+cmap           <Down>       <Nop>
+cmap           <Right>      <Nop>
