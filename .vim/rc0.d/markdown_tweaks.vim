@@ -322,9 +322,9 @@ augroup markdown
            \          foldmethod=expr
            \          foldenable
            \          formatprg=par\ -jw80
-  autocmd BufWritePost <buffer>
-      \ silent :!pandoc -c ~/.config/dotfiles/pandoc/pandoc.css
-      \ --toc --from markdown_github % > %:r.html
+  " autocmd BufWritePost <buffer>
+  "     \ silent :!pandoc -c ~/.config/dotfiles/pandoc/pandoc.css
+  "     \ --toc --from markdown_github % > %:r.html
 augroup END
 
 syn match myDate /\v\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
