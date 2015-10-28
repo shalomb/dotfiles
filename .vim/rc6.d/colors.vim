@@ -27,6 +27,8 @@ highlight ShowMarksHLm   cterm=bold ctermfg=166 ctermbg=none
 highlight SignColumn     cterm=bold ctermfg=202 ctermbg=233
 highlight Comment        cterm=none ctermfg=248
 
+highlight SpellBad       cterm=bold ctermfg=248 ctermbg=52
+
 " diff colours
 "gray100 on darkgreen
 highlight DiffAdd      ctermfg=232  ctermbg=28   cterm=NONE
@@ -48,3 +50,4 @@ endif
 
 " set the background colour of columns 80 onwards
 let &colorcolumn=join(range(81,120),",")
+
