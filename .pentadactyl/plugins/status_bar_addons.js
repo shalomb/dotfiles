@@ -82,15 +82,13 @@
 
 
 /* #17  	 Show the feed-button in the statusbar
- */
 (function(){
   var statusPanel = document.createElement("statusbarpanel");
   statusPanel.setAttribute("id", "buttons-panel-clone");
   // statusPanel.appendChild(document.getElementById("feed-button"));
-  statusPanel.appendChild(document.getElementById("star-button"));
+  // statusPanel.appendChild(document.getElementById("star-button"));
   statusPanel.firstChild.setAttribute("style", "padding: 0; max-height: 16px;");
   document.getElementById("status-bar")
     .insertBefore(statusPanel, document.getElementById("security-button"));
-})();			
-
-
+})();
+ */
