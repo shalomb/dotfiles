@@ -1,5 +1,5 @@
 #!/bin/sh
-TTY=`tty | awk -F '/' '{ print $3 }'`
-export TTY
-# exec dbus-launch --exit-with-session startfluxbox
-exec dbus-launch --exit-with-session ~/.fluxbox/startup
+
+[[ -r ~/.config/profile ]] && source ~/.config/profile
+
+exec dbus-launch --exit-with-session i3
