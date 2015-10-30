@@ -1,3 +1,3 @@
 #!/bin/bash
 
-[[ -r ~/.profile ]] && source ~/.profile
+[[ -r ~/.config/profile ]] && source ~/.config/profile
