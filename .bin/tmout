@@ -1,0 +1,83 @@
+#!/usr/bin/perl -w
+use strict;
+use Term::ReadKey;
+use Getopt::Long qw|:config pass_through|;
+
+local $|; $|=1;
+local $SIG{ALRM} = sub { exit };
+
+sub timeout;
+
+my ($timeout, $command, $tmout, $bg);
+
+GetOptions ("t|timeout=i" => \$timeout,
+            "c|command=s" => \$command,
+            "b|bg" => \$bg,
+);
+
+if (scalar @ARGV) {
+  if (!defined $timeout) {
+    if ( ($timeout) = $ARGV[0] =~ /^(\d+)$/ ) {
+      shift @ARGV;
+    } else {
+      die "$ARGV[0] is not numeric, cannot allocate timeout\n";
+    }
+  }
+  if (defined $timeout and !defined $command) { 
+    if (scalar @ARGV) {
+      $command = join " ", @ARGV 
+    } else {
+      die "E, error processing command\n";
+    }
+  }
+}
+
+sub prompt {
+  print "\rrun `$command' [Y/n]  ";
+  alarm $timeout; 
+  
+  $tmout = countdown( $timeout );
+  open my $tty, "</dev/tty";
+  ReadMode "raw";
+  my $key = lc ReadKey 0, *$tty;
+
+  if ($key eq 'n') {
+    undef $command;
+    exit
+  } elsif ($key eq 'y' or $key eq "\n" or $key eq ' ') {
+    exit
+  } else {
+    kill 15, $tmout;
+    &prompt();
+  }
+}
+&prompt;
+
+END {
+  ReadMode "normal";
+  if (defined $tmout) {
+    kill 15, $tmout; 
+    if ($command) {
+      print "[1K[1A[1B";
+      alarm 0;
+      exec $command;
+    } 
+  }
+}
+
+sub countdown {
+  my $timeout = shift;
+  my $tmout = fork;
+  if (defined $tmout and !$tmout) {
+    my $l = 0;
+    for (reverse 0..$timeout) { 
+        print ((chr 8) x $l);
+        $_ = "$_ ";
+        $l = length $_;
+        print STDERR $_;
+        sleep 1 
+    }
+    exit;
+  }
+  return $tmout;
+}
