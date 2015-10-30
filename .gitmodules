@@ -52,9 +52,6 @@
 [submodule ".vim/bundle/ps1"]
 	path = .vim/bundle/ps1
 	url = https://github.com/PProvost/vim-ps1.git
-[submodule ".vim/bundle/perforce"]
-	path = .vim/bundle/perforce
-	url = https://github.com/pydave/vim-perforce.git
 [submodule ".vim/bundle/dragvisuals"]
 	path = .vim/bundle/dragvisuals
 	url = https://github.com/shinokada/dragvisuals.vim.git
