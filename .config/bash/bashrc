@@ -40,7 +40,6 @@ if type -P screen &> /dev/null; then
   export screen_session
 fi
 
-export TTY="$(tty)"; TTY="${TTY##/dev/}"
 export RUNLEVEL="${RUNLEVEL##* }"
 export PRERUNLEVEL="${RUNLEVEL%% *}"
 
