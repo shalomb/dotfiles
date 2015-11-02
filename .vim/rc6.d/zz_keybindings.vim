@@ -10,8 +10,11 @@ cnoremap <C-$>                        <End>
 cnoremap <C-^>                        <Home>
 cnoremap %%                           <C-R>=expand('%:p:h').'/'<CR>
 cnoremap w!!                          %!SUDO_ASKPASS=$(which ssh-askpass) sudo -A tee % > /dev/null
-cnoremap <C-h>                        <S-Left>
-cnoremap <C-l>                        <S-Right>
+cnoremap <C-h>                        <Left>
+cnoremap <C-l>                        <Right>
+cnoremap <C-p>                        <Up>
+cnoremap <C-n>                        <Down>
+
 
 inoremap <A-C-Left>                   <esc>:tabprevious<cr>
 inoremap <A-C-Right>                  <esc>:tabnext<cr>
@@ -22,6 +25,9 @@ inoremap <C-Enter>                    <C-o>o
 inoremap <C-S-Enter>                  <C-o>O
 inoremap <C-U>                        <C-G>u<C-U>
 inoremap <C-W>                        <C-G>u<C-W>
+
+nnoremap <C-Left>                     <Nop>
+nnoremap <C-Right>                    <Nop>
 
 " like tmux - c-w,c-w switches to previous window
 nnoremap <C-W><C-W>                   <C-W>p
