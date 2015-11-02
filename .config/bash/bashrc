@@ -33,7 +33,7 @@ export HISTIGNORE='&:ls: ls *:[bf]g'
 export HISTSIZE="$HISTFILESIZE"
 export HISTTIMEFORMAT=""
 export IGNOREEOF=5
-export TIMEFORMAT=$'\nReal: %3lR\tUser: %3lU\tSys: %3lS\tCPU: %3lP'
+export TIMEFORMAT=$'\nReal: %3lR\tUser: %3lU\tSys: %3lS\tCPU: %P'
 
 if type -P screen &> /dev/null; then
   read screen_session _ < <(screen -ls | grep "$PPID\.")
