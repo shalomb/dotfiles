@@ -27,8 +27,6 @@ export MANPAGER="$PAGER"
 
 export FCEDIT="$EDITOR"
 
-export GREP_COLOR='1;32'
-
 export HISTCONTROL=ignoredups
 export HISTFILESIZE=8192
 export HISTIGNORE='&:ls: ls *:[bf]g'
