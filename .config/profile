@@ -73,7 +73,6 @@ HOST="${HOST:-"$HOSTNAME"}";              export HOST;
 
 LANG="en_GB.UTF-8";                       export LANG;
 LC_ALL="en_GB.UTF-8";                     export LC_ALL;
-TZ='Europe/London';                       export TZ;
 
 if [ -d "$HOME/.bin" ] ; then PATH="$HOME/.bin:$PATH"; fi
 PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin"
