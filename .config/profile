@@ -33,6 +33,8 @@ umask 022
 SHELL="`readlink -f /proc/$$/exe`";       export SHELL
 TTY=`tty`;                                export TTY
 VT=`ps -o command= -p $(pidof X || pidof xinit) | sed -r 's/.*(vt[0-9]+).*/\1/'`
+RUNLEVEL=${RUNLEVEL:-$(runlevel | awk '{print $2}')}
+PRERUNLEVEL=${RUNLEVEL:-$(runlevel | awk '{print $1}')}
 
 # Environment Variables
 XDG_CACHE_HOME="$HOME/.cache";            export XDG_CACHE_HOME;

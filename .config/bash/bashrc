@@ -40,10 +40,6 @@ if type -P screen &> /dev/null; then
   export screen_session
 fi
 
-export RUNLEVEL="${RUNLEVEL##* }"
-export PRERUNLEVEL="${RUNLEVEL%% *}"
-
-
 # Shell Options
 # echo -n "setting shell options .. "
 shopt -s cdable_vars
