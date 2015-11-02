@@ -81,13 +81,11 @@ PATH="$PATH:/usr/local/bin/:/usr/lib/pm-utils/bin/";
 
 # Redirect $TMP to ~/.tmp
 TMP=/tmp/"$USER"
-if [ ! -e "$TMP" ]; then
-  old_umask="`umask`"
-  umask 0077
-  mkdir -p "$TMP"
-  ln -sf "$TMP" "$HOME/.tmp"
-  umask "$old_umask"
-fi
+[ ! -e "$TMP" ]       || mkdir -p "$TMP"
+[ ! -e "$HOME/.tmp" ] && ln -sf "$TMP" "$HOME/.tmp" 
+
+chown -R "$USER":"$USER" "$TMP"
+chmod -R 4750 "$TMP"
 
    TMP="$HOME/.tmp"; export    TMP;
   TEMP="$TMP";       export   TEMP;
