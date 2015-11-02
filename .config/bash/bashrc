@@ -186,6 +186,5 @@ lastlog -u "${USER}" | tail -n 1 | sed -r -e 's/  +/ /g'
 uptime
 echo ''
 
-fortune
-echo ""
+type -P fortune && fortune 2>&1 && echo ""
 
