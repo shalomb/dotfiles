@@ -107,10 +107,10 @@ if [[ $qtermWinID = 0x0 ]]; then     # window is non-existent
   qtermSession="$(tmux ls | grep -Eio "^qterm:")"
   if [[ -z $qtermSession ]]; then
     urxvtc -name qterm -title qterm  \
-       -e  tmux new-session -s qterm &
+       -e  tmux -2l new-session -s qterm &
   else
     urxvtc -name qterm -title qterm     \
-      -e tmux attach -t "$qtermSession" &
+      -e tmux -2 attach -t "$qtermSession" &
   fi
   exit;
 fi
