@@ -64,7 +64,7 @@ reload_ssh_agent () {
   unset agent_spawned_this_session
   export SSH_AUTH_SOCK SSH_AGENT_PID SSH_AGENT_INFO_FILE
 
-  echo "Keys unlocked .. "
+  echo " unlocked .. "
   ssh-add -l
 
 }
