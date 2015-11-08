@@ -65,7 +65,7 @@ reload_ssh_agent () {
   export SSH_AUTH_SOCK SSH_AGENT_PID SSH_AGENT_INFO_FILE
 
   echo " unlocked .. "
-  ssh-add -l
+  ssh-add -l && echo ''
 
 }
 
