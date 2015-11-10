@@ -53,6 +53,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/pydave/vim-perforce.git               bundle/perforce
   git submodule add -f https://github.com/shalomb/vimcse.git                    vimcse
   git submodule add -f https://github.com/shinokada/dragvisuals.vim.git         bundle/dragvisuals
+  git submodule add -f https://github.com/tmux-plugins/vim-tmux.git             bundle/tmux
   git submodule add -f https://github.com/tomasr/molokai.git                    bundle/molokai
   git submodule add -f https://github.com/tpope/vim-abolish.git                 bundle/abolish
   git submodule add -f https://github.com/tpope/vim-fugitive.git                bundle/fugitive
