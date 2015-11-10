@@ -1,8 +1,9 @@
 #!/bin/bash
 
+# SYNOPSIS
+#   tmuxie - tmux session helper
+
 set -eu
-
-
 
 if ! type -P tmux &> /dev/null; then
   echo "tmux not installed (in \$PATH)?" >&2
