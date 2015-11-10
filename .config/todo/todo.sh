@@ -335,6 +335,11 @@ getPrefix()
     # Returns:       Uppercase FILE prefix to be used in place of "TODO:" where
     #                a different todo file can be specified.
     local base=$(basename "${1:-$TODO_FILE}")
+    if [[ -e "$PWD/$base" ]]; then
+      echo "$base"
+    else
+      echo "$1"
+    fi
     echo "${base%%.[^.]*}" | tr 'a-z' 'A-Z'
 }
 
@@ -689,7 +694,7 @@ _addto() {
     cleaninput
 
     if [[ $TODOTXT_DATE_ON_ADD = 1 ]]; then
-        now=$(date '+%Y-%m-%d')
+        now=$(date '+%FT%T')
         input=$(echo "$input" | sed -e 's/^\(([A-Z]) \)\{0,1\}/\1'"$now /")
     fi
     echo "$input" >> "$file"
