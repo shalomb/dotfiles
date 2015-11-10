@@ -80,4 +80,4 @@ elif [[ -z $session_name ]] && test -t 0; then
   fi
 fi
 
-exec tmux new-session -s "$session_name"
+exec tmux -l -2 new-session -s "$session_name"

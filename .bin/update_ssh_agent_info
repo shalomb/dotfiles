@@ -48,7 +48,7 @@ reload_ssh_agent () {
     } > "$SSH_AGENT_INFO_FILE"
   fi
 
-  echo "Unlocking ssh keys for [$SSH_AGENT_PID | $SSH_AUTH_SOCK] .."
+  echo -n "Unlocking ssh keys for agent ($SSH_AGENT_PID@$SSH_AUTH_SOCK) .."
   if ! ssh-add -L &>/dev/null; then
     [[ -t 0 ]] || return  # If we're not interactive, abort.
     if ! ssh-add &> /dev/null; then
@@ -64,8 +64,8 @@ reload_ssh_agent () {
   unset agent_spawned_this_session
   export SSH_AUTH_SOCK SSH_AGENT_PID SSH_AGENT_INFO_FILE
 
-  echo "Keys unlocked .. "
-  ssh-add -l
+  echo " unlocked .. "
+  ssh-add -l && echo ''
 
 }
 

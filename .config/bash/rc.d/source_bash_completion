@@ -1,0 +1,3 @@
+#!/bin/bash
+
+[[ -z $BASH_COMPLETION_COMPAT_DIR ]] && source /etc/bash_completion

@@ -31,9 +31,6 @@
 [submodule "bundle/ps1"]
 	path = bundle/ps1
 	url = https://github.com/PProvost/vim-ps1.git
-[submodule "bundle/perforce"]
-	path = bundle/perforce
-	url = https://github.com/pydave/vim-perforce.git
 [submodule "bundle/dragvisuals"]
 	path = bundle/dragvisuals
 	url = https://github.com/shinokada/dragvisuals.vim.git

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+function launch {
+  local cmd="$1"; shift;
+  if ! killall -0 "$cmd"; then
+    if type -P "$cmd"; then
+      echo "launching '$cmd' '$@'" >> /tmp/i3.log
+      "$cmd" "$@" &
+    fi
+  fi
+}
+
+launch gnome-screensaver

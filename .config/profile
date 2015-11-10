@@ -1,5 +1,5 @@
-#!/bin/sh
 
+#!/bin/sh
  ##############################################################################
 #   ~/.profile: executed by the command interpreter for login shells           #
 #   (including bash when invoked as a --login shell).                          #
@@ -32,7 +32,9 @@ umask 022
 
 SHELL="`readlink -f /proc/$$/exe`";       export SHELL
 TTY=`tty`;                                export TTY
-VT=`ps -o command= -p $(pidof X) | sed -r 's/.*(vt[0-9]+).*/\1/'`
+VT=`ps -o command= -p $(pidof X || pidof xinit) | sed -r 's/.*(vt[0-9]+).*/\1/'`
+RUNLEVEL=${RUNLEVEL:-$(runlevel | awk '{print $2}')}
+PRERUNLEVEL=${RUNLEVEL:-$(runlevel | awk '{print $1}')}
 
 # Environment Variables
 XDG_CACHE_HOME="$HOME/.cache";            export XDG_CACHE_HOME;
@@ -73,7 +75,6 @@ HOST="${HOST:-"$HOSTNAME"}";              export HOST;
 
 LANG="en_GB.UTF-8";                       export LANG;
 LC_ALL="en_GB.UTF-8";                     export LC_ALL;
-TZ='Europe/London';                       export TZ;
 
 if [ -d "$HOME/.bin" ] ; then PATH="$HOME/.bin:$PATH"; fi
 PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin"
@@ -82,13 +83,11 @@ PATH="$PATH:/usr/local/bin/:/usr/lib/pm-utils/bin/";
 
 # Redirect $TMP to ~/.tmp
 TMP=/tmp/"$USER"
-if [ ! -e "$TMP" ]; then
-  old_umask="`umask`"
-  umask 0077
-  mkdir -p "$TMP"
-  ln -sf "$TMP" "$HOME/.tmp"
-  umask "$old_umask"
-fi
+[ ! -e "$TMP" ]       || mkdir -p "$TMP"
+[ ! -e "$HOME/.tmp" ] && ln -sf "$TMP" "$HOME/.tmp" 
+
+chown -R "$USER":"$USER" "$TMP"
+chmod -R 4750 "$TMP"
 
    TMP="$HOME/.tmp"; export    TMP;
   TEMP="$TMP";       export   TEMP;
@@ -100,7 +99,7 @@ TMPDIR="$TMP";       export TMPDIR;
 # If we're not running interactively, return.
 test -t 0 || return
 
-GREP_COLOR="1;36";                        export GREP_COLOR;
+GREP_COLOR="0;36";                        export GREP_COLOR;
 GREP_COLORS="${GREP_COLOR:-"1;36"}";      export GREP_COLORS;
 
 INPUTRC=~/.inputrc;                       export INPUTRC;
@@ -128,6 +127,7 @@ export LESS_TERMCAP_ue=$'\E[0m';          export LESS_TERMCAP_ue;
 # end underline
 export LESS_TERMCAP_us=$'\E[01;32m';      export LESS_TERMCAP_us;
 
+PAGER="${PAGER:-less}";                   export PAGER;
 MANPAGER="${PAGER:-"less"}";              export MANPAGER;
 MANPATH="$MANPATH:/usr/share/man/:/var/cache/man/"; export MANPATH
 

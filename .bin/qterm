@@ -67,7 +67,7 @@
 #   Shalom Bhooshi <s.bhooshi/gmail.com>
 #
 # COPYRIGHT
-#   Copyright © 2011 Shalom Bhooshi.  
+#   Copyright (C) 2011 Shalom Bhooshi.  
 #   License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 #   This is free software: you are free to change and redistribute it.
 #   There is NO WARRANTY, to the extent permitted by law.
@@ -107,10 +107,10 @@ if [[ $qtermWinID = 0x0 ]]; then     # window is non-existent
   qtermSession="$(tmux ls | grep -Eio "^qterm:")"
   if [[ -z $qtermSession ]]; then
     urxvtc -name qterm -title qterm  \
-       -e  tmux new-session -s qterm &
+       -e  tmux -2l new-session -s qterm &
   else
     urxvtc -name qterm -title qterm     \
-      -e tmux attach -t "$qtermSession" &
+      -e tmux -2 attach -t "$qtermSession" &
   fi
   exit;
 fi

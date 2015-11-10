@@ -15,20 +15,15 @@
 #  * ~/.config/bashrc hasn't been sourced before - for interactive shells
 #  * it hasn't already been marked as sourced.
 if [[ -z $PROFILE_SOURCED ]]; then
-  if [[ -e ~/.config/.profile ]]; then
-    source ~/.config/.profile && PROFILE_SOURCED=1
+  if [[ -e ~/.config/profile ]]; then
+    source ~/.config/profile && PROFILE_SOURCED=1
   fi
 fi
 
-export BASHRC_SOURCED="$BASHRC_SOURCED|$(date +%s)"
-export BASHRC_SOURCED_BY="$BASHRC_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
-export PAGER=$(which less)
-export MANPAGER="$PAGER"
+# export BASHRC_SOURCED="$BASHRC_SOURCED|$(date +%s)"
+# export BASHRC_SOURCED_BY="$BASHRC_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
 
 export FCEDIT="$EDITOR"
-
-export GREP_OPTIONS='--color=auto'
-export GREP_COLOR='1;32'
 
 export HISTCONTROL=ignoredups
 export HISTFILESIZE=8192
@@ -36,17 +31,12 @@ export HISTIGNORE='&:ls: ls *:[bf]g'
 export HISTSIZE="$HISTFILESIZE"
 export HISTTIMEFORMAT=""
 export IGNOREEOF=5
-export TIMEFORMAT=$'\nReal: %3lR\tUser: %3lU\tSys: %3lS\tCPU: %3lP'
+export TIMEFORMAT=$'\nReal: %3lR\tUser: %3lU\tSys: %3lS\tCPU: %P'
 
 if type -P screen &> /dev/null; then
   read screen_session _ < <(screen -ls | grep "$PPID\.")
   export screen_session
 fi
-
-export TTY="$(tty)"; TTY="${TTY##/dev/}"
-export RUNLEVEL="${RUNLEVEL##* }"
-export PRERUNLEVEL="${RUNLEVEL%% *}"
-
 
 # Shell Options
 # echo -n "setting shell options .. "
@@ -196,6 +186,5 @@ lastlog -u "${USER}" | tail -n 1 | sed -r -e 's/  +/ /g'
 uptime
 echo ''
 
-fortune
-echo ""
+type -P fortune &>/dev/null && fortune 2>&1 && echo ""
 

@@ -1,0 +1,198 @@
+# i3 config file (v4)
+# Please see http://i3wm.org/docs/userguide.html for a complete reference!
+
+workspace_auto_back_and_forth yes
+popup_during_fullscreen       smart
+focus_follows_mouse           no
+new_window pixel              0
+
+set $mod Mod4 
+floating_modifier $mod
+
+# Font for window titles. Will also be used by the bar unless a different font
+# is used in the bar {} block below.
+font pango:monospace 8
+
+# start a terminal
+bindsym $mod+Return           exec gmrun $(tail -n 1 ~/.gmrun_history)
+bindsym Control+$mod+Return   exec gmrun $(tail -n 1 ~/.gmrun_history)
+bindsym $mod+Shift+Return     exec x-terminal-emulator
+
+# resize window (you can also use the mouse for that)
+mode "resize" {
+  bindsym h               resize shrink width    8 px or  8 ppt
+  bindsym j               resize grow   height   8 px or  8 ppt
+  bindsym k               resize shrink height   8 px or  8 ppt
+  bindsym l               resize grow   width    8 px or  8 ppt
+
+  bindsym Control+h       resize shrink width    1 px or  1 ppt
+  bindsym Control+j       resize grow   height   1 px or  1 ppt
+  bindsym Control+k       resize shrink height   1 px or  1 ppt
+  bindsym Control+l       resize grow   width    1 px or  1 ppt
+
+  bindsym Shift+h         resize shrink width   12 px or 12 ppt
+  bindsym Shift+j         resize grow   height  12 px or 12 ppt
+  bindsym Shift+k         resize shrink height  12 px or 12 ppt
+  bindsym Shift+l         resize grow   width   12 px or 12 ppt
+
+  bindsym Shift+period    resize grow   width   10 px or 10 ppt
+  bindsym Shift+comma     resize shrink width   10 px or 10 ppt
+  bindsym Shift+period    resize grow   width   10 px or 10 ppt
+  bindsym Shift+comma     resize shrink width   10 px or 10 ppt
+
+  bindsym Escape          mode "default"
+}
+
+mode "window move" {
+  bindsym Escape          mode "default"
+}
+
+mode "workspace control" {
+  bindsym h               split h
+  bindsym v               split v
+
+  bindsym Escape          mode "default"
+}
+
+mode "window control" {
+
+  bindsym a               focus parent
+  bindsym backslash       split h
+  bindsym d               kill
+  bindsym e               layout toggle split
+  bindsym f               fullscreen toggle
+  bindsym h               focus left
+  bindsym i               exec dmenu_run
+  bindsym j               focus down
+  bindsym k               focus up
+  bindsym l               focus right
+  bindsym m               exec i3-input -l 1 -P 'Move to: ' -F 'move container to workspace "%s"'
+  bindsym n               exec gmrun $(tail -n 1 ~/.gmrun_history)
+  bindsym period          exec "~/.bin/qterm; i3-msg '[urgent=Latest] focus'"
+  bindsym Return          exec gmrun $(tail -n 1 ~/.gmrun_history) ; mode "default"
+  bindsym r               mode "resize"
+  bindsym Shift+i         exec --no-startup-id i3-dmenu-desktop
+  bindsym Shift+r         restart ; mode "default"
+  bindsym Shift+space     floating toggle
+  bindsym slash           exec /usr/local/bin/quickswitch.py; mode "default"
+  bindsym s               layout stacking
+  bindsym space           focus mode_toggle
+  bindsym t               layout tabbed
+  bindsym underscore      split v
+  bindsym w               mode "workspace control"
+  bindsym x               [urgent=latest] focus
+  bindsym Shift+colon     exec gmrun $(tail -n 1 ~/.gmrun_history); mode "default"
+
+  bindsym Shift+h         move left
+  bindsym Shift+j         move down
+  bindsym Shift+k         move up
+  bindsym Shift+l         move right
+
+  bindsym Control+h       workspace prev
+  bindsym Control+j       workspace 1
+  bindsym Control+k       workspace back_and_forth
+  bindsym Control+l       workspace next
+
+  bindsym 1               workspace 1
+  bindsym 2               workspace 2
+  bindsym 3               workspace 3
+  bindsym 4               workspace 4
+  bindsym 5               workspace 5
+  bindsym 6               workspace 6
+  bindsym 7               workspace 7
+  bindsym 8               workspace 8
+  bindsym 9               workspace 9
+  bindsym 0               workspace 0
+
+  bindsym Shift+1         move container to workspace 1
+  bindsym Shift+2         move container to workspace 2
+  bindsym Shift+3         move container to workspace 3
+  bindsym Shift+4         move container to workspace 4
+  bindsym Shift+5         move container to workspace 5
+  bindsym Shift+6         move container to workspace 6
+  bindsym Shift+7         move container to workspace 7
+  bindsym Shift+8         move container to workspace 8
+  bindsym Shift+9         move container to workspace 9
+  bindsym Shift+0         move container to workspace 10
+
+  bindsym Shift+question  exec i3-msg 'split v' ; exec --no-startup-id x-terminal-emulator -e less ~/.config/i3/config ; mode "default"
+
+  bindsym Escape          mode "default"
+  bindsym Control+$mod+semicolon    mode "default"
+  bindsym Control+$mod+h  mode "default"
+  bindsym Control+$mod+j  mode "default"
+  bindsym Control+$mod+k  mode "default"
+  bindsym Control+$mod+l  mode "default"
+}
+
+bindsym Control+$mod+Shift+h    workspace prev
+bindsym Control+$mod+Shift+j    workspace next
+bindsym Control+$mod+Shift+k    workspace prev
+bindsym Control+$mod+Shift+l    workspace next
+
+bindsym Control+$mod+h    focus left
+bindsym Control+$mod+j    focus down
+bindsym Control+$mod+k    focus up
+bindsym Control+$mod+l    focus right
+
+bindsym Control+$mod+semicolon    mode "window control"
+bindsym Control+$mod+Shift+colon  exec i3-input -P ':' -F 'gmrun "%s"' ; mode "default"
+bindsym Control+$mod+m            exec i3-input -l 1 -P 'Mark: ' -F 'exec ~/.bin/winmark mark "%s"' ; mode "default"
+bindsym Control+$mod+period       scratchpad show
+
+bindsym Control+$mod+slash  exec /usr/local/bin/quickswitch.py; mode "default"
+
+mode "window mark" {
+  bindsym Escape          mode "default"
+}
+
+mode "i3 control" {
+  bindsym b               bar mode toggle
+  bindsym r               reload  ; mode "default"
+  bindsym Shift+r         restart ; mode "default"
+  bindsym q               exec "i3-nagbar -t warning -m 'End X session? ' -b 'Yes, exit i3' 'i3-msg exit'"
+  bindsym Escape          mode "default"
+}
+
+bindsym Control+$mod+i    mode "i3 control"
+
+bindsym $mod+Mod1+a       exec "~/.bin/winmark summon a ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+b       exec "~/.bin/winmark summon b ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+c       exec "~/.bin/winmark summon c ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+d       exec "~/.bin/winmark summon d ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+e       exec "~/.bin/winmark summon e ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+f       exec "~/.bin/winmark summon f ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+g       exec "~/.bin/winmark summon g ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+h       exec "~/.bin/winmark summon h ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+i       exec "~/.bin/winmark summon i ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+j       exec "~/.bin/winmark summon j ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+k       exec "~/.bin/winmark summon k ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+l       exec "~/.bin/winmark summon l ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+m       exec "~/.bin/winmark summon m ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+n       exec "~/.bin/winmark summon n ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+o       exec "~/.bin/winmark summon o ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+p       exec "~/.bin/winmark summon p ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+q       exec "~/.bin/winmark summon q ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+r       exec "~/.bin/winmark summon r ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+s       exec "~/.bin/winmark summon s ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+t       exec "~/.bin/winmark summon t ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+u       exec "~/.bin/winmark summon u ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+v       exec "~/.bin/winmark summon v ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+w       exec "~/.bin/winmark summon w ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+x       exec "~/.bin/winmark summon x ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+y       exec "~/.bin/winmark summon y ; i3-msg '[urgent=latest] focus'"
+bindsym $mod+Mod1+z       exec "~/.bin/winmark summon z ; i3-msg '[urgent=latest] focus'"
+
+# Start i3bar to display a workspace bar (plus the system information i3status
+# finds out, if available)
+bar {
+  status_command i3status
+  tray_padding 8
+#        tray_output primary
+}
+
+exec --no-startup-id        i3-msg 'workspace 1; exec qterm;   workspace 1;'
+exec --no-startup-id        i3-msg 'workspace 2; exec firefox; workspace 1;'
+
+exec --no-startup-id        ~/.config/workspacerc
+

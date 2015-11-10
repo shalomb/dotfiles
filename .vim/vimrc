@@ -94,9 +94,10 @@ syntax on                   " start highlighting
 set fileformat=unix         " no CR-LF, just plain newlines
 
 set autoindent              " try and be smart about indenting
-set smartindent             " C like indenting
 set cindent                 " done better
 set copyindent              " make autoindent use the same characters to indent
+set cinkeys-=0#             " disable commenting moving us to the BOL
+set indentkeys-=0#          " disable commenting moving us to the BOL
 set nojoinspaces
 
 set showmatch               " show matching braces, parantheses, brackets, etc
