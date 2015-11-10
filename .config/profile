@@ -20,19 +20,27 @@
 
 #   Let everyone know this file was sourced.
 #    we'll use it to break never-ending cyclic loops.
-PROFILE_SOURCED="`date +%s`";
-PROFILE_SOURCED_BY="$PROFILE_SOURCED_BY|`ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=` `date +%s`";
-export PROFILE_SOURCED;
-export PROFILE_SOURCED_BY;
+# PROFILE_SOURCED="`date +%s`";
+# PROFILE_SOURCED_BY="$PROFILE_SOURCED_BY|`ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=` `date +%s`";
+# export PROFILE_SOURCED;
+# export PROFILE_SOURCED_BY;
 
-
+if [ -d "$HOME/.bin" ] ; then PATH="$HOME/.bin:$PATH"; fi
+PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin"
+PATH="$PATH:/usr/local/bin/:/usr/lib/pm-utils/bin/"; 
+                                          export PATH;
 # The default umask is set in /etc/profile; for setting the umask
 # for ssh logins, install and configure the libpam-umask package.
 umask 022
 
 SHELL="`readlink -f /proc/$$/exe`";       export SHELL
 TTY=`tty`;                                export TTY
-VT=`ps -o command= -p $(pidof X || pidof xinit) | sed -r 's/.*(vt[0-9]+).*/\1/'`
+
+VT=""
+pid=$(pidof X || pidof xinit) &&
+  VT=`ps -o command= -p "$pid" 2>/dev/null | sed -r 's/.*(vt[0-9]+).*/\1/'`
+export VT
+
 RUNLEVEL=${RUNLEVEL:-$(runlevel | awk '{print $2}')}
 PRERUNLEVEL=${RUNLEVEL:-$(runlevel | awk '{print $1}')}
 
@@ -46,10 +54,10 @@ XDG_DATA_DIRS="/usr/local/share:/usr/share:$XDG_DATA_HOME";
                                           export XDG_DATA_DIRS;
 XDG_RUNTIME_DIR="$HOME/.tmp";             export XDG_RUNTIME_DIR;
 
-BROWSER="`which x-www-browser`";          export BROWSER;
-EDITOR="${EDITOR:-"`which vim`"}";        export EDITOR;
-VISUAL="$EDITOR";                         export VISUAL;
-XEDITOR="${XEDITOR:-"`which gvim`"}";     export XEDITOR;
+BROWSER="`/usr/bin/which x-www-browser`";      export BROWSER;
+EDITOR="${EDITOR:-"`/usr/bin/which vim`"}";    export EDITOR;
+VISUAL="$EDITOR";                              export VISUAL;
+XEDITOR="${XEDITOR:-"`/usr/bin/which gvim`"}"; export XEDITOR;
 
 GZIP="-9v";                               export GZIP;
 BZIP2="-9v";                              export BZIP2;
@@ -76,17 +84,12 @@ HOST="${HOST:-"$HOSTNAME"}";              export HOST;
 LANG="en_GB.UTF-8";                       export LANG;
 LC_ALL="en_GB.UTF-8";                     export LC_ALL;
 
-if [ -d "$HOME/.bin" ] ; then PATH="$HOME/.bin:$PATH"; fi
-PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin"
-PATH="$PATH:/usr/local/bin/:/usr/lib/pm-utils/bin/"; 
-                                          export PATH;
-
 # Redirect $TMP to ~/.tmp
 TMP=/tmp/"$USER"
 [ ! -e "$TMP" ]       || mkdir -p "$TMP"
 [ ! -e "$HOME/.tmp" ] && ln -sf "$TMP" "$HOME/.tmp" 
 
-chown -R "$USER":"$USER" "$TMP"
+chown   "$USER":"$USER" "$TMP"
 chmod -R 4750 "$TMP"
 
    TMP="$HOME/.tmp"; export    TMP;
