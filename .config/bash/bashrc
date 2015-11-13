@@ -139,8 +139,7 @@ function reload () {
     done
   else
     reload  /etc/bash_completion       \
-            ~/.config/bash/completion  \
-            ~/.config/bash/aliases
+            ~/.config/bash/bashrc
   fi
 }
 
