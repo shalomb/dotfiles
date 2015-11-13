@@ -3,17 +3,17 @@
 # SYNOPSIS
 #   workspacerc - workspace init file for x sessions
 
+wksplog="$TMP/workspacerc-`date +%s`.log"
+
 launch() {
   cmd="$1"; shift;
   if ! killall -0 "$cmd"; then
     if type -P "$cmd"; then
-      echo "launching '$cmd' '$@'" >> /tmp/i3.log
+      echo "launching '$cmd' '$@'" >> "$wksplog"
       "$cmd" "$@" &
     fi
   fi
 }
-
-wksplog="$TMP/workspacerc-`date +%s`.log"
 
 {
 
@@ -24,12 +24,6 @@ wksplog="$TMP/workspacerc-`date +%s`.log"
   xset +dpms          # enable DPMS (Energy Star) features.
   xset dpms 420 480 600  # timeouts for standby, suspend, off
 
-  xset b on           # Turn the bell on
-  xset b 10 100 50    # Turn beeps into croaks
-  xset r rate 175 30  # Set the keyboard repeat-rate:
-
-  test -e ~/.Xmodmap &&	xmodmap ~/.Xmodmap & # change the keymap
-
   test -d ~/.fonts || {
     mkdir -p ~/.fonts;
     chmod 755 ~/.fonts;
@@ -38,10 +32,9 @@ wksplog="$TMP/workspacerc-`date +%s`.log"
 
   xset +fp ~/.fonts   # add ~/.fonts to the font path
   xset fp rehash      # rehash the font path
-  
+
   test -r ~/.Xresources && xrdb -merge ~/.Xresources
-  test -r ~/.Xmodmap    && xmodmap ~/.Xmodmap
-  
+
   if ! kill -0 "$SSH_AGENT_PID"; then
     eval `ssh-agent -s`;
   fi
@@ -53,24 +46,30 @@ wksplog="$TMP/workspacerc-`date +%s`.log"
   # nice -n 5   idesk &
 
   nice -n 0   urxvtd -q -f -o && qterm &
-  qtermWinId=$(printf "0x%x" "$(wmctrl -lx | awk '/qterm.URxvt/{print $1}')")
-  wmctrl -i -r "$qtermWinId" -b add,skip_taskbar
+
+  for file in ~/.config/xmodmap{,.$(hostname -s)}; do
+    test -e "$file" && xmodmap "$file"
+  done
 
   unclutter  -idle 5 &
   autocutsel --fork &
   laptop-detect && numlockx off &
 
   launch gnome-session &
+  launch gnome-settings-daemon &
   launch gnome-power-manager &
-  launch gnome-keyring-daemon &
+  # launch gnome-keyring-daemon &
   launch gnome-screensaver &
+
+  launch VBoxClient-all &
 
   # setxkbmap -option ctrl:nocaps &
 
   # override some settings that gnome-settings-daemon might set
   sleep 10 && xset b on           # Turn the bell on
   sleep 10 && xset b 10 100 50    # Turn beeps into croaks
-  sleep 10 && xset r rate 175 30  # Set the keyboard repeat-rate:
+  sleep 10 && xset r rate 175 40  # Set the keyboard repeat-rate:
 
+  xrandr --dpi 96
 } >> "$wksplog" 2>&1 &
 
