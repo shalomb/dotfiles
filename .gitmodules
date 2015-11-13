@@ -145,3 +145,9 @@
 [submodule ".vim/bundle/tmux"]
 	path = .vim/bundle/tmux
 	url = https://github.com/tmux-plugins/vim-tmux.git
+[submodule ".vim/bundle/vim-ruby"]
+	path = .vim/bundle/vim-ruby
+	url = https://github.com/vim-ruby/vim-ruby.git
+[submodule ".vim/bundle/perforce"]
+	path = .vim/bundle/perforce
+	url = https://github.com/pydave/vim-perforce.git
