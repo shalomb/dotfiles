@@ -17,7 +17,7 @@ function select_session_by_name() {
   # Current Sessions
   while read -r session; do 
     sessions+=( "$session" )
-  done < <( tmux ls 2> /dev/null )
+  done < <( tmux -l -2 ls 2> /dev/null )
 
   # Prepared Sessions
   for d in "$HOME"/.etc /etc "$HOME"/.config; do 
@@ -63,11 +63,14 @@ else
 fi
 
 echo "session_name: $session_name"
+echo -ne "\033]0;$session_name+${USER}@${HOSTNAME}:..${PWD: -24}\007"
 
 if  [[ -f $session_name ]]; then
+  echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}"
   exec "$session_name"  # is a file representing a prepared session
-elif [[ -n $session_name ]] && tmux ls 2>/dev/null | awk 'BEGIN{e_c=1}$1 ~ /'"$session_name"'/{e_c=0}END{exit e_c}'; then
-  exec tmux attach -t "$session_name" # attach to an existing session
+elif [[ -n $session_name ]] && tmux -l -2 ls 2>/dev/null | awk 'BEGIN{e_c=1}$1 ~ /'"$session_name"'/{e_c=0}END{exit e_c}'; then
+  echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}"
+  exec tmux -l -2 attach -t "$session_name" # attach to an existing session
 elif [[ -n $session_name ]]; then
   echo "Session '$session_name' doesn't exist .. aborting.";
   exit 3;
