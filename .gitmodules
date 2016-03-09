@@ -151,3 +151,12 @@
 [submodule ".vim/bundle/perforce"]
 	path = .vim/bundle/perforce
 	url = https://github.com/pydave/vim-perforce.git
+[submodule ".vim/bundle/jinja2-syntax"]
+	path = .vim/bundle/jinja2-syntax
+	url = https://github.com/Glench/Vim-Jinja2-Syntax.git
+[submodule ".vim/bundle/memolist"]
+	path = .vim/bundle/memolist
+	url = https://github.com/glidenote/memolist.vim.git
+[submodule ".vim/bundle/schlepp"]
+	path = .vim/bundle/schlepp
+	url = https://github.com/zirrostig/vim-schlepp.git

@@ -32,8 +32,11 @@ set report=1                " Always report changes
 set ruler                   " display cursor position
 set showcmd                 " show command-in-progress
 set showmode                " mode shown in lower left
-set novisualbell            " no visual bell
 set title                   " set the term's window title
+
+set noerrorbells            " no bell on error messages
+set visualbell              " use a visual bell instead
+set t_vb=                   " but don't set a control code - so no flashing screen
 
 set foldcolumn=1            " no fold column
 set foldlevelstart=0        " start with all folds closed
