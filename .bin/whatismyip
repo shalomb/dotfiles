@@ -63,7 +63,9 @@ function extract_v6_address {
 
 function get_external_v4_addresses {
            local addr=$( wget -q4 'http://ident.me/'                  -O - )
-  [[ $addr ]] || addr=$( wget -q4 'http://www.telize.com/ip'          -O - )
+  [[ $addr ]] || addr=$( wget -q4 'http://checkip.amazonaws.com/'     -O - )
+  [[ $addr ]] || addr=$( wget -q4 'http://ifconfig.me/'               -O - )
+  [[ $addr ]] || addr=$( wget -q4 'https://api.ipify.org'             -O - )
   [[ $addr ]] || addr=$( wget -q4 'http://checkip.dns.he.net/'        -O - | extract_v4_address )
   [[ $addr ]] || addr=$( wget -q4 'http://checkip.dyndns.com/'        -O - | extract_v4_address )
   [[ $addr ]] || addr=$( wget -q4 'http://checkip.dyndns.com:8245/'   -O - | extract_v4_address )
@@ -73,7 +75,6 @@ function get_external_v4_addresses {
 
 function get_external_v6_addresses {
            local addr=$( wget -q6 'http://ident.me/'                  -O - )
-  [[ $addr ]] || addr=$( wget -q6 'http://www.telize.com/ip'          -O - )
   [[ $addr ]] || addr=$( wget -q6 'http://checkip.dns.he.net/'        -O - | extract_v6_address )
   [[ $addr ]] || addr=$( wget -q6 'http://checkip.dyndns.com/'        -O - | extract_v4_address )
   [[ $addr ]] || addr=$( wget -q6 'http://checkip.dyndns.com:8245/'   -O - | extract_v4_address )
