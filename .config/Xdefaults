@@ -1,4 +1,9 @@
-*dpi:                   76
+! *dpi:                   76
+Xft.dpi:                76
+! Xft.antialias:          true
+! Xft.rgba:               rgb
+Xft.hinting:            true
+Xft.hintstyle:          hintslight
 
 URxvt*termName:         rxvt
 URxvt*saveLines:        16384
@@ -35,7 +40,7 @@ URxvt*color1:           #b21818
 URxvt*color2:           #18b218
 ! yellow
 URxvt*color3:           #BE5F00
-! blue 
+! b3a2322lue 
 URxvt*color4:           #6D85BA
 ! magenta
 URxvt*color5:           #b218b2
@@ -60,10 +65,160 @@ URxvt*color14:          #54FFFF
 ! bright white 
 URxvt*color15:          #FFFFFF
 
-URxvt*font:	            xft:Bitstream Vera Sans mono:size=10,antialiased=true
-!URxvt.font:            9x15bold,xft:AquaBase:antialiased=true
-!URxvt*font:            xft:Monaco:size=10,antialiased=true
-!URxvt-ml*font:         xft:Bitstream Vera Sans mono:size=11
-!URxvt.font:            9x15bold,xft:Monaco:antialiased=true
+! URxvt*font:             xft:Bitstream Vera Sans mono:size=9,antialiased=true
+URxvt*font:             xft:Droid Sans Mono:size=10,style=Regular,antialiased=true
+!URxvt*font:             xft:Bitstream Vera Sans mono:size=9,antialiased=true
 !urXVT.FOnt:            9x15,xft:Kochi Gothic:antialiased=true
+
+! ! black
+! XTerm*color0:           #000000
+! ! red
+! XTerm*color1:           #b21818
+! ! green
+! XTerm*color2:           #18b218
+! ! yellow
+! XTerm*color3:           #BE5F00
+! ! blue 
+! XTerm*color4:           #6D85BA
+! ! magenta
+! XTerm*color5:           #b218b2
+! ! cyan 
+! XTerm*color6:           #18b2b2
+! ! white 
+! XTerm*color7:           #b2b2b2
+! ! bight black 
+! XTerm*color8:           #686868
+! ! bright red 
+! XTerm*color9:           #FF5454
+! ! bright green 
+! XTerm*color10:          #54FF54
+! ! bright yellow 
+! XTerm*color11:          #FFFF54
+! ! bright blue 
+! XTerm*color12:          #73C5FF
+! ! bright magenta
+! XTerm*color13:          #FF54FF
+! ! bright cyan 
+! XTerm*color14:          #54FFFF
+! ! bright white 
+! XTerm*color15:          #FFFFFF
+
+! XTerm*cursorColor:      #AA5454
+!:XTerm*colorBD:          #7f2a19
+!:XTerm*colorBDMode:      true
+
+!XTerm*faceName:         Bitstream Vera Sans mono:size=8,antialiased=true
+Xterm*faceName:           Bitstream Vera Sans Mono:size=12:style=Book:antialias=true
+Xterm*font:               Bitstream Vera Sans Mono:size=14:style=Book:antialias=true
+Xterm*faceNameDoublesize: WenQuanYi Bitmap Song
+Xterm*visualBell:         True
+
+! Forbid bold font faces; bold type is light blue.
+XTerm*colorBDMode:        true
+XTerm*colorBD:            rgb:82/a4/d3
+
+! Do not underscore text, underlined text is white.
+XTerm*colorULMode:        true
+XTerm*colorUL:            rgb:e4/e4/e4
+
+XTerm*scaleHeight:        1.01
+
+XTerm*borderWidth:        0
+
+xterm*alwaysBoldMode:     false
+xterm*boldMode:           true
+xterm*colorBDMode:        true
+xterm*colorMode:          true
+xterm*cursorBlink:        false
+xterm*dynamicColors:      true
+xterm*eightBitInput:      true
+! xterm*faceName:         Terminus Re33:size=10
+xterm*jumpScroll:         true
+xterm*letterSpace:        -1
+xterm*metaSendsEscape:    true
+xterm*multiScroll:        true
+xterm*rightScrollBar:     true
+xterm*saveLines:          16384
+xterm*scrollBar:          true
+xterm*scrollKey:          true
+xterm*scrollTtyOutput:    false
+xterm*toolBar:            false
+xterm*utf8:               2
+xterm*utf8Title:          true
+xterm*visualBell:         false
+XTerm*charClass:          33:48,37:48,45-46:48,38:48
+
+
+! [Xterm_256color_chart]
+! (https://upload.wikimedia.org/wikipedia/en/1/15/Xterm_256color_chart.svg)
+
+! XTerm*foreground:         rgb:b2/b2/b2
+! XTerm*background:         rgb:08/08/08
+! *background:            #002b36
+*background:            #080808
+! *foreground:            #839496
+*foreground:            #bcbcbc
+*fadeColor:             #002b36
+*cursorColor:           #93a1a1
+
+*pointerColorBackground: #586e75
+*pointerColorForeground: #93a1a1
+
+!!! black dark/light
+!*color0:                #073642
+!*color8:                #002b36
+
+!! red dark/light
+*color1:                #dc322f
+*color9:                #cb4b16
+
+!! green dark/light
+*color2:                #859900
+*color10:               #586e75
+
+!! yellow dark/light
+*color3:                #859900
+*color11:               #657b83
+
+!! blue dark/light
+*color4:                #268bd2
+*color12:               #839496
+
+!! magenta dark/light
+*color5:                #d33682
+*color13:               #6c71c4
+
+!! cyan dark/light
+*color6:                #2aa198
+*color14:               #93a1a1
+
+!! white dark/light
+*color7:                #eee8d5
+*color15:               #fdf6e3
+
+
+! xscreensaver ---------------------------------------------------------------
+
+xscreensaver.Dialog.bodyFont:                -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.buttonFont:              -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.dateFont:                -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.headingFont:             -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.labelFont:               -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.unameFont:               -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.passwd.passwdFont:              -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.background:              #073642
+xscreensaver.Dialog.bottomShadowColor:       #073642
+xscreensaver.Dialog.topShadowColor:          #073642
+xscreensaver.Dialog.Button.background:       #cb4b16
+xscreensaver.Dialog.Button.foreground:       #bcbcbc
+xscreensaver.Dialog.foreground:              #bcbcbc
+xscreensaver.Dialog.borderWidth:             0
+xscreensaver.Dialog.internalBorderWidth:     0
+xscreensaver.Dialog.shadowThickness:         2
+xscreensaver.Dialog.text.background:         #080808
+xscreensaver.Dialog.text.foreground:         #eee8d5
+xscreensaver.passwd.thermometer.background:  #000000
+xscreensaver.passwd.thermometer.foreground:  #dc322f
+xscreensaver.passwd.thermometer.width:       3
+xscreensaver.dateFormat:                     %a %FT%T
 
