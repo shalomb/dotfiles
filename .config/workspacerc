@@ -8,7 +8,7 @@ wksplog="$TMP/workspacerc-`date +%s`.log"
 launch() {
   cmd="$1"; shift;
   if ! killall -0 "$cmd"; then
-    if type -P "$cmd"; then
+    if type "$cmd"; then
       echo "launching '$cmd' '$@'" >> "$wksplog"
       "$cmd" "$@" &
     fi
@@ -24,16 +24,17 @@ launch() {
   xset +dpms          # enable DPMS (Energy Star) features.
   xset dpms 420 480 600  # timeouts for standby, suspend, off
 
-  test -d ~/.fonts || {
-    mkdir -p ~/.fonts;
-    chmod 755 ~/.fonts;
-    mkfontdir ~/.fonts; 
+  test -d ~/.config/fonts || {
+    mkdir -p ~/.config/fonts;
+    chmod 755 ~/.config/fonts;
+    mkfontdir ~/.config/fonts; 
   } &                 # set-up user fonts dir
 
-  xset +fp ~/.fonts   # add ~/.fonts to the font path
+  xset +fp ~/.config/fonts   # add ~/.config/fonts to the font path
   xset fp rehash      # rehash the font path
 
-  test -r ~/.Xresources && xrdb -merge ~/.Xresources
+  test -r ~/.config/Xdefaults  && xrdb -merge ~/.config/Xdefaults
+  test -r ~/.config/Xresources && xrdb -merge ~/.config/Xresources
 
   if ! kill -0 "$SSH_AGENT_PID"; then
     eval `ssh-agent -s`;
@@ -45,9 +46,9 @@ launch() {
 
   # nice -n 5   idesk &
 
-  nice -n 0   urxvtd -q -f -o && qterm &
+  # nice -n 0   urxvtd -q -f -o && qterm &
 
-  for file in ~/.config/xmodmap{,.$(hostname -s)}; do
+  for file in ~/.config/xmodmap ~/.config/xmodmap.`hostname -s`; do
     test -e "$file" && xmodmap "$file"
   done
 
@@ -59,10 +60,12 @@ launch() {
   launch gnome-settings-daemon &
   launch gnome-power-manager &
   # launch gnome-keyring-daemon &
-  launch gnome-screensaver &
+  # launch gnome-screensaver &
+  launch xscreensaver &
 
   launch VBoxClient-all &
 
+  launch xflux -l 48.1439 -g 17.1097 &
   # setxkbmap -option ctrl:nocaps &
 
   # override some settings that gnome-settings-daemon might set
