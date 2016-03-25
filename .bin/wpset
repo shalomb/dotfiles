@@ -23,7 +23,8 @@ sub setWallpaper;
 sub which { (grep -e, map { $_ = fsc($_, $_[0]) } split /:/, $ENV{PATH})[0] }
 
 my $wpsetter    = 'feh';
-my $fbsetbg     = which 'fbsetbg';
+my $fbsetbg     = which 'feh';
+my $fbsetbg_opts = '--bg-scale';
 
 my $wallpaper_log  = glob "~/.config/wallpapers/last_wallpapers";
 my $wallpaper_list = glob '~/.config/wallpapers/wallpaper.list';
@@ -83,7 +84,8 @@ sub setWallpaper {
   print "$0 setwallpaper $wp";
 
   $ENV{wpsetters} = $wpsetter;
-  system { $fbsetbg } $fbsetbg, $wp;
+  print "$fbsetbg - $fbsetbg_opts $wp";
+  system { $fbsetbg } $fbsetbg, $fbsetbg_opts, $wp;
   system { "ln" } "ln", "-svf", "$wp", fsc($ENV{HOME}, '.fluxbox', 'wallpaper');
 
   if ($? == -1) {
