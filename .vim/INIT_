@@ -39,6 +39,8 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/endel/vim-github-colorscheme.git      bundle/github-colorscheme
   git submodule add -f https://github.com/ervandew/supertab.git                 bundle/supertab
   git submodule add -f https://github.com/gabrielelana/vim-markdown.git         bundle/markdown
+  git submodule add -f https://github.com/Glench/Vim-Jinja2-Syntax.git          bundle/jinja2-syntax
+  git submodule add -f https://github.com/glidenote/memolist.vim.git            bundle/memolist
   git submodule add -f https://github.com/godlygeek/tabular.git                 bundle/tabular
   git submodule add -f https://github.com/hsitz/VimOrganizer.git                bundle/VimOrganizer
   git submodule add -f https://github.com/jceb/vim-orgmode.git                  bundle/orgmode
@@ -84,6 +86,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/vim-scripts/vis.git                   bundle/vis
   git submodule add -f https://github.com/vim-scripts/VST.git                   bundle/vst     # Vim reStructured Text
   git submodule add -f https://github.com/wikitopian/hardmode.git               bundle/hardmode
+  git submodule add -f https://github.com/zirrostig/vim-schlepp.git             bundle/schlepp
 
   git submodule init
   git submodule update --init --recursive
