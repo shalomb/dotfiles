@@ -34,7 +34,6 @@ function gd  { _git_alias_cmd_wrapper "diff"     "$@"; }
 function gl  { _git_alias_cmd_wrapper "log"      "$@"; }
 function gs  { _git_alias_cmd_wrapper "status"   "$@"; }
 
-function git { (echo "+ git $@"; command git "$@"); }
 function gcm {
   local args=( "$@" )
 
