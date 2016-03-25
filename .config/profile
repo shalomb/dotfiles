@@ -90,7 +90,7 @@ TMP=/tmp/"$USER"
 [ -e "$HOME/.tmp" ] || ln -sf "$TMP" "$HOME/.tmp" 
 
 chown   "$USER":"$USER" "$TMP"
-chmod -R 4750 "$TMP"
+chmod -R 5750 "$TMP"
 
    TMP="$HOME/.tmp"; export    TMP;
   TEMP="$TMP";       export   TEMP;
