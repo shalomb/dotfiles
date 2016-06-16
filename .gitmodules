@@ -166,9 +166,6 @@
 [submodule ".vim/bundle/commentary"]
 	path = .vim/bundle/commentary
 	url = https://github.com/tpope/vim-commentary.git
-[submodule ".vim/bundle/ansible-vim"]
-	path = .vim/bundle/ansible-vim
-	url = https://github.com/pearofducks/ansible-vim.git
 [submodule ".vim/bundle/yaml"]
 	path = .vim/bundle/yaml
 	url = https://github.com/avakhov/vim-yaml.git
