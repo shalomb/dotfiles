@@ -41,7 +41,7 @@ function gcm {
     git commit
   else
     if [[ ${args[0]} != '-'* ]]; then
-      args=( "'${args[*]}'" )
+      args=( "$@" )
     fi
     git commit -m "${args[@]}"
   fi
