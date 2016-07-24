@@ -196,14 +196,16 @@ bindsym Control+XF86WakeUp     exec gmrun
 
 bindsym XF86AudioLowerVolume   exec pactl set-sink-volume @DEFAULT_SINK@ -10%
 bindsym XF86AudioRaiseVolume   exec pactl set-sink-volume @DEFAULT_SINK@ +10%
-bindsym XF86AudioMicMute       exec gmrun
+bindsym XF86AudioMicMute       exec gmrun "XF86AudioMicMute"
 bindsym XF86AudioMute          exec pactl set-sink-mute   @DEFAULT_SINK@ toggle
-bindsym XF86Display            exec gmrun
-bindsym XF86Explorer           exec gmrun
-bindsym xf86launchA            exec gmrun
+bindsym XF86Display            exec gmrun "XF86Display"
 bindsym XF86MonBrightnessDown  exec xbacklight -dec 3
 bindsym XF86MonBrightnessUp    exec xbacklight -inc 3
 bindsym XF86Tools              exec xbacklight -set 30
+bindsym XF86Search             exec gmrun "XF86Search"
+bindsym XF86LaunchA            exec gmrun "XF86launchA"
+bindsym XF86Explorer           exec gmrun "XF86Explorer"
+# bindsym XF86WLAN               exec gmrun "XF86WLAN"
 
 bindsym Control+$mod+i    mode "i3 control"
 
