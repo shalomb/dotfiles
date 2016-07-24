@@ -236,6 +236,8 @@ bindsym $mod+Mod1+x       exec "~/.bin/winmark summon x ; i3-msg '[urgent=latest
 bindsym $mod+Mod1+y       exec "~/.bin/winmark summon y ; i3-msg '[urgent=latest] focus'"
 bindsym $mod+Mod1+z       exec "~/.bin/winmark summon z ; i3-msg '[urgent=latest] focus'"
 
+bindsym $mod+Mod1+period  exec "~/.bin/qterm ; i3-msg '[title=qterm] focus'"
+
 bindsym button4             nop
 bindsym button5             nop
 
