@@ -40,4 +40,8 @@
 [push]
   default = current
 
+[branch]
+  autosetupmerge  = always
+  autosetuprebase = always
+
 # vim:filetype=gitconfig:sw=2:ts=2:et
