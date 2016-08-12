@@ -37,4 +37,7 @@
   user  = shalomb
   token = 822bb43c9861d41e965eb83b72d4736d
 
+[push]
+  default = current
+
 # vim:filetype=gitconfig:sw=2:ts=2:et
