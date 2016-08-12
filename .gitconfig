@@ -47,7 +47,7 @@
   prompt = false
 
 [push]
-  default = current
+  default = simple
 
 [branch]
   autosetupmerge  = always
