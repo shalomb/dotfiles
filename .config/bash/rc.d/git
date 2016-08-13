@@ -15,14 +15,14 @@ function __my_git_ps1 {
   gs=$(git status)
 
   if grep -iq "Changes not staged" <<<"$gs"; then
-    echo -ne "$red$t$reset"
+    printf '\001%s\002%s\001%s\002' "$red" "$t" "$reset"
     return
   fi
 
   if grep -iq "^Untracked files:" <<<"$gs"; then
-    echo -ne "$orange_166$t$reset"
+    printf '\001%s\002%s\001%s\002' "$orange_166" "$t" "$reset"
     return
   fi
 
-  echo -n "$bold$green_36$t$reset"
+  printf '\001%s\002%s\001%s\002' "$green_36" "$t" "$reset"
 }
