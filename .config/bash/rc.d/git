@@ -1,0 +1,28 @@
+#!/bin/bash
+
+function __my_git_ps1 {
+  t=$(__git_ps1 | sed -r 's/^ *\(|\) *$//g')
+
+  s=0
+
+  t="${t//feature\//f\/}"
+  t="${t//bugfix\//b\/}" 
+  t="${t//release\//r\/}"
+  t="${t//hotfix\//h\/}" 
+  t="${t//support\//s\/}"
+
+
+  gs=$(git status)
+
+  if grep -iq "Changes not staged" <<<"$gs"; then
+    echo -ne "$red$t$reset"
+    return
+  fi
+
+  if grep -iq "^Untracked files:" <<<"$gs"; then
+    echo -ne "$orange_166$t$reset"
+    return
+  fi
+
+  echo -n "$bold$green_36$t$reset"
+}
