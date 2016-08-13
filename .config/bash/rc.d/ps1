@@ -17,14 +17,14 @@ case "$TERM" in
   screen*)
     # NOTE: U+2002 is used instead of whitespace below to get around readline
     #       jumping around on ESC and using colour sequences in __my_git_ps1
-    PS1="${debian_chroot:+($debian_chroot)}"\
-    PS1+="\[\$grey_236\]\!"\
-    PS1+="\[\$green_72\]\#"\
-    PS1+="\[\$red_162\]$(e=\$?;echo $e)"\
-    PS1+="\[\$blue_24\]\$(date +%T|tr -d :) "\
-    PS1+="\[\$bold\$blue_32\]\W "\
-    PS1+="\[\$(__my_git_ps1)\] "\
-    PS1+="$sumarker "
+    PS1='${debian_chroot:+($debian_chroot)}'\
+    PS1+='\[$grey_236\]\!'\
+    PS1+='\[$green_72\]\#'\
+    PS1+='\[$red_162\]$(e=$?;echo $e)'\
+    PS1+='\[$blue_24\]$(date +%T|tr -d :) '\
+    PS1+='\[$bold$blue_32\]\W '\
+    PS1+='$(__my_git_ps1) '
+    PS1+="$sumarker "
     ;;
   *)
     PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00;37m\]:\[\033[00;34m\]\W'"$sumarker"' '
