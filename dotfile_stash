@@ -34,6 +34,8 @@ $action{ +(shift) } = 1;
 
 usage() if not reduce { our $a + our $b } @action{('import', 'export')};
 
+$ENV{df_force} = 1;  # Force create links by default
+
 chdir dirname "$0"
   or die "Error changing directory to dirname($0): $!";
 
@@ -66,9 +68,9 @@ for my $file ( map { bsd_glob $_ } @globs ) {
   elsif ( $dst_file =~ m[\/] ) {
     make_directory  ( dirname($dst_file) , $ENV{df_force} ? 1 : 0 )
       if not -d dirname($dst_file);
-    make_link( $src_file, $dst_file, $ENV{df_force} ? 1 : 0 );
   }
-  else {
+
+  if    ( -f $src_file ) {
     make_link( $src_file, $dst_file, $ENV{df_force} ? 1 : 0 );
   }
 
