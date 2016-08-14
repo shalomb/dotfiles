@@ -72,8 +72,14 @@ elif [[ -n $session_name ]] && tmux -l -2 ls 2>/dev/null | awk 'BEGIN{e_c=1}$1 ~
   echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}"
   exec tmux -l -2 attach -t "$session_name" # attach to an existing session
 elif [[ -n $session_name ]]; then
-  echo "Session '$session_name' doesn't exist .. aborting.";
-  exit 3;
+  if [[ -f ~/.config/tmuxie/sessions/$session_name ]]; then
+    echo "launching prepared session ~/.config/tmuxie/sessions/$session_name"
+    ~/.config/tmuxie/sessions/$session_name
+    exit $?
+  else
+    echo "Session '$session_name' doesn't exist .. aborting.";
+    exit 3;
+  fi
 elif [[ -z $session_name ]] && test -t 0; then
   # We have no session name and we are interactive
   printf 'Enter session name or RETURN to abort. ' >&2 ; read reply
