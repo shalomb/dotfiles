@@ -1,28 +1,29 @@
 #!/bin/bash
 
 function __my_git_ps1 {
-  t=$(__git_ps1 | sed -r 's/^ *\(|\) *$//g')
+  git_ps1_text=$(__git_ps1 '%s')
 
   s=0
 
-  t="${t//feature\//f\/}"
-  t="${t//bugfix\//b\/}" 
-  t="${t//release\//r\/}"
-  t="${t//hotfix\//h\/}" 
-  t="${t//support\//s\/}"
-
+  git_ps1_text="${git_ps1_text//feature\//f\/}"
+  git_ps1_text="${git_ps1_text//bugfix\//b\/}" 
+  git_ps1_text="${git_ps1_text//release\//r\/}"
+  git_ps1_text="${git_ps1_text//hotfix\//h\/}" 
+  git_ps1_text="${git_ps1_text//support\//s\/}"
 
   gs=$(git status)
 
   if grep -iq "Changes not staged" <<<"$gs"; then
-    printf '\001%s\002%s\001%s\002' "$red" "$t" "$reset"
+    printf '\001%s\002%s\001%s\002' "$red" "$git_ps1_text" "$reset"
+  elif grep -iq "^Untracked files:" <<<"$gs"; then
+    printf '\001%s\002%s\001%s\002' "$orange_166" "$git_ps1_text" "$reset"
+  else
+    printf '\001%s\002%s\001%s\002' "$green_36" "$git_ps1_text" "$reset"
+  fi
+
+  if ahead=$(grep -iPo "(?:behind|ahead of) '.*?' by \d+" <<<"$gs" | grep -Po '\d+$'); then
+    printf '\001%s\002%s\001%s\002'  "$bold$red_196" "+$ahead" "$reset"
     return
   fi
 
-  if grep -iq "^Untracked files:" <<<"$gs"; then
-    printf '\001%s\002%s\001%s\002' "$orange_166" "$t" "$reset"
-    return
-  fi
-
-  printf '\001%s\002%s\001%s\002' "$green_36" "$t" "$reset"
 }

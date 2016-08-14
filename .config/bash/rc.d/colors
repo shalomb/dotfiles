@@ -33,8 +33,11 @@ if [[ $(tput colors) -ge 256 ]] 2>/dev/null; then
    grey_236=$(tput setaf 236)
    grey_238=$(tput setaf 238)
    grey_240=$(tput setaf 240)
+   red_124=$( tput setaf 124)
    red_162=$( tput setaf 162)
+   red_196=$( tput setaf 196)
    orange_166=$( tput setaf 166)
    green_72=$(tput setaf 72)
    green_36=$(tput setaf 36)
+   yellow_222=$(tput setaf 222)
 fi
