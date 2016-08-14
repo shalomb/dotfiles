@@ -179,6 +179,7 @@ bindsym Control+$mod+m            exec i3-input -l 1 -P 'Mark: ' -F 'exec ~/.bin
 bindsym Control+$mod+period       scratchpad show
 
 bindsym Control+$mod+slash        exec /usr/local/bin/quickswitch.py; mode "default"
+bindsym Control+$mod+Shift+slash  exec dmenu_winmarks
 
 mode "window mark" {
   bindsym Escape          mode "default"

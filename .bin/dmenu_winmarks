@@ -1,0 +1,22 @@
+#!/bin/bash
+
+candidates=()
+
+cd ~/.config/winmarks
+
+if (( $# > 0 )); then
+  candidates+="$( grep -ih "$@" ?)"
+else
+  for i in ?; do 
+    candidates+=( "$(<"$i")" )
+  done 
+fi
+
+while read -r l; do
+  read -a foo <<<"$l"
+  winmark summon "${foo[@]}"
+done < <(
+  for i in "${candidates[@]}"; do
+    echo -e "$i"
+  done  | dmenu -b -l 10 -i 
+)
