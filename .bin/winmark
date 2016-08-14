@@ -53,8 +53,12 @@ elif [[ $action = @(summon|call) ]]; then
 
   if [[ -f $winid ]]; then
     if [[ $winid = $curwin ]]; then
+      new_mark="$(readlink previous)"
       wmctrl -i -r "$winid" -b toggle,hidden
+      exec "$0" "summon" "$new_mark"
     else
+      [[ -e current ]] && mv current previous
+      ln -svf "$mark" current
       wmctrl -i -r "$winid" -b remove,hidden
       wmctrl -i -a "$winid"
     fi
