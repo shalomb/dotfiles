@@ -25,8 +25,15 @@ function __my_git_ps1 {
     printf '\001%s\002%s\001%s\002' "$green_36" "$git_ps1_text" "$reset"
   fi
 
-  if ahead=$(grep -iPo "(?:behind|ahead of) '.*?' by \d+" <<<"$gs" | grep -Po '\d+$'); then
-    printf '\001%s\002%s\001%s\002'  "$bold$red_196" "+$ahead" "$reset"
+  divergence_text=$(grep -iPo "(?:behind|ahead of) '.*?' by \d+" <<<"$gs")
+
+  divergence_symbol=''
+  grep -iq "ahead"  <<<"$divergence_text" && divergence_symbol+='+'
+  grep -iq "behind" <<<"$divergence_text" && divergence_symbol+='-'
+
+  if divergence_amount=$(grep -Po '\d+$' <<<"$divergence_text"); then
+    printf '\001%s\002%s\001%s\002' \
+      "$bold$red_196" "$divergence_symbol$divergence_amount" "$reset"
     return
   fi
 
