@@ -3,6 +3,10 @@
 function __my_git_ps1 {
   git_ps1_text=$(__git_ps1 '%s')
 
+  if [[ -z $git_ps1_text ]] || (( ${#git_ps1_text} == 0 )); then
+    printf '\001%s\002%s\001%s\002'  "$bold$grey_236" "-" "$reset"
+    return
+  fi
   s=0
 
   git_ps1_text="${git_ps1_text//feature\//f\/}"
