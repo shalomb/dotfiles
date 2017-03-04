@@ -1,0 +1,3 @@
+" digraphs
+
+set digraph
