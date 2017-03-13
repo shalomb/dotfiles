@@ -35,8 +35,7 @@ nnoremap <C-W><C-W>                   <C-W>p
 " nnoremap <buffer>          ;          :
 " nnoremap <buffer>          :          ;
 
-nnoremap <buffer>         S          :,%s@\v@gci<Left><Left><Left><Left>
-nnoremap <buffer> <expr>  M          ':%s@\v' . @/ . '@@gci<left><left><left><left>'
+nnoremap <buffer>         S          :,%s@\v@@gi<Left><Left><Left><Left>
 
 cnoremap %% <C-R>=fnameescape(expand('%:h:p')).'/'<cr>
 map <leader>ee    :edit     %%
