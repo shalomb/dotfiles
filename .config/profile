@@ -84,17 +84,20 @@ HOST="${HOST:-"$HOSTNAME"}";              export HOST;
 LANG="en_GB.UTF-8";                       export LANG;
 LC_ALL="en_GB.UTF-8";                     export LC_ALL;
 
+USER="${USER:-`id -un`}"
+
+set -xv
 # Redirect $TMP to ~/.tmp
 TMP=/tmp/"$USER"
-[ -e "$TMP" ]       || mkdir -p "$TMP"
-[ -e "$HOME/.tmp" ] || ln -sf "$TMP" "$HOME/.tmp" 
+PRIVATE_TMP="$HOME/.tmp"
+[ ! -e "$TMP" ] && (umask 027; mkdir -p "$TMP")
+[ `readlink -f "$PRIVATE_TMP"` != "$TMP" ] && ln -sf "$TMP/" "$PRIVATE_TMP"
+set +xv
 
-chown   "$USER":"$USER" "$TMP"
-chmod -R 5750 "$TMP"
-
-   TMP="$HOME/.tmp"; export    TMP;
-  TEMP="$TMP";       export   TEMP;
-TMPDIR="$TMP";       export TMPDIR;
+   TMP="$PRIVATE_TMP"; export    TMP;
+  TEMP="$TMP";         export   TEMP;
+TMPDIR="$TMP";         export TMPDIR;
+unset PRIVATE_TMP
 
 # Shell Specifics
 # We now go on to setup the env. for the interactive command shell.
@@ -113,7 +116,7 @@ LESSHISTSIZE="512";                       export LESSHISTSIZE;
 LESSKEY="$XDG_CONFIG_HOME/less/lesskey";  export LESSKEY;
 LESS=' -RCi';                             export LESS;
 type -p lesspipe &>/dev/null && eval "$(lesspipe)";
-                                          export LESSOPEN;
+
 # colourise manpages
 # Begin blink
 export LESS_TERMCAP_mb=$'\E[01;31m';      export LESS_TERMCAP_mb;
