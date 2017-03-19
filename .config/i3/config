@@ -80,6 +80,7 @@ mode "workspace control" {
   bindsym Control+Shift+l         move workspace to output right
 
   bindsym Escape          mode "default"
+  bindsym Return          exec gmrun $(tail -n 1 ~/.gmrun_history) ; mode "default"
 }
 
 mode "window control" {
