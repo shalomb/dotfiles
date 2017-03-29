@@ -91,7 +91,10 @@ set -xv
 TMP=/tmp/"$USER"
 PRIVATE_TMP="$HOME/.tmp"
 [ ! -e "$TMP" ] && (umask 027; mkdir -p "$TMP")
-[ `readlink -f "$PRIVATE_TMP"` != "$TMP" ] && ln -sf "$TMP/" "$PRIVATE_TMP"
+if [ `readlink -f "$PRIVATE_TMP"` != "$TMP" ]; then
+  rm "$PRIVATE_TMP"
+  ln -sf "$TMP/" "$PRIVATE_TMP"
+fi
 set +xv
 
    TMP="$PRIVATE_TMP"; export    TMP;
