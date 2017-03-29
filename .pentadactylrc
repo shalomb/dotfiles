@@ -84,6 +84,7 @@ cmap -builtin <C-e>        <End>
 cmap -builtin <C-h>        <Left>
 cmap -builtin <C-l>        <Right>
 
+nmap          ,yj          -ex :clip $j
 nmap          ,ym          -ex :clip $m
 nmap          ,yd          -ex :clip $fqdn
 nmap          ,yu          -ex :clip $u

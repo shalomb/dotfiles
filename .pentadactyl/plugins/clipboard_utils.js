@@ -46,6 +46,12 @@ function clipExpand(v) {
     case '$u':
       r = window.content.location.href;
       break;
+    case '$jira':
+    case '$j':
+      r = '[' + clipExpand('$t') + '|' + clipExpand('$u') + ']';
+      r = r.replace( /\[\[/, "[" )
+      r = r.replace( /\]\ */, "][" )
+      break;
     case '$markdown':
     case '$m':
       r = '[' + clipExpand('$t') + '](' + clipExpand('$u') + ')';
