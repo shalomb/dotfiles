@@ -1,0 +1,3 @@
+#!/bin/bash
+
+wn "${1:-wordnet}" -over | "${PAGER:-less}"
