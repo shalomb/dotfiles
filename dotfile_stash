@@ -60,7 +60,10 @@ for my $file ( map { bsd_glob $_ } @globs ) {
 
   my $src_file = readlink_f $file // $file;
   
-  next if not length $dst_file or not -e $src_file;
+  do {
+    warn "$src_file : $!\n";
+    next 
+  } if not length $dst_file or not -e $src_file;
 
   if    ( -d $src_file ) {
     link_directory_contents($src_file, $dst_file);
