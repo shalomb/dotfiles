@@ -1,0 +1,92 @@
+#!/usr/bin/perl -l
+
+# xkcdpwgen '%[2-9] %adjective %adjective %nouns %verb %adverb%{s/\b(\w)/ uc "$1" /eg;s/\s+/-/g}'
+
+use strict;
+use warnings;
+use Data::Dumper;
+
+sub helpmsg {
+  print <<'EOF'
+xkcdpwgen 'FORMAT_SPECIFIER'
+
+e.g.
+xkcdpwgen '%[2-9] %adjective %adjective %nouns %verb %adverb%{s/\b(\w)/ uc "$1" /eg;s/\s+/-/g}'
+xkcdpwgen '%adjective %nouns %verb%{ $_=join "-", map ucfirst, split }'
+EOF
+}
+
+helpmsg and exit 3 if not scalar @ARGV;
+
+sub read_from {
+  my ($file, $count, $min, $max) = (@_, 3, 8);
+
+  open my $fh, '-|', "shuf -n${count}00 /usr/share/wordnet/" . $file 
+    or die "$!";
+
+  my @p;
+  my $c = 1;
+  while (<$fh>) {
+    my $word = +(split /\s/, $_)[4] ;
+    if ( length($word) >= $min and length($word) <= $max ) {
+      next if $word =~ /^the|a|is|i.?e.?$/i;
+      next if $word =~ /^[[:upper:]]/;
+      $word =~ s/\W//;
+      $word =~ s/_/-/;
+      push @p, $word;
+      last if $c++ >= $count;
+    }
+  }
+  @p
+}
+
+my %dispatch = (
+  adverb    => sub { read_from 'data.adv',  1; },
+  adjective => sub { read_from 'data.adj',  1; },
+  noun      => sub { read_from 'data.noun', 1; },
+  nouns     => sub { map { s/s?$/s/; $_; }      read_from 'data.noun', 1; },
+  verb      => sub { map { $$%2 ==  1 ? do { s/e$//; $_ . "ing" } : $_
+                         } read_from 'data.verb', 1; },
+);
+
+srand($$);
+
+sub fill {
+  my ($arg, $mod) = (@_);
+  if ( $dispatch{$arg} ) {
+    $_ = sprintf "%s", $dispatch{$arg}->();
+  } else {
+    warn "No dispatch for item '$arg'\n";
+  }
+  eval "$mod" if defined $mod;
+  $_;
+}
+
+sub fill_pattern {
+  my ($arg, $min_count, $max_count) = (@_, 1, 1);
+
+  $min_count //= 1;
+  if ( not defined $max_count and defined $min_count ) {
+    $max_count = $min_count;
+    $min_count = 1;
+  }
+  ($min_count, $max_count) = ($max_count, $min_count) if $min_count > $max_count;
+
+  my @c = grep /[$arg]/, map chr, 32..127;
+  my @r; push @r,  @c[ rand()*$$ % scalar @c ]  while $max_count-- >= $min_count;
+  join "", @r;
+}
+
+use v5.24;
+my $fmt = $ARGV[0];
+
+$fmt =~ s/%(\w+)(?:\{(.+?)\})?/     fill $1, $2 /eg;
+$fmt =~ s/%\[(.+?)\](?:\{(\d+)\})?/ fill_pattern $1, $2 /eg;
+$fmt = do {
+  $_ = $fmt;
+  eval "$2" if /(%\{(.+?)\})/;
+  s/%\{(.+?\})//g;
+  $_;
+};
+print "$fmt";
+
