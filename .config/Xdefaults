@@ -15,9 +15,33 @@ URxvt*cursorColor2:     #3399cc
 
 URxvt.keysym.M-u    :  perl:mark-yank-urls:activate_mark_mode
 URxvt.perl-lib      :  /home/unop/.local/lib/urxvt
-URxvt.perl-ext      :  selection,mark-yank-urls
-URxvt.urlLauncher   :  firefox
+URxvt.perl-ext      :  selection,mark-yank-urls,default,matcher,font-size,selection-to-clipboard
+URxvt.urlLauncher   :  xdg-open
 URxvt.underlineURLs :  true
+
+! Ensure font-size is included in your URxvt.perl-ext comma separated list of extensions, like below
+URxvt.font-size.step: 1
+! Bind Ctrl+Up and Ctrl+Down to font increment and decrement respectively
+URxvt.keysym.CM-Up:     perl:font-size:incglobal
+URxvt.keysym.CM-Down:   perl:font-size:decglobal
+
+! URxvt.letterSpace:      -1
+URxvt.resize-font.smaller: C-Down
+URxvt.resize-font.bigger: C-Up
+
+! URxvt.font: 9x15
+! URxvt.font:             xft:monaco:size=10,true
+URxvt*font:             xft:Bitstream Vera Sans mono:size=10,antialiased=true
+URxvt.italicFont:       xft:Bitstream Vera Sans Mono:italic:autohint=true
+URxvt.boldFont:         xft:Bitstream Vera Sans Mono:bold:autohint=true
+URxvt.boldItalicFont:   xft:Bitstream Vera Sans Mono:bold:italic:autohint=true
+! URxvt*font:             xft:Droid Sans Mono:size=10,style=Regular,antialiased=true
+!URxvt*font:             xft:Bitstream Vera Sans mono:size=9,antialiased=true
+!urXVT.FOnt:            9x15,xft:Kochi Gothic:antialiased=true
+
+URxvt.iso14755: false
+URxvt.iso14755_52: false
+
 
 URxvt*inheritPixmap:    true
 URxvt*transparent:      true
@@ -65,52 +89,47 @@ URxvt*color14:          #54FFFF
 ! bright white 
 URxvt*color15:          #FFFFFF
 
-! URxvt*font:             xft:Bitstream Vera Sans mono:size=9,antialiased=true
-URxvt*font:             xft:Droid Sans Mono:size=10,style=Regular,antialiased=true
-!URxvt*font:             xft:Bitstream Vera Sans mono:size=9,antialiased=true
-!urXVT.FOnt:            9x15,xft:Kochi Gothic:antialiased=true
+! black
+XTerm*color0:           #000000
+! red
+XTerm*color1:           #b21818
+! green
+XTerm*color2:           #18b218
+! yellow
+XTerm*color3:           #BE5F00
+! blue 
+XTerm*color4:           #6D85BA
+! magenta
+XTerm*color5:           #b218b2
+! cyan 
+XTerm*color6:           #18b2b2
+! white 
+XTerm*color7:           #b2b2b2
+! bight black 
+XTerm*color8:           #686868
+! bright red 
+XTerm*color9:           #FF5454
+! bright green 
+XTerm*color10:          #54FF54
+! bright yellow 
+XTerm*color11:          #FFFF54
+! bright blue 
+XTerm*color12:          #73C5FF
+! bright magenta
+XTerm*color13:          #FF54FF
+! bright cyan 
+XTerm*color14:          #54FFFF
+! bright white 
+XTerm*color15:          #FFFFFF
 
-! ! black
-! XTerm*color0:           #000000
-! ! red
-! XTerm*color1:           #b21818
-! ! green
-! XTerm*color2:           #18b218
-! ! yellow
-! XTerm*color3:           #BE5F00
-! ! blue 
-! XTerm*color4:           #6D85BA
-! ! magenta
-! XTerm*color5:           #b218b2
-! ! cyan 
-! XTerm*color6:           #18b2b2
-! ! white 
-! XTerm*color7:           #b2b2b2
-! ! bight black 
-! XTerm*color8:           #686868
-! ! bright red 
-! XTerm*color9:           #FF5454
-! ! bright green 
-! XTerm*color10:          #54FF54
-! ! bright yellow 
-! XTerm*color11:          #FFFF54
-! ! bright blue 
-! XTerm*color12:          #73C5FF
-! ! bright magenta
-! XTerm*color13:          #FF54FF
-! ! bright cyan 
-! XTerm*color14:          #54FFFF
-! ! bright white 
-! XTerm*color15:          #FFFFFF
-
-! XTerm*cursorColor:      #AA5454
-!:XTerm*colorBD:          #7f2a19
-!:XTerm*colorBDMode:      true
+XTerm*cursorColor:      #AA5454
+! XTerm*colorBD:          #7f2a19
+! XTerm*colorBDMode:      true
 
 !XTerm*faceName:         Bitstream Vera Sans mono:size=8,antialiased=true
-Xterm*faceName:           Bitstream Vera Sans Mono:size=12:style=Book:antialias=true
-Xterm*font:               Bitstream Vera Sans Mono:size=14:style=Book:antialias=true
-Xterm*faceNameDoublesize: WenQuanYi Bitmap Song
+! Xterm*faceName:           Bitstream Vera Sans Mono:size=12:style=Book:antialias=true
+! Xterm*font:               Bitstream Vera Sans Mono:size=14:style=Book:antialias=true
+! Xterm*faceNameDoublesize: WenQuanYi Bitmap Song
 Xterm*visualBell:         True
 
 ! Forbid bold font faces; bold type is light blue.
@@ -222,3 +241,5 @@ xscreensaver.passwd.thermometer.foreground:  #dc322f
 xscreensaver.passwd.thermometer.width:       3
 xscreensaver.dateFormat:                     %a %FT%T
 
+! URxvt.font: 9x15bold
+! URxvt.font: xft:monaco:bold:size=10
