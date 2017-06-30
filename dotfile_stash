@@ -17,6 +17,7 @@ use File::Glob      qw[:glob];
 use File::Path      qw[make_path remove_tree];
 use File::Spec      qw[catfile];
   sub fsc { File::Spec->catfile(@_) }
+use File::Which     qw[which where]; 
 use List::Util      qw[reduce];
 
 local $\ = "\n";
@@ -29,10 +30,12 @@ sub readlink_f;
 
 usage() if not scalar @ARGV;
 
-my %action; @action{('import', 'export')} = (0,0);
+my @allowed_actions = qw[import export status];
+
+my %action; @action{@allowed_actions} = (0,0);
 $action{ +(shift) } = 1;
 
-usage() if not reduce { our $a + our $b } @action{('import', 'export')};
+usage() if not reduce { our $a + our $b } @action{ @allowed_actions };
 
 $ENV{df_force} = 1;  # Force create links by default
 
@@ -53,6 +56,16 @@ for my $file ( map { bsd_glob $_ } @globs ) {
   }
   elsif ($action{'export'})  {
     ($dst_file) = (fsc($ENV{HOME}, $file));
+  }
+  elsif ($action{'status'})  {
+    ($dst_file) = (fsc($ENV{HOME}, $file));
+
+    my $git = which('git');
+    system { $git } $git, (qw<status --porcelain>, $file);
+
+    my $diff = which('diff');
+    my $exit_code = system { $diff } $diff, ('-q', $file, $dst_file);
+    exit ($exit_code >> 8);
   }
   else  {
     die "Unknown action, aborting ... "
