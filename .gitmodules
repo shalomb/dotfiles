@@ -172,3 +172,6 @@
 [submodule ".vim/bundle/tslime"]
 	path = .vim/bundle/tslime
 	url = https://github.com/jgdavey/tslime.vim.git
+[submodule ".vim/bundle/dockerfile"]
+	path = .vim/bundle/dockerfile
+	url = https://github.com/ekalinin/Dockerfile.vim.git
