@@ -92,9 +92,8 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/vim-scripts/VST.git                   bundle/vst     # Vim reStructured Text
   git submodule add -f https://github.com/zirrostig/vim-schlepp.git             bundle/schlepp
 
-  git submodule init
-  git submodule update --init --recursive
   git submodule -q foreach git pull -q origin master
+  git submodule update --init --recursive
   git submodule status
 )
 
