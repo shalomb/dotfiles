@@ -1,3 +1,3 @@
 " digraphs
 
-set digraph
+" set digraph
