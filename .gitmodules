@@ -175,3 +175,7 @@
 [submodule ".vim/bundle/dockerfile"]
 	path = .vim/bundle/dockerfile
 	url = https://github.com/ekalinin/Dockerfile.vim.git
+[submodule ".tmux/plugins/tpm"]
+	path = .tmux/plugins/tpm
+	url = https://github.com/tmux-plugins/tpm.git
+
