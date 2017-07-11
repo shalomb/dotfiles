@@ -37,7 +37,27 @@ highlight DiffDelete   ctermfg=196  ctermbg=160  cterm=NONE
 highlight DiffText     ctermfg=16   ctermbg=214  cterm=NONE
 
 " cursor
-if &term =~ "xterm\\|rxvt\\|screen-256color"
+if exists('$TMUX')
+  " Changing cursor shape per mode
+  " 1 or 0 -> blinking block
+  " 2 -> solid block
+  " 3 -> blinking underscore
+  " 4 -> solid underscore
+  " 5 -> blinking vertical bar
+  " 6 -> solid vertical bar
+
+  " tmux will only forward escape sequences to the terminal if surrounded by a
+  " DCS sequence
+
+  " Insert Mode Cursor
+  let &t_SI .= "\<Esc>Ptmux;\<Esc>\<Esc>[6 q\<Esc>\\" 
+
+  " setup the cursor shape when vim is started
+  autocmd VimEnter * silent !echo -ne "\033Ptmux;\033\033[4 q\033\\"
+  " Normal Mode Cursor
+  let &t_EI .= "\<Esc>Ptmux;\<Esc>\<Esc>[4 q\<Esc>\\"
+
+elseif &term =~ "xterm\\|rxvt\\|screen-256color"
   " use a red cursor otherwise
   let &t_EI = "\<Esc>]12;red\x7"
   " use an orange cursor in insert mode
