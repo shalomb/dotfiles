@@ -1,3 +1,15 @@
 #!/bin/bash
 
-echo -ne "\033]12;orange\007"
+# set_cursor_colour
+
+# tmux
+if [[ ${TMUX-} ]]; then
+  # cursor shape is a short underscore
+  # see .vim/rc6.d/colours.vim for codes
+  printf '\033Ptmux;\033\033[4 q\033\\'
+  # cursor color
+  printf '\033Ptmux;\033\033]12;red\007\033\\'
+else
+  # rxvt
+  printf '\033]12;red\007'
+fi
