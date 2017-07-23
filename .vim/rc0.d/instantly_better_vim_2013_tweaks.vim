@@ -40,8 +40,8 @@ highlight ColorColumn ctermbg=magenta
 "====[ Make tabs, trailing whitespace, and non-breaking spaces visible ]======
 
     exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~,eol:$"
-    set listchars=precedes:<,extends:>
-    set list
+    set listchars+=precedes:<,extends:>
+    set list!
 
 
 "====[ Swap : and ; to make colon commands easier to type ]======
