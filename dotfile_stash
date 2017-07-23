@@ -1,23 +1,24 @@
 #!/usr/bin/perl
 
 # NAME
-#   dotfile_stash - import/export dotfiles 
+#   dotfile_stash - import/export dotfiles
 #
 # SYNOPSIS
 #   dotfile_stash [import|export] files
+#   dotfile_stash [status|diff]   files
 
 use strict;
 use warnings;
 
 use Cwd;
 use File::Basename  qw[basename dirname];
-use File::Find; 
+use File::Find;
   no warnings 'File::Find';
 use File::Glob      qw[:glob];
 use File::Path      qw[make_path remove_tree];
 use File::Spec      qw[catfile];
   sub fsc { File::Spec->catfile(@_) }
-use File::Which     qw[which where]; 
+use File::Which     qw[which where];
 use List::Util      qw[reduce];
 
 local $\ = "\n";
@@ -80,10 +81,10 @@ for my $file ( map { bsd_glob $_ } @globs ) {
   }
 
   my $src_file = readlink_f $file // $file;
-  
+
   do {
     warn "$src_file : $!\n";
-    next 
+    next
   } if not length $dst_file or not -e $src_file;
 
   if    ( -d $src_file ) {
