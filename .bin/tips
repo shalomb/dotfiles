@@ -11,7 +11,7 @@
 
 # DESCRIPTION
 
-shopt -s extglob nocaseglob nocasematch 
+shopt -s extglob nocaseglob nocasematch
 
 tipsdir=~/Desktop/tips
 
@@ -34,11 +34,21 @@ elif [[ $1 = "/" ]]; then
   exit $?;
 fi
 
+search_terms=()
+
 for glob in "$@"; do
-  while read -d $'' file; do
-    files+=( "$file" ) 
-  done < <( find * \( -name ".[!.]?*" -prune \) \
-    -o -ipath "*$glob*" -print0 | sort -z )
+
+  if [[ ${glob:0:1} = "/" && ${glob:${#glob}-1} = "/" ]]; then
+    search_term="$glob"
+    search_term="${search_term##/}"
+    search_term="${search_term%%/}"
+    search_terms+=( "$search_term" )
+  else
+    while read -d $'' file; do
+      files+=( "$file" )
+    done < <( find * \( -name ".[!.]?*" -prune \) \
+                -o -ipath "*$glob*" -print0 | sort -z )
+  fi
 done
 
 if (( ${#files[@]} == 0 )); then
@@ -49,7 +59,7 @@ if (( ${#files[@]} == 0 )); then
   fi
 fi
 
-files=( "${files[@]//\/\///}" ) 
+files=( "${files[@]//\/\///}" )
 files=( "${files[@]//\*/}"    )
 
 for f in "${files[@]}"; do
@@ -59,8 +69,10 @@ for f in "${files[@]}"; do
   fi
 done
 
-( IFS=$', '; echo "$PWD: Editing ${files[*]}" );
+echo "$0 [$PWD]: Editing the following .. "
+printf "  %s\n" ${files[@]}
 
-editor "${files[@]}"  # assuming a sane editor!!
+search_term="${search_terms[@]}"
+vim -c "silent! /${search_term// /\\|}/e" -c 'norm ggnzv' "${files[@]}"
 
 cd "$oldpwd"
