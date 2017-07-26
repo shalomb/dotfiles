@@ -32,7 +32,7 @@ function gb  { _git_alias_cmd_wrapper "branch  " "$@"; }
 function gco { _git_alias_cmd_wrapper "checkout" "$@"; }
 function gd  { _git_alias_cmd_wrapper "diff"     "$@"; }
 function gl  { _git_alias_cmd_wrapper "log"      "$@"; }
-function gs  { _git_alias_cmd_wrapper "status"   "$@"; }
+function gs  { _git_alias_cmd_wrapper "st" --short "$@"; }
 
 function gcm {
   local args=( "$@" )

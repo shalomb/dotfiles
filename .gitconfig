@@ -49,7 +49,7 @@
   pom     = push origin master
   pum     = pull origin master
   s       = status --porcelain
-  st      = status
+  st      = status --short
   tree    = log --graph --oneline --decorate
   vimdiff = difftool -y -t vimdiff
 
