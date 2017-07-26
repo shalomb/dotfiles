@@ -41,8 +41,8 @@
   ec      = config -e
   ign     = ls-files -o -i --exclude-standard
   k       = !gitk
-  lg      = log -p
-  lgp     = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+  lg      = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+  lgp     = log -p
   lol     = log --graph --decorate --pretty=oneline --abbrev-commit
   lola    = log --graph --decorate --pretty=oneline --abbrev-commit --all
   ls      = ls-files
