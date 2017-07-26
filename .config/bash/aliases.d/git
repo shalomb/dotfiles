@@ -33,6 +33,8 @@ function gco { _git_alias_cmd_wrapper "checkout" "$@"; }
 function gd  { _git_alias_cmd_wrapper "diff"     "$@"; }
 function gl  { _git_alias_cmd_wrapper "lg"       "$@"; }
 function glp { _git_alias_cmd_wrapper "lgp"      "$@"; }
+function gp  { command git pull                  "$@"; }
+function gP  { command git push                  "$@"; }
 function gs  { _git_alias_cmd_wrapper "st" --short "$@"; }
 
 function gcm {
