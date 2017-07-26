@@ -11,6 +11,23 @@
   status       = auto
   ui           = auto
 
+[color "status"]
+  header    = 246 bold   # white
+  added     = 42  bold   # green
+  changed   = 160 bold   # red
+  untracked = 75  bold   # blue
+
+[color "branch"]
+  current   = 42  bold   # green
+  local     = 75  dim    # blue
+  remote    = 166 dim    # green
+
+[color "diff"]
+  meta      = 248 dim    # white
+  frag      = 75  bold   # blue
+  old       = 160 dim    # red
+  new       = 42  bold   # green
+
 [core]
   editor = vim
 
