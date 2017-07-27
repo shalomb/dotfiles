@@ -6,6 +6,14 @@
 _git_cmd=''
 _git_args=()
 
+gh_script=$BASH_SOURCE
+
+function gh {
+  while read -r _ c _ r; do
+    printf "  %-5s - %s\n" "$c" "$r"
+  done < <( grep -iE '^#\|' "$gh_script" | sort ) | column -s - | "$PAGER"
+}
+
 function _git {
   local cmd="$1"; shift;
   local args=( "$@" )
@@ -27,19 +35,30 @@ function _git {
   command git "$cmd" "${args[@]}"
 }
 
+#| ga - git add
 function ga  { _git "add"      "$@"; }
+#| gd - git diff -b -w
 function gd  { _git "diff" -b -w "$@"; }
+#| gl - git lg
 function gl  { _git "lg"       "$@"; }
+#| gls - git ls
+function gls { _git "ls" "$@"; }
+#| glp - git lgp
 function glp { _git "lgp"      "$@"; }
+#| gp - git pull
 function gp  { command git pull                  "$@"; }
+#| gP - git push
 function gP  { command git push                  "$@"; }
+#| gs - git st --short
 function gs  { _git "st" --short "$@"; }
 
+#| gb - git branch
 function gb  {
   _git "branch"   "$@";
   old_branch=$(git branch | awk '/*/{print $2}');
 }
 
+#| gco - git checkout
 function gco {
   if [[ $# == 0 ]]; then
     if [[ ${old_branch-} ]]; then
@@ -52,6 +71,7 @@ function gco {
   _git "checkout" "$@";
 }
 
+# gcm - git commit -m
 function gcm {
   local args=( "$@" )
 
@@ -65,11 +85,16 @@ function gcm {
   fi
 }
 
+#| g - git
     alias g=git
 complete -o bashdefault -o default -o nospace -F __git_wrap__git_main g
 
+#| gca - ga; gcm
   alias gca='ga; gcm '
+#| gpom - git push origin master
  alias gpom='git push origin master'
+#| gk - gitk --all
    alias gk='gitk --all &'
+#| gx - gitx --all
    alias gx='gitx --all'
 
