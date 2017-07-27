@@ -8,6 +8,7 @@ _git_args=()
 
 gh_script=$BASH_SOURCE
 
+#| gh - this screen
 function gh {
   while read -r _ c _ r; do
     printf "  %-5s - %s\n" "$c" "$r"
@@ -46,9 +47,9 @@ function gls { _git "ls" "$@"; }
 #| glp - git lgp
 function glp { _git "lgp"      "$@"; }
 #| gp - git pull
-function gp  { command git pull                  "$@"; }
+function gp  { [[ $# = 0 ]] && set -- origin $(git branch | awk '/*/{print $2}'); command git pull "$@"; }
 #| gP - git push
-function gP  { command git push                  "$@"; }
+function gP  { [[ $# = 0 ]] && set -- origin $(git branch | awk '/*/{print $2}'); command git push "$@"; }
 #| gs - git st --short
 function gs  { _git "st" --short "$@"; }
 
