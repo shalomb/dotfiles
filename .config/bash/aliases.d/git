@@ -6,7 +6,7 @@
 _git_cmd=''
 _git_args=()
 
-function _git_alias_cmd_wrapper {
+function _git {
   local cmd="$1"; shift;
   local args=( "$@" )
 
@@ -24,18 +24,18 @@ function _git_alias_cmd_wrapper {
   fi
   _git_args=( "${args[@]}" )
 
-  git "$cmd" "${args[@]}"
+  command git "$cmd" "${args[@]}"
 }
 
-function ga  { _git_alias_cmd_wrapper "add"      "$@"; }
-function gb  { _git_alias_cmd_wrapper "branch"   "$@"; }
-function gco { _git_alias_cmd_wrapper "checkout" "$@"; }
-function gd  { _git_alias_cmd_wrapper "diff" -b -w "$@"; }
-function gl  { _git_alias_cmd_wrapper "lg"       "$@"; }
-function glp { _git_alias_cmd_wrapper "lgp"      "$@"; }
+function ga  { _git "add"      "$@"; }
+function gb  { _git "branch"   "$@"; }
+function gco { _git "checkout" "$@"; }
+function gd  { _git "diff" -b -w "$@"; }
+function gl  { _git "lg"       "$@"; }
+function glp { _git "lgp"      "$@"; }
 function gp  { command git pull                  "$@"; }
 function gP  { command git push                  "$@"; }
-function gs  { _git_alias_cmd_wrapper "st" --short "$@"; }
+function gs  { _git "st" --short "$@"; }
 
 function gcm {
   local args=( "$@" )
