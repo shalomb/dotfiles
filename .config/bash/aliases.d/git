@@ -28,14 +28,29 @@ function _git {
 }
 
 function ga  { _git "add"      "$@"; }
-function gb  { _git "branch"   "$@"; }
-function gco { _git "checkout" "$@"; }
 function gd  { _git "diff" -b -w "$@"; }
 function gl  { _git "lg"       "$@"; }
 function glp { _git "lgp"      "$@"; }
 function gp  { command git pull                  "$@"; }
 function gP  { command git push                  "$@"; }
 function gs  { _git "st" --short "$@"; }
+
+function gb  {
+  _git "branch"   "$@";
+  old_branch=$(git branch | awk '/*/{print $2}');
+}
+
+function gco {
+  if [[ $# == 0 ]]; then
+    if [[ ${old_branch-} ]]; then
+      set -- "$old_branch"
+    else
+      set -- "develop"
+    fi
+  fi
+  old_branch=$(git branch | awk '/*/{print $2}');
+  _git "checkout" "$@";
+}
 
 function gcm {
   local args=( "$@" )
