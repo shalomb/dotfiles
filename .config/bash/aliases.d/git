@@ -40,6 +40,32 @@ function _git {
 function ga  { _git "add"      "$@"; }
 #| gd - git diff -b -w
 function gd  { _git "diff" -b -w "$@"; }
+#| gfbd - git flow bugfix finish
+function gfbd { [[ $# = 0 ]] && set -- $(gbr); command git flow bugfix finish "$@"; }
+#| gfbl - git flow bugfix list
+function gfbl { command git flow bugfix list "$@"; }
+#| gfbs - git flow bugfix start
+function gfbs { command git flow bugfix start "$@"; }
+
+#| gffco - <checkout feature branch>
+function gffco { 
+  branch="$1"
+  available=( $( gffl | sed 's/\*//' | grep -iP "$1" ) )
+  if (( ${#available[@]} > 1 )); then
+    { echo 'Multiple branches available ..'
+      printf "  %s\n" "${available[@]}";
+    } >&2
+  else
+    gco "feature/$available"
+  fi
+}
+
+#| gffd - git flow feature finish
+function gffd { [[ $# = 0 ]] && set -- $(gbr); command git flow feature finish "$@"; }
+#| gffl - git flow feature list
+function gffl { command git flow feature list "$@"; }
+#| gffs - git flow feature start
+function gffs { command git flow feature start "$@"; }
 #| gl - git lg
 function gl  { _git "lg"       "$@"; }
 #| gls - git ls
@@ -47,28 +73,56 @@ function gls { _git "ls" "$@"; }
 #| glp - git lgp
 function glp { _git "lgp"      "$@"; }
 #| gp - git pull
-function gp  { [[ $# = 0 ]] && set -- origin $(git branch | awk '/*/{print $2}'); command git pull "$@"; }
+function gp  { [[ $# = 0 ]] && set -- origin $(gbr); command git pull "$@"; }
 #| gP - git push
-function gP  { [[ $# = 0 ]] && set -- origin $(git branch | awk '/*/{print $2}'); command git push "$@"; }
+function gP  { [[ $# = 0 ]] && set -- origin $(gbr); command git push "$@"; }
 #| gs - git st --short
 function gs  { _git "st" --short "$@"; }
 
 #| gb - git branch
 function gb  {
-  _git "branch"   "$@";
-  old_branch=$(git branch | awk '/*/{print $2}');
+  if _git "branch"   "$@"; then
+    [[ $# != 0 ]] && old_branch="$@"
+  else
+    old_branch=$(gbr);
+  fi
+}
+
+#| gbd - git branch -d
+function gbd {
+  bye_branch=$(gbr)
+  gco && command git branch -d "$bye_branch"
+}
+
+#| gbr - current branch
+function gbr {
+  git branch | awk '/^*/{print $2}'
 }
 
 #| gco - git checkout
 function gco {
+  # TODO
+  # Manage a branch stack - gbpush/gbpop
   if [[ $# == 0 ]]; then
     if [[ ${old_branch-} ]]; then
       set -- "$old_branch"
     else
       set -- "develop"
     fi
+  elif [[ $# == 1 ]]; then
+    available=( $( git branch | sed -r -e 's/^\*//' -e 's/\ +//' | grep -iP -- "$1" ) )
+    if [[ -z $available ]]; then
+      { echo "No branch names match '$1', aborting .."; } >&2; return
+    elif (( ${#available[@]} > 1 )); then
+      { echo 'Multiple branches available ..'
+        printf "  %s\n" "${available[@]}";
+      } >&2
+      return
+    else
+      set -- "$available"
+    fi
   fi
-  old_branch=$(git branch | awk '/*/{print $2}');
+  old_branch=$(gbr);
   _git "checkout" "$@";
 }
 
