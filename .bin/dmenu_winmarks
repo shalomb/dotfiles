@@ -2,6 +2,10 @@
 
 candidates=()
 
+if [[ ! -d ~/.config/winmarks ]]; then
+  mkdir    ~/.config/winmarks
+fi
+
 cd ~/.config/winmarks
 
 if (( $# > 0 )); then
