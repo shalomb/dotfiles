@@ -86,7 +86,6 @@ LC_ALL="en_GB.UTF-8";                     export LC_ALL;
 
 USER="${USER:-`id -un`}"
 
-set -xv
 # Redirect $TMP to ~/.tmp
 TMP=/tmp/"$USER"
 PRIVATE_TMP="$HOME/.tmp"
@@ -95,7 +94,6 @@ if [ `readlink -f "$PRIVATE_TMP"` != "$TMP" ]; then
   rm "$PRIVATE_TMP"
   ln -sf "$TMP/" "$PRIVATE_TMP"
 fi
-set +xv
 
    TMP="$PRIVATE_TMP"; export    TMP;
   TEMP="$TMP";         export   TEMP;
