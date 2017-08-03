@@ -21,6 +21,7 @@
   current   = 42  bold   # green
   local     = 75  dim    # blue
   remote    = 166 dim    # green
+  upstream  = 160 dim    # red
 
 [color "diff"]
   meta      = 248 dim    # white
