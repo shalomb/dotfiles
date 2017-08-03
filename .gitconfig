@@ -78,4 +78,7 @@
 [mergetool]
   prompt = false
 
+[tag]
+  sort = version:refname
+
 # vim:filetype=gitconfig:sw=2:ts=2:et
