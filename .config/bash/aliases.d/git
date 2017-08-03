@@ -3,19 +3,32 @@
 # SYNOPSIS
 #   git(1) aliases
 
-_git_cmd=''
+bash_completion_dir=/usr/share/bash-completion/completions/
+
+local BOLD=$(tput bold)
+local RESET=$(tput sgr0)
+local REVERSE=$(tput rev)
+local BLACK=$(tput setaf 0)
+local RED=$(tput setaf 1)
+local GREEN=$(tput setaf 2)
+local YELLOW=$(tput setaf 3)
+local BLUE=$(tput setaf 4)
+local MAGENTA=$(tput setaf 5)
+local CYAN=$(tput setaf 6)
+local WHITE=$(tput setaf 7)
+
+if [[ -d $bash_completion_dir ]]; then
+  for completion in "$bash_completion_dir"/git*; do
+    source "$completion"
+  done
+else
+  echo "Unable to source git bash-completion, missing $bash_completion_dir" >&2
+fi
+
+git_bar_entry_point=$BASH_SOURCE
+
 _git_args=()
-
-gh_script=$BASH_SOURCE
-
-#| gh - this screen
-function gh {
-  while read -r _ c _ r; do
-    printf "  %-5s - %s\n" "$c" "$r"
-  done < <( grep -iE '^#\|' "$gh_script" | sort ) | column -s - | "$PAGER"
-}
-
-function _git {
+function _git_arg_wrapper {
   local cmd="$1"; shift;
   local args=( "$@" )
 
@@ -37,66 +50,101 @@ function _git {
 }
 
 #| ga - git add
-function ga  { _git "add"      "$@"; }
-#| gd - git diff -b -w
-function gd  { _git "diff" -b -w "$@"; }
-#| gfbd - git flow bugfix finish
-function gfbd { [[ $# = 0 ]] && set -- $(gbr); command git flow bugfix finish "$@"; }
-#| gfbl - git flow bugfix list
-function gfbl { command git flow bugfix list "$@"; }
-#| gfbs - git flow bugfix start
-function gfbs { command git flow bugfix start "$@"; }
-
-#| gffco - <checkout feature branch>
-function gffco { 
-  branch="$1"
-  available=( $( gffl | sed 's/\*//' | grep -iP "$1" ) )
-  if (( ${#available[@]} > 1 )); then
-    { echo 'Multiple branches available ..'
-      printf "  %s\n" "${available[@]}";
-    } >&2
-  else
-    gco "feature/$available"
-  fi
-}
-
-#| gffd - git flow feature finish
-function gffd { [[ $# = 0 ]] && set -- $(gbr); command git flow feature finish "$@"; }
-#| gffl - git flow feature list
-function gffl { command git flow feature list "$@"; }
-#| gffs - git flow feature start
-function gffs { command git flow feature start "$@"; }
-#| gl - git lg
-function gl  { _git "lg"       "$@"; }
-#| gls - git ls
-function gls { _git "ls" "$@"; }
-#| glp - git lgp
-function glp { _git "lgp"      "$@"; }
-#| gp - git pull
-function gp  { [[ $# = 0 ]] && set -- origin $(gbr); command git pull "$@"; }
-#| gP - git push
-function gP  { [[ $# = 0 ]] && set -- origin $(gbr); command git push "$@"; }
-#| gs - git st --short
-function gs  { _git "st" --short "$@"; }
+function ga  { _git_arg_wrapper "add" "$@"; }
 
 #| gb - git branch
 function gb  {
-  if _git "branch"   "$@"; then
+  if [[ $# == 0 ]]; then
+    command git branch --color --sort=committerdate
+    return
+  fi
+  if _git_arg_wrapper "branch" -v "$@"; then
     [[ $# != 0 ]] && old_branch="$@"
   else
     old_branch=$(gbr);
   fi
 }
 
-#| gbd - git branch -d
-function gbd {
-  bye_branch=$(gbr)
-  gco && command git branch -d "$bye_branch"
+#| gba - gb -a
+function gba { command git branch -av "$@"; }
+
+#| gbp - git branch --no-color
+function gbp { command git branch --no-color; }
+
+#| gbv - branch ref info
+function gbv { gbranches | summarize_refs; }
+
+#| gbvv - branch ref info
+function gbvv { gbranches --all | summarize_refs; }
+
+#| gbvvv - branch ref info
+function gbvvv { git for-each-ref --format="%(refname)" | summarize_refs; }
+
+#| g_summarize_refs - print ref summaries
+function summarize_refs {
+  local current=$(gbr);
+  local cmark;
+  local cmark_current="%C($(git config color.branch.current))"
+        cmark_current="${cmark_current:-green}"
+  local cmark_local="%C($(git config color.branch.local))"
+        cmark_local="${cmark_local:-blue}"
+    {
+      if [[ -t 0 ]]; then
+        gbranches
+      else
+        cat -
+      fi
+    } | while read -r ref; do
+    if [[ $ref == $current ]]; then
+      cmark="$cmark_current"
+    elif [[ $ref == @(master|develop) ]]; then
+      cmark="%C(bold magenta)"
+    else
+      cmark="$cmark_local"
+    fi
+    _ref=$(printf "%-16s" "$ref")
+    git log -n1 "$ref" \
+      --date=format:%FT%T \
+      --pretty=format:"$cmark$_ref %C(reset) %C(bold)%h%C(reset) %s %n  %C(142)%cd %C(white)'%cN' <%ce> %C(yellow)%n    (%D) %C(reset)%t, %p %n%n"
+  done | cat -
 }
 
+#| gbranches - list branches
+function gbranches { git branch --sort=committerdate "$@" | awk '{print $NF}'; }
+
+#| gbar - (re-)load git-bar aliases
+function gbar { source "$git_bar_entry_point"; } 
+
+#| gbd - git branch -d
+function gbd {
+  if [[ $# = 0 ]]; then
+    bye_branch=$(gbr)
+    set -- "$bye_branch"
+    gco 
+  fi
+  command git branch -d "$@"
+}
+
+#| gbl - git blame
+function gbl { _git_arg_wrapper blame "$@"; }
+
 #| gbr - current branch
-function gbr {
-  git branch | awk '/^*/{print $2}'
+function gbr { git rev-parse --abbrev-ref HEAD; }
+
+#| gca - ga; gcm
+function gca { ga; gcm "$@"; }
+
+# gcm - git commit -m
+function gcm {
+  local args=( "$@" )
+  if (( ${#args[@]} == 0 )); then
+    git commit
+  else
+    if [[ ${args[0]} != '-'* ]]; then
+      args=( "$@" )
+    fi
+    git commit -m "${args[*]}"
+  fi
 }
 
 #| gco - git checkout
@@ -110,7 +158,7 @@ function gco {
       set -- "develop"
     fi
   elif [[ $# == 1 ]]; then
-    available=( $( git branch | sed -r -e 's/^\*//' -e 's/\ +//' | grep -iP -- "$1" ) )
+    available=( $( gbranches | grep -iP -- "$1" ) )
     if [[ -z $available ]]; then
       { echo "No branch names match '$1', aborting .."; } >&2; return
     elif (( ${#available[@]} > 1 )); then
@@ -121,35 +169,232 @@ function gco {
     else
       set -- "$available"
     fi
+  else
+    command git "$@"
+    return
   fi
   old_branch=$(gbr);
-  _git "checkout" "$@";
+  _git_arg_wrapper "checkout" "$@";
 }
+__git_complete gco _git_checkout
 
-# gcm - git commit -m
-function gcm {
-  local args=( "$@" )
+#| gd - git diff
+function gd  { _git_arg_wrapper "diff" "$@"; }
 
-  if (( ${#args[@]} == 0 )); then
-    git commit
+#| gf - git fetch
+function gf { command git fetch "$@"; }
+
+#| gfa - git fetch --all
+function gfa { gf --all "$@"; }
+
+#| gfbco - <checkout bugfix branch>
+function gfbco { 
+  local branch="$1"
+  local available=( $( gfbl | sed 's/\*//' | grep -iP -- "$1" ) )
+  if (( ${#available[@]} > 1 )); then
+    { echo 'Multiple branches available ..'
+      printf "  %s\n" "${available[@]}";
+    } >&2
   else
-    if [[ ${args[0]} != '-'* ]]; then
-      args=( "$@" )
-    fi
-    git commit -m "${args[*]}"
+    gco "bugfix/$available"
   fi
 }
+
+#| gfbd - git flow bugfix finish
+function gfbd { [[ $# = 0 ]] && set -- $(gbr); command git flow bugfix finish "$@"; }
+
+#| gfbl - git flow bugfix list
+function gfbl { command git flow bugfix list "$@"; }
+
+#| gfbs - git flow bugfix start
+function gfbs { command git flow bugfix start "$@"; }
+
+#| gffco - <checkout feature branch>
+function gffco { 
+  local branch="$1"
+  local available=( $( gffl | sed 's/\*//' | grep -iP -- "$1" ) )
+  if (( ${#available[@]} > 1 )); then
+    { echo 'Multiple branches available ..'
+      printf "  %s\n" "${available[@]}";
+    } >&2
+  else
+    gco "feature/$available"
+  fi
+}
+
+#| gffd - git flow feature finish
+function gffd { [[ $# = 0 ]] && set -- $(gbr); command git flow feature finish "$@"; }
+
+#| gffl - git flow feature list
+function gffl { command git flow feature list "$@"; }
+
+#| gffs - git flow feature start
+function gffs { command git flow feature start "$@"; }
+
+#| gh - this screen
+function gh {
+  while read -r _ c _ r; do
+    printf "  %-5s - %s\n" "$c" "$r"
+  done < <( grep -iE '^#\|' "$git_bar_entry_point" | sort ) | column -s - | "$PAGER"
+}
+
+#| gk - gitk --all
+function gk { gitk --all & }
+
+#| gl - git lg
+function gl  { _git_arg_wrapper "lg" "$@"; }
+
+#| gls - git ls
+function gls { _git_arg_wrapper "ls" "$@"; }
+
+#| glf - git log
+function glf {
+  git log --oneline --date=format:%FT%T --pretty=format:"$@ %h %ad <%an> - %s" "$@"
+}
+
+#| glg - git log --grep="$1"
+function glg {
+  git log --grep="$1" --oneline --date=format:%FT%T --pretty=format:"%h %ad <%an> - %s"
+}
+
+#| glp - git lgp
+function glp { _git_arg_wrapper "lgp" "$@"; }
+
+#| gp - git pull
+function gp  { [[ $# = 0 ]] && set -- origin $(gbr); command git pull "$@"; }
+
+#| gP - git push
+function gP  { [[ $# = 0 ]] && set -- origin $(gbr); command git push "$@"; }
+
+#| gpom - git push origin master
+function gPo { git push origin "$@"; }
+
+#| gr - git remote
+function gr { command git remote "$@"; }
+
+#| gra - gr add
+function gra { gr add "$@"; }
+
+#! grv - git remote -v
+function grv { gr -v; }
+
+#| gS - git show
+function gS  { command git "show" "$@"; }
+
+#| gs - git st 
+function gs  {
+  if (( $# == 0 )); then
+    _git_arg_wrapper "st" --branch --short
+  else
+    _git_arg_wrapper "st" "$@"
+  fi
+}
+__git_complete gs _git_status
+
+#| gt - git tag
+function gt { command git tag "$@"; }
+
+#| gtv - git tag <v+>
+function gtv {
+  local BOLD=$(tput bold)
+  local BLUE=$(tput setaf 4)
+  local YELLOW=$(tput setaf 3)
+  local RESET=$(tput sgr0)
+  command git tag -l -n1 | while read tag desc; do
+    local text=$( git show "$tag" --date=format:%FT%T )
+    local tag=$(    awk 'NR==1' <<<"$text" | awk     '{print $2}' )
+    local tagger=$( awk 'NR==2' <<<"$text" | awk -F: '{print $2}' )
+    local date=$(   awk 'NR==3' <<<"$text" | sed -r 's/^.[^:]+: *//' )
+    local desc=$(   awk 'NR==5' <<<"$text" )
+    printf "%s	%s	%s\t%s" "$BOLD$tag" "$RESET$YELLOW$date" "$BLUE$tagger$RESET" "$desc"
+    if [[ $1 = '-v' ]]; then
+      echo -en "\n	"
+      git show "$tag" --oneline --date=format:%FT%T --pretty=format:"$BOLD%h	$RESET$YELLOW%ad	$BLUE'%an' <%ae>$RESET	%s" | tail -n 1
+      echo ''
+    else
+      echo -en "\n"
+    fi
+  done | column -s '	' -t -e | { if [[ $1 = '-v' ]]; then cat; else sort -k2; fi }
+}
+
+#| gtvv - gtv -v
+function gtvv { gtv -v; }
+
+#| gtvvv - git tag <v+++>
+function gtvvv { command git tag | summarize_refs;  }
+
+#| gx - gitx --all
+function gx { gitx --all; }
+
+function revision_completion {
+  local cur="${COMP_WORDS[COMP_CWORD]}";
+  local revs=( $(gb | sed -r -e 's/^\*//' -e 's/\ +//' | grep -iP -- "$cur") )
+  if [[ $cur ]]; then
+    while read -r id; do
+      short="${id:0:7}"
+      revs+=( "$short" "$id" )
+    done < <(git rev-list --all | grep -iP -- "$cur")
+    # ( (git rev-list --all; git log --oneline) | sort | grep -iP -- "$cur" )
+  fi
+  COMPREPLY=( $(compgen -W "${revs[*]}" -- "$cur" ) );
+}
+
+function revision_completion_full {
+  local cur="${COMP_WORDS[COMP_CWORD]}";
+  local revs=()
+  if [[ $cur ]]; then
+    while read -r line; do
+      short="${line:0:7}"
+      revs+=( "$short" "$line" )
+    done < <(git log --no-abbrev-commit --all --pretty=oneline | grep -iP -- "$cur")
+  fi
+  COMPREPLY=( $(compgen -W "${revs[*]}" -- "$cur" ) );
+}
+
+function file_completion {
+  local cur="${COMP_WORDS[COMP_CWORD]}";
+  local files=()
+  if [[ $cur ]]; then
+    while read -r line; do
+      files+=( "$line" )
+    done < <(
+      command git ls-files | grep -iP -- "$cur"
+      # find . \( -iname ".git" -prune \) -o -print 
+    )
+  fi
+  COMPREPLY=( $(compgen -W "${files[*]}" ) );
+}
+
+function unstaged_completion {
+  local cmd="$1"
+  local cur="${COMP_WORDS[COMP_CWORD]}";
+  local files=( $(git status --porcelain | sed -r 's/^ *(.|\?+) *//' | grep -iP -- "$cur") )
+  COMPREPLY=( $(compgen -W "${files[*]}" ) );
+}
+
+function branch_completion {
+  local cmd="$1"
+  local cur="${COMP_WORDS[COMP_CWORD]}";
+  local branches=( $($cmd | sed -r -e 's/^\*//' -e 's/\ +//' | grep -iP -- "$cur") )
+  COMPREPLY=( $(compgen -W "${branches[*]}" ) );
+}
+
+function complete_branches { branch_completion gbp  ;}
+function complete_features { branch_completion gffl ;}
+function complete_bugfixes { branch_completion gfbl ;}
 
 #| g - git
     alias g=git
 complete -o bashdefault -o default -o nospace -F __git_wrap__git_main g
+complete -o bashdefault -o default -o nospace -F unstaged_completion ga
+complete -o bashdefault -o default -o nospace -F unstaged_completion gd
+complete -o bashdefault -o default -o nospace -F complete_branches gb
+complete -o bashdefault -o default -o nospace -F complete_branches gbd
+complete -o bashdefault -o default -o nospace -F complete_branches gco
+complete -o bashdefault -o default -o nospace -F complete_features gffco
+complete -o bashdefault -o default -o nospace -F complete_bugfixes gfbco
+complete -o bashdefault -o default -o nospace -F revision_completion gS
+complete -o bashdefault -o default -o nospace -F revision_completion_full glg
+complete -o bashdefault -o default -o nospace -F file_completion glf
 
-#| gca - ga; gcm
-  alias gca='ga; gcm '
-#| gpom - git push origin master
- alias gpom='git push origin master'
-#| gk - gitk --all
-   alias gk='gitk --all &'
-#| gx - gitx --all
-   alias gx='gitx --all'
 
