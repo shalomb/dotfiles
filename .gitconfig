@@ -35,6 +35,7 @@
 [alias]
   ammend  = commit --amend -C HEAD
   br      = branch
+  caa     = commit -a --amend -C HEAD
   ci      = commit
   co      = checkout
   dc      = diff --cached
