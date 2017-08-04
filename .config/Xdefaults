@@ -164,9 +164,7 @@ xterm*scrollTtyOutput:    false
 xterm*toolBar:            false
 xterm*utf8:               2
 xterm*utf8Title:          true
-xterm*visualBell:         false
 XTerm*charClass:          33:48,37:48,45-46:48,38:48
-
 
 ! [Xterm_256color_chart]
 ! (https://upload.wikimedia.org/wikipedia/en/1/15/Xterm_256color_chart.svg)
