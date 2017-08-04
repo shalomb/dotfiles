@@ -70,7 +70,7 @@ launch() {
 
   # override some settings that gnome-settings-daemon might set
   sleep 10 && xset b on           # Turn the bell on
-  sleep 10 && xset b 10 100 50    # Turn beeps into croaks
+  sleep 10 && xset -b             # Disable bell/speaker completely
   sleep 10 && xset r rate 175 40  # Set the keyboard repeat-rate:
 
   xrandr --dpi 96
