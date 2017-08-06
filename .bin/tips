@@ -47,7 +47,6 @@ search_terms=()
 for glob in "$@"; do
 
   if [[ ${glob:0:1} = "/" ]]; then
-    echo "sp: $glob??"
     search_term="$glob"
     search_term="${search_term##/}"
     search_term="${search_term%%/}"
