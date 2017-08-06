@@ -24,13 +24,17 @@ if [[ ! -d "$tipsdir" ]]; then
   exit 2
 fi
 
+function list_tips() {
+  local pattern="$1"
+  find * \( -name ".[!.]?*" \) \
+    -prune -o -iregex ".*$pattern.*" -print0 | sort -z
+}
+
 oldpwd="$PWD"
 cd "$tipsdir"
 if (( $# == 0 )) || [[ $1 = @(-l|--ls|--list) ]]; then
-  find * .[!.]* \( -name ".hg" -type d -o -iname "*sw?" \) \
-    -prune -o -type f -printf '%p\n' \
-    | column | less
-  exit 1;
+  list_tips | perl -lpe 'BEGIN{$/="\0"}' | column | less
+  exit $?
 elif [[ $1 = "/" ]]; then
   shift;
   cmd="$1"; shift;
@@ -50,8 +54,7 @@ for glob in "$@"; do
   else
     while read -d $'' file; do
       files+=( "$file" )
-    done < <( find * \( -name ".[!.]?*" -prune \) \
-                -o -ipath "*$glob*" -print0 | sort -z )
+    done < <( list_tips "$glob" )
   fi
 done
 
