@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# vi: filetype=sh:sw=2:tw=2:et:ai:foldmethod=marker:foldmarker={{{,}}}
+# vi: filetype=sh:sw=2:tw=2:et:ai
 
 # NAME
 #   tips - invoke tip files on demand
@@ -13,7 +13,11 @@
 
 shopt -s extglob nocaseglob nocasematch
 
-tipsdir=~/Desktop/tips
+if [[ -e ~/.config/tips/config ]]; then
+  source ~/.config/tips/config
+fi
+
+tipsdir="${tipsdir:-~/tips}"
 
 if [[ ! -d "$tipsdir" ]]; then
   echo "No such directory '$tipsdir', $!"
