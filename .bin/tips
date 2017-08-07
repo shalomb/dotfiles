@@ -58,7 +58,7 @@ for glob in "$@"; do
   fi
 done
 
-if (( ${#files[@]} == 0 )); then
+if (( ${#files[@]} == 0 && ${#search_terms[@]} == 0 )); then
   if (( $# == 0 )); then
     files=( . )
   else
@@ -80,6 +80,6 @@ echo "$0 [$PWD]: Editing the following .. "
 printf "  %s\n" ${files[@]}
 
 search_term="${search_terms[@]}"
-vim -c "silent! /${search_term// /\\|}/e" -c 'norm ggnzv' "${files[@]}"
+vim -c "silent! /${search_term// /\\|}/e" -c 'norm ggnzv' "${files[@]:-.}"
 
 cd "$oldpwd"
