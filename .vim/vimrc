@@ -112,7 +112,7 @@ set matchpairs+==:;         " variable assignments, etc
 set matchtime=5             " Show match sec;
 set showcmd                 " show input command??;
 
-set timeoutlen=100          " timeout (ms) waited for key sequence to complete
+set timeoutlen=500          " timeout (ms) waited for key sequence to complete
 
 set pastetoggle=<F11>
 
