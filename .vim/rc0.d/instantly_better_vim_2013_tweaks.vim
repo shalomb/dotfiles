@@ -41,7 +41,7 @@ highlight ColorColumn ctermbg=magenta
 
     exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~,eol:$"
     set listchars+=precedes:<,extends:>
-    set list!
+    set nolist
 
 
 "====[ Swap : and ; to make colon commands easier to type ]======
