@@ -42,6 +42,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/endel/vim-github-colorscheme.git      bundle/github-colorscheme
   git submodule add -f https://github.com/ervandew/supertab.git                 bundle/supertab
   git submodule add -f https://github.com/gabrielelana/vim-markdown.git         bundle/markdown
+  git submodule add -f https://github.com/garbas/vim-snipmate.git               bundle/snipmate
   git submodule add -f https://github.com/Glench/Vim-Jinja2-Syntax.git          bundle/jinja2-syntax
   git submodule add -f https://github.com/glidenote/memolist.vim.git            bundle/memolist
   git submodule add -f https://github.com/godlygeek/tabular.git                 bundle/tabular
@@ -54,7 +55,6 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/majutsushi/tagbar.git                 bundle/tagbar
   git submodule add -f https://github.com/mattn/calendar-vim.git                bundle/calendar-vim
   git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack
-  git submodule add -f https://github.com/msanders/snipmate.vim.git             bundle/snipmate
   git submodule add -f https://github.com/PProvost/vim-ps1.git                  bundle/ps1
   git submodule add -f https://github.com/pydave/vim-perforce.git               bundle/perforce
   git submodule add -f https://github.com/shalomb/vimcse.git                    vimcse
