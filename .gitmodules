@@ -48,7 +48,7 @@
 	url = https://github.com/mileszs/ack.vim.git
 [submodule ".vim/bundle/snipmate"]
 	path = .vim/bundle/snipmate
-	url = https://github.com/msanders/snipmate.vim.git
+	url = https://github.com/garbas/vim-snipmate.git
 [submodule ".vim/bundle/ps1"]
 	path = .vim/bundle/ps1
 	url = https://github.com/PProvost/vim-ps1.git
@@ -117,7 +117,7 @@
 	url = https://github.com/vim-scripts/perlprove.vim.git
 [submodule ".vim/bundle/sharp-indent"]
 	path = .vim/bundle/sharp-indent
-	url = https://github.com/vim-scripts/sharp-Indent.git
+	url = https://github.com/vim-scripts/sharp-Syntax.git
 [submodule ".vim/bundle/fsharp-plugin"]
 	path = .vim/bundle/fsharp-plugin
 	url = https://github.com/vim-scripts/sharp-Syntax--Rim.git
@@ -185,3 +185,9 @@
 [submodule ".vim/bundle/ansible-snippets"]
 	path = .vim/bundle/ansible-snippets
 	url = git@github.com:shalomb/ansible-snippets.git
+[submodule ".vim/bundle/mw-utils"]
+	path = .vim/bundle/mw-utils
+	url = https://github.com/MarcWeber/vim-addon-mw-utils.git
+[submodule ".vim/bundle/tlib"]
+	path = .vim/bundle/tlib
+	url = https://github.com/tomtom/tlib_vim.git
