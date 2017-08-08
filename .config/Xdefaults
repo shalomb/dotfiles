@@ -51,8 +51,8 @@ URxvt*foreground:       #cfcfcf
 URxvt*background:       #000000
 URxvt*iconFile:         /usr/share/icons/Gion/scalable/apps/terminal.svg
 
-URxvt*scrollBar:        true
-URxvt*scrollBar_right:  true
+URxvt*scrollBar:        false
+URxvt*scrollBar_right:  false
 URxvt*transpscrollbar:  true
 !URxvt*scrollColor:     #424242
 
@@ -156,9 +156,7 @@ xterm*jumpScroll:         true
 xterm*letterSpace:        -1
 xterm*metaSendsEscape:    true
 xterm*multiScroll:        true
-xterm*rightScrollBar:     true
 xterm*saveLines:          16384
-xterm*scrollBar:          true
 xterm*scrollKey:          true
 xterm*scrollTtyOutput:    false
 xterm*toolBar:            false
