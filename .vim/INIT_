@@ -53,6 +53,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/kien/ctrlp.vim.git                    bundle/ctrlp
   git submodule add -f https://github.com/kshenoy/vim-sol.git                   bundle/sol
   git submodule add -f https://github.com/majutsushi/tagbar.git                 bundle/tagbar
+  git submodule add -f https://github.com/MarcWeber/vim-addon-mw-utils.git      bundle/mw-utils
   git submodule add -f https://github.com/mattn/calendar-vim.git                bundle/calendar-vim
   git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack
   git submodule add -f https://github.com/PProvost/vim-ps1.git                  bundle/ps1
@@ -62,6 +63,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/takac/vim-hardtime.git                bundle/hardtime
   git submodule add -f https://github.com/tmux-plugins/vim-tmux.git             bundle/tmux
   git submodule add -f https://github.com/tomasr/molokai.git                    bundle/molokai
+  git submodule add -f https://github.com/tomtom/tlib_vim.git                   bundle/tlib
   git submodule add -f https://github.com/tpope/vim-abolish.git                 bundle/abolish
   git submodule add -f https://github.com/tpope/vim-commentary.git              bundle/commentary
   git submodule add -f https://github.com/tpope/vim-fugitive.git                bundle/fugitive
