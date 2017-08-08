@@ -179,3 +179,9 @@
 	path = .tmux/plugins/tpm
 	url = https://github.com/tmux-plugins/tpm.git
 
+[submodule ".vim/bunble/ansible-snippets"]
+	path = .vim/bunble/ansible-snippets
+	url = git@github.com:shalomb/ansible-snippets.git
+[submodule ".vim/bundle/ansible-snippets"]
+	path = .vim/bundle/ansible-snippets
+	url = git@github.com:shalomb/ansible-snippets.git
