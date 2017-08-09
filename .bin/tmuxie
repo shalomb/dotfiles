@@ -39,8 +39,7 @@ function select_session_by_name() {
     fi
   done < <( printf "%s\n" "${sessions[@]}")
 
-  printf 'Which one? ' >&2; 
-  read reply
+  read -p 'Which one? ' reply
 
   if [[ -z $reply ]]; then 
     return 0;
@@ -86,11 +85,9 @@ elif [[ -n $session_name ]]; then
   fi
 elif [[ -z $session_name ]] && test -t 0; then
   # We have no session name and we are interactive
-  printf 'Enter session name or RETURN to abort. ' >&2 ; read reply
-  if [[ -z $reply ]]; then 
-    exit 1;
-  else
-    session_name="$reply"
+  read -p 'Enter session name or RETURN to abort. ' session_name
+  if [[ -z $session_name ]]; then 
+    exit 3
   fi
 fi
 
