@@ -5,6 +5,8 @@
 
 set -eu
 
+shopt -s nocasematch
+
 if ! type -P tmux &> /dev/null; then
   echo "tmux not installed (in \$PATH)?" >&2
   exit 2
@@ -77,8 +79,10 @@ elif [[ -n $session_name ]]; then
     ~/.config/tmuxie/sessions/$session_name
     exit $?
   else
-    echo "Session '$session_name' doesn't exist .. aborting.";
-    exit 3;
+    read -p "Session '$session_name' doesn't exist!! Create? [N] " reply
+    if [[ -z $reply || $reply != 'y' ]]; then
+      exit 3
+    fi
   fi
 elif [[ -z $session_name ]] && test -t 0; then
   # We have no session name and we are interactive
