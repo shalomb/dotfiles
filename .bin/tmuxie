@@ -45,11 +45,11 @@ function select_session_by_name() {
     return 0;
   elif [[ $reply = *[!0-9]* ]]; then
     session_name="$reply";
-  elif ! (( reply < 0 && reply > ${#sessions[@]}-1 )); then
+  elif (( reply > 0 && reply < ${#sessions[@]}-1 )); then
     session_name="${sessions[reply]//:*/:}"
   else
     echo "No such session. $reply" >&2
-    exit 2;
+    session_name=$(select_session_by_name)
   fi
   
   echo "$session_name"; return 0;
