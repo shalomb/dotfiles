@@ -1,0 +1,17 @@
+# Always color, even if piping to a another program
+--color
+
+# Always sort file
+--sort-files
+
+# Print a break between results from different files.
+--break
+
+# Ignore specific directories
+--ignore-dir=.git/
+--ignore-dir=.tmp/
+--ignore-dir=dist
+
+# Make ack recognize some filetypes 
+--type-set=json=.json
+--type-set=markdown=.md,.mkd,.markdown
