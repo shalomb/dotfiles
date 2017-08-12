@@ -1,5 +1,6 @@
 ! *dpi:                   76
-Xft.dpi:                76
+Xft.dpi:                80
+
 ! Xft.antialias:          true
 ! Xft.rgba:               rgb
 Xft.hinting:            true
