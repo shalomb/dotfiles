@@ -201,12 +201,13 @@ bindsym XF86AudioRaiseVolume   exec pactl set-sink-volume @DEFAULT_SINK@ +10%
 bindsym XF86AudioMicMute       exec gmrun "XF86AudioMicMute"
 bindsym XF86AudioMute          exec pactl set-sink-mute   @DEFAULT_SINK@ toggle
 bindsym XF86Display            exec gmrun "XF86Display"
-bindsym XF86MonBrightnessDown  exec xbacklight -dec 3
-bindsym XF86MonBrightnessUp    exec xbacklight -inc 3
-bindsym XF86Tools              exec xbacklight -set 30
-bindsym XF86Search             exec gmrun "XF86Search"
-bindsym XF86LaunchA            exec gmrun "XF86launchA"
-bindsym XF86Explorer           exec gmrun "XF86Explorer"
+bindsym XF86MonBrightnessDown  exec xbacklight -dec 4
+bindsym XF86MonBrightnessUp    exec xbacklight -inc 4
+bindsym XF86Tools              exec xbacklight -set 24
+bindsym XF86Search             exec exec /usr/local/bin/quickswitch.py; mode "default"
+bindsym XF86LaunchA            exec i3-dmenu-desktop
+bindsym XF86Explorer           exec dmenu_run
+bindsym XF86WakeUp             exec dmrun "XF86WakeUp"
 # bindsym XF86WLAN               exec gmrun "XF86WLAN"
 
 bindsym Control+$mod+i    mode "i3 control"
