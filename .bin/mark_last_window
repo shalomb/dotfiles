@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# mark_last_window
+#
+# Monitor changes in active window and mark the previous one for i3
+# to be able to use.
+
+last=
+xprop -root -spy _NET_ACTIVE_WINDOW | while read _ _ _ _ wid; do
+  [[ $last ]] && (set -xv; i3-msg "[id=$last] mark _last")
+  last="$wid"
+done
+

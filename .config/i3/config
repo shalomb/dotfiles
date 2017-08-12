@@ -173,7 +173,7 @@ bindsym Control+$mod+Mod1+l     focus output right
 bindsym Control+$mod+bracketleft  workspace back_and_forth
 bindsym Control+$mod+bracketright mode "window control"
 bindsym Control+$mod+semicolon    mode "window control"
-bindsym Control+$mod+apostrophe   workspace back_and_forth
+bindsym Control+$mod+apostrophe   [con_mark=_last] focus
 bindsym Control+$mod+numbersign   mode "workspace control"
 bindsym Control+$mod+Shift+colon  exec i3-input -P 'workspace: ' -F "exec i3-msg 'workspace %s'"
 bindsym Control+$mod+m            exec i3-input -l 1 -P 'Mark: ' -F 'exec ~/.bin/winmark mark "%s"' ; mode "default"
@@ -293,6 +293,7 @@ bar {
   }
 }
 
+exec --no-startup-id  ~/.bin/mark_last_window
 exec --no-startup-id  i3-msg 'workspace 1; exec qterm;   workspace 1;'
 exec --no-startup-id  i3-msg 'workspace 2; exec firefox; workspace 1;'
 
