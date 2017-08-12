@@ -17,21 +17,11 @@ launch() {
 
 {
 
-  xset s on           # screensaver
-  xset s blank        # screensaver blank
-  xset s 300          # after 5*60 seconds
-
-  xset +dpms          # enable DPMS (Energy Star) features.
-  xset dpms 420 480 600  # timeouts for standby, suspend, off
-
   test -d ~/.config/fonts || {
     mkdir -p ~/.config/fonts;
     chmod 755 ~/.config/fonts;
     mkfontdir ~/.config/fonts; 
   } &                 # set-up user fonts dir
-
-  xset +fp ~/.config/fonts   # add ~/.config/fonts to the font path
-  xset fp rehash      # rehash the font path
 
   test -r ~/.config/Xdefaults  && xrdb -merge ~/.config/Xdefaults
   test -r ~/.config/Xresources && xrdb -merge ~/.config/Xresources
@@ -68,11 +58,8 @@ launch() {
   launch xflux -l 48.1439 -g 17.1097 &
   # setxkbmap -option ctrl:nocaps &
 
-  # override some settings that gnome-settings-daemon might set
-  sleep 10 && xset b on           # Turn the bell on
-  sleep 10 && xset -b             # Disable bell/speaker completely
-  sleep 10 && xset r rate 175 40  # Set the keyboard repeat-rate:
-
   xrandr --dpi 96
+
+  ~/.config/xsetrc
 } >> "$wksplog" 2>&1 &
 
