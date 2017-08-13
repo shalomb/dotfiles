@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# SYNOPSIS
+# bluetooth-toggle
+
+# SRC
+# [Script for toggling bluetooth - ThinkWiki](http://www.thinkwiki.org/wiki/Script_for_toggling_bluetooth)
+
+shopt -s extglob nocasematch
+
+status_file=/proc/acpi/ibm/bluetooth 
+
+function usage() {
+  echo ''
+  exec $0 'status'
+}
+
+if [[ -n $1 ]]; then
+	if [[ $1 == status ]]; then
+		cat "$status_file"
+		exit $?
+	fi
+  if [[ $1 == @(enable|disable) ]]; then
+    echo -n "$1" > "$status_file"
+    exit $?
+  else
+    echo "$0 : '$1' is not a valid subcommand" >&2
+    usage
+    exit 3
+  fi
+fi
+
+state=$( awk '$1 ~ /status:/ { print $2 }' "$status_file")
+
+case "$state" in
+  enabled)
+    echo -n 'disable' > "$status_file"
+  ;;
+  disabled)
+    echo -n 'enable'  > "$status_file"
+  ;;
+  *)
+    usage
+    exit 3
+  ;;
+esac
