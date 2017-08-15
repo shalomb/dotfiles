@@ -299,4 +299,5 @@ exec --no-startup-id  i3-msg 'workspace 1; exec qterm;   workspace 1;'
 exec --no-startup-id  i3-msg 'workspace 2; exec firefox; workspace 1;'
 
 exec --no-startup-id  ~/.config/workspacerc
+exec --no-startup-id  ~/.bin/wpset
 
