@@ -18,7 +18,9 @@ type -P xrandr         &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
 type -P xsel           &>/dev/null || pkgs_to_install+=( 'xsel' )
 type -P xset           &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
 
-type -P xflux          &>/dev/null || { echo "xflux is a manual install" >&2 }
+type -P xflux          &>/dev/null || {
+  echo "xflux is a manual install" >&2
+}
 
 if (( ${#pkgs_to_install[@]} >= 1 )); then
   echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
