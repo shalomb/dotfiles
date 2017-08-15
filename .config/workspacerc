@@ -53,8 +53,6 @@ launch() {
   # launch gnome-screensaver &
   launch xscreensaver &
 
-  launch VBoxClient-all &
-
   launch xflux -l 48.1439 -g 17.1097 &
   # setxkbmap -option ctrl:nocaps &
 

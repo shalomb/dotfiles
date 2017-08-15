@@ -1,5 +1,31 @@
 #!/bin/bash
 
+pkgs_to_install=()
+
+type -P autocutsel     &>/dev/null || pkgs_to_install+=( 'autocutsel' )
+type -P dmenu          &>/dev/null || pkgs_to_install+=( 'suckless-tools' )
+type -P feh            &>/dev/null || pkgs_to_install+=( 'feh' )
+type -P flock          &>/dev/null || pkgs_to_install+=( 'util-linux' )
+type -P git            &>/dev/null || pkgs_to_install+=( 'git' )
+type -P laptop-detect  &>/dev/null || pkgs_to_install+=( 'laptop-detect' )
+type -P setxkbmap      &>/dev/null || pkgs_to_install+=( 'x11-xkb-utils ' )
+type -P ssh-askpass    &>/dev/null || pkgs_to_install+=( 'ssh-askpass' )
+type -P ssh            &>/dev/null || pkgs_to_install+=( 'openssh-client' )
+type -P sudo           &>/dev/null || pkgs_to_install+=( 'sudo' )
+type -P unclutter      &>/dev/null || pkgs_to_install+=( 'unclutter' )
+type -P xmodmap        &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
+type -P xrandr         &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
+type -P xsel           &>/dev/null || pkgs_to_install+=( 'xsel' )
+type -P xset           &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
+
+type -P xflux          &>/dev/null || { echo "xflux is a manual install" >&2 }
+
+if (( ${#pkgs_to_install[@]} >= 1 )); then
+  echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
+  (set -xv; sudo aptitude install ${pkgs_to_install[@]})
+fi
+
+
 set -x
 
 ( set -exv
@@ -14,3 +40,4 @@ find .[!.]*/ */ -name "INIT" -type f -exec {} \;
 find .[!.]* \
   \( -name ".git" -type d -o -name "*.sw?" -o -name "*~" \) -prune \
   -o -type f -exec ./dotfile_stash export {} +
+
