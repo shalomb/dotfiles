@@ -35,6 +35,19 @@ cd "$tipsdir"
 if (( $# == 0 )) || [[ $1 = @(-l|--ls|--list) ]]; then
   list_tips | perl -lpe 'BEGIN{$/="\0"}' | column | less
   exit $?
+elif (( $# == 0 )) || [[ $1 = @(-s|--st|--status) ]]; then
+  git status --short --porcelain
+  exit $?
+elif (( $# == 0 )) || [[ $1 = @(--SYNC) ]]; then
+  if                                                             \
+    ( git diff-index HEAD -- | grep -q '.')  ||                  \
+    ( git ls-files . --exclude-standard --others | grep -q '.' ) \
+  ; then
+    git add .
+    git commit -m "Autocommit on $(hostname -f), $(date)"
+  fi
+  git pull && git push
+  exit $?
 elif [[ $1 = "/" ]]; then
   shift;
   cmd="$1"; shift;
@@ -83,3 +96,4 @@ search_term="${search_terms[@]}"
 vim -c "silent! /${search_term// /\\|}/e" -c 'norm ggnzv' "${files[@]:-.}"
 
 cd "$oldpwd"
+
