@@ -1,190 +1,159 @@
-[submodule ".vim/bundle/switch"]
-	path = .vim/bundle/switch
-	url = https://github.com/AndrewRadev/switch.vim.git
-[submodule ".vim/bundle/tmux-navigator"]
-	path = .vim/bundle/tmux-navigator
-	url = https://github.com/christoomey/vim-tmux-navigator.git
-[submodule ".vim/bundle/textobj-word-column"]
-	path = .vim/bundle/textobj-word-column
-	url = https://github.com/coderifous/textobj-word-column.vim.git
-[submodule ".vim/bundle/easymotion"]
-	path = .vim/bundle/easymotion
-	url = https://github.com/easymotion/vim-easymotion.git
-[submodule ".vim/bundle/github-colorscheme"]
-	path = .vim/bundle/github-colorscheme
-	url = https://github.com/endel/vim-github-colorscheme.git
-[submodule ".vim/bundle/supertab"]
-	path = .vim/bundle/supertab
-	url = https://github.com/ervandew/supertab.git
-[submodule ".vim/bundle/markdown"]
-	path = .vim/bundle/markdown
-	url = https://github.com/gabrielelana/vim-markdown.git
-[submodule ".vim/bundle/tabular"]
-	path = .vim/bundle/tabular
-	url = https://github.com/godlygeek/tabular.git
-[submodule ".vim/bundle/VimOrganizer"]
-	path = .vim/bundle/VimOrganizer
-	url = https://github.com/hsitz/VimOrganizer.git
-[submodule ".vim/bundle/orgmode"]
-	path = .vim/bundle/orgmode
-	url = https://github.com/jceb/vim-orgmode.git
-[submodule ".vim/bundle/arpeggio"]
-	path = .vim/bundle/arpeggio
-	url = https://github.com/kana/vim-arpeggio.git
-[submodule ".vim/bundle/ctrlp"]
-	path = .vim/bundle/ctrlp
-	url = https://github.com/kien/ctrlp.vim.git
-[submodule ".vim/bundle/sol"]
-	path = .vim/bundle/sol
-	url = https://github.com/kshenoy/vim-sol.git
-[submodule ".vim/bundle/tagbar"]
-	path = .vim/bundle/tagbar
-	url = https://github.com/majutsushi/tagbar.git
-[submodule ".vim/bundle/calendar-vim"]
-	path = .vim/bundle/calendar-vim
-	url = https://github.com/mattn/calendar-vim.git
-[submodule ".vim/bundle/ack"]
-	path = .vim/bundle/ack
-	url = https://github.com/mileszs/ack.vim.git
-[submodule ".vim/bundle/snipmate"]
-	path = .vim/bundle/snipmate
-	url = https://github.com/garbas/vim-snipmate.git
-[submodule ".vim/bundle/ps1"]
-	path = .vim/bundle/ps1
-	url = https://github.com/PProvost/vim-ps1.git
-[submodule ".vim/bundle/dragvisuals"]
-	path = .vim/bundle/dragvisuals
-	url = https://github.com/shinokada/dragvisuals.vim.git
-[submodule ".vim/bundle/molokai"]
-	path = .vim/bundle/molokai
-	url = https://github.com/tomasr/molokai.git
-[submodule ".vim/bundle/abolish"]
-	path = .vim/bundle/abolish
-	url = https://github.com/tpope/vim-abolish.git
-[submodule ".vim/bundle/fugitive"]
-	path = .vim/bundle/fugitive
-	url = https://github.com/tpope/vim-fugitive.git
-[submodule ".vim/bundle/pathogen"]
-	path = .vim/bundle/pathogen
-	url = https://github.com/tpope/vim-pathogen.git
-[submodule ".vim/bundle/ragtag"]
-	path = .vim/bundle/ragtag
-	url = https://github.com/tpope/vim-ragtag.git
-[submodule ".vim/bundle/repeat"]
-	path = .vim/bundle/repeat
-	url = https://github.com/tpope/vim-repeat.git
-[submodule ".vim/bundle/sleuth"]
-	path = .vim/bundle/sleuth
-	url = https://github.com/tpope/vim-sleuth.git
-[submodule ".vim/bundle/speeddating"]
-	path = .vim/bundle/speeddating
-	url = https://github.com/tpope/vim-speeddating.git
-[submodule ".vim/bundle/surround"]
-	path = .vim/bundle/surround
-	url = https://github.com/tpope/vim-surround.git
-[submodule ".vim/bundle/unimpaired"]
-	path = .vim/bundle/unimpaired
-	url = https://github.com/tpope/vim-unimpaired.git
-[submodule ".vim/bundle/vimoutliner"]
-	path = .vim/bundle/vimoutliner
-	url = https://github.com/vimoutliner/vimoutliner.git
-[submodule ".vim/bundle/streppone--css"]
-	path = .vim/bundle/streppone--css
-	url = https://github.com/vim-scripts/css.vim--Streppone.git
-[submodule ".vim/bundle/drawit"]
-	path = .vim/bundle/drawit
-	url = https://github.com/vim-scripts/DrawIt.git
-[submodule ".vim/bundle/genutils"]
-	path = .vim/bundle/genutils
-	url = https://github.com/vim-scripts/genutils.git
-[submodule ".vim/bundle/gundo"]
-	path = .vim/bundle/gundo
-	url = https://github.com/vim-scripts/Gundo.git
-[submodule ".vim/bundle/iptables"]
-	path = .vim/bundle/iptables
-	url = https://github.com/vim-scripts/iptables.git
-[submodule ".vim/bundle/matchit"]
-	path = .vim/bundle/matchit
-	url = https://github.com/vim-scripts/matchit.zip.git
-[submodule ".vim/bundle/netrw"]
-	path = .vim/bundle/netrw
-	url = https://github.com/vim-scripts/netrw.vim.git
-[submodule ".vim/bundle/mauke-perl"]
-	path = .vim/bundle/mauke-perl
-	url = https://github.com/vim-scripts/perl-mauke.vim.git
-[submodule ".vim/bundle/perlprove"]
-	path = .vim/bundle/perlprove
-	url = https://github.com/vim-scripts/perlprove.vim.git
-[submodule ".vim/bundle/sharp-indent"]
-	path = .vim/bundle/sharp-indent
-	url = https://github.com/vim-scripts/sharp-Syntax.git
-[submodule ".vim/bundle/fsharp-plugin"]
-	path = .vim/bundle/fsharp-plugin
-	url = https://github.com/vim-scripts/sharp-Syntax--Rim.git
-[submodule ".vim/bundle/ShowMarks"]
-	path = .vim/bundle/ShowMarks
-	url = https://github.com/vim-scripts/ShowMarks.git
-[submodule ".vim/bundle/taglist"]
-	path = .vim/bundle/taglist
-	url = https://github.com/vim-scripts/taglist.vim.git
-[submodule ".vim/bundle/underlinetag"]
-	path = .vim/bundle/underlinetag
-	url = https://github.com/vim-scripts/underlinetag.git
-[submodule ".vim/bundle/vimwiki"]
-	path = .vim/bundle/vimwiki
-	url = https://github.com/vim-scripts/vimwiki.git
-[submodule ".vim/bundle/vis"]
-	path = .vim/bundle/vis
-	url = https://github.com/vim-scripts/vis.git
-[submodule ".vim/bundle/vst"]
-	path = .vim/bundle/vst
-	url = https://github.com/vim-scripts/VST.git
-[submodule ".vim/bundle/hardmode"]
-	path = .vim/bundle/hardmode
-	url = https://github.com/wikitopian/hardmode.git
-[submodule ".vim/bundle/tmux"]
-	path = .vim/bundle/tmux
-	url = https://github.com/tmux-plugins/vim-tmux.git
-[submodule ".vim/bundle/vim-ruby"]
-	path = .vim/bundle/vim-ruby
-	url = https://github.com/vim-ruby/vim-ruby.git
-[submodule ".vim/bundle/perforce"]
-	path = .vim/bundle/perforce
-	url = https://github.com/pydave/vim-perforce.git
-[submodule ".vim/bundle/jinja2-syntax"]
-	path = .vim/bundle/jinja2-syntax
-	url = https://github.com/Glench/Vim-Jinja2-Syntax.git
-[submodule ".vim/bundle/memolist"]
-	path = .vim/bundle/memolist
-	url = https://github.com/glidenote/memolist.vim.git
-[submodule ".vim/bundle/schlepp"]
-	path = .vim/bundle/schlepp
-	url = https://github.com/zirrostig/vim-schlepp.git
-[submodule ".vim/bundle/hardtime"]
-	path = .vim/bundle/hardtime
-	url = https://github.com/takac/vim-hardtime.git
-[submodule ".vim/bundle/commentary"]
-	path = .vim/bundle/commentary
-	url = https://github.com/tpope/vim-commentary.git
-[submodule ".vim/bundle/yaml"]
-	path = .vim/bundle/yaml
-	url = https://github.com/avakhov/vim-yaml.git
-[submodule ".vim/bundle/tslime"]
-	path = .vim/bundle/tslime
-	url = https://github.com/jgdavey/tslime.vim.git
-[submodule ".vim/bundle/dockerfile"]
-	path = .vim/bundle/dockerfile
-	url = https://github.com/ekalinin/Dockerfile.vim.git
-[submodule ".tmux/plugins/tpm"]
-	path = .tmux/plugins/tpm
-	url = https://github.com/tmux-plugins/tpm.git
+[submodule   ".vim/bundle/ansible-snippets"]
+  path   =   .vim/bundle/ansible-snippets      
+  url    =   git@github.com:shalomb/ansible-snippets.git
 
-[submodule ".vim/bundle/ansible-snippets"]
-	path = .vim/bundle/ansible-snippets
-	url = git@github.com:shalomb/ansible-snippets.git
-[submodule ".vim/bundle/mw-utils"]
-	path = .vim/bundle/mw-utils
-	url = https://github.com/MarcWeber/vim-addon-mw-utils.git
-[submodule ".vim/bundle/tlib"]
-	path = .vim/bundle/tlib
-	url = https://github.com/tomtom/tlib_vim.git
+[submodule   ".vim/bundle/switch"]
+  path   =   .vim/bundle/switch                
+  url    =   https://github.com/AndrewRadev/switch.vim.git
+
+[submodule   ".vim/bundle/yaml"]
+  path   =   .vim/bundle/yaml                  
+  url    =   https://github.com/avakhov/vim-yaml.git
+
+[submodule   ".vim/bundle/tmux-navigator"]
+  path   =   .vim/bundle/tmux-navigator        
+  url    =   https://github.com/christoomey/vim-tmux-navigator.git
+
+[submodule   ".vim/bundle/textobj-word-column"]
+  path   =   .vim/bundle/textobj-word-column   
+  url    =   https://github.com/coderifous/textobj-word-column.vim.git
+
+[submodule   ".vim/bundle/easymotion"]
+  path   =   .vim/bundle/easymotion            
+  url    =   https://github.com/easymotion/vim-easymotion.git
+
+[submodule   ".vim/bundle/dockerfile"]
+  path   =   .vim/bundle/dockerfile            
+  url    =   https://github.com/ekalinin/Dockerfile.vim.git
+
+[submodule   ".vim/bundle/supertab"]
+  path   =   .vim/bundle/supertab              
+  url    =   https://github.com/ervandew/supertab.git
+
+[submodule   ".vim/bundle/markdown"]
+  path   =   .vim/bundle/markdown              
+  url    =   https://github.com/gabrielelana/vim-markdown.git
+
+[submodule   ".vim/bundle/snipmate"]
+  path   =   .vim/bundle/snipmate              
+  url    =   https://github.com/garbas/vim-snipmate.git
+
+[submodule   ".vim/bundle/jinja2-syntax"]
+  path   =   .vim/bundle/jinja2-syntax         
+  url    =   https://github.com/Glench/Vim-Jinja2-Syntax.git
+
+[submodule   ".vim/bundle/tabular"]
+  path   =   .vim/bundle/tabular               
+  url    =   https://github.com/godlygeek/tabular.git
+
+[submodule   ".vim/bundle/tslime"]
+  path   =   .vim/bundle/tslime                
+  url    =   https://github.com/jgdavey/tslime.vim.git
+
+[submodule   ".vim/bundle/ctrlp"]
+  path   =   .vim/bundle/ctrlp                 
+  url    =   https://github.com/kien/ctrlp.vim.git
+
+[submodule   ".vim/bundle/mw-utils"]
+  path   =   .vim/bundle/mw-utils              
+  url    =   https://github.com/MarcWeber/vim-addon-mw-utils.git
+
+[submodule   ".vim/bundle/ack"]
+  path   =   .vim/bundle/ack                   
+  url    =   https://github.com/mileszs/ack.vim.git
+
+[submodule   ".vim/bundle/hardtime"]
+  path   =   .vim/bundle/hardtime              
+  url    =   https://github.com/takac/vim-hardtime.git
+
+[submodule   ".tmux/plugins/tpm"]
+  path   =   .tmux/plugins/tpm                 
+  url    =   https://github.com/tmux-plugins/tpm.git
+
+[submodule   ".vim/bundle/tmux"]
+  path   =   .vim/bundle/tmux                  
+  url    =   https://github.com/tmux-plugins/vim-tmux.git
+
+[submodule   ".vim/bundle/molokai"]
+  path   =   .vim/bundle/molokai               
+  url    =   https://github.com/tomasr/molokai.git
+
+[submodule   ".vim/bundle/tlib"]
+  path   =   .vim/bundle/tlib                  
+  url    =   https://github.com/tomtom/tlib_vim.git
+
+[submodule   ".vim/bundle/abolish"]
+  path   =   .vim/bundle/abolish               
+  url    =   https://github.com/tpope/vim-abolish.git
+
+[submodule   ".vim/bundle/commentary"]
+  path   =   .vim/bundle/commentary            
+  url    =   https://github.com/tpope/vim-commentary.git
+
+[submodule   ".vim/bundle/fugitive"]
+  path   =   .vim/bundle/fugitive              
+  url    =   https://github.com/tpope/vim-fugitive.git
+
+[submodule   ".vim/bundle/pathogen"]
+  path   =   .vim/bundle/pathogen              
+  url    =   https://github.com/tpope/vim-pathogen.git
+
+[submodule   ".vim/bundle/ragtag"]
+  path   =   .vim/bundle/ragtag                
+  url    =   https://github.com/tpope/vim-ragtag.git
+
+[submodule   ".vim/bundle/repeat"]
+  path   =   .vim/bundle/repeat                
+  url    =   https://github.com/tpope/vim-repeat.git
+
+[submodule   ".vim/bundle/sleuth"]
+  path   =   .vim/bundle/sleuth                
+  url    =   https://github.com/tpope/vim-sleuth.git
+
+[submodule   ".vim/bundle/speeddating"]
+  path   =   .vim/bundle/speeddating           
+  url    =   https://github.com/tpope/vim-speeddating.git
+
+[submodule   ".vim/bundle/surround"]
+  path   =   .vim/bundle/surround              
+  url    =   https://github.com/tpope/vim-surround.git
+
+[submodule   ".vim/bundle/unimpaired"]
+  path   =   .vim/bundle/unimpaired            
+  url    =   https://github.com/tpope/vim-unimpaired.git
+
+[submodule   ".vim/bundle/genutils"]
+  path   =   .vim/bundle/genutils              
+  url    =   https://github.com/vim-scripts/genutils.git
+
+[submodule   ".vim/bundle/gundo"]
+  path   =   .vim/bundle/gundo                 
+  url    =   https://github.com/vim-scripts/Gundo.git
+
+[submodule   ".vim/bundle/matchit"]
+  path   =   .vim/bundle/matchit               
+  url    =   https://github.com/vim-scripts/matchit.zip.git
+
+[submodule   ".vim/bundle/netrw"]
+  path   =   .vim/bundle/netrw                 
+  url    =   https://github.com/vim-scripts/netrw.vim.git
+
+[submodule   ".vim/bundle/ShowMarks"]
+  path   =   .vim/bundle/ShowMarks             
+  url    =   https://github.com/vim-scripts/ShowMarks.git
+
+[submodule   ".vim/bundle/taglist"]
+  path   =   .vim/bundle/taglist               
+  url    =   https://github.com/vim-scripts/taglist.vim.git
+
+[submodule   ".vim/bundle/underlinetag"]
+  path   =   .vim/bundle/underlinetag          
+  url    =   https://github.com/vim-scripts/underlinetag.git
+
+[submodule   ".vim/bundle/vis"]
+  path   =   .vim/bundle/vis                   
+  url    =   https://github.com/vim-scripts/vis.git
+
+[submodule   ".vim/bundle/schlepp"]
+  path   =   .vim/bundle/schlepp               
+  url    =   https://github.com/zirrostig/vim-schlepp.git
