@@ -81,9 +81,6 @@ HOSTNAME="${HOSTNAME:-"`cat /etc/hostname`"}";
 HOSTNAME="${HOSTNAME:-"`hostname -s`"}";  export HOSTNAME;
 HOST="${HOST:-"$HOSTNAME"}";              export HOST;
 
-LANG="en_GB.UTF-8";                       export LANG;
-LC_ALL="en_GB.UTF-8";                     export LC_ALL;
-
 USER="${USER:-`id -un`}"
 
 # Redirect $TMP to ~/.tmp
@@ -99,6 +96,10 @@ fi
   TEMP="$TMP";         export   TEMP;
 TMPDIR="$TMP";         export TMPDIR;
 unset PRIVATE_TMP
+
+for file in ~/.config/profile.d/*.sh; do
+  . "$file"
+done
 
 # Shell Specifics
 # We now go on to setup the env. for the interactive command shell.
