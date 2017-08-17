@@ -2,7 +2,11 @@
 
 # tips_completion.sh - completion for the `tips' command.
 
-tips_dir="${tips_dir:-$HOME/Desktop/tips}"
+if [[ -e ~/.config/tips/config ]]; then
+  source ~/.config/tips/config
+fi
+
+tipsdir="${tipsdir:-$HOME/tips}"
 
 _tips() {
 
@@ -14,7 +18,7 @@ _tips() {
   options=""
 
   oldpwd="$PWD"
-  if cd "$tips_dir"; then
+  if cd "$tipsdir"; then
 
     while read f; do 
       COMPREPLY+=( "$f" );
