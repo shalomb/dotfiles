@@ -36,7 +36,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/AndrewRadev/switch.vim.git            bundle/switch
   git submodule add -f https://github.com/avakhov/vim-yaml.git                  bundle/yaml
   git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    bundle/tmux-navigator
-  git submodule add -f https://github.com/coderifous/textobj-word-column.vim.git bundle/textobj-word-column
+  git submodule add -f https://github.com/idbrii/textobj-word-column.vim.git    bundle/textobj-word-column
   git submodule add -f https://github.com/easymotion/vim-easymotion.git         bundle/easymotion
   git submodule add -f https://github.com/ekalinin/Dockerfile.vim.git           bundle/dockerfile
   git submodule add -f https://github.com/ervandew/supertab.git                 bundle/supertab
