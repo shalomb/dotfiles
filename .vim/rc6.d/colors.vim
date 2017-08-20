@@ -7,6 +7,10 @@ set background=light
 colorscheme molokai
 set background=dark
 
+" transparency
+highlight Normal  ctermbg=NONE guibg=NONE
+highlight NonText ctermbg=NONE guibg=NONE
+
 " xterm colors: http://vim.wikia.com/wiki/Xterm256_color_names_for_console_Vim
 highlight ErrorMsg     cterm=bold ctermbg=160 ctermfg=232
 highlight FoldColumn   ctermbg=NONE
@@ -17,7 +21,7 @@ highlight SignColumn   ctermbg=NONE
 highlight Visual       cterm=reverse ctermbg=172 ctermfg=238
 highlight Search       cterm=reverse ctermbg=202 ctermfg=236
 highlight CursorColumn ctermbg=234
-highlight ColorColumn  ctermbg=234
+highlight ColorColumn  ctermbg=235
 highlight CursorLine   ctermbg=234
 
 highlight ShowMarksHLl   cterm=bold ctermfg=166 ctermbg=none
@@ -67,7 +71,4 @@ elseif &term =~ "xterm\\|rxvt\\|screen-256color"
   autocmd VimLeave * silent !echo -ne "\033]112\007"
   " use \003]12;gray\007 for gnome-terminal
 endif
-
-" set the background colour of columns 80 onwards
-let &colorcolumn=join(range(81,120),",")
 
