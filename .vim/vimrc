@@ -133,7 +133,7 @@ let g:pwd            = getcwd()
 let g:invocation_pwd = getcwd()
 
 """" Set Viminfo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-set viminfo='10,\"100,:256,%,n~/.vim/viminfo
+set viminfo='10,\"100,:256,%,n~/.local/viminfo
 
 """" abbrevs """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
