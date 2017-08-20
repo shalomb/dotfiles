@@ -1,4 +1,4 @@
-#### Dotfile
+#### dotfiles
 
 dotfiles for my workspace.
 
