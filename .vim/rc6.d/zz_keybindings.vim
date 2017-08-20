@@ -122,7 +122,7 @@ nnoremap <silent> <leader>oh          :help <C-r><C-a><cr>
 nnoremap <silent> <leader>od          :Vexplore<cr>
 nnoremap <silent> <leader>oD          :!xdg-open %:h<cr>
 nnoremap <silent> <leader>of          :!xdg-open %:p<cr>
-nnoremap <silent> <leader>ofk         :vsplit ~/.fluxbox/keys<cr>
+nnoremap <silent> <leader>ofi         :vsplit ~/.config/i3/config<cr>
 nnoremap <silent> <leader>ogk         :vsplit ~/.gitconfig<cr>:1;/\[alias\]<cr>zt
 nnoremap <silent> <leader>otk         :vsplit ~/.tmux.conf<cr>:1;/keybindings<cr>zt
 nnoremap <silent> <leader>ovk         :vsplit ~/.vimrc<cr>:1;/keybindings<cr>zt
