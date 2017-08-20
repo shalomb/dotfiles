@@ -8,8 +8,6 @@ Helptags
 
 """" Environmental Variables """""""""""""""""""""""""""""""""""""""""""""""""
 
-let $PAGER='less'           " less is my pager
-let $LESS=$PAGER            " to reiterate - less is my pager
 let $MYVIMRUNTIME=resolve(split(&runtimepath,',')[0])
 set shell=/bin/bash
 
