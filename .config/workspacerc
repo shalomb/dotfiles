@@ -38,8 +38,12 @@ launch() {
 
   # nice -n 0   urxvtd -q -f -o && qterm &
 
-  for file in ~/.config/xmodmap ~/.config/xmodmap.`hostname -s`; do
-    test -e "$file" && xmodmap "$file"
+  for file in \
+    ~/.config/xmodmap \
+    ~/.config/xmodmap.d/* \
+    ~/.config/xmodmap.`hostname -s`.d/* \
+    ; do
+      test -e "$file" && xmodmap "$file"
   done
 
   unclutter  -idle 5 &
