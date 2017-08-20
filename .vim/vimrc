@@ -1,8 +1,9 @@
 ﻿""" Pathogen  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 runtime bundle/pathogen/autoload/pathogen.vim
 filetype off
-call pathogen#helptags()
+
 call pathogen#infect('bundle/{}')
+Helptags
 
 
 """" Environmental Variables """""""""""""""""""""""""""""""""""""""""""""""""
