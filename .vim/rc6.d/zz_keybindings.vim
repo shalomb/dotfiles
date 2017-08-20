@@ -1,5 +1,6 @@
-"""" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let mapleader = ","
+
+"""" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 nnoremap <CR>                         ``
 " <CR> in the Command Line/QuickFix mode shouldn't be overridden
@@ -16,10 +17,6 @@ cnoremap <C-p>                        <Up>
 cnoremap <C-n>                        <Down>
 
 
-inoremap <A-C-Left>                   <esc>:tabprevious<cr>
-inoremap <A-C-Right>                  <esc>:tabnext<cr>
-inoremap <C-Left>                     <esc>:tabprevious<cr>
-inoremap <C-Right>                    <esc>:tabnext<cr>
 inoremap <C-S>                        <C-O>:update<CR>
 inoremap <C-Enter>                    <C-o>o
 inoremap <C-S-Enter>                  <C-o>O
@@ -32,8 +29,10 @@ nnoremap <C-Right>                    <Nop>
 " like tmux - c-w,c-w switches to previous window
 nnoremap <C-W><C-W>                   <C-W>p
 
-" nnoremap <buffer>          ;          :
-" nnoremap <buffer>          :          ;
+" nnoremap <buffer>          ;           :call feedkeys('q:G')<CR>
+" nnoremap <buffer>          :           <Nop>
+
+nnoremap <buffer>          <Enter>    <Nop>
 
 nnoremap <buffer>         S          :,%s@\v@@gi<Left><Left><Left><Left>
 
@@ -53,10 +52,9 @@ noremap  <buffer> <silent> <C-y>      5<C-y>
 
 nnoremap <expr>           gV          "`[".getregtype(v:register)[0]."`]"
 
+vnoremap                  //          y/<C-R>"<CR>zt
+
 nnoremap          .                   .`[
-nnoremap          <A-C-Left>          <esc>:tabprevious<cr>
-nnoremap          <A-C-Right>         <esc>:tabnext<cr>
-nnoremap          <F2>                :NERDTreeToggle<CR>
 nnoremap <silent> <C-Tab>             <C-W><C-W>    " control-tab to next window
 " nnoremap <silent> P                   P`[   " jump back to position after put
 " nnoremap <silent> p                   p`[   " jump back to position after put
@@ -71,13 +69,11 @@ nnoremap <silent> <leader><space>     :edit #<cr>
 nnoremap <silent> <leader><Tab>       <C-w><C-w>
 nnoremap <silent> <leader>a           :edit #<cr>
 nnoremap <silent> <leader>A           :execute "set titlestring=".input("Set window title to: ")<cr>
-nnoremap <silent> <leader><C-a>       :edit #<cr>
 nnoremap <silent> <leader>c           :new<cr>:only<cr>
 nnoremap          <leader>e           :edit <C-R>=expand('%:h').'/'<CR>
 
 nnoremap          <leader>ba          :ls<cr>:b<space>
 nnoremap          <leader>be          :CommandTBuffer<cr>
-nnoremap          <leader>bg          :LustyBufferGrep<cr>
 nnoremap <silent> <leader>bc          :close<cr>
 nnoremap <silent> <leader>bd          :bdelete<cr>
 nnoremap <silent> <leader>bh          :bprevious<cr>
@@ -92,21 +88,12 @@ nnoremap <silent> <leader>,           :edit #<cr>
 
 nnoremap <silent> <leader>g           :silent set visualbell!<cr>
 
-" lusty-explorer.vim:1760
-" VIM::command "silent! topleft 1split #{@title}"
-nnoremap <silent> <leader>lb          :ls<cr>:LustyBufferExplorer<cr>
-nnoremap <silent> <leader>lb          :LustyBufferExplorer<cr>
-nnoremap <silent> <leader>lF          :LustyFilesystemExplorer<cr>
-nnoremap <silent> <leader>lf          :LustyFilesystemExplorerFromHere<cr>
-nnoremap <silent> <leader>lg          :LustyBufferGrep<cr>
 nnoremap <silent> <leader>l           :redraw<cr>
 nnoremap <silent> <leader>m           g<  " last set of messages
 " nnoremap <silent> <leader>>         :new /tmp/exchange<cr>ggP`]a<cr><Esc>"_dGgg:w!<cr> " :close<cr>
 " nnoremap <silent> <leader><         :new ~/.tmp/exchange<cr>ggyG<Esc>:w!<cr>:close<cr>
 nnoremap <silent> <leader>>           :write! $TMP/exchange<cr>
 nnoremap <silent> <leader><           :split  $TMP/exchange<cr>
-nnoremap <silent> <leader>ncl         :set cursorline!    cursorline?<cr>
-nnoremap <silent> <leader>ncc         :set cursorcolumn!  cursorcolumn?<cr>
 nnoremap <silent> <leader>nh          :set hlsearch!      hlsearch?<cr>
 nnoremap <silent> <leader>nl          :set list!          list?<cr>
 nnoremap <silent> <leader>nm          :if &guioptions =~ 'm'<bar>  set guioptions-=m <bar>else<bar>  set guioptions+=m<bar>endif<cr>
@@ -125,12 +112,13 @@ nnoremap <silent> <leader>of          :!xdg-open %:p<cr>
 nnoremap <silent> <leader>ofi         :vsplit ~/.config/i3/config<cr>
 nnoremap <silent> <leader>ogk         :vsplit ~/.gitconfig<cr>:1;/\[alias\]<cr>zt
 nnoremap <silent> <leader>otk         :vsplit ~/.tmux.conf<cr>:1;/keybindings<cr>zt
-nnoremap <silent> <leader>ovk         :vsplit ~/.vimrc<cr>:1;/keybindings<cr>zt
+nnoremap <silent> <leader>ovk         :vsplit ~/.vim/rc6.d/zz_keybindings.vim<cr>:1;/keybindings<cr>zt
 " nnoremap <silent> <leader>oh        "zyw:execute ":help ".@z.""<cr>
 nnoremap <silent> <leader>P           "+gP      "paste from gui-clipboard
 nnoremap <silent> <leader>Q           :only<cr>
 nnoremap <silent> <leader>r           :set wrap!<cr>
 nnoremap <silent> <leader>S           :new<cr>
+nnoremap <silent> <leader>V           :vnew<cr>
 nnoremap <silent> <leader>sa          zg  " add word to dict
 nnoremap <silent> <leader>sp          :set spell!<cr>
 nnoremap <silent> <leader>sP          :!x-terminal-emulator -e ispell -x -t %<cr>:redraw<cr>
