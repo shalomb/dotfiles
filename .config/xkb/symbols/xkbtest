@@ -1,0 +1,24 @@
+partial alphanumeric_keys
+xkb_symbols "dashes" {
+  key <AE11> {
+    symbols[Group2] = [ endash, emdash ]
+  };
+  key <AC11> {
+    type= "FOUR_LEVEL",
+      symbols[Group1]= [
+        apostrophe,
+        at,
+        dead_circumflex,
+        dead_caron
+      ]
+  };
+};
+
+partial modifier_keys
+xkb_symbols "caps_mod4" {
+  replace key <CAPS> {
+    [ VoidSymbol, VoidSymbol ]
+  };
+  modifier_map Mod4 { <CAPS> };
+};
+
