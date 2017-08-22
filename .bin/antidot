@@ -1,0 +1,143 @@
+#!/bin/bash
+
+set -eu
+
+is-installed() {
+  local cmd="$1"
+  if ! type -P "$cmd" &> /dev/null; then
+    return 1
+  fi
+}
+
+if [[ $1 = 'deps' ]]; then
+  declare -A deps
+
+  deps['find']='findutils'
+  deps['git']='git'
+  deps['readlink']='coreutils'
+  deps['rsync']='rsync'
+  deps['sudo']='sudo'
+
+  pkgs_to_install=()
+  for dep in ${!deps[@]}; do
+    echo -ne "checking dependency '${deps[$dep]}/$dep' ... "
+    if is-installed "$dep"; then
+      echo "OK"
+    else
+      echo "NO"
+      pkgs_to_install+=( "${deps[$dep]}" )
+    fi
+  done
+
+  if (( ${#pkgs_to_install[@]} > 0 )); then
+    if type -P sudo &> /dev/null; then
+      exec sudo apt install "${pkgs_to_install[@]}"
+    else
+      exec su - -c "apt install '${pkgs_to_install[@]}'"
+    fi
+  fi
+fi
+
+antidotrc=~/.config/antidotrc
+
+if [[ $antidotrc ]]; then
+  source "$antidotrc"
+fi
+
+abs-path () {
+  local target=$(readlink -f "$1")
+  echo "$target"
+}
+
+make-link() {
+  local dotfile=$(dot-file "$1")
+  local src="$2/$dotfile"
+  local dst="$3"
+  local opts="${4-}"
+
+  local parent_dir=$(abs-path "$src")/
+
+  if [[ ! -f $src ]] || [[ $src = */ ]]; then 
+    src="$src/"
+    dst="$dst/"
+  fi
+
+  if [[ $dst = *:* ]]; then
+    dest_dir="${dst#*:}"
+  fi
+
+  set -xv
+  # echo \
+  rsync -PavclpEAXH $opts \
+        --rsync-path="mkdir -p $dest_dir && rsync" \
+        --link-dest="$parent_dir" \
+        "$src" "$dst"
+}
+
+dot-file() {
+  local file="$1"
+  echo "${file##$HOME/}"
+}
+
+main() {
+  local cmd="$1"; shift;
+
+  case "$cmd" in
+    import|manage|stash)
+      local file="$1"
+      local dest="${2:-$root}"
+      make-link "$file" "$root" "$dest"
+    ;;
+
+    export|publish|link)
+      local file="$1"
+      local dest="${2:-$HOME}"
+      make-link "$file" "$root" "$dest"
+    ;;
+
+    log)
+      for file; do
+        git log "$(dot-file "$file")"
+      done
+    ;;
+
+    status|info)
+      if (( $# == 0 )); then
+        exec git status --short --
+      fi
+
+      for file; do
+        if [[ -d $file ]]; then
+          ls -ld "$file" ~/"$file"
+        else
+          if [[ -e $root/$file ]]; then
+            git status --porcelain "$root/$file"
+          else
+            echo "'$file' appears to be unmanaaged (not under '$root'?)."
+          fi
+
+          echo ''
+          echo "links for '$file'"
+          find ~/ -xdev -maxdepth 5 -samefile "$file" -exec ls -lisad {} +
+
+          echo ''
+          for file in "$root/$file" ~/"$file" "$file"; do
+            [[ -e $file ]]  && ls -lisad "$file"
+          done
+        fi
+      done
+    ;;
+
+    *)
+      set -xv
+      if [[ -e $cmd ]]; then
+        exec "$0" status "$cmd"
+      fi
+      echo "Unknown subcommand '$cmd'" >&2
+      exit 3
+    ;;
+
+  esac
+}
+
+main "$@"
