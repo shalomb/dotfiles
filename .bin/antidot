@@ -40,7 +40,7 @@ fi
 
 antidotrc=~/.config/antidotrc
 
-if [[ $antidotrc ]]; then
+if [[ -e $antidotrc ]]; then
   source "$antidotrc"
 fi
 
