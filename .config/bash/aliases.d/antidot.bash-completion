@@ -1,0 +1,51 @@
+#!/bin/bash
+
+
+__antidot-complete() {
+  local cmd="$1"
+  local subcmd="${COMP_WORDS[1]}";
+
+  local cur="${COMP_WORDS[COMP_CWORD]}";
+  local prev="${COMP_WORDS[COMP_CWORD-1]}";
+
+  local antidotrc=~/.config/antidotrc
+
+  if [[ -e $antidotrc ]]; then
+    source "$antidotrc"
+  fi
+
+  if [[ -n $prev && $prev != $cmd ]]; then
+    if [[ $prev == $subcmd && $subcmd = @(import|manage|stash) ]]; then
+      root="$HOME"
+    fi
+
+    local files=()
+    while read f; do
+      files+=( "$f" )
+    done < <(
+      shopt -s nullglob dotglob
+      cd "$root" 
+
+      for f in "$cur"*; do
+        if [[ -d $f ]]; then
+          echo "$f/"
+        else
+          echo "$f"
+        fi
+      done
+
+    )
+    if (( ${#files[@]} == 1 )) && [[ ! -d $root/$files ]]; then
+      compopt +o nospace
+    else
+      compopt -o nospace
+    fi
+    fCOMPREPLY=( $( compgen -W "${files[*]}" -- "$cur" ) );
+  else
+    local subcommands=( export publish link import manage stash log status info )
+    COMPREPLY=( $( compgen -W "${subcommands[*]}" -- "$cur" ) );
+  fi
+}
+
+complete -o bashdefault -o default -F __antidot-complete antidot
+

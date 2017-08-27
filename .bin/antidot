@@ -49,34 +49,118 @@ abs-path () {
   echo "$target"
 }
 
-make-link() {
-  local dotfile=$(dot-file "$1")
-  local src="$2/$dotfile"
-  local dst="$3"
-  local opts="${4-}"
-
-  local parent_dir=$(abs-path "$src")/
-
-  if [[ ! -f $src ]] || [[ $src = */ ]]; then 
-    src="$src/"
-    dst="$dst/"
-  fi
-
-  if [[ $dst = *:* ]]; then
-    dest_dir="${dst#*:}"
-  fi
-
-  set -xv
-  # echo \
-  rsync -PavclpEAXH $opts \
-        --rsync-path="mkdir -p $dest_dir && rsync" \
-        --link-dest="$parent_dir" \
-        "$src" "$dst"
-}
-
 dot-file() {
   local file="$1"
   echo "${file##$HOME/}"
+}
+
+bootstrap-rsync() {
+  local srv="$1"
+
+  if [[ $srv = *: ]]; then
+    local srv="${srv%:}"
+  fi
+
+  gzip -6v < "$(type -P rsync)" |
+    ssh "$srv" "
+      type -P rsync >/dev/null 2>&1 ||
+        mkdir -p ~/.bin/ &&
+        cd ~/.bin/    &&
+        gzip -d - > ~/.bin/rsync &&
+        chmod +x ~/.bin/rsync
+      PATH=\"~/.bin:\$PATH\" rsync --version
+    "
+}
+
+make-link() {
+  echo "make-link : $@"
+  local dst="$1"; shift;
+  local src=( "$@" )
+
+  files=()
+  if [[ $dst = *:* ]]; then
+    for i in "${!src[@]}"; do
+      files+=( $(compgen -G "$root/${src[i]}") )
+    done
+  fi
+
+  for i in "${!files[@]}"; do
+    if [[ -d ${files[i]} ]]; then
+      files[i]="${files[i]%/}/"
+    fi
+  done
+
+  local DEBUG=1
+  [[ -n ${DEBUG-} ]] &&
+( IFS=','
+  cat<<EOF >&2
+src      : [${src[*]}]
+files    : [${files[*]}]
+dst      : $dst
+EOF
+)
+
+  exit
+  local opts="${4-}"
+  set -xv
+  local src=( $(cd "$root" && compgen -G "$src_glob") )
+
+
+exit;
+
+  if   [[ $dst = *:  ]]; then
+    if [[ $src = */ || -d $src || -d $root/$src ]]; then
+      dst="$dst$dotfile"
+    else
+      dst="$dst$(dirname "$dotfile")"
+    fi
+  fi
+
+  if   [[ $dst = *: || $dst = *:* ]]; then
+    local dst_parent="${dst##*:}"
+    if [[ $dst_parent != *'/' ]]; then
+      local dst_parent="$(dirname "$dst_parent")"
+    fi
+  fi
+
+  if [[ -d $src ]]; then
+    src=$(abs-path "$src")
+    src="${src%/}/"
+    dst="${dst%/}/"
+    local dst_parent="${dst_parent:-$dst}"
+    local link_dest="$src"
+  elif [[ -f $src ]]; then
+    local link_dest="$(dirname "${src}")/"
+  elif [[ $src = *'*' ]]; then
+    echo "src glob : $src"
+    local link_dest="${src%/*}/"
+    local dst="${dst%/*}/"
+  else
+    echo "whoopsie" >&2; exit 3;
+  fi
+
+  local dst_parent="${dst_parent:-$(dirname "$dst")}"
+
+  [[ -n ${DEBUG-} ]] &&
+  cat<<EOF >&2
+PWD        : $(pwd -P)
+dotfile    : $dotfile
+link-dst   : $link_dest
+dst-parent : $dst_parent
+src        : $src
+dst        : $dst
+EOF
+
+  [[ -n ${DEBUG-} ]] &&
+  set -xv
+
+  set -- $(compgen -G "$src")
+
+  rsync -PavlpEAXH $opts \
+        --rsync-path="mkdir -p $dst_parent && \$(which rsync || echo ~/.bin/rsync)" \
+        --link-dest="$link_dest" \
+        --exclude=.git/ \
+        "$@" "$dst"
 }
 
 main() {
@@ -84,24 +168,30 @@ main() {
 
   case "$cmd" in
     import|manage|stash)
-      local file="$1"
+      #| Import an unmanaged file to the repo
+      local file="${1#$HOME}"
       local dest="${2:-$root}"
       make-link "$file" "$root" "$dest"
     ;;
 
     export|publish|link)
-      local file="$1"
-      local dest="${2:-$HOME}"
-      make-link "$file" "$root" "$dest"
+      #| Export managed files to ~/ or a remote server
+      echo "export: [$@]"
+      make-link "${@: -1}" "${@: 1:$#-1}" 
     ;;
 
     log)
+      #| Show the git log of a file
+      cd "$root"
       for file; do
         git log "$(dot-file "$file")"
       done
     ;;
 
     status|info)
+      #| Show the status of a managed file
+      cd "$root"
+
       if (( $# == 0 )); then
         exec git status --short --
       fi
@@ -126,6 +216,26 @@ main() {
           done
         fi
       done
+    ;;
+
+    '/')
+      #| Run a shell command in the context of the repo
+      cd "$root" && "$@"
+    ;;
+
+    boot|bootstrap)
+      #| Bootstrap rsync onto ~/.bin/ on the remote host - this assumes binary compatibility
+      bootstrap-rsync "$1"
+    ;;
+
+    help)
+      #| Show this help menu
+      grep -B1 -E '^ +#\|' "$0" |
+        tr -d '\n' |
+        sed -r 's/--/\n/g' |
+        while read c t; do
+          printf '%-20s  %s\n' "$c" "$t"
+        done | sed -r -e 's/\)//' -e 's/#\|/  -/'
     ;;
 
     *)
