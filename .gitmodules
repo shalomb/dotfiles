@@ -157,3 +157,9 @@
 [submodule   ".vim/bundle/schlepp"]
   path   =   .vim/bundle/schlepp               
   url    =   https://github.com/zirrostig/vim-schlepp.git
+[submodule ".vim/bundle/dragvisuals"]
+	path = .vim/bundle/dragvisuals
+	url = https://github.com/shinokada/dragvisuals.vim.git
+[submodule ".vim/bundle/tortoise-typing"]
+	path = .vim/bundle/tortoise-typing
+	url = https://github.com/thanthese/Tortoise-Typing.git
