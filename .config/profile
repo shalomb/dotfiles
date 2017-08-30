@@ -137,7 +137,8 @@ export LESS_TERMCAP_us=$'\E[01;32m';      export LESS_TERMCAP_us;
 
 PAGER="${PAGER:-less}";                   export PAGER;
 MANPAGER="${PAGER:-"less"}";              export MANPAGER;
-MANPATH="$MANPATH:/usr/share/man/:/var/cache/man/"; export MANPATH
+MANPATH="$MANPATH:/usr/share/man/:/usr/local/share/man/:/var/cache/man/";
+                                          export MANPATH
 
 GNOME_DESKTOP_SESSION_ID='profile0';      export GNOME_DESKTOP_SESSION_ID;
 
