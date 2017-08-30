@@ -15,7 +15,7 @@ xset dpms 420 480 600  # timeouts for standby, suspend, off
 
 
 # override some settings that gnome-settings-daemon might set
-sleep 10 && xset b on           # Turn the bell on
-sleep 10 && xset -b             # Disable bell/speaker completely
-sleep 10 && xset r rate 175 40  # Set the keyboard repeat-rate:
+xset b on           # Turn the bell on
+xset -b             # Disable bell/speaker completely
+xset r rate 175 40  # Set the keyboard repeat-rate:
 
