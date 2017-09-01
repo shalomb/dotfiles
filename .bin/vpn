@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -eu
+
+vpn_name="${0##*/}"
+
+config_file=/etc/openfortivpn/$vpn_name 
+if [[ -e $config_file ]]; then
+  echo exec sudo openfortivpn --config "$config_file"
+else
+  echo "Could not find config file ($config_file) for '$vpn_name'"
+  echo ''
+  echo "  Available VPN configurations"
+  for i in /etc/openfortivpn/*; do
+    echo "    ${i##*/}"
+  done
+fi
+

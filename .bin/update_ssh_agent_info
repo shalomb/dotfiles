@@ -54,7 +54,7 @@ reload_ssh_agent () {
     if ! ssh-add &> /dev/null; then
       if [[ -n $agent_spawned_this_session ]]; then
         kill -0 "$SSH_AGENT_PID" && kill "$SSH_AGENT_PID"
-        [[ -e $SSH_AGENT_INFO_FILE ]] && rm "$SSH_AGENT_INFO_FILE"
+        [[ -e $SSH_AGENT_INFO_FILE ]] && rm -f "$SSH_AGENT_INFO_FILE"
       fi
       unset SSH_AGENT_PID SSH_AUTH_SOCK SSH_AGENT_INFO
       return
@@ -75,7 +75,7 @@ reload_ssh_agent () {
   source "$SSH_AGENT_INFO_FILE" &>/dev/null
 
 if { ! kill -0 "$SSH_AGENT_PID" ; } &>/dev/null; then
-  rm "$SSH_AGENT_INFO_FILE";
+  rm -f "$SSH_AGENT_INFO_FILE";
 fi
 
 # if we have no identities loaded

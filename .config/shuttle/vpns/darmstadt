@@ -1,0 +1,7 @@
+#!/bin/bash
+
+jumphost="jh.ao.in.pan-net.eu"
+cidrs=( 172.16.0.0/15 )
+
+exec sshuttle -v -H -r "$jumphost" "${cidrs[@]}"
+
