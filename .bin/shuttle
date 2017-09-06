@@ -3,10 +3,8 @@
 set -eu
 shopt -s nullglob
 
-set -xv
 if [[ -z ${vpn_name-} ]]; then
-  vpn_name="${0##*/}"
-  vpn_name="$1"
+  vpn_name="${1:-${0##*/}}"
 fi
 
 config_file=~/.config/shuttle/vpns/$vpn_name 
@@ -14,7 +12,7 @@ config_file=~/.config/shuttle/vpns/$vpn_name
 if [[ -e $config_file ]]; then
   exec "$config_file"
 else
-  echo "Could not find config file ($config_file) for '$vpn_name'"
+  echo "Missing config file ($config_file) for sshuttle VPN '$vpn_name'"
   echo ''
   echo "  Available VPN configurations"
   for i in ~/.config/shuttle/vpns/*; do
