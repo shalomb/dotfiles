@@ -7,6 +7,8 @@
 #  - creates a shell script that can be sourced into other scripts
 #  - exports the SSH_AUTH_SOCK, SSH_AGENT_PID and SSH_AGENT_INFO_FILE envvars
 
+[[ -n $SSH_CONNECTION ]] && return
+
 # TODO : set -e in the caller still breaks this somewhere
 [[ ${-//[!e]/} ]] && sete=1
 shopt nullglob | grep -iq on && nullglob=1
