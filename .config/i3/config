@@ -72,7 +72,7 @@ mode "workspace control" {
   bindsym h               split h
   bindsym v               split v
 
-  bindsym Shift+r         exec --no-startup-id xrandr --output DP-1 --off
+  bindsym Shift+r         exec --no-startup-id xrandr --output DP-1-1 --off --output DP-1-2 --off --output eDP-1-1 --primary --auto
   bindsym r               exec --no-startup-id xrandr --output eDP-1 --primary --auto --output DP-1-1 --rotate normal --left-of eDP-1  --auto --output DP-1-2 --rotate normal --left-of DP-1-1 --auto
 
   bindsym l               exec --no-startup-id xset dpms force off; exec --no-startup-id xscreensaver-command -lock ; mode "default"
