@@ -39,7 +39,6 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/easymotion/vim-easymotion.git         bundle/easymotion
   git submodule add -f https://github.com/ekalinin/Dockerfile.vim.git           bundle/dockerfile
   git submodule add -f https://github.com/ervandew/supertab.git                 bundle/supertab
-  git submodule add -f https://github.com/gabrielelana/vim-markdown.git         bundle/markdown
   git submodule add -f https://github.com/garbas/vim-snipmate.git               bundle/snipmate
   git submodule add -f https://github.com/Glench/Vim-Jinja2-Syntax.git          bundle/jinja2-syntax
   git submodule add -f https://github.com/godlygeek/tabular.git                 bundle/tabular
@@ -50,6 +49,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack
   git submodule add -f https://github.com/shinokada/dragvisuals.vim.git         bundle/dragvisuals
   git submodule add -f https://github.com/takac/vim-hardtime.git                bundle/hardtime
+  git submodule add -f https://github.com/tamlok/vim-markdown.git               bundle/markdown
   git submodule add -f https://github.com/thanthese/Tortoise-Typing.git         bundle/tortoise-typing
   git submodule add -f https://github.com/tmux-plugins/vim-tmux.git             bundle/tmux
   git submodule add -f https://github.com/tomasr/molokai.git                    bundle/molokai
