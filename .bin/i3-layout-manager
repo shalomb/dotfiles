@@ -1,0 +1,103 @@
+#!/bin/bash
+
+set -eu
+
+all_workspaces=$( i3-msg -t get_workspaces )
+function is-workspace-available {
+  local ws=$1
+  jq -e -r '.[] | select(.name=="'"$ws"'")' >/dev/null <<<"$all_workspaces"
+}
+
+function move-workspace-to-output {
+  local ws="$1"
+  local output="$2"
+
+  echo "$ws -> $output"
+
+  ( set -xv
+  is-workspace-available "$ws" &&
+    i3-msg "workspace $ws, move workspace to output $output"
+  )
+}
+
+function dock {
+
+  outputs=( $(xrandr -q | grep -Po '^\K(\S+)(?= connected)') )
+
+  echo "Number of active outputs : ${#outputs[@]}"
+
+  if (( ${#outputs[@]} == 1 )); then
+    echo "Only one output (${outputs[@]}) is active, cannot continue .." >&2
+    return
+  fi
+
+  xrandr \
+    --output eDP-1 --auto \
+    --output DP-1-1 --left-of eDP-1  --auto --primary \
+    --output DP-1-2 --left-of DP-1-1 --auto
+
+  declare -A workspace_output_map
+
+  workspace_output_map[0]="eDP-1"
+  workspace_output_map[p]="eDP-1"
+
+  workspace_output_map[q]="DP-1-1"
+  workspace_output_map[1]="DP-1-1"
+  workspace_output_map[2]="DP-1-1"
+  workspace_output_map[3]="DP-1-1"
+  workspace_output_map[4]="DP-1-1"
+  workspace_output_map[5]="DP-1-1"
+
+  workspace_output_map[f]="DP-1-1"
+  workspace_output_map[6]="DP-1-2"
+  workspace_output_map[7]="DP-1-2"
+  workspace_output_map[8]="DP-1-2"
+  workspace_output_map[9]="DP-1-2"
+  workspace_output_map[2]="DP-1-2"
+  workspace_output_map[e]="DP-1-2"
+  workspace_output_map[w]="DP-1-2"
+
+  for i in ${!workspace_output_map[@]}; do
+    if ! move-workspace-to-output "$i" "${workspace_output_map[$i]}"; then
+      echo "Unable to move workspace $i to output ${workspace_output_map[$i]}" >&2
+    fi
+  done
+
+}
+
+function undock {
+
+  outputs=( $(xrandr -q | grep -Po '^\K(\S+)(?= connected)') )
+  workspaces=( $(i3-msg -t get_workspaces | jq -r '.[].name' | sort) )
+
+  for i in "${workspaces[@]}"; do
+    if ! move-workspace-to-output "$i" "${outputs[0]}"; then
+      echo "Unable to move workspace $i to output ${outputs[0]}" >&2
+    fi
+  done
+
+  xrandr --output "${outputs[0]}" --auto --primary
+
+  for i in "${outputs[@]:1: ${#outputs[@]}}"; do
+    xrandr --output "$i" --off
+  done
+
+}
+
+cmd="$1"
+
+while getopts 'duh' opt; do
+  case "$opt" in 
+    d)
+      dock
+    ;;
+    h) 
+      echo 'pass one of d|u'
+    ;;
+    u)
+      undock
+    ;;
+  esac
+done
+
+# shift $((OPTIND -1))
