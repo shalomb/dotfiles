@@ -3,7 +3,7 @@ highlight ExtraWhitespace ctermbg=red
 augroup unwantedspace
   au!
 
-  au BufNewFile,BufCreate,BufRead,BufWritePre  <buffer> silent! %s///ge
+  au BufNewFile,BufCreate,BufRead,BufWritePre  <buffer> silent! %s///ge
   au BufNewFile,BufCreate,BufRead,BufWritePre  <buffer> silent! %s/\v\s+$//ge
 
   " [Highlight unwanted spaces | Vim Tips Wiki | FANDOM powered by Wikia]
