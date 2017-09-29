@@ -169,3 +169,6 @@
 [submodule ".vim/bundle/exchange"]
 	path = .vim/bundle/exchange
 	url = https://github.com/tommcdo/vim-exchange.git
+[submodule ".vim/bundle/snipmate-snippets"]
+	path = .vim/bundle/snipmate-snippets
+	url = https://github.com/honza/vim-snippets.git
