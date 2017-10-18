@@ -1,6 +1,6 @@
 [submodule   ".vim/bundle/ansible-snippets"]
 	path = .vim/bundle/ansible-snippets
-	url = git@github.com:shalomb/ansible-snippets.git
+	url = https://github.com/shalomb/ansible-snippets.git
 
 [submodule   ".vim/bundle/switch"]
 	path = .vim/bundle/switch
