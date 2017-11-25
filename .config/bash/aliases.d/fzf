@@ -45,7 +45,7 @@ function cdp {
         column |
         fzf --bind=ctrl-s:toggle-sort \
             --cycle \
-            --height 50% \
+            --height 10% \
             --no-mouse \
             --query="$query" \
             --reverse \
