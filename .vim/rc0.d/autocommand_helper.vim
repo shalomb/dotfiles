@@ -9,9 +9,9 @@ function! s:AuRsyncTargetCompletion(ArgLead, CmdLine, CursorPos)
     " let l:foo = input( 'I got ' . a:ArgLead )
     return join( map( split(expand('%'), '\n'), '"' . a:ArgLead . '"' . ' . v:val' ), '\n')
   elseif char_at_pos == ' '
-    return system("perl -lne 'print $1 if /Host +([^\*]+)$/i' ~/.ssh/*config* ~/.ssh/config.d/*")
+    return system("perl -lne '($h)=/Host +([^\*]+)$/i; print for split /\\s+/, $h' ~/.ssh/*config* ~/.ssh/config.d/*")
   else
-    return system("perl -lne '($h)=/Host +([^\*]+)$/i; print $h if $h =~ /^" . a:ArgLead . "/' ~/.ssh/*config* ~/.ssh/config.d/*")
+    return system("perl -lne '($h)=/Host +([^\*]+)$/i; print for grep /^" . a:ArgLead . "/, split /\\s+/, $h' ~/.ssh/*config* ~/.ssh/config.d/*")
   endif
 
 endfunction
