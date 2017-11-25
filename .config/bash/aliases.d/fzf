@@ -1,0 +1,151 @@
+#!/bin/bash
+
+#| cdf - cd to directory
+function cdf {
+  query="$@"
+
+  if [[ -d $query ]]; then
+    dir="$query"; [[ $dir = ~ ]] && dir="$HOME"
+  else
+    dir="$PWD"
+  fi
+
+  target="$(
+    find "${dir:-.}" \
+      -type d \( -iname ".?*" \) -prune \
+      -o -type d -print |
+    fzf --sort \
+        --bind=ctrl-s:toggle-sort \
+        --cycle \
+        --height 10% \
+        --no-mouse \
+        --print-query \
+        --query="$query" \
+        --reverse \
+        --tiebreak=index
+  )"
+
+  [[ $target == '~' ]] && target="$HOME"
+  if [[ -d $target ]]; then
+    cd "$target"
+  else
+    echo "cdf: $target: No such directory"
+  fi
+}
+
+function cdp {
+  query="$@"
+  dir="$( cd ~ && find * -iname ".git" |
+      sed -r 's@/.git@@' |
+      while read d; do
+        (  cd "$d" && git remote -v | grep 'fetch'
+        ) 2>/dev/null |
+          sed -r 's@^@'"$d"'  @';
+      done |
+        column |
+        fzf --bind=ctrl-s:toggle-sort \
+            --cycle \
+            --height 10% \
+            --no-mouse \
+            --query="$query" \
+            --reverse \
+            --sort \
+            --tiebreak=index |
+          awk '{ print $1 }'
+  )"
+  cd "$dir"
+}
+
+#| cdfr - cd from home
+function cdfr {
+  cd ~
+}
+
+#| fz - File browser
+function fz {
+  local cmd="$1"
+  if git -C . rev-parse --is-inside-work-tree &>/dev/null; then
+    local FZF_DEFAULT_COMMAND='git ls-tree -r --name-only HEAD'
+  else
+    local FZF_DEFAULT_COMMAND='find . \( -iname ".?*" \) -prune -o -type f -print'
+  fi
+  local files=( $(
+    FZF_DEFAULT_COMMAND="$FZF_DEFAULT_COMMAND" \
+      fzf --multi --preview 'less {}'
+    )
+  )
+  "${cmd:-$EDITOR}" "${files[@]}"
+}
+
+#| gB - Git Browser
+function gB {
+  local query
+
+  if ! git show "$1" &>/dev/null; then
+    query="$@"
+    set --
+  fi
+
+  while block=$(
+      git log --graph \
+        --color=always \
+        --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' \
+        --abbrev-commit --date=relative "$@" |
+      fzf --ansi --multi \
+          --sort \
+          --bind=ctrl-s:toggle-sort \
+          --reverse --query="$query" \
+          --tiebreak=index \
+          --no-mouse --print-query \
+          --border --height 70% --cycle \
+          --preview 'git show --color=always $(echo "{}" | perl -lane "print /([[:xdigit:]]\{7})/")' \
+          --expect=ctrl-d,ctrl-e,ctrl-v,ctrl-f,ctrl-j,ctrl-m
+    ); do
+
+    query=$( sed  -n '1p' <<<"$block" );
+    key=$(   sed  -n '2p' <<<"$block" ); key="${key##ctrl-}"
+    items=$( tail -n +3   <<<"$block" );
+    shasums=( $( perl -lne 'print /(\w{7})/' <<<"$block" ) )
+
+    echo '----'
+    echo "query: $query"
+    echo "key:   $key"
+    echo -e "items: \n$items"
+    echo "sums:  ${shasums[@]}"
+    echo ''
+    echo -e "block: [$block\n]"
+    echo '----'
+
+    [[ -z $key ]] && key=m
+
+    case "$key" in
+      e)
+        cat <<EOHELP | column | less
+  e - show this help menu
+  d - show diffs between revisions
+  f - show files at revisions
+  m - show commits
+EOHELP
+      ;;
+      d)
+        git diff "${shasums[0]}" "${shasums[1]:-HEAD}" $(
+          { echo -e 'M\t.'
+            git diff-tree --no-commit-id --name-status \
+                -r "${shasums[0]}" "${shasums[1]:-HEAD}"
+          } | fzf --ansi --sort --reverse |
+              awk '{ print $2 }'
+        )
+      ;;
+      f)
+        while read -r file; do
+          git show "${shasums[0]}":"$file"
+        done < <( git ls-tree --name-only -r "${shasums[0]}" |
+          fzf --ansi --multi --sort --reverse )
+      ;;
+      m)
+        git show --color=always "${shasums[@]}"
+      ;;
+    esac
+
+  done
+}
