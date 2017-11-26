@@ -63,18 +63,74 @@ function cdfr {
 
 #| fz - File browser
 function fz {
-  local cmd="$1"
-  if git -C . rev-parse --is-inside-work-tree &>/dev/null; then
-    local FZF_DEFAULT_COMMAND='git ls-tree -r --name-only HEAD'
-  else
-    local FZF_DEFAULT_COMMAND='find . \( -iname ".?*" \) -prune -o -type f -print'
-  fi
-  local files=( $(
+
+  fz_cmd="$1"
+  fz_query="$2"
+  fz_cmd="${fz_cmd:-$EDITOR}"
+  fz_preview_cmd="less {}"
+
+  local FZF_DEFAULT_COMMAND='find . \( -iname ".?*" \) -prune -o -print'
+
+  while block=$(
     FZF_DEFAULT_COMMAND="$FZF_DEFAULT_COMMAND" \
-      fzf --multi --preview 'less {}'
-    )
-  )
-  "${cmd:-$EDITOR}" "${files[@]}"
+    fzf \
+      --bind=ctrl-s:toggle-sort \
+      --border \
+      --cycle \
+      --header="$fz_cmd $fz_query [$?,$$,$PWD]" \
+      --height 50% \
+      --inline-info \
+      --multi \
+      --no-mouse \
+      --preview="$fz_preview_cmd" \
+      --print-query \
+      --query="$fz_query" \
+      --reverse \
+      --sort \
+      --tiebreak=index \
+      --expect='ctrl-d,ctrl-o,ctrl-e,ctrl-m,ctrl-v'
+    ); do
+
+    fz_query=$( sed  -n '1p' <<<"$block" );
+    key=$(   sed  -n '2p' <<<"$block" ); key="${key##ctrl-}"
+    files=( $( tail -n +3   <<<"$block" ) );
+
+    [[ -z $key ]] && key=m
+
+    case "$key" in
+      e)
+        declare -A fz_cmds;
+        fz_cmds[fz_cmd]='Command to run on selections'
+        fz_cmds[fz_query]='Search term for fz'
+        fz_cmds[fz_preview_cmd]='Command to use when previewing items'
+        fz_cmds[PWD]='Current working directory'
+
+        setting=$(
+          for i in "${!fz_cmds[@]}"; do
+            echo "$i - [${!i}] ${fz_cmds[$i]}"
+          done |
+            fzf --sort --reverse --tac |
+            awk '{ print $1 }'
+        )
+        [[ -z $setting ]] && continue
+
+        read -r -p " $setting: [${!setting}]> " _tv;
+        read -r "$setting" <<<"${_tv:-${!setting}}"
+
+        [[ $setting = PWD ]] && [[ $(pwd) != $PWD ]] && cd "$PWD"
+
+        continue
+      ;;
+      m)
+        $fz_cmd "${files[@]}"
+      ;;
+      *)
+        read -p "unimplemented action for '$key'" foo
+        continue
+      ;;
+    esac
+
+  done
 }
 
 #| gB - Git Browser
