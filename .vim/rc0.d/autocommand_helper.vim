@@ -17,7 +17,7 @@ function! s:AuRsyncTargetCompletion(ArgLead, CmdLine, CursorPos)
 endfunction
 
 function! GitRoot()
-  return systemlist('git rev-parse --show-toplevel')[0]
+  return systemlist('git rev-parse --show-toplevel 2>/dev/null')[0]
 endfunction
 
 function! NormalizeWS(v)
