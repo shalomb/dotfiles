@@ -31,7 +31,6 @@ ln -svf .vim/gvimrc .gvimrc
 ( set +e -xv
   cd .vim/
 
-  git submodule add -f git@github.com:shalomb/ansible-snippets.git              bundle/ansible-snippets
   git submodule add -f https://github.com/AndrewRadev/switch.vim.git            bundle/switch
   git submodule add -f https://github.com/avakhov/vim-yaml.git                  bundle/yaml
   git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    bundle/tmux-navigator
@@ -48,6 +47,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/kien/ctrlp.vim.git                    bundle/ctrlp
   git submodule add -f https://github.com/MarcWeber/vim-addon-mw-utils.git      bundle/mw-utils
   git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack
+  git submodule add -f https://github.com/shalomb/ansible-snippets.git          bundle/ansible-snippets
   git submodule add -f https://github.com/shinokada/dragvisuals.vim.git         bundle/dragvisuals
   git submodule add -f https://github.com/takac/vim-hardtime.git                bundle/hardtime
   git submodule add -f https://github.com/tamlok/vim-markdown.git               bundle/markdown
