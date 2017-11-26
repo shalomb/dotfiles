@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [[ ! -e ~/.config/plantuml/plantuml.jar ]]; then
+    mkdir  ~/.config/plantuml/
+    wget -c 'https://netix.dl.sourceforge.net/project/plantuml/plantuml.jar' \
+         -o ~/.config/plantuml/plantuml.jar
+fi
+
+java -jar ~/.config/plantuml/plantuml.jar \
+     -Djava.awt.headless=true \
+     -verbose \
+     -tsvg \
+     "$@"
+

@@ -1,0 +1,207 @@
+#!/bin/bash
+
+#| cdf - cd to directory
+function cdf {
+  query="$@"
+
+  if [[ -d $query ]]; then
+    dir="$query"; [[ $dir = ~ ]] && dir="$HOME"
+  else
+    dir="$PWD"
+  fi
+
+  target="$(
+    find "${dir:-.}" \
+      -type d \( -iname ".?*" \) -prune \
+      -o -type d -print |
+    fzf --sort \
+        --bind=ctrl-s:toggle-sort \
+        --cycle \
+        --height 10% \
+        --no-mouse \
+        --print-query \
+        --query="$query" \
+        --reverse \
+        --tiebreak=index
+  )"
+
+  [[ $target == '~' ]] && target="$HOME"
+  if [[ -d $target ]]; then
+    cd "$target"
+  else
+    echo "cdf: $target: No such directory"
+  fi
+}
+
+function cdp {
+  query="$@"
+  dir="$( cd ~ && find * -iname ".git" |
+      sed -r 's@/.git@@' |
+      while read d; do
+        (  cd "$d" && git remote -v | grep 'fetch'
+        ) 2>/dev/null |
+          sed -r 's@^@'"$d"'  @';
+      done |
+        column |
+        fzf --bind=ctrl-s:toggle-sort \
+            --cycle \
+            --height 50% \
+            --no-mouse \
+            --query="$query" \
+            --reverse \
+            --sort \
+            --tiebreak=index |
+          awk '{ print $1 }'
+  )"
+  cd "$dir"
+}
+
+#| cdfr - cd from home
+function cdfr {
+  cd ~
+}
+
+#| fz - File browser
+function fz {
+
+  fz_cmd="$1"
+  fz_query="$2"
+  fz_cmd="${fz_cmd:-$EDITOR}"
+  fz_preview_cmd="less {}"
+
+  local FZF_DEFAULT_COMMAND='find . \( -iname ".?*" \) -prune -o -print'
+
+  while block=$(
+    FZF_DEFAULT_COMMAND="$FZF_DEFAULT_COMMAND" \
+    fzf \
+      --bind=ctrl-s:toggle-sort \
+      --border \
+      --cycle \
+      --header="$fz_cmd $fz_query [$?,$$,$PWD]" \
+      --height 50% \
+      --inline-info \
+      --multi \
+      --no-mouse \
+      --preview="$fz_preview_cmd" \
+      --print-query \
+      --query="$fz_query" \
+      --reverse \
+      --sort \
+      --tiebreak=index \
+      --expect='ctrl-d,ctrl-o,ctrl-e,ctrl-m,ctrl-v'
+    ); do
+
+    fz_query=$( sed  -n '1p' <<<"$block" );
+    key=$(   sed  -n '2p' <<<"$block" ); key="${key##ctrl-}"
+    files=( $( tail -n +3   <<<"$block" ) );
+
+    [[ -z $key ]] && key=m
+
+    case "$key" in
+      e)
+        declare -A fz_cmds;
+        fz_cmds[fz_cmd]='Command to run on selections'
+        fz_cmds[fz_query]='Search term for fz'
+        fz_cmds[fz_preview_cmd]='Command to use when previewing items'
+        fz_cmds[PWD]='Current working directory'
+
+        setting=$(
+          for i in "${!fz_cmds[@]}"; do
+            echo "$i - [${!i}] ${fz_cmds[$i]}"
+          done |
+            fzf --sort --reverse --tac |
+            awk '{ print $1 }'
+        )
+        [[ -z $setting ]] && continue
+
+        read -r -p " $setting: [${!setting}]> " _tv;
+        read -r "$setting" <<<"${_tv:-${!setting}}"
+
+        [[ $setting = PWD ]] && [[ $(pwd) != $PWD ]] && cd "$PWD"
+
+        continue
+      ;;
+      m)
+        $fz_cmd "${files[@]}"
+      ;;
+      *)
+        read -p "unimplemented action for '$key'" foo
+        continue
+      ;;
+    esac
+
+  done
+}
+
+#| gB - Git Browser
+function gB {
+  local query
+
+  if ! git show "$1" &>/dev/null; then
+    query="$@"
+    set --
+  fi
+
+  while block=$(
+      git log --graph \
+        --color=always \
+        --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' \
+        --abbrev-commit --date=relative "$@" |
+      fzf --ansi --multi \
+          --sort \
+          --bind=ctrl-s:toggle-sort \
+          --reverse --query="$query" \
+          --tiebreak=index \
+          --no-mouse --print-query \
+          --border --height 70% --cycle \
+          --preview 'git show --color=always $(echo "{}" | perl -lane "print /([[:xdigit:]]\{7})/")' \
+          --expect=ctrl-d,ctrl-e,ctrl-v,ctrl-f,ctrl-j,ctrl-m
+    ); do
+
+    query=$( sed  -n '1p' <<<"$block" );
+    key=$(   sed  -n '2p' <<<"$block" ); key="${key##ctrl-}"
+    items=$( tail -n +3   <<<"$block" );
+    shasums=( $( perl -lne 'print /(\w{7})/' <<<"$block" ) )
+
+    echo '----'
+    echo "query: $query"
+    echo "key:   $key"
+    echo -e "items: \n$items"
+    echo "sums:  ${shasums[@]}"
+    echo ''
+    echo -e "block: [$block\n]"
+    echo '----'
+
+    [[ -z $key ]] && key=m
+
+    case "$key" in
+      e)
+        cat <<EOHELP | column | less
+  e - show this help menu
+  d - show diffs between revisions
+  f - show files at revisions
+  m - show commits
+EOHELP
+      ;;
+      d)
+        git diff "${shasums[0]}" "${shasums[1]:-HEAD}" $(
+          { echo -e 'M\t.'
+            git diff-tree --no-commit-id --name-status \
+                -r "${shasums[0]}" "${shasums[1]:-HEAD}"
+          } | fzf --ansi --sort --reverse |
+              awk '{ print $2 }'
+        )
+      ;;
+      f)
+        while read -r file; do
+          git show "${shasums[0]}":"$file"
+        done < <( git ls-tree --name-only -r "${shasums[0]}" |
+          fzf --ansi --multi --sort --reverse )
+      ;;
+      m)
+        git show --color=always "${shasums[@]}"
+      ;;
+    esac
+
+  done
+}

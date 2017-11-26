@@ -43,6 +43,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/honza/vim-snippets.git                bundle/snipmate-snippets
   git submodule add -f https://github.com/idbrii/textobj-word-column.vim.git    bundle/textobj-word-column
   git submodule add -f https://github.com/jgdavey/tslime.vim.git                bundle/tslime
+  git submodule add -f https://github.com/junegunn/vim-peekaboo.git             bundle/peekaboo
   git submodule add -f https://github.com/kien/ctrlp.vim.git                    bundle/ctrlp
   git submodule add -f https://github.com/MarcWeber/vim-addon-mw-utils.git      bundle/mw-utils
   git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack

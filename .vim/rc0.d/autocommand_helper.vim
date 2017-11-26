@@ -1,5 +1,6 @@
+""" Autocommands helper """""""""""""""""""""""""""""""""""""""""""""""
 
-function! s:AuRsyncTargetCompletion(ArgLead, CmdLine, CursorPos) 
+function! s:AuRsyncTargetCompletion(ArgLead, CmdLine, CursorPos)
   let l:cmdline = getcmdline()
   let l:char_at_pos = a:CmdLine[a:CursorPos-1]
   " let l:foo = input( "I got " . (a:CursorPos) . " being '" . char_at_pos . "'" )
@@ -8,15 +9,15 @@ function! s:AuRsyncTargetCompletion(ArgLead, CmdLine, CursorPos)
     " let l:foo = input( 'I got ' . a:ArgLead )
     return join( map( split(expand('%'), '\n'), '"' . a:ArgLead . '"' . ' . v:val' ), '\n')
   elseif char_at_pos == ' '
-    return system("perl -lne 'print $1 if /Host +([^\*]+)$/i' ~/.ssh/*config*")
+    return system("perl -lne '($h)=/Host +([^\*]+)$/i; print for split /\\s+/, $h' ~/.ssh/*config* ~/.ssh/config.d/*")
   else
-    return system("perl -lne '($h)=/Host +([^\*]+)$/i; print $h if $h =~ /^" . a:ArgLead . "/' ~/.ssh/*config*")
+    return system("perl -lne '($h)=/Host +([^\*]+)$/i; print for grep /^" . a:ArgLead . "/, split /\\s+/, $h' ~/.ssh/*config* ~/.ssh/config.d/*")
   endif
 
 endfunction
 
 function! GitRoot()
-  return systemlist('git rev-parse --show-toplevel')[0]
+  return systemlist('git rev-parse --show-toplevel 2>/dev/null')[0]
 endfunction
 
 function! NormalizeWS(v)
@@ -71,10 +72,17 @@ function! AuStartCmdHistoryEditing(...)
     let l:feed_keys = 'q:Gk$F&w'
 
   elseif l:subcmd == 'AuRunTmuxCommand'
+
+    try
+      let l:target_directory = GitRoot()
+    catch /.*/
+      let l:target_directory = expand('%:p:h')
+    endtry
+
     let l:hist_args = [
       \  'au BufWritePost,FileWritePost * silent',
       \    ':Tmux (',
-      \      'cd ' . l:git_root,
+      \      'cd ' . l:target_directory,
       \      '&&',
       \      l:subcmd_target . ';',
       \    ')'
