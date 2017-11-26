@@ -72,10 +72,17 @@ function! AuStartCmdHistoryEditing(...)
     let l:feed_keys = 'q:Gk$F&w'
 
   elseif l:subcmd == 'AuRunTmuxCommand'
+
+    try
+      let l:target_directory = GitRoot()
+    catch /.*/
+      let l:target_directory = expand('%:p:h')
+    endtry
+
     let l:hist_args = [
       \  'au BufWritePost,FileWritePost * silent',
       \    ':Tmux (',
-      \      'cd ' . l:git_root,
+      \      'cd ' . l:target_directory,
       \      '&&',
       \      l:subcmd_target . ';',
       \    ')'
