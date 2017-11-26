@@ -1,6 +1,6 @@
 """ Autocommands helper """""""""""""""""""""""""""""""""""""""""""""""
 
-function! s:AuRsyncTargetCompletion(ArgLead, CmdLine, CursorPos) 
+function! s:AuRsyncTargetCompletion(ArgLead, CmdLine, CursorPos)
   let l:cmdline = getcmdline()
   let l:char_at_pos = a:CmdLine[a:CursorPos-1]
   " let l:foo = input( "I got " . (a:CursorPos) . " being '" . char_at_pos . "'" )
