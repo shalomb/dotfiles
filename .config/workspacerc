@@ -48,7 +48,7 @@ launch() {
 
   unclutter  -idle 5 &
   autocutsel --fork &
-  diodon &
+  copyq &
   laptop-detect && numlockx off &
 
   launch gnome-session &
