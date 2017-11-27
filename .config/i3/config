@@ -16,7 +16,7 @@ popup_during_fullscreen       smart
 focus_follows_mouse           no
 new_window pixel              0
 
-set $mod Mod4 
+set $mod Mod4
 floating_modifier $mod
 
 for_window [window_role="pop-up"]      floating enable
@@ -60,7 +60,7 @@ mode "resize" {
 mode "window move" {
   bindsym Escape          mode "default"
 }
- 
+
 mode "workspace control" {
   bindsym semicolon       mode "window control"
   bindsym p               focus parent
@@ -332,6 +332,7 @@ bindsym $mod+Mod1+y       exec "~/.bin/winmark summon y ; i3-msg '[urgent=latest
 bindsym $mod+Mod1+z       exec "~/.bin/winmark summon z ; i3-msg '[urgent=latest] focus'"
 
 bindsym $mod+Mod1+period  exec "~/.bin/qterm ; i3-msg '[title=qterm] focus'"
+bindsym $mod+Control+comma   exec "copyq menu"
 
 bindsym button4             nop
 bindsym button5             nop

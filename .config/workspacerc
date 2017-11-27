@@ -20,7 +20,7 @@ launch() {
   test -d ~/.config/fonts || {
     mkdir -p ~/.config/fonts;
     chmod 755 ~/.config/fonts;
-    mkfontdir ~/.config/fonts; 
+    mkfontdir ~/.config/fonts;
   } &                 # set-up user fonts dir
 
   test -r ~/.config/Xdefaults  && xrdb -merge ~/.config/Xdefaults
@@ -48,6 +48,7 @@ launch() {
 
   unclutter  -idle 5 &
   autocutsel --fork &
+  copyq &
   laptop-detect && numlockx off &
 
   launch gnome-session &
