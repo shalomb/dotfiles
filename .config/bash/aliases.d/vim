@@ -1,0 +1,16 @@
+#!/bin/bash
+
+function clear-swapfile {
+  local file="$1"
+  local dir="${1%/*}"
+  local swapfiles=( "$dir/.${file##*/}".sw? )
+  for swapfile in "${swapfiles[@]}"; do
+    local pid=$(fuser -a "$swapfile" 2>/dev/null)
+    if [[ -n $pid ]]; then
+      pid="${pid##* }"
+      echo "$swapfile is opened by pid '$pid' ($(ps --no-headers f -p $pid) )"
+    else
+      rm -v "$swapfile"
+    fi
+  done
+}
