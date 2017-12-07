@@ -191,7 +191,7 @@ function gB {
   local query
 
   if ! git show "$1" &>/dev/null; then
-    query="$@"
+    query="${@:->}"
     set --
   fi
 
@@ -230,10 +230,10 @@ function gB {
     case "$key" in
       e)
         cat <<EOHELP | column | less
-  e - show this help menu
-  d - show diffs between revisions
-  f - show files at revisions
-  m - show commits
+  ctrl-e - show this help menu
+  ctrl-d - show diffs between revisions
+  ctrl-f - show files at revisions
+  ctrl-m - show commits
 EOHELP
       ;;
       d)
