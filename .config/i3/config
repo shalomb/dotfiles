@@ -341,7 +341,7 @@ bindsym button5             nop
 for_window [class="Galculator"]                 floating enable border pixel 2
 for_window [class="Shutter" instance="shutter"] floating enable
 for_window [class="Slack" title="^Slack call . .*"]  floating enable border pixel 2
-for_window [class="URxvt" instance="qterm"]     floating enable
+for_window [title="Oracle VM VirtualBox Administrador"] floating enable
 
 for_window [class="*"] border 1pixel
 new_window pixel 1
@@ -393,6 +393,33 @@ bar {
   }
 }
 
+# Named workspaces
+set $ws1 1
+set $ws2 2
+set $ws3 3
+set $ws4 4
+set $ws5 5
+set $ws6 6
+set $ws7 7
+set $ws8 8
+set $ws9 9
+set $wsf f
+set $wsp p
+set $wsq q
+set $wsm m
+set $wss s
+
+# Application workspace assignments
+assign [class="Evolution"]            $wsm
+assign [class="Firefox.*"]            $wsf
+assign [class="Slack"]                $wss
+assign [class="URxvt" title="qterm"]  $wsq
+
+# Spotify does not behave well under `assign`
+# https://github.com/i3/i3/issues/2060
+for_window [class="Spotify"] move to workspace $wsp
+
+# Startup tasks
 exec_always --no-startup-id  ~/.bin/mark_last_window
 exec --no-startup-id  i3-msg 'workspace 1; exec qterm;   workspace 1;'
 exec --no-startup-id  i3-msg 'workspace 2; exec firefox; workspace 1;'
