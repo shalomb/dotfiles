@@ -206,7 +206,7 @@ bindsym Control+XF86WakeUp     exec gmrun
 
 bindsym NoSymbol               exec gmrun "NoSymbol"
 bindsym Pause                  exec gmrun "Pause"
-bindsym Print                  exec gmrun "Print"
+bindsym Print                  exec --no-startup-id shutter -s
 bindsym Super_R                exec gmrun "Super_R"
 bindsym XF86AudioForward       exec gmrun "XF86AudioForward"
 bindsym XF86AudioLowerVolume   exec pactl set-sink-volume @DEFAULT_SINK@ -10%
