@@ -120,7 +120,7 @@ function fz {
       --reverse \
       --sort \
       --tiebreak=index \
-      --expect='ctrl-b,ctrl-d,ctrl-e,ctrl-f,ctrl-i,ctrl-o,ctrl-m,ctrl-v'
+      --expect='ctrl-b,ctrl-d,ctrl-e,ctrl-f,ctrl-g,ctrl-i,ctrl-o,ctrl-m,ctrl-v'
     ); do
 
     fz_query=$( sed  -n '1p' <<<"$block" );
@@ -164,6 +164,14 @@ function fz {
         [[ $setting = PWD ]] && [[ $(pwd) != $PWD ]] && cd "$PWD"
 
         continue
+      ;;
+      g)
+        while block=$(
+          FZF_DEFAULT_COMMAND="ack '$fz_query'" \
+            fzf --reverse ); do
+          local files=( $( awk -F: '{ print $1 }' <<<"$block" ) )
+          vim +/"$fz_query" "${files[@]}"
+        done
       ;;
       o)
         { tail -n  1 $fz_preview_cmds_list;
