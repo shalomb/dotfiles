@@ -59,6 +59,15 @@ function! AuStartCmdHistoryEditing(...)
       \ ]
     let l:feed_keys = 'q:Gk?' . l:subcmd . 'j$F/'
 
+  elseif l:subcmd == 'AuRunCommand'
+    let l:hist_args = [
+      \  'au BufWritePost,FileWritePost * silent',
+      \  ':!(',
+      \    l:subcmd_target . ';',
+      \  ')'
+      \ ]
+    let l:feed_keys = 'q:Gk$F;'
+
   elseif l:subcmd == 'AuRunGitCommand'
     let l:git_root = GitRoot()
     let l:hist_args = [
@@ -109,6 +118,9 @@ command! -complete=custom,s:AuRsyncTargetCompletion -nargs=1
 
 command! -complete=custom,s:AuRsyncTargetCompletion -nargs=1
   \ AuRsyncGitProject call AuStartCmdHistoryEditing('AuRsyncGitProject', <q-args>)
+
+command! -nargs=*
+  \ AuRunCommand      call AuStartCmdHistoryEditing('AuRunCommand', <q-args>)
 
 command! -nargs=*
   \ AuRunTmuxCommand call AuStartCmdHistoryEditing('AuRunTmuxCommand', <q-args>)
