@@ -123,6 +123,9 @@ command! -nargs=*
   \ AuRunCommand      call AuStartCmdHistoryEditing('AuRunCommand', <q-args>)
 
 command! -nargs=*
+  \ AuRunGitCommand   call AuStartCmdHistoryEditing('AuRunGitCommand', <q-args>)
+
+command! -nargs=*
   \ AuRunTmuxCommand call AuStartCmdHistoryEditing('AuRunTmuxCommand', <q-args>)
 
 vmap ,l <Plug>SendSelectionToTmux
