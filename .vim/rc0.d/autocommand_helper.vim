@@ -114,7 +114,7 @@ function! AuStartCmdHistoryEditing(...)
 endfunction
 
 command! -complete=custom,s:AuRsyncTargetCompletion -nargs=1
-  \ AuRsyncFile call AuStartCmdHistoryEditing('AuRsyncFile', <q-args>)
+  \ AuRsyncFile       call AuStartCmdHistoryEditing('AuRsyncFile', <q-args>)
 
 command! -complete=custom,s:AuRsyncTargetCompletion -nargs=1
   \ AuRsyncGitProject call AuStartCmdHistoryEditing('AuRsyncGitProject', <q-args>)
@@ -126,7 +126,7 @@ command! -nargs=*
   \ AuRunGitCommand   call AuStartCmdHistoryEditing('AuRunGitCommand', <q-args>)
 
 command! -nargs=*
-  \ AuRunTmuxCommand call AuStartCmdHistoryEditing('AuRunTmuxCommand', <q-args>)
+  \ AuRunTmuxCommand  call AuStartCmdHistoryEditing('AuRunTmuxCommand', <q-args>)
 
 vmap ,l <Plug>SendSelectionToTmux
 nmap ,l <Plug>NormalModeSendToTmux
