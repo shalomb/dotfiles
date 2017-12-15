@@ -212,15 +212,17 @@ bindsym XF86AudioForward       exec gmrun "XF86AudioForward"
 bindsym XF86AudioLowerVolume   exec pactl set-sink-volume @DEFAULT_SINK@ -10%
 bindsym XF86AudioMedia         exec gmrun "XF86AudioMedia"
 bindsym XF86AudioMicMute       exec gmrun "XF86AudioMicMute"
+bindsym Shift+XF86AudioMicMute exec gmrun "Shift+XF86AudioMicMute"
 bindsym XF86AudioMute          exec pactl set-sink-mute   @DEFAULT_SINK@ toggle
-bindsym XF86AudioNext          exec gmrun "XF86AudioNext"
-bindsym XF86AudioPause         exec gmrun "XF86AudioPause"
+bindsym Shift+XF86AudioMute    exec pactl set-source-mute $(pacmd list-sources | awk '/\* index:/{ print $3 }') toggle
+bindsym XF86AudioNext          exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
+bindsym XF86AudioPause         exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause
 bindsym XF86AudioPlay          exec gmrun "XF86AudioPlay"
-bindsym XF86AudioPrev          exec gmrun "XF86AudioPrev"
+bindsym XF86AudioPrev          exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
 bindsym XF86AudioRaiseVolume   exec pactl set-sink-volume @DEFAULT_SINK@ +10%
 bindsym XF86AudioRecord        exec gmrun "XF86AudioRecord"
 bindsym XF86AudioRewind        exec gmrun "XF86AudioRewind"
-bindsym XF86AudioStop          exec gmrun "XF86AudioStop"
+bindsym XF86AudioStop          exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Stop
 bindsym XF86Back               exec gmrun "XF86Back"
 bindsym XF86Battery            exec gmrun "XF86Battery"
 bindsym XF86Bluetooth          exec gmrun "XF86Bluetooth"
@@ -239,7 +241,8 @@ bindsym XF86Finance            exec gmrun "XF86Finance"
 bindsym XF86Forward            exec gmrun "XF86Forward"
 bindsym XF86Game               exec gmrun "XF86Game"
 bindsym XF86Go                 exec gmrun "XF86Go"
-bindsym XF86HomePage           exec gmrun "XF86HomePage"
+bindsym XF86HomePage           exec gnome-control-center
+bindsym Shift+Home             exec gmrun "Shift+Home"
 bindsym XF86KbdBrightnessDown  exec gmrun "XF86KbdBrightnessDown"
 bindsym XF86KbdBrightnessUp    exec gmrun "XF86KbdBrightnessUp"
 bindsym XF86KbdLightOnOff      exec gmrun "XF86KbdLightOnOff"
@@ -254,7 +257,7 @@ bindsym XF86Launch8            exec gmrun "XF86Launch8"
 bindsym XF86Launch9            exec gmrun "XF86Launch9"
 bindsym XF86LaunchA            exec i3-dmenu-desktop
 bindsym XF86LaunchB            exec gmrun "XF86LaunchB"
-bindsym XF86Mail               exec gmrun "XF86Mail"
+bindsym XF86Mail               exec gnome-control-center sound
 bindsym XF86MailForward        exec gmrun "XF86MailForward"
 bindsym XF86MenuKB             exec gmrun "XF86MenuKB"
 bindsym XF86Messenger          exec gmrun "XF86Messenger"
