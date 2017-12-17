@@ -175,3 +175,6 @@
 [submodule ".vim/bundle/peekaboo"]
 	path = .vim/bundle/peekaboo
 	url = https://github.com/junegunn/vim-peekaboo.git
+[submodule ".vim/bundle/fzf"]
+	path = .vim/bundle/fzf
+	url = https://github.com/junegunn/fzf.vim.git
