@@ -78,7 +78,7 @@ function watch-logfile {
         if [[ -n $int ]]; then
           if awk '{
               if (/Setting .* interface down/) { e=0 } else { e=1 }
-              exit $e;
+              exit e;
             }' "$logfile"; then
               deconfigure-interface "$int"
             else
