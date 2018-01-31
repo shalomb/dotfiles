@@ -23,6 +23,7 @@ function clear-swapfiles {
   done < <(find . -type f -iname '*.sw?' -print0 )
 
   for file in "${swapfiles[@]}"; do
-    clear-swapfile "$file"
+    basename="${file##*/.}"
+    clear-swapfile "${file%/*}/${basename%.sw?}"
   done
 }
