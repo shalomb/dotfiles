@@ -14,3 +14,16 @@ function clear-swapfile {
     fi
   done
 }
+
+function clear-swapfiles {
+  local swapfiles=()
+
+  while read -r -d $'\0' file; do
+    swapfiles+=( "$file" )
+  done < <(find . -type f -iname '*.sw?' -print0 )
+
+  for file in "${swapfiles[@]}"; do
+    basename="${file##*/.}"
+    clear-swapfile "${file%/*}/${basename%.sw?}"
+  done
+}
