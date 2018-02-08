@@ -120,7 +120,7 @@ function fz {
       --reverse \
       --sort \
       --tiebreak=index \
-      --expect='ctrl-b,ctrl-d,ctrl-e,ctrl-f,ctrl-i,ctrl-o,ctrl-m,ctrl-v'
+      --expect='ctrl-b,ctrl-d,ctrl-e,ctrl-f,ctrl-g,ctrl-i,ctrl-o,ctrl-m,ctrl-v'
     ); do
 
     fz_query=$( sed  -n '1p' <<<"$block" );
@@ -165,6 +165,14 @@ function fz {
 
         continue
       ;;
+      g)
+        while block=$(
+          FZF_DEFAULT_COMMAND="ack '$fz_query'" \
+            fzf --reverse ); do
+          local files=( $( awk -F: '{ print $1 }' <<<"$block" ) )
+          vim +/"$fz_query" "${files[@]}"
+        done
+      ;;
       o)
         { tail -n  1 $fz_preview_cmds_list;
           head -n -1 $fz_preview_cmds_list;
@@ -191,7 +199,7 @@ function gB {
   local query
 
   if ! git show "$1" &>/dev/null; then
-    query="$@"
+    query="${@:->}"
     set --
   fi
 
@@ -230,10 +238,10 @@ function gB {
     case "$key" in
       e)
         cat <<EOHELP | column | less
-  e - show this help menu
-  d - show diffs between revisions
-  f - show files at revisions
-  m - show commits
+  ctrl-e - show this help menu
+  ctrl-d - show diffs between revisions
+  ctrl-f - show files at revisions
+  ctrl-m - show commits
 EOHELP
       ;;
       d)
