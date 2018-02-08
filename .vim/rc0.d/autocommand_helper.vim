@@ -59,6 +59,15 @@ function! AuStartCmdHistoryEditing(...)
       \ ]
     let l:feed_keys = 'q:Gk?' . l:subcmd . 'j$F/'
 
+  elseif l:subcmd == 'AuRunCommand'
+    let l:hist_args = [
+      \  'au BufWritePost,FileWritePost * silent',
+      \  ':!(',
+      \    l:subcmd_target . ';',
+      \  ')'
+      \ ]
+    let l:feed_keys = 'q:Gk$F;'
+
   elseif l:subcmd == 'AuRunGitCommand'
     let l:git_root = GitRoot()
     let l:hist_args = [
@@ -105,13 +114,19 @@ function! AuStartCmdHistoryEditing(...)
 endfunction
 
 command! -complete=custom,s:AuRsyncTargetCompletion -nargs=1
-  \ AuRsyncFile call AuStartCmdHistoryEditing('AuRsyncFile', <q-args>)
+  \ AuRsyncFile       call AuStartCmdHistoryEditing('AuRsyncFile', <q-args>)
 
 command! -complete=custom,s:AuRsyncTargetCompletion -nargs=1
   \ AuRsyncGitProject call AuStartCmdHistoryEditing('AuRsyncGitProject', <q-args>)
 
 command! -nargs=*
-  \ AuRunTmuxCommand call AuStartCmdHistoryEditing('AuRunTmuxCommand', <q-args>)
+  \ AuRunCommand      call AuStartCmdHistoryEditing('AuRunCommand', <q-args>)
+
+command! -nargs=*
+  \ AuRunGitCommand   call AuStartCmdHistoryEditing('AuRunGitCommand', <q-args>)
+
+command! -nargs=*
+  \ AuRunTmuxCommand  call AuStartCmdHistoryEditing('AuRunTmuxCommand', <q-args>)
 
 vmap ,l <Plug>SendSelectionToTmux
 nmap ,l <Plug>NormalModeSendToTmux

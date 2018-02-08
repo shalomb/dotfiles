@@ -1,0 +1,57 @@
+#!/bin/bash
+
+set -eu
+
+config=/tmp/wksp.yaml
+
+outputs=$(yq -c -r '.layout | keys[]' < "$config")
+
+echo "${outputs[@]}"
+
+exit
+
+function dock {
+  xrandr \
+    --output DP-1-1  --off \
+    --output DP-1-2  --off \
+    --output eDP-1-1 --rotate normal --primary --auto
+
+  primary=$(i3-msg -t get_outputs | jq -r '.[] | select(.primary==true).name')
+  # collapse all workspaces to the new primary
+  wsp=$(i3-msg -t get_workspaces |
+          jq -r '.[] | select(.focused!=true).name')
+
+  for w in "${wsp[@]}"; do
+    i3-msg "workspace $w, move workspace to output $primary"
+  done
+}
+
+function dock {
+  centre=DP-1-1   # primary output
+    left=DP-1-2   # secondary output
+   right=eDP-1    # tertiary/laptop output
+
+  xrandr \
+    --output "$right"  --rotate normal --auto \
+    --output "$centre" --rotate normal --left-of "$right"  --auto --primary \
+    --output "$left"   --rotate normal --left-of "$centre" --auto
+
+  # move windows to the primary output
+  for i in {1..5}; do
+    i3-msg "workspace $i, move workspace to output $centre"
+  done
+
+  # move windows to the secondary output
+  for i in {6..9} w e; do
+    i3-msg "workspace $i, move workspace to output $left"
+  done
+
+  # move windows to the tertiary output
+  for i in 0 q s; do
+    i3-msg "workspace $i, move workspace to output $right"
+  done
+
+}
+
+# start app on specific workspace
+ i3-msg 'workspace 1:Web; exec /usr/bin/firefox'
