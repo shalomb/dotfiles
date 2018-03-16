@@ -1,5 +1,9 @@
 [user]
   name   = Shalom Bhooshi
+  signingkey = XXXXXXXXXX
+
+[commit]
+	gpgsign = true
 
 [color]
   branch       = auto
