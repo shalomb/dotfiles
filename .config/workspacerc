@@ -65,6 +65,8 @@ launch() {
 
   launch qterm
 
+  mark_last_window
+
   xrandr --dpi 96
 
   ~/.config/xsetrc
