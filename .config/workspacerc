@@ -69,6 +69,9 @@ launch() {
 
   xrandr --dpi 96
 
+  wpset
+
   ~/.config/xsetrc
+
 } >> "$wksplog" 2>&1 &
 

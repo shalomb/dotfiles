@@ -423,5 +423,4 @@ for_window [class="Spotify"] move to workspace $wsp
 
 # Startup tasks
 exec --no-startup-id  ~/.config/workspacerc
-exec --no-startup-id  ~/.bin/wpset
 
