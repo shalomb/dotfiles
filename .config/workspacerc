@@ -46,6 +46,8 @@ launch() {
       test -e "$file" && xmodmap "$file"
   done
 
+  mark_last_window
+
   unclutter  -idle 5 &
   autocutsel --fork &
   copyq &
@@ -62,12 +64,9 @@ launch() {
   # setxkbmap -option ctrl:nocaps &
 
   launch firefox &>/dev/null
-
+  launch evolution &>/dev/null
+  launch slack
   launch qterm
-
-  mark_last_window
-
-  wpset
 
   xrandr --dpi 96
 
