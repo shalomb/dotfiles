@@ -61,6 +61,8 @@ launch() {
   launch xflux -l 48.1439 -g 17.1097 &
   # setxkbmap -option ctrl:nocaps &
 
+  launch firefox &>/dev/null
+
   xrandr --dpi 96
 
   ~/.config/xsetrc
