@@ -422,7 +422,6 @@ assign [class="URxvt" title="qterm"]  $wsq
 for_window [class="Spotify"] move to workspace $wsp
 
 # Startup tasks
-exec_always --no-startup-id  ~/.bin/mark_last_window
 exec --no-startup-id  ~/.config/workspacerc
 exec --no-startup-id  ~/.bin/wpset
 
