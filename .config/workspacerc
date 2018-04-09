@@ -20,7 +20,7 @@ launch() {
   test -d ~/.config/fonts || {
     mkdir -p ~/.config/fonts;
     chmod 755 ~/.config/fonts;
-    mkfontdir ~/.config/fonts; 
+    mkfontdir ~/.config/fonts;
   } &                 # set-up user fonts dir
 
   test -r ~/.config/Xdefaults  && xrdb -merge ~/.config/Xdefaults
@@ -46,8 +46,11 @@ launch() {
       test -e "$file" && xmodmap "$file"
   done
 
+  mark_last_window
+
   unclutter  -idle 5 &
   autocutsel --fork &
+  copyq &
   laptop-detect && numlockx off &
 
   launch gnome-session &
@@ -60,8 +63,14 @@ launch() {
   launch xflux -l 48.1439 -g 17.1097 &
   # setxkbmap -option ctrl:nocaps &
 
+  launch firefox &>/dev/null
+  launch evolution &>/dev/null
+  launch slack
+  launch qterm
+
   xrandr --dpi 96
 
-  ~/.config/xsetrc
+  sleep 10 && ~/.config/xsetrc
+
 } >> "$wksplog" 2>&1 &
 

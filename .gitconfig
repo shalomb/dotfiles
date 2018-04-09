@@ -1,6 +1,9 @@
 [user]
   name   = Shalom Bhooshi
-  email  = s.bhooshi@gmail.com
+  signingkey = XXXXXXXXXX
+
+[commit]
+	gpgsign = true
 
 [color]
   branch       = auto
