@@ -181,3 +181,6 @@
 [submodule ".vim/bundle/fzf-core"]
 	path = .vim/bundle/fzf-core
 	url = https://github.com/junegunn/fzf.git
+[submodule ".vim/bundle/terraform"]
+	path = .vim/bundle/terraform
+	url = https://github.com/hashivim/vim-terraform.git
