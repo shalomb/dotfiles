@@ -46,6 +46,8 @@ launch() {
       test -e "$file" && xmodmap "$file"
   done
 
+  mark_last_window
+
   unclutter  -idle 5 &
   autocutsel --fork &
   copyq &
@@ -61,8 +63,14 @@ launch() {
   launch xflux -l 48.1439 -g 17.1097 &
   # setxkbmap -option ctrl:nocaps &
 
+  launch firefox &>/dev/null
+  launch evolution &>/dev/null
+  launch slack
+  launch qterm
+
   xrandr --dpi 96
 
-  ~/.config/xsetrc
+  sleep 10 && ~/.config/xsetrc
+
 } >> "$wksplog" 2>&1 &
 

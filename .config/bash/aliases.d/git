@@ -113,14 +113,14 @@ function summarize_refs {
 function gbranches { git branch --sort=committerdate "$@" | awk '{print $NF}'; }
 
 #| gbar - (re-)load git-bar aliases
-function gbar { source "$git_bar_entry_point"; } 
+function gbar { source "$git_bar_entry_point"; }
 
 #| gbd - git branch -d
 function gbd {
   if [[ $# = 0 ]]; then
     bye_branch=$(gbr)
     set -- "$bye_branch"
-    gco 
+    gco
   fi
   command git branch -d "$@"
 }
@@ -188,7 +188,7 @@ function gf { command git fetch "$@"; }
 function gfa { gf --all "$@"; }
 
 #| gfbco - <checkout bugfix branch>
-function gfbco { 
+function gfbco {
   local branch="$1"
   local available=( $( gfbl | sed 's/\*//' | grep -iP -- "$1" ) )
   if (( ${#available[@]} > 1 )); then
@@ -210,7 +210,7 @@ function gfbl { command git flow bugfix list "$@"; }
 function gfbs { command git flow bugfix start "$@"; }
 
 #| gffco - <checkout feature branch>
-function gffco { 
+function gffco {
   local branch="$1"
   local available=( $( gffl | sed 's/\*//' | grep -iP -- "$1" ) )
   if (( ${#available[@]} > 1 )); then
@@ -281,7 +281,7 @@ function grv { gr -v; }
 #| gS - git show
 function gS  { command git "show" "$@"; }
 
-#| gs - git st 
+#| gs - git st
 function gs  {
   if (( $# == 0 )); then
     _git_arg_wrapper "st" --branch --short
@@ -359,7 +359,7 @@ function file_completion {
       files+=( "$line" )
     done < <(
       command git ls-files | grep -iP -- "$cur"
-      # find . \( -iname ".git" -prune \) -o -print 
+      # find . \( -iname ".git" -prune \) -o -print
     )
   fi
   COMPREPLY=( $(compgen -W "${files[*]}" ) );
