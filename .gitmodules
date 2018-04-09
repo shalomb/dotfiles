@@ -67,8 +67,8 @@
 	url = https://github.com/takac/vim-hardtime.git
 
 [submodule   ".tmux/plugins/tpm"]
-  path   =   .tmux/plugins/tpm                 
-  url    =   https://github.com/tmux-plugins/tpm.git
+        path = .tmux/plugins/tpm
+        url = https://github.com/tmux-plugins/tpm.git
 
 [submodule   ".vim/bundle/tmux"]
 	path = .vim/bundle/tmux
@@ -169,9 +169,11 @@
 [submodule ".vim/bundle/exchange"]
 	path = .vim/bundle/exchange
 	url = https://github.com/tommcdo/vim-exchange.git
+
 [submodule ".vim/bundle/snipmate-snippets"]
 	path = .vim/bundle/snipmate-snippets
 	url = https://github.com/honza/vim-snippets.git
+
 [submodule ".vim/bundle/peekaboo"]
 	path = .vim/bundle/peekaboo
 	url = https://github.com/junegunn/vim-peekaboo.git
