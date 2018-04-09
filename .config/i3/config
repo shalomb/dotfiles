@@ -16,7 +16,7 @@ popup_during_fullscreen       smart
 focus_follows_mouse           no
 new_window pixel              0
 
-set $mod Mod4 
+set $mod Mod4
 floating_modifier $mod
 
 for_window [window_role="pop-up"]      floating enable
@@ -60,7 +60,7 @@ mode "resize" {
 mode "window move" {
   bindsym Escape          mode "default"
 }
- 
+
 mode "workspace control" {
   bindsym semicolon       mode "window control"
   bindsym p               focus parent
@@ -206,21 +206,23 @@ bindsym Control+XF86WakeUp     exec gmrun
 
 bindsym NoSymbol               exec gmrun "NoSymbol"
 bindsym Pause                  exec gmrun "Pause"
-bindsym Print                  exec gmrun "Print"
+bindsym Print                  exec --no-startup-id shutter -s
 bindsym Super_R                exec gmrun "Super_R"
 bindsym XF86AudioForward       exec gmrun "XF86AudioForward"
 bindsym XF86AudioLowerVolume   exec pactl set-sink-volume @DEFAULT_SINK@ -10%
 bindsym XF86AudioMedia         exec gmrun "XF86AudioMedia"
 bindsym XF86AudioMicMute       exec gmrun "XF86AudioMicMute"
+bindsym Shift+XF86AudioMicMute exec gmrun "Shift+XF86AudioMicMute"
 bindsym XF86AudioMute          exec pactl set-sink-mute   @DEFAULT_SINK@ toggle
-bindsym XF86AudioNext          exec gmrun "XF86AudioNext"
-bindsym XF86AudioPause         exec gmrun "XF86AudioPause"
+bindsym Shift+XF86AudioMute    exec pactl set-source-mute $(pacmd list-sources | awk '/\* index:/{ print $3 }') toggle
+bindsym XF86AudioNext          exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
+bindsym XF86AudioPause         exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause
 bindsym XF86AudioPlay          exec gmrun "XF86AudioPlay"
-bindsym XF86AudioPrev          exec gmrun "XF86AudioPrev"
+bindsym XF86AudioPrev          exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
 bindsym XF86AudioRaiseVolume   exec pactl set-sink-volume @DEFAULT_SINK@ +10%
 bindsym XF86AudioRecord        exec gmrun "XF86AudioRecord"
 bindsym XF86AudioRewind        exec gmrun "XF86AudioRewind"
-bindsym XF86AudioStop          exec gmrun "XF86AudioStop"
+bindsym XF86AudioStop          exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Stop
 bindsym XF86Back               exec gmrun "XF86Back"
 bindsym XF86Battery            exec gmrun "XF86Battery"
 bindsym XF86Bluetooth          exec gmrun "XF86Bluetooth"
@@ -239,7 +241,7 @@ bindsym XF86Finance            exec gmrun "XF86Finance"
 bindsym XF86Forward            exec gmrun "XF86Forward"
 bindsym XF86Game               exec gmrun "XF86Game"
 bindsym XF86Go                 exec gmrun "XF86Go"
-bindsym XF86HomePage           exec gmrun "XF86HomePage"
+bindsym XF86HomePage           exec gnome-control-center
 bindsym XF86KbdBrightnessDown  exec gmrun "XF86KbdBrightnessDown"
 bindsym XF86KbdBrightnessUp    exec gmrun "XF86KbdBrightnessUp"
 bindsym XF86KbdLightOnOff      exec gmrun "XF86KbdLightOnOff"
@@ -254,7 +256,7 @@ bindsym XF86Launch8            exec gmrun "XF86Launch8"
 bindsym XF86Launch9            exec gmrun "XF86Launch9"
 bindsym XF86LaunchA            exec i3-dmenu-desktop
 bindsym XF86LaunchB            exec gmrun "XF86LaunchB"
-bindsym XF86Mail               exec gmrun "XF86Mail"
+bindsym XF86Mail               exec gnome-control-center sound
 bindsym XF86MailForward        exec gmrun "XF86MailForward"
 bindsym XF86MenuKB             exec gmrun "XF86MenuKB"
 bindsym XF86Messenger          exec gmrun "XF86Messenger"
@@ -332,9 +334,20 @@ bindsym $mod+Mod1+y       exec "~/.bin/winmark summon y ; i3-msg '[urgent=latest
 bindsym $mod+Mod1+z       exec "~/.bin/winmark summon z ; i3-msg '[urgent=latest] focus'"
 
 bindsym $mod+Mod1+period  exec "~/.bin/qterm ; i3-msg '[title=qterm] focus'"
+bindsym $mod+Control+comma   exec "copyq menu"
 
 bindsym button4             nop
 bindsym button5             nop
+
+# Special windows
+for_window [class="Galculator"]                 floating enable border pixel 2
+for_window [class="Shutter" instance="shutter"] floating enable
+for_window [class="Slack" title="^Slack call . .*"]  floating enable border pixel 2
+for_window [title="Oracle VM VirtualBox Administrador"] floating enable
+
+for_window [class="*"] border 1pixel
+new_window pixel 1
+for_window [class="(?i)firefox"] title_format "<span foreground='#BBBBBB'>%title</span>"
 
 # color defines for zenburn styled i3
 set $ac     #073642
@@ -353,10 +366,6 @@ client.focused              $ac        $ac         $tx
 client.unfocused            $bg        $bg         $ia
 client.focused_inactive     $bg        $bg         $ac
 client.urgent               $rd        $rd         $tx
-
-for_window [class="*"] border 1pixel
-new_window pixel 1
-for_window [class="(?i)firefox"] title_format "<span foreground='#BBBBBB'>%title</span>"
 
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)
@@ -386,10 +395,32 @@ bar {
   }
 }
 
-exec_always --no-startup-id  ~/.bin/mark_last_window
-exec --no-startup-id  i3-msg 'workspace 1; exec qterm;   workspace 1;'
-exec --no-startup-id  i3-msg 'workspace 2; exec firefox; workspace 1;'
+# Named workspaces
+set $ws1 1
+set $ws2 2
+set $ws3 3
+set $ws4 4
+set $ws5 5
+set $ws6 6
+set $ws7 7
+set $ws8 8
+set $ws9 9
+set $wsf f
+set $wsp p
+set $wsq q
+set $wsm m
+set $wss s
 
+# Application workspace assignments
+assign [class="Evolution"]            $wsm
+assign [class="Firefox.*"]            $wsf
+assign [class="Slack"]                $wss
+assign [class="URxvt" title="qterm"]  $wsq
+
+# Spotify does not behave well under `assign`
+# https://github.com/i3/i3/issues/2060
+for_window [class="Spotify"] move to workspace $wsp
+
+# Startup tasks
 exec --no-startup-id  ~/.config/workspacerc
-exec --no-startup-id  ~/.bin/wpset
 

@@ -61,24 +61,56 @@ function cdfr {
   cd ~
 }
 
+BOLD=$(    tput bold    )
+RED=$(     tput setaf 1 )
+GREEN=$(   tput setaf 2 )
+YELLOW=$(  tput setaf 3 )
+BLUE=$(    tput setaf 4 )
+MAGENTA=$( tput setaf 5 )
+CYAN=$(    tput setaf 6 )
+WHITE=$(   tput setaf 7 )
+RESET=$(   tput sgr0    )
+
+fz_config_base=~/.config/fz/
+mkdir -p "$fz_config_base"
+
 #| fz - File browser
 function fz {
 
-  fz_cmd="$1"
-  fz_query="$2"
-  fz_cmd="${fz_cmd:-$EDITOR}"
-  fz_preview_cmd="less {}"
+  declare -A fz_vars;
+  fz_vars[fz_query]='Search term for fz'
+  fz_vars[fz_preview_cmd]='Command to use when previewing items'
+  fz_vars[PWD]='Current working directory'
+  fz_vars[fz_file_regex]='Work on filenames matching ACK regex'
+  fz_vars[fz_ignore_file_regex]='Ignore filenames matching ACK regex'
+  fz_vars[fz_ignore_dir_regex]='Ignore dirnames matching ACK regex'
+  fz_vars[fz_window_height]='Window height'
+  fz_vars[fz_cmd_d]='Command mapped to Ctrl-d to run on selections'
+  fz_vars[fz_cmd_i]='Command mapped to Ctrl-i to run on selections'
+  fz_vars[fz_cmd_o]='Command mapped to Ctrl-o to run on selections'
+  fz_vars[fz_cmd_m]='Command mapped to Ctrl-m to run on selections'
+  fz_vars[fz_cmd_v]='Command mapped to Ctrl-v to run on selections'
 
-  local FZF_DEFAULT_COMMAND='find . \( -iname ".?*" \) -prune -o -print'
+  fz_cmd_m="${1:-${fz_cmd_m:-$EDITOR}}"
+  fz_query="$2"
+  fz_preview_cmd="less {}"
+  fz_file_regex='.'
+  fz_ignore_file_regex='^\..*'
+  fz_ignore_dir_regex='^\..*'
+  fz_window_height='50%'
+  fz_preview_cmds_list="$fz_config_base/preview_cmds.list"
+
+  local FZF_DEFAULT_COMMAND
 
   while block=$(
-    FZF_DEFAULT_COMMAND="$FZF_DEFAULT_COMMAND" \
+    FZF_DEFAULT_COMMAND="ack -r -g --ignore-file=match:'$fz_ignore_file_regex' --ignore-dir=match:'$fz_ignore_dir_regex' '$fz_file_regex'" \
     fzf \
+      --ansi \
       --bind=ctrl-s:toggle-sort \
       --border \
       --cycle \
-      --header="$fz_cmd $fz_query [$?,$$,$PWD]" \
-      --height 50% \
+      --header="$fz_cmd_m $fz_query [$?,$$,$PWD]" \
+      --height "$fz_window_height" \
       --inline-info \
       --multi \
       --no-mouse \
@@ -88,41 +120,70 @@ function fz {
       --reverse \
       --sort \
       --tiebreak=index \
-      --expect='ctrl-d,ctrl-o,ctrl-e,ctrl-m,ctrl-v'
+      --expect='ctrl-b,ctrl-d,ctrl-e,ctrl-f,ctrl-g,ctrl-i,ctrl-o,ctrl-m,ctrl-v'
     ); do
 
     fz_query=$( sed  -n '1p' <<<"$block" );
-    key=$(   sed  -n '2p' <<<"$block" ); key="${key##ctrl-}"
-    files=( $( tail -n +3   <<<"$block" ) );
+    key=$(      sed  -n '2p' <<<"$block" ); key="${key##ctrl-}"
+    files=( $(  tail -n +3   <<<"$block" ) );
 
     [[ -z $key ]] && key=m
 
+    for i in "${!fz_vars[@]}"; do
+      echo "$BOLD$WHITE$i$RESET - [$YELLOW${!i}$RESET] $CYAN${fz_vars[$i]}$RESET"
+    done | sort > "$TMP/fz_settings.txt"
+
     case "$key" in
       e)
-        declare -A fz_cmds;
-        fz_cmds[fz_cmd]='Command to run on selections'
-        fz_cmds[fz_query]='Search term for fz'
-        fz_cmds[fz_preview_cmd]='Command to use when previewing items'
-        fz_cmds[PWD]='Current working directory'
-
         setting=$(
-          for i in "${!fz_cmds[@]}"; do
-            echo "$i - [${!i}] ${fz_cmds[$i]}"
-          done |
-            fzf --sort --reverse --tac |
+          < "$TMP/fz_settings.txt" \
+            fzf \
+              --ansi \
+              --bind=ctrl-s:toggle-sort \
+              --border \
+              --cycle \
+              --header='Settings editor' \
+              --height "$fz_window_height" \
+              --inline-info \
+              --no-mouse \
+              --reverse \
+              --sort \
+              --tiebreak=index \
+              --tac |
             awk '{ print $1 }'
         )
         [[ -z $setting ]] && continue
 
-        read -r -p " $setting: [${!setting}]> " _tv;
+        local tmpfile=$(mktemp)
+        echo "${!setting}" > "$tmpfile"
+        "$EDITOR" "$tmpfile"
+        read -r _tv < "$tmpfile"
         read -r "$setting" <<<"${_tv:-${!setting}}"
+        rm -r "$tmpfile"
 
         [[ $setting = PWD ]] && [[ $(pwd) != $PWD ]] && cd "$PWD"
 
         continue
       ;;
-      m)
-        $fz_cmd "${files[@]}"
+      g)
+        while block=$(
+          FZF_DEFAULT_COMMAND="ack '$fz_query'" \
+            fzf --reverse ); do
+          local files=( $( awk -F: '{ print $1 }' <<<"$block" ) )
+          vim +/"$fz_query" "${files[@]}"
+        done
+      ;;
+      o)
+        { tail -n  1 $fz_preview_cmds_list;
+          head -n -1 $fz_preview_cmds_list;
+        } | awk '!a[$0]++' > $fz_preview_cmds_list.orig;
+        mv $fz_preview_cmds_list.orig $fz_preview_cmds_list;
+
+        fz_preview_cmd="$(head -n 1 "$fz_preview_cmds_list")"
+      ;;
+      d|f|i|m|v)
+        local cmd="fz_cmd_$key"
+        ${!cmd} "${files[@]}"
       ;;
       *)
         read -p "unimplemented action for '$key'" foo
@@ -138,7 +199,7 @@ function gB {
   local query
 
   if ! git show "$1" &>/dev/null; then
-    query="$@"
+    query="${@:->}"
     set --
   fi
 
@@ -177,10 +238,10 @@ function gB {
     case "$key" in
       e)
         cat <<EOHELP | column | less
-  e - show this help menu
-  d - show diffs between revisions
-  f - show files at revisions
-  m - show commits
+  ctrl-e - show this help menu
+  ctrl-d - show diffs between revisions
+  ctrl-f - show files at revisions
+  ctrl-m - show commits
 EOHELP
       ;;
       d)
