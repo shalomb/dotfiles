@@ -86,7 +86,7 @@ sub setWallpaper {
   $ENV{wpsetters} = $wpsetter;
   print "$fbsetbg - $fbsetbg_opts $wp";
   system { $fbsetbg } $fbsetbg, $fbsetbg_opts, $wp;
-  system { "ln" } "ln", "-svf", "$wp", fsc($ENV{HOME}, '.fluxbox', 'wallpaper');
+  system { "ln" } "ln", "-svf", "$wp", fsc($ENV{HOME}, '.config', 'wallpaper');
 
   if ($? == -1) {
     warn "E, error setting wallpaper $wp $!";
