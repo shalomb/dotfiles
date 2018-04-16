@@ -43,11 +43,11 @@ my @wallpaper_directories = grep -d, map glob("$_"), ('~/.config/wallpapers/');
   }
 
   if (-e $wallpaper_list) {
-    eval { 
-      @wallpapers = @{ retrieve($wallpaper_list) } 
+    eval {
+      @wallpapers = @{ retrieve($wallpaper_list) }
     }; if ($@) {
       warn "$@";
-      $@ =~ /Magic number checking on storable file failed/ 
+      $@ =~ /Magic number checking on storable file failed/
         and unlink $wallpaper_list;
     }
   }
@@ -80,18 +80,18 @@ my @wallpaper_directories = grep -d, map glob("$_"), ('~/.config/wallpapers/');
 
 sub setWallpaper {
   my $wp = shift;
-  
+
   print "$0 setwallpaper $wp";
 
   $ENV{wpsetters} = $wpsetter;
   print "$fbsetbg - $fbsetbg_opts $wp";
   system { $fbsetbg } $fbsetbg, $fbsetbg_opts, $wp;
-  system { "ln" } "ln", "-svf", "$wp", fsc($ENV{HOME}, '.fluxbox', 'wallpaper');
+  system { "ln" } "ln", "-svf", "$wp", fsc($ENV{HOME}, '.config', 'wallpaper');
 
   if ($? == -1) {
     warn "E, error setting wallpaper $wp $!";
   } else {
-    open my $wp_log, ">>", $wallpaper_log 
+    open my $wp_log, ">>", $wallpaper_log
       or warn "E, error opening wp_log $wallpaper_log for writing, $!\n";
     printf $wp_log "%s %s", time, $wp;
   }
@@ -117,5 +117,5 @@ sub getWallpapers {
   }
 
   push @wallpapers, getWallpapers( fsc($dir, $_) ) for @directories;
-  return @wallpapers 
+  return @wallpapers
 }

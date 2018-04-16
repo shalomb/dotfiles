@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -eu
+
+while getopts 'u' opt; do
+  case "$opt" in
+    u) update=1
+      ;;
+  esac
+done
+shift $((OPTIND -1))
+
+projects_find() {
+( cd ~
+  find * -iname ".git" |
+    sed -r 's@/.git@@' |
+    while read d; do
+      ( cd "$d" && git remote -v | awk '/fetch/{ print $2 }'
+      ) 2>/dev/null | sed -r 's@^@'"$d"' @';
+    done | column -t
+)
+}
+
+if [[ -n ${update-} ]] || [[ ! -e ~/.config/projects.list ]]; then
+  projects_find > ~/.config/projects.list
+fi
+
+cat ~/.config/projects.list
