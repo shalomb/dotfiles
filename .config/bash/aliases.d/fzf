@@ -35,14 +35,7 @@ function cdf {
 
 function cdp {
   query="$@"
-  dir="$( cd ~ && find * -iname ".git" |
-      sed -r 's@/.git@@' |
-      while read d; do
-        (  cd "$d" && git remote -v | grep 'fetch'
-        ) 2>/dev/null |
-          sed -r 's@^@'"$d"'  @';
-      done |
-        column |
+  dir="$( projects-list |
         fzf --bind=ctrl-s:toggle-sort \
             --cycle \
             --height 50% \
