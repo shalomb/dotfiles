@@ -1,0 +1,13 @@
+#!/bin/bash
+
+ranger() {
+  if [[ -z ${RANGER_LEVEL-} ]]; then
+    command ranger "$@"
+  else
+    exit
+  fi
+}
+
+alias rg='ranger'
+alias rG='ranger /'
+alias rg~='ranger ~'
