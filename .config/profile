@@ -1,4 +1,3 @@
-
 #!/bin/sh
  ##############################################################################
 #   ~/.profile: executed by the command interpreter for login shells           #
@@ -25,9 +24,10 @@
 # export PROFILE_SOURCED;
 # export PROFILE_SOURCED_BY;
 
-if [ -d "$HOME/.bin" ] ; then PATH="$HOME/.bin:$PATH"; fi
+PATH="$HOME/.local/bin:$HOME/.bin:$PATH"
+
 PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin"
-PATH="$PATH:/usr/local/bin/:/usr/lib/pm-utils/bin/"; 
+PATH="$PATH:/usr/local/bin/:/usr/lib/pm-utils/bin/";
                                           export PATH;
 # The default umask is set in /etc/profile; for setting the umask
 # for ssh logins, install and configure the libpam-umask package.
