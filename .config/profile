@@ -34,15 +34,6 @@ PATH="$PATH:/usr/local/bin/:/usr/lib/pm-utils/bin/";
 umask 022
 
 # Environment Variables
-XDG_CACHE_HOME="$HOME/.cache";            export XDG_CACHE_HOME;
-XDG_CONFIG_HOME="$HOME/.config";          export XDG_CONFIG_HOME;
-XDG_CONFIG_DIRS="$HOME/.etc/:/etc:/etc/xdg:$XDG_CONFIG_HOME";
-                                          export XDG_CONFIG_DIRS;
-XDG_DATA_HOME="$HOME/.local/share";       export XDG_DATA_HOME;
-XDG_DATA_DIRS="/usr/local/share:/usr/share:$XDG_DATA_HOME";
-                                          export XDG_DATA_DIRS;
-XDG_RUNTIME_DIR="$HOME/.tmp";             export XDG_RUNTIME_DIR;
-
 BROWSER="`/usr/bin/which x-www-browser`";      export BROWSER;
 EDITOR="${EDITOR:-"`/usr/bin/which vim`"}";    export EDITOR;
 VISUAL="$EDITOR";                              export VISUAL;
