@@ -174,15 +174,14 @@
 	path = .vim/bundle/snipmate-snippets
 	url = https://github.com/honza/vim-snippets.git
 
-[submodule ".vim/bundle/peekaboo"]
-	path = .vim/bundle/peekaboo
-	url = https://github.com/junegunn/vim-peekaboo.git
 [submodule ".vim/bundle/fzf"]
 	path = .vim/bundle/fzf
 	url = https://github.com/junegunn/fzf.vim.git
+
 [submodule ".vim/bundle/fzf-core"]
 	path = .vim/bundle/fzf-core
 	url = https://github.com/junegunn/fzf.git
+
 [submodule ".vim/bundle/terraform"]
 	path = .vim/bundle/terraform
 	url = https://github.com/hashivim/vim-terraform.git
