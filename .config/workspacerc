@@ -66,6 +66,7 @@ launch() {
 
   launch firefox &>/dev/null
   launch evolution &>/dev/null
+  launch spotify &
   launch slack &
   launch qterm
 
