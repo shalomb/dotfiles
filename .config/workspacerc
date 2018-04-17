@@ -46,6 +46,9 @@ launch() {
       test -e "$file" && xmodmap "$file"
   done
 
+  dbus-update-activation-environment --systemd DISPLAY
+  eval $(gnome-keyring-daemon --start --replace --daemonize)
+
   pgrep -f mark_last_window || mark_last_window &
   pgrep -f pulseaudio       || pulseaudio -D &
 
@@ -64,8 +67,8 @@ launch() {
   launch xflux -l 48.1439 -g 17.1097 &
   # setxkbmap -option ctrl:nocaps &
 
-  launch firefox &>/dev/null
-  launch evolution &>/dev/null
+  launch firefox &>/dev/null &
+  launch evolution &>/dev/null &
   launch spotify &
   launch slack &
   launch qterm
