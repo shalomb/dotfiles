@@ -51,7 +51,7 @@ launch() {
   dbus-launch seahorse-daemon
 
   pgrep -f mark_last_window || mark_last_window &
-  pgrep -f pulseaudio       || pulseaudio -D &
+  start-pulseaudio-x11 &
 
   unclutter  -idle 5 &
   autocutsel --fork &
