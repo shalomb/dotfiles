@@ -47,6 +47,7 @@ launch() {
   done
 
   pgrep -f mark_last_window || mark_last_window &
+  pgrep -f pulseaudio       || pulseaudio -D &
 
   unclutter  -idle 5 &
   autocutsel --fork &
@@ -65,7 +66,7 @@ launch() {
 
   launch firefox &>/dev/null
   launch evolution &>/dev/null
-  launch slack
+  launch slack &
   launch qterm
 
   xrandr --dpi 96
