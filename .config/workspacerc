@@ -47,7 +47,8 @@ launch() {
   done
 
   dbus-update-activation-environment --systemd DISPLAY
-  eval $(gnome-keyring-daemon --start --replace --daemonize)
+  eval $(dbus-launch gnome-keyring-daemon --start --replace --daemonize)
+  dbus-launch seahorse-daemon
 
   pgrep -f mark_last_window || mark_last_window &
   pgrep -f pulseaudio       || pulseaudio -D &
