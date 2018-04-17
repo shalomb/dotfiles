@@ -46,7 +46,7 @@ launch() {
       test -e "$file" && xmodmap "$file"
   done
 
-  mark_last_window
+  pgrep -f mark_last_window || mark_last_window &
 
   unclutter  -idle 5 &
   autocutsel --fork &
