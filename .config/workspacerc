@@ -44,6 +44,8 @@ launch() {
   eval $(dbus-launch gnome-keyring-daemon --start --replace --daemonize)
   dbus-launch seahorse-daemon
 
+  eval "$(gpg-agent --daemon)"
+
   pgrep -f mark_last_window || mark_last_window &
   start-pulseaudio-x11 &
 
