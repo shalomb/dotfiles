@@ -31,10 +31,6 @@ launch() {
   fi
 
   wpset &
-  # xbindkeys
-  # fetchmail
-
-  # nice -n 5   idesk &
 
   # nice -n 0   urxvtd -q -f -o && qterm &
 
@@ -58,11 +54,6 @@ launch() {
   copyq &
   laptop-detect && numlockx off &
 
-  launch gnome-session &
-  launch gnome-settings-daemon &
-  launch gnome-power-manager &
-  # launch gnome-keyring-daemon &
-  # launch gnome-screensaver &
   launch xscreensaver &
 
   launch xflux -l 48.1439 -g 17.1097 &
