@@ -18,3 +18,5 @@ NO_AT_BRIDGE=1;                           export NO_AT_BRIDGE
 
 GNOME_DESKTOP_SESSION_ID='profile0';      export GNOME_DESKTOP_SESSION_ID;
 
+# Disable user desktop icons
+gsettings set org.gnome.desktop.background show-desktop-icons false
