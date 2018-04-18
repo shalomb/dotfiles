@@ -2,7 +2,11 @@
 
 # Under xdm(1), it appears the environment is not setup
 # appropriately, so source ~/.profile
-[ "$TMP" = "" ] && source ~/.profile
+
+if [ "$TMP" = "" ]; then
+  TMP=/tmp/`id -un`
+  mkdir -p "$TMP"
+fi
 
 script="${0##*/}"
 args="$@"
@@ -18,11 +22,42 @@ start_desktop() {
   log "pwd : `pwd`"
   log "env : `env`"
 
-  [[ -r ~/.config/profile ]] && source ~/.config/profile
+  test -r ~/.config/profile && source ~/.config/profile
+
+  test -d ~/.config/fonts || {
+    mkdir -p ~/.config/fonts;
+    chmod 755 ~/.config/fonts;
+    mkfontdir ~/.config/fonts;
+  } &                 # set-up user fonts dir
+
+  test -r ~/.config/Xdefaults  && xrdb -merge ~/.config/Xdefaults
+  test -r ~/.config/Xresources && xrdb -merge ~/.config/Xresources
+
+  for file in \
+    ~/.config/xmodmap \
+    ~/.config/xmodmap.d/* \
+    ~/.config/xmodmap.`hostname -s`.d/* \
+    ; do
+      test -e "$file" && xmodmap "$file"
+  done
 
   setxkbmap -option ctrl:nocaps &
   # xbindkeys
   # setxkbmap -option ctrl:nocaps -option altwin:swap_alt_win &
+
+  dbus-update-activation-environment --systemd DISPLAY
+  eval $(dbus-launch gnome-keyring-daemon --start --replace --daemonize)
+  dbus-launch seahorse-daemon
+
+  eval "$(gpg-agent --daemon)"
+
+  if ! kill -0 "$SSH_AGENT_PID"; then
+    eval $(ssh-agent -s);
+  fi
+
+  dbus-launch start-pulseaudio-x11 &
+
+  xscreensaver -no-splash &
 
   exec dbus-launch --exit-with-session i3
 
