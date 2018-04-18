@@ -49,7 +49,7 @@ start_desktop() {
   eval $(dbus-launch gnome-keyring-daemon --start --replace --daemonize)
   dbus-launch seahorse-daemon
 
-  eval "$(gpg-agent --daemon)"
+  eval "$(gpg-agent --daemon --write-env-file $XDG_CACHE_HOME/gpg-agent-info)"
 
   unset SSH_AGENT_PID SSH_AUTH_SOCK
   if ! kill -0 "$SSH_AGENT_PID"; then
