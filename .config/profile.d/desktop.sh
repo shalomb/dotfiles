@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # required by gnome-control-center > 1:3.28
-XDG_CURRENT_DESKTOP=GNOME;                export XDG_CURRENT_DESKTOP;
+XDG_CURRENT_DESKTOP=GNOME-Classic:GNOME;  export XDG_CURRENT_DESKTOP;
+GNOME_SHELL_SESSION_MODE=classic;         export GNOME_SHELL_SESSION_MODE;
 
 # GTK, QT, etc
 GTK2_RC_FILES=~/.gtkrc-2.0;               export GTK2_RC_FILES;
