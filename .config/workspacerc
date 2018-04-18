@@ -32,8 +32,6 @@ launch() {
 
   wpset &
 
-  # nice -n 0   urxvtd -q -f -o && qterm &
-
   for file in \
     ~/.config/xmodmap \
     ~/.config/xmodmap.d/* \
@@ -63,7 +61,9 @@ launch() {
   launch evolution &>/dev/null &
   launch spotify &
   launch slack &
-  launch qterm
+
+  nice -n 0 urxvtd -q -f -o &
+  launch qterm &
 
   xrandr --dpi 96
 
