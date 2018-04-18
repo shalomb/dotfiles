@@ -51,6 +51,7 @@ start_desktop() {
 
   eval "$(gpg-agent --daemon)"
 
+  unset SSH_AGENT_PID SSH_AUTH_SOCK
   if ! kill -0 "$SSH_AGENT_PID"; then
     eval $(ssh-agent -s);
   fi
