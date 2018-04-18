@@ -21,3 +21,5 @@ XDG_PICTURES_DIR="$HOME/private/pictures";    export XDG_PICTURES_DIR;
 XDG_PUBLICSHARE_DIR="$HOME/public";           export XDG_PUBLICSHARE_DIR;
 XDG_TEMPLATES_DIR="$HOME/private/templates";  export XDG_TEMPLATES_DIR;
 XDG_VIDEOS_DIR="$HOME/private/videos";        export XDG_VIDEOS_DIR;
+
+xdg-user-dirs-update
