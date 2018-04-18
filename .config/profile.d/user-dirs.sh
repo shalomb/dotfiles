@@ -7,7 +7,7 @@ XDG_CONFIG_DIRS="$HOME/.etc/:/etc:/etc/xdg:$XDG_CONFIG_HOME";
 XDG_DATA_HOME="$HOME/.local/share";       export XDG_DATA_HOME;
 XDG_DATA_DIRS="/usr/local/share:/usr/share:$XDG_DATA_HOME";
                                           export XDG_DATA_DIRS;
-XDG_RUNTIME_DIR="$HOME/.tmp";             export XDG_RUNTIME_DIR;
+XDG_RUNTIME_DIR="/run/user/$(id -u)";     export XDG_RUNTIME_DIR;
 
 # NOTE
 # These are also set in and read from
