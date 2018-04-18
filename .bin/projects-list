@@ -11,14 +11,12 @@ done
 shift $((OPTIND -1))
 
 projects_find() {
-( cd ~
-  find . -iname ".git" |
-    sed -r 's@/.git@@' |
-    while read d; do
-      ( cd "$d" && git remote -v | awk '/fetch/{ print $2 }'
-      ) 2>/dev/null | sed -r 's@^@'"$d"' @';
-    done | column -t
-)
+find ~ -iname ".git" |
+  sed -r 's@/.git@@' |
+  while read d; do
+    ( cd "$d" && git remote -v | awk '/fetch/{ print $2 }'
+    ) 2>/dev/null | sed -r 's@^@'"$d"' @';
+  done | column -t
 }
 
 if [[ -n ${update-} ]] || [[ ! -e ~/.config/projects.list ]]; then
