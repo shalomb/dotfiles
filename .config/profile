@@ -17,13 +17,6 @@
 #   to us).                                                                    #
  ##############################################################################
 
-#   Let everyone know this file was sourced.
-#    we'll use it to break never-ending cyclic loops.
-# PROFILE_SOURCED="`date +%s`";
-# PROFILE_SOURCED_BY="$PROFILE_SOURCED_BY|`ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=` `date +%s`";
-# export PROFILE_SOURCED;
-# export PROFILE_SOURCED_BY;
-
 PATH="$HOME/.local/bin:$HOME/.bin:$PATH"
 
 PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin"
