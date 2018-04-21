@@ -14,11 +14,16 @@
 # export BASH_ALIASES_SOURCED_BY="$BASH_ALIASES_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
 
 shopt -s nullglob dotglob extglob
-alias_files=( ~/.config/bash/aliases.d/* );
-if (( ${#alias_files[@]} > 0 )); then
-  reload "${alias_files[@]}";
-fi
-shopt -u nullglob dotglob
+
+aliases_files=(
+  ~/.config/bash/aliases.d/* \
+  ~/.config/bash/aliases.host/"$(hostname -s)" \
+  ~/.config/bash/aliases.host/"$(hostname -f)" \
+);
+
+for aliases_file in "${aliases_files[@]}"; do
+  [[ -r $aliases_file ]] && source "$aliases_file"
+done
 
 function add_alias () {
   if ! alias "$1" &> /dev/null; then
@@ -72,8 +77,8 @@ alias r='fc -s'
 # alias t='tail -n'
 
 # like the perl join
-perljoin () 
-{ 
+perljoin ()
+{
     local jstr="";
     local join="$1"; shift;
     for i; do jstr+="$i$join"; done;
@@ -109,9 +114,9 @@ alias     timestamp='date +%s'
 alias     timestamp_simple='date +"%Y%m%dT%H%M%S"'
 alias     timestamp_rfc3339='date --rfc-3339=seconds | tr " " T'
 
-function timein() { 
+function timein() {
   # http://www.linuxjournal.com/content/add-your-city-linuxs-list-time-zones
-  ( 
+  (
     shopt -s nocasematch
     cd /usr/share/zoneinfo  || cd /usr/lib/zoneinfo
     local search_str="$1"
@@ -157,7 +162,7 @@ function  mkfile ()   {   mkdir -p $(dirname "$@"); touch $@; }
 
 # function rand { echo $(( $RANDOM % ((${2:-$1} - $1 + 1) + $1) )) ; }
 
-function  mkexe       { 
+function  mkexe       {
   local file="$1";
   [[ -d "${file%/*}" ]] || mkdir -p "${file%/*}";
   [[ -e "$file" ]]      || touch "$file";
@@ -170,7 +175,7 @@ function  mkexe       {
     if [[ "$a" == "y" ]]; then
       rm -i ~/.bin/"${file##*/}" && ln -sif "$file" ~/.bin/"${file##*/}";
       chmod 750 ~/.bin/"${file##*/}";
-    else 
+    else
       echo no;
     fi
   fi
@@ -180,13 +185,13 @@ function  mkexe       {
 
 function  press () {
   local archive="${1%%/}";
-  
+
   if [[ ! -e "$archive" ]]; then shift; fi
 
   tar cf - "$@" | bzip2 -9v > "$archive.tbz" && stat -c "%n  %s"  "$archive.tbz";
 }
 
-function  trmv  ()   { 
+function  trmv  ()   {
   test -n "$NSTR" || NSTR=' '
   test -n "$NREP" || NREP='_'
   for file; do
@@ -203,7 +208,7 @@ function  setlocale  { printf '\33]701;%s\007' "$@"; }
 function  treecp     { tar cpf - "$1" | (cd "$2" ; tar xpf -) ; }
 function  vif        { $PAGER $(lif "$@"); }
 
-function  doc ()    { 
+function  doc ()    {
   local o;
   local docfiles;
   { o=$(builtin type -a "$1")   ; [[ -n $o ]] && echo -e "TYPE\n-----\n$o"
@@ -211,15 +216,15 @@ function  doc ()    {
     (
       shopt -s nullglob
       docfiles=( /usr/share/doc/"$1"/* );
-      (( ${#docfiles[@]} > 0 )) && { 
+      (( ${#docfiles[@]} > 0 )) && {
         echo -e "\nDOCFILES\n---------\n/usr/share/doc/"$1"/";
-        printf "%s\n" "${docfiles[@]##*/}"  | columns; 
+        printf "%s\n" "${docfiles[@]##*/}"  | columns;
       }
     );
     o=$(command man -k "$@")    ; [[ -n $o ]] && echo -e "\nAPROPOS\n--------\n$o"
     o=$(command dpkg -l | perl -lane '$F[1] =~ /'"$1"'/ and print join " ", @F');
                                   [[ -n $o ]] && echo -e "\nPACKAGES\n---------\n$o"
-    o=$(dpkg -L $(dpkg -S $(type -p "$1") | awk -F: '{print $1}')); 
+    o=$(dpkg -L $(dpkg -S $(type -p "$1") | awk -F: '{print $1}'));
                                   [[ -n $o ]] && echo -e "\nPACKAGE FILES\n--------------\n$o";
     o=$(builtin help "$@")      ; [[ -n $o ]] && echo -e "\nHELP\n----\n$o"
     o=$(command man "$@")       ; [[ -n $o ]] && echo -e "\nMANPAGE\n--------\n$o"
@@ -230,13 +235,13 @@ function  doc ()    {
 function  dirs () {
   [[ -n "$DIRS_N" ]] || DIRS_N=1;
   if [[ -n "$@" ]]; then
-    builtin dirs "$@" 
+    builtin dirs "$@"
   else
-    { \echo -e "This is less.\n   q<N> to goto N\n   q<RETURN> to quit\n"; 
+    { \echo -e "This is less.\n   q<N> to goto N\n   q<RETURN> to quit\n";
       builtin dirs -v
     } | less -C
-    local dir=$( 
-        perl -e 'print glob pop' ${DIRSTACK[$(read -p "Which dir? " -s -n $DIRS_N n; echo $n)]} 
+    local dir=$(
+        perl -e 'print glob pop' ${DIRSTACK[$(read -p "Which dir? " -s -n $DIRS_N n; echo $n)]}
       )
     cd $dir && \echo "$PWD"
   fi
@@ -264,7 +269,7 @@ function which () {
     target=$(readlink "$target");
     echo "  $target";
   done;
-} 
+}
 
 function asciitab {
   man ascii 2>/dev/null | awk 'BEGIN{RS="\n\n"}NR==10'
@@ -275,19 +280,6 @@ function asciitab {
 # function dfp { df -h | perl -lne 'print "-"x67 if ($.=~/1|2/); printf "|%-12s| %4s | %4s | %5s | %8s | %-15s |\n", split /\s+/,$_'/,$_'; '}              #pretty print df -h
 # printf '\33]701;%s\007' en_GB.UTF-8                 # set the locale
 # printf '\33]50;%s\007' "8x13,xft:Kochi Gothic"      # set funky fonts
-
-# ==================================#
-# Source other named files          #
-# ==================================#
-aliases_files=(
-  ~/.config/bash/aliases.d/* \
-  ~/.config/bash/aliases.host/"$(hostname -s)" \
-  ~/.config/bash/aliases.host/"$(hostname -f)" \
-);
-
-for aliases_file in "${aliases_files[@]}"; do
-  [[ -r $aliases_file ]] && source "$aliases_file"
-done
 
 # ==================================#
 # *  aliases added via add_alias  * #
