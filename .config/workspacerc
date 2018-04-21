@@ -44,6 +44,5 @@ launch() {
   xrandr --dpi 96
 
   sleep 10 && ~/.config/xsetrc
-
 } >> "$wksplog" 2>&1 &
 

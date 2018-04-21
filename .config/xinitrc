@@ -47,8 +47,6 @@ start_desktop() {
 
   systemctl --user import-environment DISPLAY
   dbus-update-activation-environment --systemd DISPLAY
-  eval $(dbus-launch gnome-keyring-daemon --start --replace --daemonize)
-  dbus-launch seahorse-daemon
 
   eval "$(gpg-agent --daemon --write-env-file $XDG_CACHE_HOME/gpg-agent-info)"
 
