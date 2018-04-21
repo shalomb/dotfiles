@@ -3,7 +3,7 @@
 shopt -s histappend
 
 # append history entries to ~/.config/bash/bash_history
-HISTFILE=~/.config/bash/bash_history
+HISTFILE=~/.config/bash/history
 HISTFILESIZE="32768"
 HISTSIZE="$HISTFILESIZE"
 HISTTIMEFORMAT='%FT%T'$'\t'
