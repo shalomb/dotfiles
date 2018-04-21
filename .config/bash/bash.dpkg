@@ -1,6 +1,0 @@
-bash						install
-bash-builtins					install
-bash-completion					install
-bash-doc					install
-bashdb						install
-bash-extra        install
