@@ -11,17 +11,9 @@
 # If not running interactively, don't do anything, just return
 [[ ${-//[!i]/} ]] || return
 
-# source ~/.profile if
-#  * ~/.config/bashrc hasn't been sourced before - for interactive shells
-#  * it hasn't already been marked as sourced.
-if [[ -z $PROFILE_SOURCED ]]; then
-  if [[ -e ~/.config/profile ]]; then
-    source ~/.config/profile && PROFILE_SOURCED=1
-  fi
+if [[ -e ~/.config/profile ]]; then
+  source ~/.config/profile
 fi
-
-# export BASHRC_SOURCED="$BASHRC_SOURCED|$(date +%s)"
-# export BASHRC_SOURCED_BY="$BASHRC_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
 
 export FCEDIT="$EDITOR"
 

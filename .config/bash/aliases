@@ -10,9 +10,6 @@
 
 [[ ${-//[!i]/} ]] || return
 
-# export BASH_ALIASES_SOURCED="$(date +%s)|$BASH_ALIASES_SOURCED"
-# export BASH_ALIASES_SOURCED_BY="$BASH_ALIASES_SOURCED_BY|$(ps -p $$ -o pid= -o ppid= -o comm= -o args= -o fuser=) $(date +%s)"
-
 shopt -s nullglob dotglob extglob
 
 aliases_files=(
