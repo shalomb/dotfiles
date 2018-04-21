@@ -10,7 +10,7 @@ if [[ ! -d .vim ]]; then
 fi
 
 pkgs_to_install=()
-type -P ack      &>/dev/null || pkgs_to_install+=( 'ack-grep' )
+type -P ack      &>/dev/null || pkgs_to_install+=( 'ack' )
 type -P ctags    &>/dev/null || pkgs_to_install+=( 'exuberant-ctags' )
 type -P git      &>/dev/null || pkgs_to_install+=( 'git' )
 type -P jq       &>/dev/null || pkgs_to_install+=( 'jq' )
