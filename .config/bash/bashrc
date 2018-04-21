@@ -11,7 +11,7 @@
 # If not running interactively, don't do anything, just return
 [[ ${-//[!i]/} ]] || return
 
-# source ~/.profile if 
+# source ~/.profile if
 #  * ~/.config/bashrc hasn't been sourced before - for interactive shells
 #  * it hasn't already been marked as sourced.
 if [[ -z $PROFILE_SOURCED ]]; then
@@ -25,11 +25,6 @@ fi
 
 export FCEDIT="$EDITOR"
 
-export HISTCONTROL=ignoredups
-export HISTFILESIZE=8192
-export HISTIGNORE='&:ls: ls *:[bf]g'
-export HISTSIZE="$HISTFILESIZE"
-export HISTTIMEFORMAT=""
 export IGNOREEOF=5
 export TIMEFORMAT=$'\nReal: %3lR\tUser: %3lU\tSys: %3lS\tCPU: %P'
 
@@ -97,11 +92,16 @@ function set_cdpath () {
 
 # CDPATH does not seem to expand variables when cd is used
 # workaround: get PROMPT_COMMAND to do the expanding
-if [[ -n $PROMPT_COMMAND && $PROMPT_COMMAND != *set_cdpath* ]]; then  
+if [[ -n $PROMPT_COMMAND && $PROMPT_COMMAND != *set_cdpath* ]]; then
     PROMPT_COMMAND="$PROMPT_COMMAND ; set_cdpath ;"
 else
   PROMPT_COMMAND="set_cdpath"
 fi
+
+function source() {
+  # echo "$(date --rfc-3339=ns): Sourcing $@"
+  builtin source "$@"
+}
 
 # reload - convenience function around source
 #   * takes multiple arguments,
@@ -120,7 +120,7 @@ function reload () {
   fi
 }
 
-# Source aliases
+# # Source aliases
 reload  ~/.config/bash/completion \
         ~/.config/bash/aliases
 
@@ -163,4 +163,3 @@ uptime
 echo ''
 
 type -P fortune &>/dev/null && fortune 2>&1 && echo ""
-
