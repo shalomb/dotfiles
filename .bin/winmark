@@ -8,12 +8,7 @@ shopt -s extglob
 
 # [[ ${-//[!i]/} ]] &&
 
-winmarks_dir="$XDG_CACHE_HOME/winmarks"
-
-if [[ ! -d "$winmarks_dir" ]]; then
-  mkdir -p "$winmarks_dir" || \
-    { echo "Error creating the winmarks directory, $!"; exit 2; };
-fi
+source "$XDG_CONFIG_HOME/winmark/defaults"
 
 cd "$winmarks_dir"
 
@@ -25,8 +20,8 @@ function get_last_winmark {
 
 action="${1:-"mark"}"
 mark="${2:-"'"}"
+curwin="${3:-$(printf "0x%08x" "$(xprop -root _NET_ACTIVE_WINDOW | grep -Eio "0x[[:xdigit:]]+")")}";
 duration="${osd_msg_duration:-"10"}"
-curwin="$(printf "0x%08x" "$(xprop -root _NET_ACTIVE_WINDOW | grep -Eio "0x[[:xdigit:]]+")")";
 
 if   [[ $action = @(mark|add) ]]; then
   touch "$curwin";
