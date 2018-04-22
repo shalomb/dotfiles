@@ -22,13 +22,12 @@ type -P xflux          &>/dev/null || {
   echo "xflux is a manual install" >&2
 }
 
+pkgs_to_install+=( $(awk '{ print $1 }' .apt/dpkg--set-selections) )
+
 if (( ${#pkgs_to_install[@]} >= 1 )); then
   echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
   (set -xv; sudo aptitude install ${pkgs_to_install[@]})
 fi
-
-
-set -x
 
 ( set -exv
   git submodule init
