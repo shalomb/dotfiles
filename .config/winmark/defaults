@@ -1,0 +1,10 @@
+#!/bin/bash
+
+winmarks_dir="$XDG_CACHE_HOME/winmarks"
+
+if [[ ! -d "$winmarks_dir" ]]; then
+  mkdir -p "$winmarks_dir" || \
+    { echo "Error creating the winmarks directory, $!"; exit 2; };
+fi
+
+
