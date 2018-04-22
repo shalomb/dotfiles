@@ -1,0 +1,20 @@
+#!/bin/bash
+
+source "$XDG_CONFIG_HOME/dunst/defaults"
+
+{
+  msg=( "$@" )
+
+cat <<EOF
+$(date)
+${msg[3]}, ${msg[4]}
+${0##*/} via ${msg[0]}
+
+${msg[1]}
+${msg[2]}
+
+--
+
+EOF
+
+} >> "$dunst_log_file"
