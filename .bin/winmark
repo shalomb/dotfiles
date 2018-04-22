@@ -12,7 +12,7 @@ source "$XDG_CONFIG_HOME/winmark/defaults"
 
 cd "$winmarks_dir"
 
-exec > >(tee -a "$winmarks_dir"/winmark.log) 2>&1
+# exec > >(tee -a "$winmarks_dir"/winmark.log) 2>&1
 
 function get_last_winmark {
   find . -type l -iname "?" -printf "%T@ %p\0" | sort -zn | grep -zom 1 ".$"
