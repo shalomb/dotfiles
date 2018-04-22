@@ -1,0 +1,8 @@
+#!/bin/bash
+
+dunst_log_file="$XDG_CACHE_HOME/dunst/dunst.log"
+
+if [[ ! -e $dunst_log_file ]]; then
+  mkdir -p "${dunst_log_file%/*}"
+fi
+

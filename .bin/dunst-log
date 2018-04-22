@@ -1,0 +1,5 @@
+#!/bin/bash
+
+source "$XDG_CONFIG_HOME/dunst/defaults"
+
+"${PAGER:-less}" "$dunst_log_file"
