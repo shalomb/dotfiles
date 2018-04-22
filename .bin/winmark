@@ -8,7 +8,7 @@ shopt -s extglob
 
 # [[ ${-//[!i]/} ]] &&
 
-winmarks_dir="$HOME/.config/winmarks"
+winmarks_dir="$XDG_CACHE_HOME/winmarks"
 
 if [[ ! -d "$winmarks_dir" ]]; then
   mkdir -p "$winmarks_dir" || \
@@ -35,8 +35,8 @@ if   [[ $action = @(mark|add) ]]; then
   duration="${osd_msg_duration:-"3"}"
   wmctrl -lx | \
     perl -lane '
-        $F[0]=~/'"$curwin"'/ and 
-          print join " ", 
+        $F[0]=~/'"$curwin"'/ and
+          print join " ",
             qw['"$mark"'], "\t",
             "$F[2]", "\t",
             q/"/, (join " ", @F[4..$#F]), q/"/
@@ -75,10 +75,10 @@ elif [[ $action = @(ls|list) ]]; then
     printf "%s %s %s\n" "$link" "$target" "$(< $link)" \
       | sed 's/\s\+/ /g' \
       | sed 's/"//g'     \
-      | while read n w n c d; do 
+      | while read n w n c d; do
           printf "%s %s %-20s %s\n" "$n" "$w" "$c" "$d"
         done
-  done 
+  done
 
 elif [[ $action = @(rm|remove) ]]; then
   set -x
@@ -89,5 +89,5 @@ elif [[ $action = @(reset|remark) ]]; then
   set -x
   rm "$mark"
   exec "$0" 'mark' "$mark"
-  
+
 fi

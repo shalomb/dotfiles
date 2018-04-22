@@ -2,18 +2,18 @@
 
 candidates=()
 
-if [[ ! -d ~/.config/winmarks ]]; then
-  mkdir    ~/.config/winmarks
+if [[ ! -d $XDG_CACHE_HOME/winmarks ]]; then
+  mkdir    $XDG_CACHE_HOME/winmarks
 fi
 
-cd ~/.config/winmarks
+cd "$XDG_CACHE_HOME/winmarks"
 
 if (( $# > 0 )); then
   candidates+="$( grep -ih "$@" ?)"
 else
-  for i in ?; do 
+  for i in ?; do
     candidates+=( "$(<"$i")" )
-  done 
+  done
 fi
 
 while read -r l; do
@@ -22,5 +22,5 @@ while read -r l; do
 done < <(
   for i in "${candidates[@]}"; do
     echo -e "$i"
-  done  | dmenu -b -l 10 -i 
+  done  | dmenu -b -l 10 -i
 )
