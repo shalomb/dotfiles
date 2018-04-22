@@ -71,6 +71,7 @@ xdg-utils              install
 xdm                    install
 xdotool                install
 xfonts-base            install
+xosd-bin               install
 xscreensaver           install
 xsel                   install
 xxd                    install
