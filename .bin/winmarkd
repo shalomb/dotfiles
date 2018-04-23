@@ -29,16 +29,15 @@ echo "Mark:     $mark"
 
 mark_file=$(readlink -f "$mark" || true)
 
-if [[ ${mark_file##*/} != $wid ]] || [[ ! -e $mark_file ]]; then
-  rm -f "$mark_file"
-  winmark mark "$mark" "$wid"
-fi
-
 if [[ $wminstance == qterm ]]; then
-  [[ -e q ]] || winmark mark '@' "$wid"
+  [[ -e @ ]] || winmark mark '@' "$wid"
 
 elif [[ $wminstance == spotify ]]; then
   [[ -e p ]] || winmark mark 'p' "$wid"
 
+elif [[ ${mark_file##*/} != $wid ]] || [[ ! -e $mark_file ]]; then
+  winmark mark "$mark" "$wid"
+
 fi
+
 
