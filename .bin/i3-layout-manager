@@ -100,7 +100,7 @@ function undock {
 
 cmd="$1"
 
-while getopts 'duh' opt; do
+while getopts 'duhx' opt; do
   case "$opt" in
     d)
       dock
@@ -110,6 +110,9 @@ while getopts 'duh' opt; do
     ;;
     u)
       undock
+    ;;
+    x)
+      set -xv
     ;;
   esac
 done
