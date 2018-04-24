@@ -2,17 +2,19 @@
 
 set -eu
 
-active_monitors=( $(xrandr -q | grep -Po '^\K(\S+)(?= connected)') )
+active_outputs=( $(xrandr -q | grep -Po '^\K(\S+)(?= connected)') )
 active_workspaces=$( i3-msg -t get_workspaces )
 
-function get_monitor {
+function get_output {
   local pattern="$1"
-  printf '%q\n' "${active_monitors[@]}" | grep -E "$1"
+  printf '%q\n' "${active_outputs[@]}" | grep -E "$1"
 }
 
-eDP1=$(  get_monitor eDP-?1  )
-DP1_1=$( get_monitor DP-?1-1 )
-DP1_2=$( get_monitor DP-?1-2 )
+laptop_output=$(  get_output eDP-?1  )
+if (( ${#active_outputs[@]} > 1 )); then
+  external_output_1=$( get_output DP-?1-1 )
+  external_output_2=$( get_output DP-?1-2 )
+fi
 
 function is-workspace-available {
   local workspace=$1
@@ -34,43 +36,43 @@ function move-workspace-to-output {
 
 function dock {
 
-  echo "Number of active outputs : ${#active_monitors[@]}"
-
-  if (( ${#active_monitors[@]} == 1 )); then
-    echo "Only one output (${active_monitors[@]}) is active, cannot continue .." >&2
+  if (( ${#active_outputs[@]} == 1 )); then
+    echo "Only ${#active_outputs[@]} output (${active_outputs[@]}) active."
+    echo "ERROR: Device appears to be undocked, cannot continue .." >&2
     return
   fi
 
-  xrandr --output "$DP1_1" --off
-  xrandr --output "$DP1_1" --off
-  xrandr \
-    --output "$DP1_1" --right-of "$eDP1"  --auto --primary \
-    --output "$DP1_2" --right-of "$DP1_1" --auto
+  xrandr --output "$external_output_1" --off
+  xrandr --output "$external_output_1" --off
+  xrandr --output "$external_output_1" \
+          --right-of "$laptop_output" --auto --primary \
+      --output "$external_output_2"    \
+          --right-of "$external_output_1" --auto
 
   declare -A workspace_output_map
 
-  workspace_output_map[0]="$eDP1"
-  workspace_output_map[p]="$eDP1"
+  workspace_output_map[0]="$laptop_output"
+  workspace_output_map[p]="$laptop_output"
 
-  workspace_output_map[1]="$DP1_1"
-  workspace_output_map[2]="$DP1_1"
-  workspace_output_map[3]="$DP1_1"
-  workspace_output_map[4]="$DP1_1"
-  workspace_output_map[5]="$DP1_1"
+  workspace_output_map[1]="$external_output_1"
+  workspace_output_map[2]="$external_output_1"
+  workspace_output_map[3]="$external_output_1"
+  workspace_output_map[4]="$external_output_1"
+  workspace_output_map[5]="$external_output_1"
 
-  workspace_output_map[6]="$DP1_2"
-  workspace_output_map[7]="$DP1_2"
-  workspace_output_map[8]="$DP1_2"
-  workspace_output_map[9]="$DP1_2"
-  workspace_output_map[2]="$DP1_2"
+  workspace_output_map[6]="$external_output_2"
+  workspace_output_map[7]="$external_output_2"
+  workspace_output_map[8]="$external_output_2"
+  workspace_output_map[9]="$external_output_2"
+  workspace_output_map[2]="$external_output_2"
 
-  workspace_output_map[q]="$DP1_1"
-  workspace_output_map[w]="$DP1_1"
+  workspace_output_map[q]="$external_output_1"
+  workspace_output_map[w]="$external_output_1"
 
-  workspace_output_map[f]="$DP1_2"
-  workspace_output_map[m]="$DP1_2"
-  workspace_output_map[s]="$DP1_2"
-  workspace_output_map[e]="$DP1_2"
+  workspace_output_map[f]="$external_output_2"
+  workspace_output_map[m]="$external_output_2"
+  workspace_output_map[s]="$external_output_2"
+  workspace_output_map[e]="$external_output_2"
 
   for i in ${!workspace_output_map[@]}; do
     if ! move-workspace-to-output "$i" "${workspace_output_map[$i]}"; then
@@ -85,15 +87,15 @@ function undock {
   workspaces=( $(jq -r '.[].name' <<<"$active_workspaces" | sort) )
 
   for i in "${workspaces[@]}"; do
-    if ! move-workspace-to-output "$i" "${active_monitors[0]}"; then
-      echo "Unable to move workspace $i to output ${active_monitors[0]}" >&2
+    if ! move-workspace-to-output "$i" "${active_outputs[0]}"; then
+      echo "Unable to move workspace $i to output ${active_outputs[0]}" >&2
     fi
   done
 
-  xrandr --output "${active_monitors[0]}" --auto --primary
+  xrandr --output "${active_outputs[0]}" --auto --primary
 
-  for output in "${active_monitors[@]:1: ${#active_monitors[@]}}"; do
-    xrandr --output "$output" --off
+  for output in "${active_outputs[@]:1: ${#active_outputs[@]}}"; do
+    xrandr --output "$output" --off || true
   done
 
 }
