@@ -68,29 +68,29 @@ URxvt*color1:           #b21818
 URxvt*color2:           #18b218
 ! yellow
 URxvt*color3:           #BE5F00
-! b3a2322lue 
+! b3a2322lue
 URxvt*color4:           #6D85BA
 ! magenta
 URxvt*color5:           #b218b2
-! cyan 
+! cyan
 URxvt*color6:           #18b2b2
-! white 
+! white
 URxvt*color7:           #b2b2b2
-! bight black 
+! bight black
 URxvt*color8:           #686868
-! bright red 
+! bright red
 URxvt*color9:           #FF5454
-! bright green 
+! bright green
 URxvt*color10:          #54FF54
-! bright yellow 
+! bright yellow
 URxvt*color11:          #FFFF54
-! bright blue 
+! bright blue
 URxvt*color12:          #73A5FF
 ! bright magenta
 URxvt*color13:          #FF54FF
-! bright cyan 
+! bright cyan
 URxvt*color14:          #54FFFF
-! bright white 
+! bright white
 URxvt*color15:          #FFFFFF
 
 ! black
@@ -101,29 +101,29 @@ XTerm*color1:           #b21818
 XTerm*color2:           #18b218
 ! yellow
 XTerm*color3:           #BE5F00
-! blue 
+! blue
 XTerm*color4:           #6D85BA
 ! magenta
 XTerm*color5:           #b218b2
-! cyan 
+! cyan
 XTerm*color6:           #18b2b2
-! white 
+! white
 XTerm*color7:           #b2b2b2
-! bight black 
+! bight black
 XTerm*color8:           #686868
-! bright red 
+! bright red
 XTerm*color9:           #FF5454
-! bright green 
+! bright green
 XTerm*color10:          #54FF54
-! bright yellow 
+! bright yellow
 XTerm*color11:          #FFFF54
-! bright blue 
+! bright blue
 XTerm*color12:          #73C5FF
 ! bright magenta
 XTerm*color13:          #FF54FF
-! bright cyan 
+! bright cyan
 XTerm*color14:          #54FFFF
-! bright white 
+! bright white
 XTerm*color15:          #FFFFFF
 
 XTerm*cursorColor:      #AA5454
