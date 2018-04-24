@@ -84,15 +84,20 @@ function dock {
 
 function undock {
 
-  workspaces=( $(jq -r '.[].name' <<<"$active_workspaces" | sort) )
+  workspaces=(
+    $(  jq -r '
+          .[] | select(.output != "'"$laptop_output"'").name
+        ' <<<"$active_workspaces" | sort
+     )
+  )
 
   for i in "${workspaces[@]}"; do
-    if ! move-workspace-to-output "$i" "${active_outputs[0]}"; then
-      echo "Unable to move workspace $i to output ${active_outputs[0]}" >&2
+    if ! move-workspace-to-output "$i" "$laptop_output"; then
+      echo "Unable to move workspace $i to output $laptop_output" >&2
     fi
   done
 
-  xrandr --output "${active_outputs[0]}" --auto --primary
+  xrandr --output "$laptop_output" --auto --primary
 
   for output in "${active_outputs[@]:1: ${#active_outputs[@]}}"; do
     xrandr --output "$output" --off || true
