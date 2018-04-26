@@ -46,6 +46,19 @@ elif [[ $action = @(summon|call) ]]; then
   winid="$(readlink "$mark")";
   winid="${winid##*/}"
 
+  if ! wmctrl -lxp | awk '$1 =="'"$winid"'"{ print $1 }' | grep -q .; then
+    wmclass=$( awk '{ print $2 }' $mark )
+    stale_winid="$winid"
+    winid=$(wmctrl -lx | awk '$3 == "'"$wmclass"'" { print $1 }')
+    if [[ -n $winid ]]; then
+      "$0" "mark" "$mark" "$winid"
+    else
+      echo "ERROR: Mark $mark has no candidate windows matching class $wmclass"
+      echo "Stale window ID detected: $stale_winid, Cleaning up ..."
+      rm -f "$stale_winid"
+    fi
+  fi
+
   if [[ -f $winid ]]; then
     if [[ $winid = $curwin ]]; then
       new_mark="$(readlink previous)"
