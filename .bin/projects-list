@@ -13,7 +13,7 @@ done
 shift $((OPTIND -1))
 
 projects_find() {
-find ~ -iname ".git" |
+find ~/* -iname ".git" |
   sed -r 's@/.git@@' |
   while read d; do
     ( cd "$d" && git remote -v | awk '/fetch/{ print $2 }'
