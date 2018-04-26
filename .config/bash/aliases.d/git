@@ -86,27 +86,30 @@ function summarize_refs {
   local cmark;
   local cmark_current="%C($(git config color.branch.current))"
         cmark_current="${cmark_current:-green}"
+        cmark_current="%C(bold)$cmark_current"
   local cmark_local="%C($(git config color.branch.local))"
         cmark_local="${cmark_local:-blue}"
     {
       if [[ -t 0 ]]; then
-        gbranches
+        gbranches -a
       else
         cat -
       fi
     } | while read -r ref; do
-    if [[ $ref == $current ]]; then
-      cmark="$cmark_current"
-    elif [[ $ref == @(master|develop) ]]; then
-      cmark="%C(bold magenta)"
-    else
-      cmark="$cmark_local"
-    fi
-    _ref=$(printf "%-16s" "$ref")
-    git log -n1 "$ref" \
-      --date=format:%FT%T \
-      --pretty=format:"$cmark$_ref %C(reset) %C(bold)%h%C(reset) %s %n  %C(142)%cd %C(white)'%cN' <%ce> %C(yellow)%n    (%D) %C(reset)%t, %p %n%n"
-  done | cat -
+          if [[ $ref == $current ]]; then
+            cmark="$cmark_current"
+          elif [[ $ref == *@(master|develop)* ]]; then
+            cmark="%C(bold magenta)"
+          else
+            cmark="$cmark_local"
+          fi
+          _ref=$(printf "%-16s" "$ref")
+          GIT_PAGER=cat \
+          git log -n1 "$ref" \
+            --date=format:%FT%T \
+            --pretty=format:"$cmark$_ref %C(reset) %C(bold)%C(white)%h%C(reset)%C(reset) %s %n  %C(142)%cd %C(white)'%cN' <%ce> %C(yellow)%n    (%D) %C(reset)%t, %p %n"
+          echo
+        done
 }
 
 #| gbranches - list branches
