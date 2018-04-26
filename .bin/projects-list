@@ -2,6 +2,8 @@
 
 set -eu
 
+projects_list="$XDG_CACHE_HOME/projects.list"
+
 while getopts 'u' opt; do
   case "$opt" in
     u) update=1
@@ -19,8 +21,8 @@ find ~ -iname ".git" |
   done | column -t
 }
 
-if [[ -n ${update-} ]] || [[ ! -e ~/.config/projects.list ]]; then
-  projects_find > ~/.config/projects.list
+if [[ -n ${update-} ]] || [[ ! -e $projects_list ]]; then
+  projects_find > "$projects_list"
 fi
 
-cat ~/.config/projects.list
+cat "$projects_list"
