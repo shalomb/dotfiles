@@ -242,6 +242,7 @@ bindsym XF86Forward            exec gmrun "XF86Forward"
 bindsym XF86Game               exec gmrun "XF86Game"
 bindsym XF86Go                 exec gmrun "XF86Go"
 bindsym XF86HomePage           exec i3-layout-manager -d
+bindsym Control+XF86HomePage   exec i3-layout-manager -u
 bindsym XF86KbdBrightnessDown  exec gmrun "XF86KbdBrightnessDown"
 bindsym XF86KbdBrightnessUp    exec gmrun "XF86KbdBrightnessUp"
 bindsym XF86KbdLightOnOff      exec gmrun "XF86KbdLightOnOff"
