@@ -14,15 +14,14 @@ if [[ -f $pidfile ]]; then
   fi
 fi
 
-# dzen2 -p 2 -bg green -fg black -y -20 -fn "-b&h-lucida-bold-r-normal-sans-14-240-75-75-p-152-iso8859-1"  <<<"$@" 
+# dzen2 -p 2 -bg green -fg black -y -20 -fn "-b&h-lucida-bold-r-normal-sans-14-240-75-75-p-152-iso8859-1"  <<<"$@"
 
 echo "$@" | \
   osd_cat -l 2 -p bottom -o 60 \
   -d "$duration" -A center -c green \
   -s 1 \
-  -f "-*-fixed-*-*-*-*-16-*-*-*-*-*-*-*" \
+  -f "-*-*-bold-*-normal-*-20-240-*-*-*-*-*-*" \
   & pid="$!"
-  # -f "-b&h-lucida-bold-r-normal-sans-24-240-75-75-p-152-iso8859-1" \
 
 echo "$(date +%s) $duration $pid" > "$pidfile"
 
