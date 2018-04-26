@@ -17,6 +17,8 @@ URxvt*borderLess:       false
 URxvt*cursorColor:      #666699
 URxvt*cursorColor2:     #3399cc
 
+URxvt.underlineColor:   #3399cc
+
 URxvt.keysym.M-u    :  perl:mark-yank-urls:activate_mark_mode
 URxvt.perl-lib      :  /home/unop/.local/lib/urxvt
 URxvt.perl-ext      :  selection,mark-yank-urls,default,matcher,font-size,selection-to-clipboard,selection-autotransform
