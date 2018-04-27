@@ -33,6 +33,7 @@ function cdf {
   fi
 }
 
+#| cdp - cd to project
 function cdp {
   query="$@"
   dir="$( projects-list |
