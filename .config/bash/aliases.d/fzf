@@ -46,6 +46,7 @@ function cdp {
             --tiebreak=index |
           awk '{ print $1 }'
   )"
+  [[ -d $dir ]] && { echo "$dir not a directory?" >&2; return; }
   cd "$dir"
 }
 
