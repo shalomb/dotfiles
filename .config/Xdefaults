@@ -34,8 +34,6 @@ URxvt.font-size.step: 1
 URxvt.keysym.CM-Up:     perl:font-size:incglobal
 URxvt.keysym.CM-Down:   perl:font-size:decglobal
 
-URxvt.letterSpace:      -1
-
 URxvt.resize-font.smaller: C-Down
 URxvt.resize-font.bigger: C-Up
 
@@ -179,7 +177,8 @@ XTerm*charClass:          33:48,37:48,45-46:48,38:48
 
 ! XTerm*foreground:         rgb:b2/b2/b2
 ! XTerm*background:         rgb:08/08/08
-*fadeColor:             #002b36
+*fadeColor:                 #002b36
+URxvt*fading:               30
 
 *pointerColorBackground: #586e75
 *pointerColorForeground: #93a1a1
