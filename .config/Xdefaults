@@ -34,7 +34,8 @@ URxvt.font-size.step: 1
 URxvt.keysym.CM-Up:     perl:font-size:incglobal
 URxvt.keysym.CM-Down:   perl:font-size:decglobal
 
-! URxvt.letterSpace:      -1
+URxvt.letterSpace:      -1
+
 URxvt.resize-font.smaller: C-Down
 URxvt.resize-font.bigger: C-Up
 
