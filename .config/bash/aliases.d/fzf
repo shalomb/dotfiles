@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#| cdf - cd to directory
-function cdf {
+#| cdd - cd to directory
+function cdd {
   query="$@"
 
   if [[ -d $query ]]; then
@@ -17,9 +17,8 @@ function cdf {
     fzf --sort \
         --bind=ctrl-s:toggle-sort \
         --cycle \
-        --height 10% \
+        --height 25% \
         --no-mouse \
-        --print-query \
         --query="$query" \
         --reverse \
         --tiebreak=index
@@ -29,7 +28,7 @@ function cdf {
   if [[ -d $target ]]; then
     cd "$target"
   else
-    echo "cdf: $target: No such directory"
+    echo "cdd: $target: No such directory"
   fi
 }
 
