@@ -26,10 +26,6 @@
 	path = .vim/bundle/dockerfile
 	url = https://github.com/ekalinin/Dockerfile.vim.git
 
-[submodule   ".vim/bundle/supertab"]
-	path = .vim/bundle/supertab
-	url = https://github.com/ervandew/supertab.git
-
 [submodule   ".vim/bundle/markdown"]
 	path = .vim/bundle/markdown
 	url = https://github.com/tamlok/vim-markdown.git
