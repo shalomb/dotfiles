@@ -54,6 +54,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/shinokada/dragvisuals.vim.git         bundle/dragvisuals
   git submodule add -f https://github.com/takac/vim-hardtime.git                bundle/hardtime
   git submodule add -f https://github.com/tamlok/vim-markdown.git               bundle/markdown
+  git submodule add -f https://github.com/terryma/vim-multiple-cursors.git      bundle/multiple-cursors
   git submodule add -f https://github.com/thanthese/Tortoise-Typing.git         bundle/tortoise-typing
   git submodule add -f https://github.com/tmux-plugins/vim-tmux.git             bundle/tmux
   git submodule add -f https://github.com/tomasr/molokai.git                    bundle/molokai
@@ -79,9 +80,15 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/vim-scripts/vis.git                   bundle/vis  # Extended VISual commands
   git submodule add -f https://github.com/zirrostig/vim-schlepp.git             bundle/schlepp
 
-  git submodule -q foreach git pull -q origin master
   git submodule update --init --recursive
-  git submodule status
+  git submodule sync
+  git submodule -q foreach '
+    echo "Synchronizing ${PWD##*dotfiles/}";
+    git fetch -q --all --prune;
+    git checkout -q master;
+    git pull -q;
+  '
+  git submodule status | sed -r 's/[()]//g' | column -t
 )
 
 exit $?;
