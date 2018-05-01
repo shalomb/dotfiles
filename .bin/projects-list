@@ -2,8 +2,10 @@
 
 set -eu
 
+: ${XDG_CACHE_HOME:="$HOME/.cache"}
 projects_list="$XDG_CACHE_HOME/projects.list"
 
+update=0
 while getopts 'u' opt; do
   case "$opt" in
     u) update=1
@@ -16,12 +18,14 @@ projects_find() {
 find ~/* -iname ".git" |
   sed -r 's@/.git@@' |
   while read d; do
+    dir="${d##$HOME}"
+    dir="~$dir"
     ( cd "$d" && git remote -v | awk '/fetch/{ print $2 }'
-    ) 2>/dev/null | sed -r 's@^@'"$d"' @';
-  done | column -t
+    ) 2>/dev/null | sed -r 's@^@'"$dir"' @';
+  done
 }
 
-if [[ -n ${update-} ]] || [[ ! -e $projects_list ]]; then
+if (( update == 1 )) || [[ ! -e $projects_list ]]; then
   projects_find > "$projects_list"
 fi
 
