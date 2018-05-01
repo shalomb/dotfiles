@@ -1,0 +1,61 @@
+#!/bin/bash
+
+set -eu
+
+: ${XDG_CACHE_HOME:="$HOME/.cache"}
+: ${cwds_list:="$XDG_CACHE_HOME/cwds"}
+
+update=0
+while getopts 'u' opt; do
+  case "$opt" in
+    u) update=1
+      ;;
+  esac
+done
+shift $((OPTIND -1))
+
+if (( update == 1 )); then
+{
+  [[ -e $cwds_list ]] && cat "$cwds_list"
+
+  pgrep -u "${LOGNAME:-$USER}" |
+    xargs -I{} readlink /proc/{}/cwd |
+    grep "^$HOME/[^.]" |
+    while read -r dir; do
+      ( cd "$dir"
+        comment=$(
+          git remote -v | awk '/origin.*fetch/{ print $2 }' | tr -d '\n'
+        )
+        : ${comment:='Not under a git project! '}
+        echo "$dir  $comment"
+      ) 2>/dev/null
+    done |
+    sed -r "s@^$HOME/@~/@" |
+    sort |
+    uniq -c |
+    sort -nr
+
+} | perl -lane '
+    use List::Util qw[sum];
+    if ( defined $F[1] ) {
+      push @{ $f{$F[1]}{score} }, $F[0];
+      $f{$F[1]}{comment} = $F[2];
+    }
+
+    END {
+      printf "%04.12f %s  %s\n", @$_
+        for sort { $b->[0] <=> $a->[0] }
+        map [ sum(
+                @{$f{$_}{score}},
+                sum( @{$f{$_}{score}}, time )/time
+              )/2,
+              $_,
+              $f{$_}{comment}
+            ],
+        keys %f
+    }
+  ' > "$cwds_list.tmp"
+  mv "$cwds_list"{.tmp,}
+fi
+
+awk '{ $1=""; print $0 }' "$cwds_list"
