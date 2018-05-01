@@ -35,18 +35,20 @@ function cdd {
 #| cdp - cd to project
 function cdp {
   query="$@"
-  dir="$( projects-list |
+  dir="$( (cwds-list; projects-list) |
+        column -t |
         fzf --bind=ctrl-s:toggle-sort \
             --cycle \
             --height 50% \
             --no-mouse \
             --query="$query" \
             --reverse \
-            --sort \
             --tiebreak=index |
           awk '{ print $1 }'
   )"
-  [[ -d $dir ]] && { echo "$dir not a directory?" >&2; return; }
+  [[ -z $dir ]] && return
+  dir="${dir//\~/$HOME}"
+  [[ -d $dir ]] || { echo "$dir not a directory?" >&2; return; }
   cd "$dir"
 }
 
