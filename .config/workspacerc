@@ -18,6 +18,7 @@ launch() {
 # NOTE
 # Also see .xinitrc for daemons started early before the desktop environment
 {
+  i3-layout-manager -a
 
   wpset &
 
