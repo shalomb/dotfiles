@@ -1,1 +1,2 @@
 alias dotfiles='cd ~/.config/dotfiles'
+alias .f='dotfiles'
