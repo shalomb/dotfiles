@@ -31,6 +31,7 @@ ln -svf .vim/gvimrc .gvimrc
 ( set +e -xv
   cd .vim/
 
+  git submodule add -f https://github.com/airblade/vim-gitgutter.git            bundle/gitgutter
   git submodule add -f https://github.com/AndrewRadev/switch.vim.git            bundle/switch
   git submodule add -f https://github.com/avakhov/vim-yaml.git                  bundle/yaml
   git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    bundle/tmux-navigator
