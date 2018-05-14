@@ -108,8 +108,13 @@ function undock {
 
 cmd="$1"
 
-while getopts 'duhx' opt; do
+while getopts 'aduhx' opt; do
   case "$opt" in
+    a)
+      if (( ${#active_outputs[@]} >= 1 )); then
+        dock
+      fi
+    ;;
     d)
       dock
     ;;
