@@ -226,7 +226,13 @@ function gffco {
 }
 
 #| gffd - git flow feature finish
-function gffd { [[ $# = 0 ]] && set -- $(gbr); command git flow feature finish "$@"; }
+function gffd {
+  if [[ $# = 0 ]]; then
+    local branch=$(gbr)
+    set -- "${branch##feature/}"
+  fi
+  command git flow feature finish "$@"
+}
 
 #| gffl - git flow feature list
 function gffl { command git flow feature list "$@"; }
@@ -395,6 +401,7 @@ complete -o bashdefault -o default -o nospace -F complete_branches gb
 complete -o bashdefault -o default -o nospace -F complete_branches gbd
 complete -o bashdefault -o default -o nospace -F complete_branches gco
 complete -o bashdefault -o default -o nospace -F complete_features gffco
+complete -o bashdefault -o default -o nospace -F complete_features gffd
 complete -o bashdefault -o default -o nospace -F complete_bugfixes gfbco
 complete -o bashdefault -o default -o nospace -F revision_completion gS
 complete -o bashdefault -o default -o nospace -F revision_completion_full glg
