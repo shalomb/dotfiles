@@ -1,0 +1,24 @@
+#!/bin/bash
+
+## fzf's installer (./install) sets this up in bashrc, may need
+## updating in the future
+
+if [[ $- == *i* ]]; then
+  fzf_install_dir="$XDG_DATA_HOME/fzf"
+  fzf_overlay_dir="$XDG_DATA_HOME/fzf-overlay"
+  fzf_bin_dir="$fzf_install_dir/bin"
+
+  if [[ ! $PATH == *$fzf_bin_dir* ]]; then
+    export PATH="$PATH:$fzf_bin_dir"
+  fi
+
+  source "$fzf_install_dir/shell/completion.bash"   2> /dev/null
+  source "$fzf_install_dir/shell/key-bindings.bash" 2> /dev/null
+
+  if [[ -d $fzf_overlay_dir ]]; then
+    for overlay in "$fzf_overlay_dir"/*sh; do
+      source "$overlay"
+    done
+  fi
+fi
+
