@@ -10,7 +10,7 @@
 
 [[ ${-//[!i]/} ]] || return
 
-shopt -s nullglob dotglob extglob
+shopt -s extglob
 
 aliases_files=(
   ~/.config/bash/aliases.d/* \
