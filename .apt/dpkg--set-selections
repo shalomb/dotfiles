@@ -5,6 +5,7 @@ bash-doc               install
 bash                   install
 bc                     install
 bzip2                  install
+catdoc                 install
 copyq                  install
 curl                   install
 dia                    install
