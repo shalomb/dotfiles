@@ -1,12 +1,15 @@
 #!/usr/bin/perl -l
 
 # ~/.bin/gvim
+
 #   - wrapper around the real gvim to improve server reuse
-# 
-# Improvements on the SO post 
+#   - Provides a "graphical" vim reusing tmux or a terminal emulator
+#     if gvim is not installed
+
+# Improvements on the SO post
 #  http://stackoverflow.com/a/8598196/742600
-#
-# (c) 2011, Shalom Bhooshi <s.bhooshi/gmail.com>
+
+# (c) 2017, Shalom Bhooshi <s.bhooshi/gmail.com>
 
 use v5.10;
 use strict;
@@ -16,13 +19,25 @@ use File::Spec;
   sub fsc { File::Spec->catfile(@_) }
 
 my $gvim = fsc(+(
-            map  { fsc($_, 'gvim')    } 
+            map  { fsc($_, 'gvim')    }
             grep { -x fsc($_, 'gvim') }
             grep { $_ ne dirname($0)  }
             split /:/,  $ENV{PATH}
-          )[0]) 
-    // die "gvim not installed in \$PATH ($ENV{PATH})?\n";
+          )[0]);
 
+if (not defined $gvim) { # if gvim is not installed
+  # TODO Start the window in a named TMUX session.
+  chomp(my $tmux_target=`tmux ls -F '#{session_name}' | awk 'NR==1'`);
+
+  if ( $tmux_target ) {
+    exec { 'tmux' }
+          qw[tmux new-window -t], "$tmux_target:", 'vim', @ARGV;
+  }
+  else {
+    exec { 'x-terminal-emulator' }
+          qw[x-terminal-emulator -e vim], @ARGV;
+  }
+}
 
 sub gvim {
   unshift @_, '--servername', $ENV{GVIMSERVER}
@@ -32,7 +47,7 @@ sub gvim {
 
 
 if (scalar @ARGV) { # args passed, reuse existing server
-  unshift @ARGV, '--remote-tab-silent' 
+  unshift @ARGV, '--remote-tab-silent'
     unless /^(?:--?|\+(?:\d|\/))/ ~~ @ARGV; # unless --options passed
   gvim @ARGV;
 }
@@ -42,7 +57,7 @@ else { # no args, so reuse existing servers
     $ENV{GVIMSERVER} = $server;
     gvim '--remote-send', '<Esc>:tabnew<CR>' # new tab
   }
-  else { 
+  else {
     gvim  # no servers, just invoke gvim
   }
 }
