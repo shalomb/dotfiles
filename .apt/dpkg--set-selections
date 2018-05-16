@@ -1,4 +1,4 @@
-ack                     nstall
+ack                    install
 atool                  install
 bash-builtins          install
 bash-completion        install
