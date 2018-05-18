@@ -28,7 +28,7 @@ set! dom.disable_open_click_delay=1000
 set! javascript.options.strict=true
 "set! javascript.options.showInConsole=true
 
-set! browser.startup.homepage="https://encrypted.google.com/search?complete=1&q="
+set! browser.startup.homepage="https://www.google.com/ncr?complete=1&num=100&safe=off&source=hp&as_oq="
 set! browser.tabs.closeButtons=2
 
 set! network.protocol-handler.external.irc=true
