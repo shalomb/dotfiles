@@ -10,11 +10,11 @@ cnoremap <C-$>                        <End>
 cnoremap <C-^>                        <Home>
 cnoremap %%                           <C-R>=expand('%:p:h').'/'<CR>
 cnoremap w!!                          %!SUDO_ASKPASS=$(which ssh-askpass) sudo -A tee % > /dev/null
+
 cnoremap <C-h>                        <Left>
 cnoremap <C-l>                        <Right>
 cnoremap <C-p>                        <Up>
 cnoremap <C-n>                        <Down>
-
 
 inoremap <C-S>                        <C-O>:update<CR>
 inoremap <C-Enter>                    <C-o>o
