@@ -83,7 +83,7 @@ nnoremap <silent> <leader>bl          :bnext<cr>
 nnoremap          <leader>bs          :ls<cr>:vsplit #
 nnoremap          <leader>bS          :ls<cr>:split #
 
-nnoremap          <leader>?           :help 
+nnoremap          <leader>?           :help
 nnoremap <silent> <leader>,           :edit #<cr>
 
 nnoremap <silent> <leader>g           :silent set visualbell!<cr>
