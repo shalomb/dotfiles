@@ -2,7 +2,6 @@ let mapleader = ","
 
 """" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-nnoremap <CR>                         ``
 " <CR> in the Command Line/QuickFix mode shouldn't be overridden
 autocmd CmdwinEnter * nnoremap <CR> <CR>
 autocmd BufReadPost quickfix nnoremap <CR> <CR>
