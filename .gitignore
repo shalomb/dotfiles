@@ -1,4 +1,4 @@
-﻿# Compiled source #
+# Compiled source #
 ###################
 *.com
 *.class
@@ -42,4 +42,6 @@ Thumbs.db
 *hist
 *.svn
 *.sw*
+tags
+.tags
 *.tmp*
