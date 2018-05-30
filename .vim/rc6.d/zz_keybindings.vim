@@ -127,7 +127,6 @@ nnoremap <silent> <leader>td          :tabclose<cr>
 nnoremap          <leader>te          :ls<cr>:tabedit #
 nnoremap          <leader>tf          :tabfind **/*
 nnoremap <silent> <leader>th          :tabprevious<cr>
-nnoremap          <leader>tips        :cd ~/Desktop/tips<cr>:CommandTFlush<cr>:CommandT<cr>
 " nnoremap          <leader>tips      :!(cd ~/Desktop/tips/; find * -type f \| column)<cr>:vsplit ~/Desktop/tips/
 nnoremap <silent> <leader>tj          :tablast<cr>
 nnoremap <silent> <leader>tk          :tabfirst<cr>

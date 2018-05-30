@@ -47,7 +47,6 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/junegunn/fzf.git                      bundle/fzf-core
   git submodule add -f https://github.com/junegunn/fzf.vim.git                  bundle/fzf
   git submodule add -f https://github.com/junegunn/vim-peekaboo.git             bundle/peekaboo
-  git submodule add -f https://github.com/kien/ctrlp.vim.git                    bundle/ctrlp
   git submodule add -f https://github.com/MarcWeber/vim-addon-mw-utils.git      bundle/mw-utils
   git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack
   git submodule add -f https://github.com/shalomb/ansible-snippets.git          bundle/ansible-snippets
