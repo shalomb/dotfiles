@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Wrapper around ack(1) to spoof ag(1)
+# Needed by ack.vim's :Ag command
+
+command ack $@
