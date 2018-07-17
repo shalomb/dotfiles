@@ -273,7 +273,10 @@ function glp { _git_arg_wrapper "lgp" "$@"; }
 function gp  { [[ $# = 0 ]] && set -- origin $(gbr); command git pull "$@"; }
 
 #| gP - git push
-function gP  { (( $# = 0 )) && set -- -u origin $(gbr); command git push "$@"; }
+function gP  {
+  (( $# == 0 )) && set -- -u origin $(gbr);
+  command git push "$@";
+}
 
 #| gPa - git push --all
 function gPa  { command git push --all; }
