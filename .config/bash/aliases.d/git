@@ -282,7 +282,7 @@ function gPa  { command git push --all; }
 function gPt  { command git push --tags; }
 
 #| gPA - gPa; gPt
-function gPA  { gPa; gPt; }
+function gPA  { gPt; gPa; }
 
 #| gpom - git push origin master
 function gPo { git push origin "$@"; }
