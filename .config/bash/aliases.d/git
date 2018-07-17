@@ -184,6 +184,9 @@ __git_complete gco _git_checkout
 #| gd - git diff
 function gd  { _git_arg_wrapper "diff" "$@"; }
 
+#| gdc - git diff --cached
+function gdc  { gd --cached "$@"; }
+
 #| gf - git fetch
 function gf { command git fetch "$@"; }
 
