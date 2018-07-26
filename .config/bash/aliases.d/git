@@ -138,7 +138,7 @@ function gbr { git rev-parse --abbrev-ref HEAD; }
 function gca { ga; gcm "$@"; }
 
 #| gcam - git commit --ammend
-function gcam { gcm --amend "$@"; }
+function gcam { command git commit --amend "$@"; }
 
 # gcm - git commit -m
 function gcm {
