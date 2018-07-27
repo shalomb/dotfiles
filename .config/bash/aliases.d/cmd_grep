@@ -2,7 +2,7 @@
 
 mygrep () {
   # filter on input from stdin
-  perl -lne 'print "  $_" if /$ENV{re}/i' 
+  perl -lne 'print "  $_" if /$ENV{re}/i'
 }
 
 function_grep() {
@@ -33,9 +33,8 @@ cmdgrep() (
     else
       echo functions ..;  function_grep
       echo aliases ..;    alias_grep
-      echo commands ..;   command_grep 
+      echo commands ..;   command_grep
     fi
   } | "$PAGER"
 );
-  
 
