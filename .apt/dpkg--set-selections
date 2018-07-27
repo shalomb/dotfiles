@@ -24,6 +24,7 @@ dia                        install
 dia-shapes                 install
 diffutils                  install
 dirmngr                    install
+dctrl-tools                install
 dnsmasq                    install
 dunst                      install
 etckeeper                  install
@@ -89,6 +90,7 @@ lsof                       install
 lynx                       install
 make                       install
 manpages                   install
+markdown                   install
 mawk                       install
 mediainfo                  install
 mount                      install
@@ -115,6 +117,7 @@ ps2eps                     install
 psmisc                     install
 pwgen                      install
 python-pip                 install
+python-pygments            install
 ranger                     install
 rar                        install
 readline-common            install
