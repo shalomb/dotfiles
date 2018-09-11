@@ -52,6 +52,14 @@ function cdp {
   cd "$dir"
 }
 
+#| cdr - cd to the root (of a project)
+function cdr {
+  local dir
+  if dir=$(git rev-parse --show-toplevel); then
+    cd "$dir"
+  fi
+}
+
 #| cdfr - cd from home
 function cdfr {
   cd ~
