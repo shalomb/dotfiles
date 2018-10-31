@@ -52,7 +52,7 @@ noremap  <buffer> <silent> <C-y>      5<C-y>
 
 nnoremap <expr>           gV          "`[".getregtype(v:register)[0]."`]"
 
-vnoremap                  //          y/<C-R>"<CR>zt
+vnoremap                  //          y/<C-R>"<CR>
 
 nnoremap          .                   .`[
 nnoremap <silent> <C-Tab>             <C-W><C-W>    " control-tab to next window
