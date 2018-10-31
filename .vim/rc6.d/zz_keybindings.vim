@@ -40,7 +40,7 @@ noremap <leader>es    :split    %%
 noremap <leader>ev    :vsplit   %%
 noremap <leader>et    :tabedit  %%
 noremap <leader>cd    :cd       %%
-noremap <leader>lcd   :lcd      %% 
+noremap <leader>lcd   :lcd      %%
 
 noremap  <buffer> <silent> k          gk
 noremap  <buffer> <silent> j          gj
