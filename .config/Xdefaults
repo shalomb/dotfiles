@@ -42,7 +42,7 @@ URxvt.resize-font.bigger: C-Up
 
 ! URxvt.font: 9x15
 ! URxvt.font:             xft:monaco:size=10,true
-URxvt*font:             xft:Bitstream Vera Sans mono:size=10,antialiased=true
+URxvt*font:             xft:Bitstream Vera Sans mono:size=12,antialiased=true
 URxvt.italicFont:       xft:Bitstream Vera Sans Mono:italic:autohint=true
 URxvt.boldFont:         xft:Bitstream Vera Sans Mono:bold:autohint=true
 URxvt.boldItalicFont:   xft:Bitstream Vera Sans Mono:bold:italic:autohint=true
