@@ -93,10 +93,11 @@ function fz {
   fz_cmd_m="${1:-${fz_cmd_m:-$EDITOR}}"
   fz_query="$2"
   fz_preview_cmd="less {}"
+  fz_preview_cmd="bat  --color always --style=plain {}"
   fz_file_regex='.'
   fz_ignore_file_regex='^\..*'
   fz_ignore_dir_regex='^\..*'
-  fz_window_height='50%'
+  fz_window_height="100%"
   fz_preview_cmds_list="$fz_config_base/preview_cmds.list"
 
   local FZF_DEFAULT_COMMAND
@@ -108,6 +109,7 @@ function fz {
       --bind=ctrl-s:toggle-sort \
       --border \
       --cycle \
+      --color 'border:#808080,info:#ffff00' \
       --header="$fz_cmd_m $fz_query [$?,$$,$PWD]" \
       --height "$fz_window_height" \
       --inline-info \

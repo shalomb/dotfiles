@@ -1,7 +1,95 @@
 #!/bin/bash
 
+cd_source="${BASH_SOURCE[0]}"
+
+#| - - cd -
+function  - () { cd -; }
+#| ~ - cd ~
+alias ~='cd ~'
+
+#| .. - cd ..
+alias     ..='cd ..'
+#| ... - cd ...
+alias     ...='cd ../..'
+#| ... - cd ...
+alias     ....='cd ../../..'
+#| cd.. - cd ..
+alias     cd..='cd ..'
+#| cd... - cd ..
+alias     cd...='cd ../..'
+
+#| mcd - mkdir "$@" && cd "$@"
+function  mcd         { mkdir -p "$@" && builtin cd "$@"; }
+
+#| md - mcd "$@"
+alias     md=mcd
+
 #| cd- - cd to -
 function cd- {
   cd -
 }
 
+#| tildeexpand - expand tildes in path
+function tildeexpand {
+  local path="$1"
+  path="${path/#\~\//$HOME\/}"
+  if   [[ $path == ~ ]]; then
+    path="$HOME"
+  elif [[ $path == ~* ]]; then
+    user="${path%%/*}"
+    user="${user#\~}"
+    IFS=':' read -a a < <( getent passwd "$user" );
+    user_home="${a[5]}"
+    path="${path/#\~$user/$user_home}"
+    # cd "$path" && return
+  fi
+  echo "$path"
+}
+
+#| cd - smarter cd
+function cd {
+  local path="$1"
+
+  [[ -z $path ]] && { cd ~; return; }
+
+  if [[ -f $path ]]; then
+    path="${path%/*}"
+    echo >&2 "+ cd $path"
+  fi
+
+  if [[ -b $path ]]; then
+    path="$(findmnt -no 'TARGET' -S "$path")"
+    echo >&2 "+ cd $path"
+  fi
+
+  if [[ ${PWD%/} == ${path%/} ]]; then
+    echo >&2 "+ cd $path"
+    return
+  fi
+
+  if [[ $path == -h ]]; then
+    while read -r _ c _ r; do
+      printf "  %-5s - %s\n" "$c" "$r"
+    done < <( grep -iE '^#\|' "$cd_source" | sort ) | column -s - | "$PAGER"
+    return
+  fi
+
+  if [[ $path == -v ]]; then
+    builtin dirs -v | "$PAGER"
+    return
+  fi
+
+  if [[ $path =~ ^[+\-][0-9]+$ ]]; then
+    if builtin dirs "$path" >/dev/null; then
+      path="$( builtin dirs "$path" )"
+      path="$( tildeexpand "$path" )"
+      # Use a regular cd here to not duplicate already existing items
+      # on the stack
+      builtin cd "$path" && return
+    else
+      return
+    fi
+  fi
+
+  builtin pushd "$path" >/dev/null
+}
