@@ -73,20 +73,39 @@ class fzf_select(Command):
     def execute(self):
         import subprocess
         import os.path
-        if self.quantifier:
-            # match only directories
-            command="find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune \
-            -o -type d -print 2> /dev/null | sed 1d | cut -b3- | \
-            fzf --sort --reverse --cycle --tiebreak=index \
-            --multi --no-mouse --bind=ctrl-s:toggle-sort"
-        else:
-            # match files and directories
-            command="find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune \
-            -o -print 2> /dev/null | sed 1d | cut -b3- | \
-            fzf --sort --reverse --cycle --tiebreak=index \
-            --multi --no-mouse --bind=ctrl-s:toggle-sort"
+
+        # https://github.com/ranger/ranger/blob/master/ranger/config/commands.py#L49
+        command="                                                     \
+            find -L . \(                                              \
+                -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc'      \
+            \) -prune -o ! -path . {filter}                           \
+               -printf '%P\n' 2> /dev/null |                          \
+               fzf                                                    \
+               --bind=ctrl-s:toggle-sort                              \
+               --cycle                                                \
+               --multi                                                \
+               --no-mouse                                             \
+               --reverse                                              \
+               --sort                                                 \
+               --border                                               \
+               --cycle                                                \
+               --color 'border:#808080,info:#ffff00'                  \
+               --header='{header}'                                    \
+               --inline-info                                          \
+               --multi                                                \
+               --no-mouse                                             \
+               --preview='if [[ -d {braces} ]]; then stat {braces}; else bat --color always --style=plain {braces}; fi'  \
+               --reverse                                              \
+               --tiebreak=index                                       \
+        ".format(
+            header=os.getcwd(),
+            filter='-type d' if self.quantifier else '',
+            braces='{}'
+        )
+
         fzf = self.fm.execute_command(command, universal_newlines=True, stdout=subprocess.PIPE)
         stdout, stderr = fzf.communicate()
+
         if fzf.returncode == 0:
             fzf_file = os.path.abspath(stdout.rstrip('\n'))
             if os.path.isdir(fzf_file):

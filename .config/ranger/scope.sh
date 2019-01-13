@@ -46,6 +46,19 @@ trim() { head -n "$maxln"; }
 # wraps highlight to treat exit code 141 (killed by SIGPIPE) as success
 safepipe() { "$@"; test $? = 0 -o $? = 141; }
 
+batify() {
+    path="$1"
+    bat \
+        --color always \
+        --theme 'Monokai Extended Bright' \
+        --style=plain "$path"
+}
+
+case "$path" in
+    *Dockerfile*)
+        try batify "$path" && { dump | trim; exit 5; } || exit 1;;
+esac
+
 # Image previews, if enabled in ranger.
 if [ "$preview_images" = "True" ]; then
     case "$mimetype" in
@@ -77,6 +90,17 @@ case "$extension" in
     7z)
         # avoid password prompt by providing empty password
         try 7z -p l "$path" && { dump | trim; exit 0; } || exit 1;;
+    # JSON
+    json)
+        try jq -C '.' "$path" && \
+            { dump | trim | fmt -s -w $width; exit 0; } || exit 1;;
+    # Markdown files
+    md|mkdn|markdown|toml|tml|yaml|yml)
+        try bat --color always --style=plain "$path" && \
+            { dump | trim; exit 0; } || exit 1;;
+    tf|tfstate|tfvars)
+        try safepipe pygmentize -f terminal "$path" && { dump | trim; exit 5; }
+    ;;
     # PDF documents:
     pdf)
         try pdftotext -l 10 -nopgbrk -q "$path" - && \
@@ -96,6 +120,10 @@ case "$extension" in
 esac
 
 case "$mimetype" in
+    application/json)
+        try jq -C '.' "$path" && \
+            { dump | trim | fmt -s -w $width; exit 0; } || exit 1;;
+    ;;
     # Syntax highlight for text files:
     text/* | */xml)
         if [ "$(tput colors)" -ge 256 ]; then
@@ -105,6 +133,7 @@ case "$mimetype" in
             pygmentize_format=terminal
             highlight_format=ansi
         fi
+        try batify "$path" && { dump | trim; exit 5; }
         try safepipe highlight --out-format=${highlight_format} "$path" && { dump | trim; exit 5; }
         try safepipe pygmentize -f ${pygmentize_format} "$path" && { dump | trim; exit 5; }
         exit 2;;
