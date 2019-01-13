@@ -30,17 +30,8 @@ function add_alias () {
   fi
 }
 
-alias     ..='cd $(dirname $(pwd -P))'
-function  - () { cd -; }
-
 function  apropos () { man -k "$1" | $PAGER; }
 function  nohup () { $(type -p nohup) "$@" &> "$(mktemp "$TMP"/.nohup.$$.XXXXXX)" ; }
-
-alias     ..='cd ..'
-alias     ...='cd ../..'
-alias     ....='cd ../../..'
-alias     cd..='cd ..'
-alias     cd...='cd ../..'
 
 alias     cls='clear'
 
@@ -152,8 +143,6 @@ function  lif  ()     { if [[ -n "$2" ]]; then egrep -Rsl "$@"; else egrep -sl "
 
 function  man         { LESS= /usr/bin/man -P $PAGER $@; }
 function  manbrowse   { locate \/man\/ | grep "$1" | $PAGER; }
-function  mcd         { mkdir "$@" && builtin cd "$@"; }
-alias     md=mcd
 
 function  mkfile ()   {   mkdir -p $(dirname "$@"); touch $@; }
 
