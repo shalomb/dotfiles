@@ -35,6 +35,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/AndrewRadev/switch.vim.git            bundle/switch
   git submodule add -f https://github.com/avakhov/vim-yaml.git                  bundle/yaml
   git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    bundle/tmux-navigator
+  git submodule add -f https://github.com/dbeniamine/cheat.sh-vim.git           bundle/cheat.sh-vim
   git submodule add -f https://github.com/easymotion/vim-easymotion.git         bundle/easymotion
   git submodule add -f https://github.com/ekalinin/Dockerfile.vim.git           bundle/dockerfile
   git submodule add -f https://github.com/garbas/vim-snipmate.git               bundle/snipmate
@@ -47,6 +48,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/junegunn/fzf.git                      bundle/fzf-core
   git submodule add -f https://github.com/junegunn/fzf.vim.git                  bundle/fzf
   git submodule add -f https://github.com/junegunn/vim-peekaboo.git             bundle/peekaboo
+  git submodule add -f https://github.com/kana/vim-textobj-user.git             bundle/vim-textobj-user.git
   git submodule add -f https://github.com/MarcWeber/vim-addon-mw-utils.git      bundle/mw-utils
   git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack
   git submodule add -f https://github.com/shalomb/ansible-snippets.git          bundle/ansible-snippets
