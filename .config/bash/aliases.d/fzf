@@ -60,11 +60,6 @@ function cdr {
   fi
 }
 
-#| cdfr - cd from home
-function cdfr {
-  cd ~
-}
-
 BOLD=$(    tput bold    )
 RED=$(     tput setaf 1 )
 GREEN=$(   tput setaf 2 )
