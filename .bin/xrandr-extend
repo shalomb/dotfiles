@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+xrandrq=
+xrandr-q() {
+  if [[ $xrandrq ]]; then
+    echo "$xrandrq"
+  else
+    xrandrq=$(xrandr -q)
+    xrandr-q
+  fi
+}
+
+primary-output() {
+  xrandr-q | awk '$3 == "primary" { print $1 }'
+}
+
+connected-outputs() {
+  xrandr-q | awk '$2 == "connected" { print $1 }'
+}
+
+secondary-output() {
+  comm -13 <(primary-output | sort) <(connected-outputs | sort)
+}
+
+active-outputs() {
+  xrandr-q | awk '$2 == "connected" && /[0-9]x[0-9]/ { print $1 }'
+}
+
+po=$(primary-output)
+so=$(secondary-output)
+ao=( $(active-outputs) )
+
+if (( ${#ao[@]} <= 1 )); then
+  xrandr --output "$so" --right-of "$po" --off
+  xrandr --output "$so" --right-of "$po" --auto
+fi
