@@ -231,7 +231,7 @@ bindsym XF86ClearGrab          exec gmrun "XF86ClearGrab"
 bindsym XF86Close              exec gmrun "XF86Close"
 bindsym XF86Copy               exec gmrun "XF86Copy"
 bindsym XF86Cut                exec gmrun "XF86Cut"
-bindsym XF86Display            exec gmrun "XF86Display"
+bindsym XF86Display            exec xrandr-extend
 bindsym XF86Documents          exec gmrun "XF86Documents"
 bindsym XF86DOS                exec gmrun "XF86DOS"
 bindsym XF86Eject              exec gmrun "XF86Eject"
@@ -337,6 +337,9 @@ bindsym $mod+Mod1+z       exec "~/.bin/winmark summon z ; i3-msg '[urgent=latest
 bindsym $mod+Mod1+period     exec "~/.bin/winmark summon @ ; i3-msg '[urgent=latest] focus'"
 bindsym $mod+Control+period  exec "~/.bin/winmark summon @ ; i3-msg '[urgent=latest] focus'"
 bindsym $mod+Control+comma   exec "copyq menu"
+
+for_window [class="URxvt" title="vim-anywhere"] move scratchpad, scratchpad show;
+bindsym Shift+Menu       exec --no-startup-id urxvt -name vim-anywhere -title vim-anywhere -e vim-anywhere
 
 bindsym button4             nop
 bindsym button5             nop
