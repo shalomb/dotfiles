@@ -12,7 +12,6 @@ irssi_nicklistfifo_width=24
 
 # create the pane with irssi's nicklist
 function irssi_setup_nickpane() {
-set -xv
   w=( $(tmux list-panes | awk -F[]x[] '{print $2}') )
   if (( ${#w[@]} == 2 )); then
     echo "irssi_nicklistfifo_width : $irssi_nicklistfifo_width ($COLUMNS)"
@@ -39,7 +38,6 @@ set -xv
 
 # irssi wrapper
 function irssi() {
-  set -xv
   tmux rename-window irssi
   irssi_setup_nickpane
   command irssi
