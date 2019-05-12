@@ -43,15 +43,33 @@ function cdp {
             --cycle \
             --height 50% \
             --no-mouse \
+            --print-query \
             --query="$query" \
             --reverse \
             --tiebreak=index |
           awk '{ print $1 }'
   )"
-  [[ -z $dir ]] && return
+
+  query="${dir%$'\n'}"
+  dir="${dir##*$'\n'}"
+
+  [[ -z $dir && -z $query ]] && return
+
   dir="${dir//\~/$HOME}"
-  [[ -d $dir ]] || { echo "$dir not a directory?" >&2; return; }
-  cd "$dir"
+  dir="${dir%/}"
+
+  if [[ -e $dir && ! -d $dir ]]; then
+    echo "$dir not a directory?" >&2
+    cd "${dir%/*}"
+  elif [[ ! -d $dir ]]; then
+    dir="${query%/}"
+    file="${dir##*/}"
+    dir="${dir%/*}"
+    echo "Missing target, f() creates '$dir/$file'." >&2
+    f() { local t="$dir/$file"; mkdir -pv "$t"; cd "$t"; }
+  else
+    cd "$dir"
+  fi
 }
 
 #| cdr - cd to the root (of a project)
