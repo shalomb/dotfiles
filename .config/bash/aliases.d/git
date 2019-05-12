@@ -55,7 +55,19 @@ function ga  { _git_arg_wrapper "add" "$@"; }
 #| gb - git branch
 function gb  {
   if [[ $# == 0 ]]; then
-    command git branch --color --sort=committerdate
+    local cur_branch=$(gbr)
+    local branch=$(
+      { command git branch --color --sort=committerdate;
+        printf "%s\n" $(git-default-branch)
+        [[ $old_branch ]] && echo "$old_branch"
+        echo "$cur_branch"
+      } | fzf --ansi --no-sort --tac
+    )
+    [[ ! $branch ]] && return
+    branch="${branch##\* }"
+    branch="${branch#"${branch%%[![:space:]]*}"}"
+    [[ $branch == $cur_branch ]] && return
+    gco "$branch" && old_branch="$cur_branch"
     return
   fi
   if _git_arg_wrapper "branch" -v "$@"; then
@@ -67,18 +79,6 @@ function gb  {
 
 #| gba - gb -a
 function gba { command git branch -av "$@"; }
-
-#| gbp - git branch --no-color
-function gbp { command git branch --no-color; }
-
-#| gbv - branch ref info
-function gbv { gbranches | summarize_refs; }
-
-#| gbvv - branch ref info
-function gbvv { gbranches --all | summarize_refs; }
-
-#| gbvvv - branch ref info
-function gbvvv { git for-each-ref --format="%(refname)" | summarize_refs; }
 
 #| g_summarize_refs - print ref summaries
 function summarize_refs {
@@ -131,8 +131,31 @@ function gbd {
 #| gbl - git blame
 function gbl { _git_arg_wrapper blame "$@"; }
 
+#| git-default-branch - show default/HEAD branches on remotes
+function git-default-branch {
+  local origins=( $(grs) )
+  local head_branches=()
+  for origin in ${origins[@]}; do
+    head_branches+=( $(grs origin | awk -F': ' '/HEAD branch/{ print $2 }') )
+  done
+  echo "${head_branches[@]}" | awk '!a[$0]++'
+}
+
+#| gbp - git branch --no-color
+function gbp { command git branch --no-color; }
+
 #| gbr - current branch
+# git symbolic-ref --short HEAD
 function gbr { git rev-parse --abbrev-ref HEAD; }
+
+#| gbv - branch ref info
+function gbv { gbranches | summarize_refs; }
+
+#| gbvv - branch ref info
+function gbvv { gbranches --all | summarize_refs; }
+
+#| gbvvv - branch ref info
+function gbvvv { git for-each-ref --format="%(refname)" | summarize_refs; }
 
 #| gca - ga; gcm
 function gca { ga; gcm "$@"; }
