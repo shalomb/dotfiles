@@ -1,0 +1,18 @@
+[distutils]
+index-servers =
+    local
+    pypi
+
+[pypi]
+# repository: https://pypi.org/pypi
+repository: https://upload.pypi.org/legacy/
+username:   shalomb
+
+[pypi-test]
+repository: https://test.pypi.org/legacy/
+username:   shalomb
+
+[local]
+repository: https://artifactory-beta.tools.in.pan-net.eu/artifactory/api/pypi/pypi-local
+username:   admin
+
