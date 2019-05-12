@@ -7,14 +7,14 @@ function cdd {
   if [[ -d $query ]]; then
     dir="$query"; [[ $dir = ~ ]] && dir="$HOME"
   else
-    dir="$PWD"
+    dir='*/'
   fi
 
   target="$(
-    find "${dir:-.}" \
-      -type d \( -iname ".?*" \) -prune \
-      -o -type d -print |
-    fzf --sort \
+    find $dir \
+        -type d \( -iname ".?*" \) -prune -o \
+        -type d -print |
+      fzf --sort \
         --bind=ctrl-s:toggle-sort \
         --cycle \
         --height 25% \
@@ -23,6 +23,8 @@ function cdd {
         --reverse \
         --tiebreak=index
   )"
+
+  [[ $target ]] || return
 
   [[ $target == '~' ]] && target="$HOME"
   if [[ -d $target ]]; then
