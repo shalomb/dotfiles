@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# SYNOPSIS
+#   minikube aliases
+
+type -a minikube &>/dev/null || return
+
+source <(minikube completion bash)
+
