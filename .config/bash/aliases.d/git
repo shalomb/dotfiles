@@ -33,17 +33,23 @@ function _git_arg_wrapper {
   local args=( "$@" )
 
   if (( ${#args[@]} == 0 )); then
+    # Capture the arguments from the previous command to compose those
+    # for the one we are about to execute.
     hist_index=$((HISTCMD-2))
     # Don't go messing around with history -p unless you
     # really know what it is doing.
     args=( $( history -p "!$hist_index:1*" &>/dev/null ) );
     # echo "args: ${args[@]} || ${#args[@]}"
+
     if [[ -n ${args[0]} ]]; then
       :;
     else
+      # Take the arguments from cache
       args=( "${_git_args[@]}" )
     fi
   fi
+
+  # Cache the arguments for a future call that is related-in-flow with this one.
   _git_args=( "${args[@]}" )
 
   command git "$cmd" "${args[@]}"
@@ -180,6 +186,11 @@ function gcm {
 function gco {
   # TODO
   # Manage a branch stack - gbpush/gbpop
+  if [[ -e $1 ]]; then
+    command git checkout "$@"
+    return
+  fi
+
   if [[ $# == 0 ]]; then
     if [[ ${old_branch-} ]]; then
       set -- "$old_branch"
@@ -292,11 +303,12 @@ function glf {
 
 #| glg - git log --grep="$1"
 function glg {
-  git log --grep="$1" --oneline --date=format:%FT%T --pretty=format:"%h %ad <%an> - %s"
+  git log -i --grep="$1" --oneline --date=format:%FT%T --pretty=format:"%h %ad <%an> - %s"
 }
 
-#| glp - git lgp
-function glp { _git_arg_wrapper "lgp" "$@"; }
+#| glp - git glp
+# TODO - what is this again?
+function glp { _git_arg_wrapper "glp" "$@"; }
 
 #| gp - git pull
 function gp  { [[ $# = 0 ]] && set -- origin $(gbr); command git pull "$@"; }
@@ -319,8 +331,14 @@ function gPA  { gPt; gPa; }
 #| gpom - git push origin master
 function gPo { git push origin "$@"; }
 
+#| gpr - gp --rebase
+function gpr { gp "$@" --rebase; }
+
 #| gr - git remote
 function gr { command git remote "$@"; }
+
+#| grs - gr show
+function grs { gr show "$@"; }
 
 #| gra - gr add
 function gra { gr add "$@"; }
@@ -378,9 +396,10 @@ function gx { gitx --all; }
 
 function revision_completion {
   local cur="${COMP_WORDS[COMP_CWORD]}";
-  local revs=( $(gb | sed -r -e 's/^\*//' -e 's/\ +//' | grep -iP -- "$cur") )
+  local revs=( $(gbp | sed -r -e 's/^\*//' -e 's/\ +//' | grep -iP -- "$cur") )
   if [[ $cur ]]; then
     while read -r id; do
+      line=$( tr '[A-Z]' '[a-z]' <<<"$line" )
       short="${id:0:7}"
       revs+=( "$short" "$id" )
     done < <(git rev-list --all | grep -iP -- "$cur")
@@ -394,9 +413,12 @@ function revision_completion_full {
   local revs=()
   if [[ $cur ]]; then
     while read -r line; do
+      line=$( tr '[A-Z]' '[a-z]' <<<"$line" )
       short="${line:0:7}"
       revs+=( "$short" "$line" )
-    done < <(git log --no-abbrev-commit --all --pretty=oneline | grep -iP -- "$cur")
+    done < <(
+      git log --no-abbrev-commit --all --pretty=oneline | grep -iP -- "$cur"
+    )
   fi
   COMPREPLY=( $(compgen -W "${revs[*]}" -- "$cur" ) );
 }
@@ -418,14 +440,20 @@ function file_completion {
 function unstaged_completion {
   local cmd="$1"
   local cur="${COMP_WORDS[COMP_CWORD]}";
-  local files=( $(git status --porcelain | sed -r 's/^ *(.|\?+) *//' | grep -iP -- "$cur") )
+  local files=( $(git status --porcelain | awk -v p="$cur" '$0~p{ print $2 }') )
   COMPREPLY=( $(compgen -W "${files[*]}" ) );
 }
 
 function branch_completion {
   local cmd="$1"
   local cur="${COMP_WORDS[COMP_CWORD]}";
-  local branches=( $($cmd | sed -r -e 's/^\*//' -e 's/\ +//' | grep -iP -- "$cur") )
+  local branches=(
+    $( { $cmd; gr; gt;
+         echo '--all --force --prune' | sed -r 's@\ +@\n@g'
+       } |
+         sed -r -e 's/^\*//' -e 's/\ +//' | grep -iP -- "$cur"
+    )
+  )
   COMPREPLY=( $(compgen -W "${branches[*]}" ) );
 }
 
@@ -447,5 +475,5 @@ complete -o bashdefault -o default -o nospace -F complete_bugfixes gfbco
 complete -o bashdefault -o default -o nospace -F revision_completion gS
 complete -o bashdefault -o default -o nospace -F revision_completion_full glg
 complete -o bashdefault -o default -o nospace -F file_completion glf
-
+complete -o bashdefault -o default -F complete_branches gP
 
