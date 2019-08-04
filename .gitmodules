@@ -199,3 +199,6 @@
 [submodule ".vim/bundle/endwise"]
 	path = .vim/bundle/endwise
 	url = https://github.com/tpope/vim-endwise.git
+[submodule ".vim/bundle/closer"]
+	path = .vim/bundle/closer
+	url = https://github.com/rstacruz/vim-closer.git
