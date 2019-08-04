@@ -202,3 +202,6 @@
 [submodule ".vim/bundle/closer"]
 	path = .vim/bundle/closer
 	url = https://github.com/rstacruz/vim-closer.git
+[submodule ".vim/bundle/editorconfig"]
+	path = .vim/bundle/editorconfig
+	url = https://github.com/editorconfig/editorconfig-vim.git
