@@ -3,7 +3,16 @@
 # SYNOPSIS
 #   minikube aliases
 
-type -a minikube &>/dev/null || return
+install-minikube() {
+  type -a minikube &>/dev/null && return
+  curl -C - -fsSL -o ~/.local/bin/minikube \
+    https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+  chmod +x ~/.local/bin/minikube
+  hash -r
+  minikube version
+}
+
+@has-cmd minikube || return
 
 source <(minikube completion bash)
 
