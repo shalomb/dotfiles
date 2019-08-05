@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# shared functions
+
+@is-interactive() {
+  [[ ${-//[!i]/} ]]
+}
+
+@has-cmd() {
+  type -a "$1" &>/dev/null
+}
