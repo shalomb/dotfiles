@@ -3,7 +3,17 @@
 # SYNOPSIS
 #   kubectl aliases
 
-type -a kubectl &>/dev/null || return
+install-kubectl() {
+  type -a kubectl &>/dev/null && return
+  local latest=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+  curl -C - -LO https://storage.googleapis.com/kubernetes-release/release/$latest/bin/linux/amd64/kubectl
+  chmod +x kubectl
+  install -p kubectl ~/.local/bin/
+  hash -r
+  kubectl version
+}
+
+@has-cmd kubectl || return
 
 source <(kubectl completion bash)
 
