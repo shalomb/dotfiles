@@ -91,7 +91,8 @@ ln -svf .vim/gvimrc .gvimrc
     echo "Synchronizing ${PWD##*dotfiles/}";
     git fetch -q --all --prune;
     git checkout -q master;
-    git pull -q;
+    git reset -q --hard origin/master;
+    git pull -q origin master;
   '
   git submodule status | sed -r 's/[()]//g' | column -t
 )
