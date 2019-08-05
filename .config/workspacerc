@@ -36,9 +36,6 @@ launch() {
   launch spotify &
   launch slack &
 
-  test -d ~/projects/dropbox-dist &&
-    launch ~/projects/dropbox-dist/dropboxd &
-
   nice -n 0 urxvtd -q -f -o &
   launch qterm &
 
