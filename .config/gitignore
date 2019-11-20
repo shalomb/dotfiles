@@ -45,3 +45,7 @@ Thumbs.db
 tags
 .tags
 *.tmp*
+
+# git submodules
+.config/vim/bundle/
+.vim/bundle/
