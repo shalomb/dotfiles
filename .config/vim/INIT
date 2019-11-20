@@ -54,6 +54,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/kana/vim-textobj-user.git             bundle/vim-textobj-user.git
   git submodule add -f https://github.com/MarcWeber/vim-addon-mw-utils.git      bundle/mw-utils
   git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack
+  git submodule add -f https://github.com/romainl/vim-qf.git                    bundle/qf
   git submodule add -f https://github.com/rstacruz/vim-closer.git               bundle/closer
   git submodule add -f https://github.com/shalomb/ansible-snippets.git          bundle/ansible-snippets
   git submodule add -f https://github.com/takac/vim-hardtime.git                bundle/hardtime
