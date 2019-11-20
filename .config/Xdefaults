@@ -19,14 +19,22 @@ URxvt*cursorColor2:     #3399cc
 
 URxvt.underlineColor:   #3399cc
 
+URxvt.urlLauncher   :  xdg-open
+URxvt.underlineURLs :  true
+
 URxvt.keysym.M-u    :  perl:mark-yank-urls:activate_mark_mode
 URxvt.perl-lib      :  /home/unop/.local/lib/urxvt
 URxvt.perl-ext      :  selection,mark-yank-urls,default,matcher,font-size,selection-to-clipboard,selection-autotransform
 URxv.perl-ext-common: default,selection-autotransform
-URxvt.selection-autotransform.0: s/\s+$//gm
-URxvt.selection-autotransform.1: s/^│//gm
-URxvt.urlLauncher   :  xdg-open
-URxvt.underlineURLs :  true
+
+! Convert a line of grep -n into a less command
+URxvt.selection-autotransform.0: s@(.+):(\\d+):\\s+(.+)$@sprintf "less +%s +/'%s' %s",$2-1,$3,$1@gme
+
+! Trim surrounding whitespace
+URxvt.selection-autotransform.1: s@^\\s+|\\s+$@@gm
+
+! Trim borders
+URxvt.selection-autotransform.2: s@^│+|│+$@@gm
 
 ! Ensure font-size is included in your URxvt.perl-ext comma separated list of extensions, like below
 URxvt.font-size.step: 1
