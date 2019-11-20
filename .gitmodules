@@ -209,3 +209,7 @@
 [submodule ".config/vim/bundle/jedi-vim"]
 	path = .config/vim/bundle/jedi-vim
 	url = https://github.com/davidhalter/jedi-vim.git
+
+[submodule ".config/vim/bundle/rainbow"]
+	path = .config/vim/bundle/rainbow
+	url = https://github.com/frazrepo/vim-rainbow.git
