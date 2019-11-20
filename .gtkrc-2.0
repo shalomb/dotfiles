@@ -1,6 +1,1 @@
-# -- THEME AUTO-WRITTEN DO NOT EDIT
-include "/usr/share/themes/Glossy/gtk-2.0/gtkrc"
-
-include "/home/unop/.gtkrc.mine"
-
-# -- THEME AUTO-WRITTEN DO NOT EDIT
+.config/gtkrc-2.0
