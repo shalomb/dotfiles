@@ -1,0 +1,80 @@
+--links=yes
+--extra=+q
+--recurse=yes
+--sort=yes
+--tag-relative=yes
+--totals=yes
+
+--exclude=\*~
+--exclude=\*.7z
+--exclude=\*.bak
+--exclude=\*.bkp
+--exclude=build
+--exclude=cache
+--exclude=\*.cache
+--exclude=\*.class
+--exclude=cscope.\*
+--exclude=dist
+--exclude=\*.docx
+--exclude=.git
+--exclude=.hg
+--exclude=\*.iso
+--exclude=log
+--exclude=\*.pdf
+--exclude=\*.pyc
+--exclude=\*.rar
+--exclude=.svn
+--exclude=\*.sw\*
+--exclude=tags
+--exclude=.tags
+--exclude=\*.tar
+--exclude=\*.tar.\*
+--exclude=\*.tbz
+--exclude=.terraform
+--exclude=\*.tgz
+--exclude=tmp
+--exclude=.tmp
+--exclude=\*.xlsx
+--exclude=\*.z
+--exclude=\*.zip
+
+--langdef=ansible
+--langmap=ansible:.yaml.yml
+--regex-ansible=/^[ \t]*-[ \t]*name:[ \t]*(.+)/\1/k,task,tasks/
+--regex-ansible=/^[ \t]*-[ \t]*hosts:[ \t]*(.+)/\1/h,host,hosts/
+--regex-ansible=/^[ \t]*-[ \t]*include:[ \t]*(.+)/\1/i,include,includes/
+--regex-ansible=/^[ \t]*-[ \t]*([A-Za-z0-9\-_]+)[ \t]*$/\1/t,tag,tags/
+--languages=+ansible
+
+--langdef=ini
+--langmap=ini:.cfg.ini
+--regex-ini=/^\[(.+)\]/\1/s,section/
+--regex-ini=/^[ \t]*([^=]+)=.*/\1/k,key/
+--languages=+ini
+
+--langdef=markdown
+--langmap=markdown:.md.mkd.mdown.mkdown.markdown
+--regex-markdown=/^#{1} *(.+) *(#{1})?/\1/1,header1/
+--regex-markdown=/^#{2} *(.+) *(#{2})?/\1/2,header2/
+--regex-markdown=/^#{3} *(.+) *(#{3})?/\1/3,header3/
+--regex-markdown=/^#{4} *(.+) *(#{4})?/\1/4,header4/
+--regex-markdown=/^#{5} *(.+) *(#{5})?/\1/5,header5/
+--regex-markdown=/^#{6} *(.+) *(#{6})?/\1/6,header6/
+--regex-markdown=/^#{7} *(.+) *(#{7})?/\1/7,header7/
+--languages=+markdown
+
+--langdef=powershell
+--langmap=powershell:.psm1
+--langmap=powershell:.ps1
+--regex-powershell=/function\s+(script:)?([a-zA-Z\-]+)/\2/m, method/i
+--regex-powershell=/\$(global:)?([a-zA-Z\-]+)/\2/v, variable/i
+--languages=+powershell
+
+--langdef=terraform
+--langmap=terraform:.tf.tfvars
+--regex-terraform=/^resource "(.+)" "(.+)"/\1 \2/r,resources/
+--regex-terraform=/^variable "(.+)"/\1/v,variables/
+--regex-terraform=/^module "(.+)"/\1/m,modules/
+--regex-terraform=/^output "(.+)"/\1/o,outputs/
+--regex-terraform=/^([a-z0-9_]+) =/\1/f,tfvars/
+--languages=+terraform
