@@ -217,3 +217,7 @@
 [submodule ".config/vim/bundle/qf"]
 	path = .config/vim/bundle/qf
 	url = https://github.com/romainl/vim-qf.git
+
+[submodule ".config/vim/bundle/ale"]
+	path = .config/vim/bundle/ale
+	url = https://github.com/dense-analysis/ale.git

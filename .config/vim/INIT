@@ -37,6 +37,7 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    bundle/tmux-navigator
   git submodule add -f https://github.com/davidhalter/jedi-vim.git              bundle/jedi-vim
   git submodule add -f https://github.com/dbeniamine/cheat.sh-vim.git           bundle/cheat.sh-vim
+  git submodule add -f https://github.com/dense-analysis/ale.git                bundle/ale
   git submodule add -f https://github.com/easymotion/vim-easymotion.git         bundle/easymotion
   git submodule add -f https://github.com/editorconfig/editorconfig-vim.git     bundle/editorconfig
   git submodule add -f https://github.com/ekalinin/Dockerfile.vim.git           bundle/dockerfile
