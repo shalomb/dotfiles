@@ -11,7 +11,7 @@ let g:ale_echo_msg_format = '[%linter%, %severity%] %s'
 
 " Write this in your vimrc file
 let g:ale_set_loclist = 0
-let g:ale_set_quickfix = 0
+let g:ale_set_quickfix = 1
 
 let g:ale_open_list = 1
 " Set this if you want to.
