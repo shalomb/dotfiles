@@ -1,3 +1,7 @@
+# git submodules
+.config/vim/bundle/
+.vim/bundle/
+
 # Compiled source #
 ###################
 *.com
@@ -45,7 +49,3 @@ Thumbs.db
 tags
 .tags
 *.tmp*
-
-# git submodules
-.config/vim/bundle/
-.vim/bundle/
