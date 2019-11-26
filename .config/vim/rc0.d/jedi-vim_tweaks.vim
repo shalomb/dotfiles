@@ -5,6 +5,5 @@ let g:jedi#show_call_signatures = "1"
 let g:jedi#use_splits_not_buffers = "top"
 let g:jedi#auto_initialization = 1
 
-set completeopt=longest,menuone
-set completeopt=menuone,longest,preview
+set completeopt=longest,menuone,preview
 set splitright
