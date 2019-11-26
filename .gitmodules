@@ -134,10 +134,6 @@
 	path = .config/vim/bundle/ShowMarks
 	url = https://github.com/vim-scripts/ShowMarks.git
 
-[submodule   ".config/vim/bundle/taglist"]
-	path = .config/vim/bundle/taglist
-	url = https://github.com/vim-scripts/taglist.vim.git
-
 [submodule   ".config/vim/bundle/underlinetag"]
 	path = .config/vim/bundle/underlinetag
 	url = https://github.com/vim-scripts/underlinetag.git

@@ -90,7 +90,6 @@ ln -svf "$vim_base/gvimrc" .gvimrc
   git submodule add -f https://github.com/vim-scripts/matchit.zip.git           bundle/matchit
   git submodule add -f https://github.com/vim-scripts/netrw.vim.git             bundle/netrw
   git submodule add -f https://github.com/vim-scripts/ShowMarks.git             bundle/ShowMarks
-  git submodule add -f https://github.com/vim-scripts/taglist.vim.git           bundle/taglist
   git submodule add -f https://github.com/vim-scripts/underlinetag.git          bundle/underlinetag
   git submodule add -f https://github.com/vim-scripts/vis.git                   bundle/vis  # Extended VISual commands
   git submodule add -f https://github.com/zirrostig/vim-schlepp.git             bundle/schlepp
