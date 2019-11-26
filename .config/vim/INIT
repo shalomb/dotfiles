@@ -1,10 +1,18 @@
 #!/bin/bash
 
-set -eu
+# Vim plugins/prerequisites manager
 
-if [[ ! -d .vim ]]; then
-  { echo "No $PWD/.vim directory found."
-    echo "  Are you in the root of you dotfiles directory?"
+# REFERENCES
+# [Synchronizing plugins with git submodules and pathogen]
+# (http://vimcasts.org/episodes/synchronizing-plugins-with-git-submodules-and-pathogen/)
+
+set -eu -o pipefail
+
+vim_base="$PWD/.config/vim"
+
+if [[ ! -d $vim_base ]]; then
+  { echo "No $vim_base directory found."
+    echo "  Are you in the root of the dotfiles directory?"
   } >&2
   exit 3
 fi
@@ -23,13 +31,13 @@ if (( ${#pkgs_to_install[@]} >= 1 )); then
   (set -xv; sudo aptitude install ${pkgs_to_install[@]})
 fi
 
-mkdir -p .vim/bundle/
+mkdir -p "$vim_base/bundle/"
 
-ln -svf .vim/vimrc  .vimrc
-ln -svf .vim/gvimrc .gvimrc
+ln -svf "$vim_base/vimrc"  .vimrc
+ln -svf "$vim_base/gvimrc" .gvimrc
 
 ( set +e -xv
-  cd .vim/
+  cd .config/vim/
 
   git submodule add -f https://github.com/airblade/vim-gitgutter.git            bundle/gitgutter
   git submodule add -f https://github.com/AndrewRadev/switch.vim.git            bundle/switch
@@ -98,14 +106,4 @@ ln -svf .vim/gvimrc .gvimrc
   git submodule status | sed -r 's/[()]//g' | column -t
 )
 
-exit $?;
-
-COMMITTING NOTES (Requires Authentication)
-  cd ~/.vim
-  git add .
-  git commit -m "Commit on $(date); "
-  git remote add origin git@github.com:shalomb/.vim.git
-  git push origin master
-
-REFERENCES
-  "Synchronizing plugins with git submodules and pathogen" http://vimcasts.org/episodes/synchronizing-plugins-with-git-submodules-and-pathogen/
+exit $?
