@@ -221,3 +221,11 @@
 [submodule ".config/vim/bundle/tagbar"]
 	path = .config/vim/bundle/tagbar
 	url = https://github.com/majutsushi/tagbar.git
+
+[submodule ".config/vim/bundle/easytags"]
+	path = .config/vim/bundle/easytags
+	url = https://github.com/xolox/vim-easytags.git
+
+[submodule ".config/vim/bundle/vim-misc"]
+	path = .config/vim/bundle/vim-misc
+	url = https://github.com/xolox/vim-misc.git
