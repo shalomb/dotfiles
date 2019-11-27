@@ -217,3 +217,7 @@
 [submodule ".config/vim/bundle/go"]
 	path = .config/vim/bundle/go
 	url = https://github.com/fatih/vim-go.git
+
+[submodule ".config/vim/bundle/tagbar"]
+	path = .config/vim/bundle/tagbar
+	url = https://github.com/majutsushi/tagbar.git
