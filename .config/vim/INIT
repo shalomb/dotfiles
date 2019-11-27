@@ -8,7 +8,7 @@
 
 set -eu -o pipefail
 
-vim_base="$PWD/.config/vim"
+vim_base=".config/vim"
 
 if [[ ! -d $vim_base ]]; then
   { echo "No $vim_base directory found."
@@ -37,7 +37,7 @@ ln -svf "$vim_base/vimrc"  .vimrc
 ln -svf "$vim_base/gvimrc" .gvimrc
 
 ( set +e -xv
-  cd .config/vim/
+  cd "$vim_base"
 
   git submodule add -f https://github.com/airblade/vim-gitgutter.git            bundle/gitgutter
   git submodule add -f https://github.com/AndrewRadev/switch.vim.git            bundle/switch
