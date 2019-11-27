@@ -52,6 +52,8 @@
 --regex-ini=/^[ \t]*([^=]+)=.*/\1/k,key/
 --languages=+ini
 
+--regex-make=/^([^# \t]*):/\1/t,target/
+
 --langdef=markdown
 --langmap=markdown:.md.mkd.mdown.mkdown.markdown
 --regex-markdown=/^#{1} *(.+) *(#{1})?/\1/1,header1/
@@ -78,3 +80,7 @@
 --regex-terraform=/^output "(.+)"/\1/o,outputs/
 --regex-terraform=/^([a-z0-9_]+) =/\1/f,tfvars/
 --languages=+terraform
+
+--langdef=snippets
+--langmap=snippets:.snippets
+--regex-snippets=/^snippet (.*)/\1/s,snippet/
