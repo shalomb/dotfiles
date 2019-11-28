@@ -1,24 +1,26 @@
 " https://github.com/majutsushi/tagbar/wiki#google-go
 let g:tagbar_type_go = {
   \ 'ctagstype': 'go',
+  \ 'ctagsargs': '-sort -silent',
   \ 'kinds' : [
-  \   'c:const',
   \   'f:functions',
-  \   'i:imports:1',
-  \   'n:interfaces',
-  \   'w:fields',
-  \   'e:embedded',
   \   'm:methods',
-  \   'r:constructor',
-  \   'p:package',
   \   't:type',
-  \   'v:variables'
+  \   'r:constructor:1',
+  \   'n:interfaces',
+  \   'c:const',
+  \   'v:variables',
+  \   'w:fields:1',
+  \   'e:embedded',
+  \   'p:package:1',
+  \   'i:imports:1'
   \ ],
   \ 'sro': '.',
   \ 'kind2scope' : {
   \   't': 'ctype',
   \   'n': 'ntype'
   \ },
+  \ 'ctagsbin': 'gotags',
   \ 'scope2kind' : {
   \   'ctype' : 't',
   \   'ntype' : 'n'
