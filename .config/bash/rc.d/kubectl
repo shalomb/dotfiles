@@ -20,3 +20,21 @@ source <(kubectl completion bash)
 alias k='kubectl'
 complete -o default -F __start_kubectl k
 
+_kubectl-mode-init() {
+  if systemctl status k3s.service &>/dev/null; then
+    KUBECTL_MODE=${KUBECTL_MODE:-k3s}
+  fi
+}
+
+[[ -z $KUBECTL_MODE ]] && _kubectl-mode-init
+
+if [[ $KUBECTL_MODE = 'k3s' ]]; then
+  kubectl() {
+    command k3s kubectl $@
+  }
+else
+  kubectl() {
+    command kubectl $@
+  }
+fi
+
