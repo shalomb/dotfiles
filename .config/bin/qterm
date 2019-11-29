@@ -13,20 +13,20 @@
 #
 # DESCTIPTION
 #   qterm uses the urxvt client (urxvtc) to spawn a terminal emulator hosting
-#   a console (i.e. a named ('qterm:') tmux session). The tmux session is 
+#   a console (i.e. a named ('qterm:') tmux session). The tmux session is
 #   spawned if it does not exist otherwise it is attached to.
 #
 #   It is similar to other apps such as kuake(1), guake(1), tilda(1), etc
-#   but requires little in terms of additional packages (except those 
+#   but requires little in terms of additional packages (except those
 #   listed in the DEPENDENCIES section below).
 #
-#   The terminal window is invoked if it is hidden or dismissed if it is 
+#   The terminal window is invoked if it is hidden or dismissed if it is
 #   active by calling this script with no arguments effectively toggling
 #   the window. By mapping this script to a Window Manager's hotkey, one
 #   always 'the console' at hand and a very useful one at that.
 #
 #   Multiple parameters can be passed to this script and they will be executed
-#   in sequence. They are 
+#   in sequence. They are
 #
 #     * show        -  Invoke qterm.
 #     * hide        -  Dismiss qterm.
@@ -40,7 +40,7 @@
 #     * help        -  Invoke the help menu.
 #
 # USAGE
-#   qterm   
+#   qterm
 #     # same as 'qterm toggle' - toggle the visibility of the qterm window.
 #
 #   qterm raise show
@@ -67,7 +67,7 @@
 #   Shalom Bhooshi <s.bhooshi/gmail.com>
 #
 # COPYRIGHT
-#   Copyright (C) 2011 Shalom Bhooshi.  
+#   Copyright (C) 2011 Shalom Bhooshi.
 #   License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 #   This is free software: you are free to change and redistribute it.
 #   There is NO WARRANTY, to the extent permitted by law.
@@ -99,7 +99,7 @@ fi
 
 qtermWinID=$(printf "0x%x" "$(wmctrl -lx | awk '/qterm.URxvt/{print $1}')")
 
-if ! kill -0 $(pidof urxvtd) &>/dev/null; then 
+if ! kill -0 $(pidof urxvtd) &>/dev/null; then
   urxvtd -q -o -f || { echo "Error launching urxvtd : $!"; exit 2; };
 fi
 
@@ -107,10 +107,10 @@ if [[ $qtermWinID = 0x0 ]]; then     # window is non-existent
   qtermSession="$(tmux ls | grep -Eio "^qterm:")"
   if [[ -z $qtermSession ]]; then
     urxvtc -name qterm -title qterm  \
-       -e  tmux -2l new-session -s qterm &
+       -e  tmux -u -2l new-session -s qterm &
   else
     urxvtc -name qterm -title qterm     \
-      -e tmux -2 attach -t "$qtermSession" &
+      -e tmux -u -2 attach -t "$qtermSession" &
   fi
   exit;
 fi

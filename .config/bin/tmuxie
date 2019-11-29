@@ -17,12 +17,12 @@ function select_session_by_name() {
   local session_name;
 
   # Current Sessions
-  while read -r session; do 
+  while read -r session; do
     sessions+=( "$session" )
   done < <( tmux -l -2 ls 2> /dev/null )
 
   # Prepared Sessions
-  for d in "$HOME"/.etc /etc "$HOME"/.config; do 
+  for d in "$HOME"/.etc /etc "$HOME"/.config; do
     if [[ -d "$d"/tmuxie/sessions/ ]]; then
       sessions+=( "$d"/tmuxie/sessions/* );
     fi
@@ -41,7 +41,7 @@ function select_session_by_name() {
 
   read -p 'Which one? ' reply
 
-  if [[ -z $reply ]]; then 
+  if [[ -z $reply ]]; then
     return 0;
   elif [[ $reply = *[!0-9]* ]]; then
     session_name="$reply";
@@ -51,7 +51,7 @@ function select_session_by_name() {
     echo "No such session. $reply" >&2
     session_name=$(select_session_by_name)
   fi
-  
+
   echo "$session_name"; return 0;
 }
 
@@ -69,9 +69,9 @@ echo -ne "\033]0;$session_name+${USER}@${HOSTNAME}:..${PWD: -24}\007"
 if  [[ -f $session_name ]]; then
   echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}"
   exec "$session_name"  # is a file representing a prepared session
-elif [[ -n $session_name ]] && tmux -l -2 ls 2>/dev/null | awk 'BEGIN{e_c=1}$1 ~ /'"$session_name"'/{e_c=0}END{exit e_c}'; then
+elif [[ -n $session_name ]] && tmux -u -l -2 ls 2>/dev/null | awk 'BEGIN{e_c=1}$1 ~ /'"$session_name"'/{e_c=0}END{exit e_c}'; then
   echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}"
-  exec tmux -l -2 attach -t "$session_name" # attach to an existing session
+  exec tmux -u -l -2 attach -t "$session_name" # attach to an existing session
 elif [[ -n $session_name ]]; then
   if [[ -f ~/.config/tmuxie/sessions/$session_name ]]; then
     echo "launching prepared session ~/.config/tmuxie/sessions/$session_name"
@@ -86,9 +86,9 @@ elif [[ -n $session_name ]]; then
 elif [[ -z $session_name ]] && test -t 0; then
   # We have no session name and we are interactive
   read -p 'Enter session name or RETURN to abort. ' session_name
-  if [[ -z $session_name ]]; then 
+  if [[ -z $session_name ]]; then
     exit 3
   fi
 fi
 
-exec tmux -l -2 new-session -s "$session_name"
+exec tmux -u -l -2 new-session -s "$session_name"
