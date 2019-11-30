@@ -21,3 +21,5 @@ let g:easytags_resolve_links = 1
 
 let g:easytags_suppress_report = 0
 let g:easytags_suppress_ctags_warning = 0
+
+let g:easytags_async = 1
