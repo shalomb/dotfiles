@@ -1,9 +1,33 @@
-[user]
-  name   = Shalom Bhooshi
-  signingkey = XXXXXXXXXX
+[alias]
+  ammend  = commit --amend -C HEAD
+  base    = !echo ${BASE:-$(git rev-parse --abbrev-ref HEAD)}
+  br      = branch
+  caa     = commit -a --amend -C HEAD
+  ci      = commit
+  co      = checkout
+  dc      = diff --cached
+  df      = diff
+  ec      = config -e
+  files   = !git diff --name-only $(git merge-base HEAD \"$(git base)\")
+  ign     = ls-files -o -i --exclude-standard
+  k       = !gitk
+  lg      = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+  lgp     = log -p
+  lola    = log --graph --decorate --pretty=oneline --abbrev-commit --all
+  lol     = log --graph --decorate --pretty=oneline --abbrev-commit
+  ls      = ls-files
+  pom     = push origin master
+  pum     = pull origin master
+  review  = !vim -p $(git files) +\"tabdo Gvdiff $(git base)\" +\"let g:gitgutter_diff_base = '$(git base)'\"
+  s       = status --porcelain
+  stat    = !git diff --stat $(git merge-base HEAD \"$(git base)\")
+  st      = status --short
+  tree    = log --graph --oneline --decorate
+  vimdiff = difftool -y -t vimdiff
 
-[commit]
-	gpgsign = true
+[branch]
+  autosetupmerge  = always
+  autosetuprebase = always
 
 [color]
   branch       = auto
@@ -32,35 +56,11 @@
   old       = 160 dim    # red
   new       = 42  bold   # green
 
+[commit]
+	gpgsign = true
+
 [core]
   editor = vim
-
-[alias]
-  ammend  = commit --amend -C HEAD
-  br      = branch
-  caa     = commit -a --amend -C HEAD
-  ci      = commit
-  co      = checkout
-  dc      = diff --cached
-  df      = diff
-  ec      = config -e
-  ign     = ls-files -o -i --exclude-standard
-  k       = !gitk
-  lg      = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
-  lgp     = log -p
-  lol     = log --graph --decorate --pretty=oneline --abbrev-commit
-  lola    = log --graph --decorate --pretty=oneline --abbrev-commit --all
-  ls      = ls-files
-  pom     = push origin master
-  pum     = pull origin master
-  s       = status --porcelain
-  st      = status --short
-  tree    = log --graph --oneline --decorate
-  vimdiff = difftool -y -t vimdiff
-
-[github]
-  user  = shalomb
-  token = 822bb43c9861d41e965eb83b72d4736d
 
 [diff]
   tool = vimdiff
@@ -68,12 +68,9 @@
 [difftool]
   prompt = false
 
-[push]
-  default = simple
-
-[branch]
-  autosetupmerge  = always
-  autosetuprebase = always
+[github]
+  user  = shalomb
+  token = 822bb43c9861d41e965eb83b72d4736d
 
 [merge]
   tool = vimdiff
@@ -82,7 +79,17 @@
 [mergetool]
   prompt = false
 
+[push]
+  default = simple
+
 [tag]
   sort = version:refname
+
+[url "ssh://git@gitlab.tools.in.pan-net.eu/"]
+	insteadOf = https://gitlab.tools.in.pan-net.eu/
+
+[user]
+  name   = Shalom Bhooshi
+  signingkey = XXXXXXXXXX
 
 # vim:filetype=gitconfig:sw=2:ts=2:et
