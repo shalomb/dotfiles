@@ -1,6 +1,10 @@
 # http://web.mit.edu/gnu/doc/html/rlman_1.html
 $include /etc/inputrc
 
+# Reload inputrc
+# bind -f  ~/.inputrc
+"\C-x\C-r":   re-read-init-file
+
 set  bell-style                      visible
 set  blink-matching-paren            on
 set  colored-stats                   on
