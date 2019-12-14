@@ -24,6 +24,8 @@ set  skip-completed-text             on
 set  visible-stats                   on
 set  colored-completion-prefix       on
 
+set vi-cmd-mode-string ★
+set vi-ins-mode-string ☆
 
 $if mode=vi
   "\eOD":  ""
