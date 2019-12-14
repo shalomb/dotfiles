@@ -22,8 +22,8 @@ set  print-completions-horizontally  on
 # set  show-all-if-ambiguous           on
 set  skip-completed-text             on
 set  visible-stats                   on
+set  colored-completion-prefix       on
 
-"\C-x\C-r":   re-read-init-file
 
 $if mode=vi
   "\eOD":  ""
