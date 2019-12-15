@@ -74,7 +74,7 @@ LESSCHARSET='utf-8';                      export LESSCHARSET;
 LESSHISTFILE="$XDG_CACHE_HOME/lesshst";   export LESSHISTFILE;
 LESSHISTSIZE="512";                       export LESSHISTSIZE;
 LESSKEY="$XDG_CONFIG_HOME/less/lesskey";  export LESSKEY;
-LESS=' -RCi';                             export LESS;
+LESS=' -CiMNR';                           export LESS;
 type -p lesspipe &>/dev/null && eval "$(lesspipe)";
 
 # colourise manpages
