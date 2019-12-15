@@ -240,6 +240,10 @@ function gB {
           --expect=ctrl-d,ctrl-e,ctrl-v,ctrl-f,ctrl-j,ctrl-m
     ); do
 
+    # block is the selection from fzf that takes the form
+    # search query term
+    # ctrl-d
+    # * 3b5c195 - Commit Message (30 minutes ago) <Author Sam>
     query=$( sed  -n '1p' <<<"$block" );
     key=$(   sed  -n '2p' <<<"$block" ); key="${key##ctrl-}"
     items=$( tail -n +3   <<<"$block" );
@@ -263,6 +267,7 @@ function gB {
   ctrl-d - show diffs between revisions
   ctrl-f - show files at revisions
   ctrl-m - show commits
+  ctrl-v - show vimdiff between versions
 EOHELP
       ;;
       d)
@@ -282,6 +287,16 @@ EOHELP
       ;;
       m)
         git show --color=always "${shasums[@]}"
+      ;;
+      v)
+        set -xv
+        vim $(
+          { git diff-tree --no-commit-id --name-status \
+                -r "${shasums[0]}"
+          } | fzf --ansi --sort --reverse |
+              awk '{ print $2 }'
+        ) +"Gvdiff ${shasums[0]}~1"
+        set +xv
       ;;
     esac
 
