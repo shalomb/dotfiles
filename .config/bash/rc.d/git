@@ -10,9 +10,9 @@ function __my_git_ps1 {
   s=0
 
   git_ps1_text="${git_ps1_text//feature\//f\/}"
-  git_ps1_text="${git_ps1_text//bugfix\//b\/}" 
+  git_ps1_text="${git_ps1_text//bugfix\//b\/}"
   git_ps1_text="${git_ps1_text//release\//r\/}"
-  git_ps1_text="${git_ps1_text//hotfix\//h\/}" 
+  git_ps1_text="${git_ps1_text//hotfix\//h\/}"
   git_ps1_text="${git_ps1_text//support\//s\/}"
 
   gs=$(git status)
@@ -38,3 +38,5 @@ function __my_git_ps1 {
   fi
 
 }
+
+export GIT_PAGER="less"
