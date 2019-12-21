@@ -15,7 +15,7 @@ function __my_git_ps1 {
   git_ps1_text="${git_ps1_text//hotfix\//h\/}"
   git_ps1_text="${git_ps1_text//support\//s\/}"
 
-  gs=$(git status)
+  gs=$(git status --ignore-submodules=all)
 
   if grep -iq "Changes not staged" <<<"$gs"; then
     printf '\001%s\002%s\001%s\002' "$red" "$git_ps1_text" "$reset"
