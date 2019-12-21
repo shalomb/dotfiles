@@ -54,7 +54,7 @@ else
 fi
 
 case "$TERM" in
-  screen*)
+  @(screen|tmux)*)
     # NOTE: U+2002 is used instead of whitespace below to get around readline
     #       jumping around on ESC and using colour sequences in __my_git_ps1
     PS1='e=$( (( $? > 0 )) && echo 1 || echo 0 );'
@@ -74,4 +74,4 @@ case "$TERM" in
 ;;
 esac
 
-# vi:fenc=utf-8
+# vi:ft=bash fenc=utf-8

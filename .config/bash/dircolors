@@ -76,6 +76,12 @@ TERM screen-256color
 TERM screen-bce
 TERM screen-w
 TERM screen.linux
+TERM tmux
+TERM tmux-256color
+TERM tmux-256color-italic
+TERM tmux-bce
+TERM tmux-w
+TERM tmux.linux
 TERM vt100
 TERM xterm
 TERM xterm-16color
@@ -122,7 +128,7 @@ FILE     00           # regular file: use no color at all
 NORMAL   00;38;5;244  # no color code at all
 RESET    0            # reset to "normal" color
 DIR      01;38;5;26   # directory
-LINK     01;38;5;125  # symbolic link. (If you set this to 'target' instead of 
+LINK     01;38;5;125  # symbolic link. (If you set this to 'target' instead of
                       # a # numerical value, the color is as for the file
                       # pointed to.)
 *       00;37 # the default??
@@ -189,8 +195,8 @@ STICKY_OTHER_WRITABLE   01;38;5;202          # dir that is sticky and other-writ
 .xls    00;38;5;89 # application/vnd.ms-excel
 .xlsx   00;38;5;89 # application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
 .xml    00;38;5;89 # application/xml
-.xhtml  00;38;5;89 
-.pod    00;38;5;89 
+.xhtml  00;38;5;89
+.pod    00;38;5;89
 .zim    00;38;5;89 # text/plain
 
 # Archives, Compressed formats, etc
