@@ -3,10 +3,8 @@
 function! s:AuRsyncTargetCompletion(ArgLead, CmdLine, CursorPos)
   let l:cmdline = getcmdline()
   let l:char_at_pos = a:CmdLine[a:CursorPos-1]
-  " let l:foo = input( "I got " . (a:CursorPos) . " being '" . char_at_pos . "'" )
 
   if char_at_pos == ':'
-    " let l:foo = input( 'I got ' . a:ArgLead )
     return join( map( split(expand('%'), '\n'), '"' . a:ArgLead . '"' . ' . v:val' ), '\n')
   elseif char_at_pos == ' '
     return system("perl -lne '($h)=/Host +([^\*]+)$/i; print for split /\\s+/, $h' ~/.ssh/*config* ~/.ssh/config.d/*")
@@ -103,7 +101,6 @@ function! AuStartCmdHistoryEditing(...)
     return 0
   endif
 
-  " let l:foo = input('run? ' . l:hist_args)
   try
     call histadd('cmd', join(l:hist_args, ' '))
     call feedkeys(l:feed_keys, 'in')
@@ -127,8 +124,4 @@ command! -nargs=*
 
 command! -nargs=*
   \ AuRunTmuxCommand  call AuStartCmdHistoryEditing('AuRunTmuxCommand', <q-args>)
-
-vmap ,l <Plug>SendSelectionToTmux
-nmap ,l <Plug>NormalModeSendToTmux
-" nmap <C-c>r     <Plug>SetTmuxVars
 
