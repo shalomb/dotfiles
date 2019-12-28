@@ -71,6 +71,9 @@
 [difftool]
   prompt = false
 
+[fetch]
+  prune = true
+
 [github]
   user  = shalomb
   token = 822bb43c9861d41e965eb83b72d4736d
