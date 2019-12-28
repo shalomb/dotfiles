@@ -73,7 +73,7 @@ set shiftround              " indent rounded to shiftwidth
 
 set number                  " turn on line numbers
 set relativenumber          " turn on relative line numbers
-set numberwidth=4           " with 3 digits by default
+set numberwidth=3           " with 3 digits by default
 
 set wrap                    " wrap long lines
 set wrapmargin=2            " clear 2 at the RHS
