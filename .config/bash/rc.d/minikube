@@ -14,5 +14,7 @@ install-minikube() {
 
 @has-cmd minikube || return
 
-source <(minikube completion bash)
+init-minikube() {
+  source <(minikube completion bash)
+}
 

@@ -15,11 +15,6 @@ install-kubectl() {
 
 @has-cmd kubectl || return
 
-source <(kubectl completion bash)
-
-alias k='kubectl'
-complete -o default -F __start_kubectl k
-
 _kubectl-mode-init() {
   if systemctl status k3s.service &>/dev/null; then
     KUBECTL_MODE=${KUBECTL_MODE:-k3s}
@@ -38,3 +33,7 @@ else
   }
 fi
 
+source <(kubectl completion bash)
+
+alias k='kubectl'
+complete -o default -F __start_kubectl k
