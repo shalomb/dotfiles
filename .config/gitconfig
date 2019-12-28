@@ -89,6 +89,9 @@
   diff = true
   show = true
 
+[pull]
+  rebase = true
+
 [push]
   default = simple
 
