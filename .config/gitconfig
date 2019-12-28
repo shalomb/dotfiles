@@ -3,6 +3,7 @@
   base    = !echo ${BASE:-$(git rev-parse --abbrev-ref HEAD)}
   br      = branch
   caa     = commit -a --amend -C HEAD
+  ce      = config --global -e
   ci      = commit
   co      = checkout
   dc      = diff --cached
