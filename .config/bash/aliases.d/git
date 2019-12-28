@@ -27,6 +27,9 @@ fi
 
 git_bar_entry_point=$BASH_SOURCE
 
+#| cdg - cd to repo root
+alias cdg='cd $(git rev-parse --show-toplevel)'
+
 _git_args=()
 function _git_arg_wrapper {
   local cmd="$1"; shift;
@@ -224,6 +227,9 @@ function gd  { _git_arg_wrapper "diff" "$@"; }
 #| gdc - git diff --cached
 function gdc  { gd --cached "$@"; }
 
+#| gdiffstat - diff --stat -r
+function gdiffstat { command git diff --stat -r "$@"; }
+
 #| gf - git fetch
 function gf { command git fetch "$@"; }
 
@@ -280,7 +286,7 @@ function gffl { command git flow feature list "$@"; }
 #| gffs - git flow feature start
 function gffs { command git flow feature start "$@"; }
 
-#| gh - this screen
+#| gh - show this help screen
 function gh {
   while read -r _ c _ r; do
     printf "  %-5s - %s\n" "$c" "$r"
@@ -288,7 +294,13 @@ function gh {
 }
 
 #| gk - gitk --all
-function gk { gitk --all & }
+function gk {
+  if type -a gitk &>/dev/null; then
+    gitk --all &
+  else
+    gl;
+  fi
+}
 
 #| gl - git lg
 function gl  { _git_arg_wrapper "lg" "$@"; }
@@ -311,7 +323,10 @@ function glg {
 function glp { _git_arg_wrapper "glp" "$@"; }
 
 #| gp - git pull
-function gp  { [[ $# = 0 ]] && set -- origin $(gbr); command git pull "$@"; }
+function gp  {
+  [[ $# = 0 ]] && set -- origin $(gbr);
+  command git pull "$@";
+}
 
 #| gP - git push
 function gP  {
@@ -359,6 +374,12 @@ function gs  {
 }
 __git_complete gs _git_status
 
+#| gsync - gp; gf
+function gsync {
+  gf --all --prune --tags
+  gp --all --prune --stat --tags
+}
+
 #| gt - git tag
 function gt { command git tag "$@"; }
 
@@ -391,8 +412,23 @@ function gtvv { gtv -v; }
 #| gtvvv - git tag <v+++>
 function gtvvv { command git tag | summarize_refs;  }
 
-#| gx - gitx --all
-function gx { gitx --all; }
+#| gundo - git reset HEAD~1 --mixed
+function gundo { command git reset --mixed HEAD~1; }
+
+#| gwip - ga .; gca WIP
+function gwip {
+  if [[ $# == 0 ]]; then
+    local msg='WIPE'
+  else
+    local msg="$@"
+  fi
+  ga . && gca "$(date +%FT%T): $msg on $(gbr): $(git log --format=%B -n 1 HEAD)"
+}
+
+#| gwipe - gwipe; git reset --hard HEAD~1
+function gwipe {
+  gwip "WIPE" && command git reset --hard HEAD~1
+}
 
 function revision_completion {
   local cur="${COMP_WORDS[COMP_CWORD]}";
