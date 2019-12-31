@@ -115,13 +115,6 @@ set timeoutlen=1000         " timeout (ms) waited for key sequence to complete
 
 set pastetoggle=<F11>
 
-set spelllang=en_gb
-set spellfile=~/.vim/spell/en.utf-8.add
-set dictionary+=/usr/share/dict/words
-set dictionary+=~/.config/dict/words
-set thesaurus+=~/.config/dict/thesaurus
-set complete-=k             " disable dictionary completion
-
 set iskeyword+=:
 
 set path=.,~,..,
