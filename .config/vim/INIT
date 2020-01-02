@@ -71,6 +71,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/tamlok/vim-markdown.git               bundle/markdown
   git submodule add -f https://github.com/terryma/vim-multiple-cursors.git      bundle/multiple-cursors
   git submodule add -f https://github.com/thanthese/Tortoise-Typing.git         bundle/tortoise-typing
+  git submodule add -f https://github.com/tmux-plugins/vim-tmux-focus-events.git bundle/tmux-focus-events
   git submodule add -f https://github.com/tmux-plugins/vim-tmux.git             bundle/tmux
   git submodule add -f https://github.com/tomasr/molokai.git                    bundle/molokai
   git submodule add -f https://github.com/tommcdo/vim-exchange.git              bundle/exchange

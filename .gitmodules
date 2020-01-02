@@ -233,3 +233,7 @@
 [submodule ".config/vim/bundle/vinegar"]
 	path = .config/vim/bundle/vinegar
 	url = https://github.com/tpope/vim-vinegar.git
+
+[submodule ".config/vim/bundle/tmux-focus-events"]
+	path = .config/vim/bundle/tmux-focus-events
+	url = https://github.com/tmux-plugins/vim-tmux-focus-events.git
