@@ -12,13 +12,20 @@ if exists('$TMUX')
   " tmux will only forward escape sequences to the terminal if surrounded by a
   " DCS sequence
 
-  " setup the cursor shape when vim is started
-  autocmd VimEnter * silent !echo -ne "\033Ptmux;\033\033[4 q\033\\"
+  " Setup normal mode shape when vim is started
+  autocmd VimEnter * silent !echo -ne "\033Ptmux;\033\033[2 q\033\\"
+
+  " https://github.com/sjl/vitality.vim/blob/master/plugin/vitality.vim#L73
+  " Start termcap mode
+  let &t_ti = "\<Esc>[?1049h"
 
   " Insert Mode Cursor
-  let &t_SI = "\<Esc>Ptmux;\<Esc>\e[5 q\<Esc>\\"
+  let &t_SI = "\<Esc>Ptmux;\<Esc>\e[6 q\<Esc>\\"
   " Normal Mode Cursor
   let &t_EI = "\<Esc>Ptmux;\<Esc>\e[2 q\<Esc>\\"
+
+  " End termcap mode
+  let &t_te = "\<Esc>[?1049l"
 
 elseif &term =~ "xterm\\|rxvt\\|screen-256color\\|tmux-256color"
   " use a red cursor otherwise
