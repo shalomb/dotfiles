@@ -237,3 +237,7 @@
 [submodule ".config/vim/bundle/tmux-focus-events"]
 	path = .config/vim/bundle/tmux-focus-events
 	url = https://github.com/tmux-plugins/vim-tmux-focus-events.git
+
+[submodule ".config/vim/bundle/clever-f"]
+	path = .config/vim/bundle/clever-f
+	url = https://github.com/rhysd/clever-f.vim.git
