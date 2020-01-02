@@ -229,3 +229,7 @@
 [submodule ".config/vim/bundle/vim-misc"]
 	path = .config/vim/bundle/vim-misc
 	url = https://github.com/xolox/vim-misc.git
+
+[submodule ".config/vim/bundle/vinegar"]
+	path = .config/vim/bundle/vinegar
+	url = https://github.com/tpope/vim-vinegar.git
