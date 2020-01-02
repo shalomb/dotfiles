@@ -206,10 +206,6 @@
 	path = .config/vim/bundle/jedi-vim
 	url = https://github.com/davidhalter/jedi-vim.git
 
-[submodule ".config/vim/bundle/rainbow"]
-	path = .config/vim/bundle/rainbow
-	url = https://github.com/frazrepo/vim-rainbow.git
-
 [submodule ".config/vim/bundle/ale"]
 	path = .config/vim/bundle/ale
 	url = https://github.com/dense-analysis/ale.git

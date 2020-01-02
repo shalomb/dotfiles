@@ -50,7 +50,6 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/editorconfig/editorconfig-vim.git     bundle/editorconfig
   git submodule add -f https://github.com/ekalinin/Dockerfile.vim.git           bundle/dockerfile
   git submodule add -f https://github.com/fatih/vim-go.git                      bundle/go
-  git submodule add -f https://github.com/frazrepo/vim-rainbow.git              bundle/rainbow
   git submodule add -f https://github.com/garbas/vim-snipmate.git               bundle/snipmate
   git submodule add -f https://github.com/Glench/Vim-Jinja2-Syntax.git          bundle/jinja2-syntax
   git submodule add -f https://github.com/godlygeek/tabular.git                 bundle/tabular
