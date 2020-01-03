@@ -71,8 +71,6 @@ set expandtab               " expand tabs to spaces
 set smarttab                " smart tab size
 set shiftround              " indent rounded to shiftwidth
 
-set number                  " turn on line numbers
-set relativenumber          " turn on relative line numbers
 set numberwidth=3           " with 3 digits by default
 
 set wrap                    " wrap long lines
