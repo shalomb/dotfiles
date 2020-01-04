@@ -8,5 +8,3 @@ augroup numbertoggle
   autocmd BufEnter,FocusGained,InsertLeave * if &nu | set relativenumber   | endif
   autocmd BufLeave,FocusLost,InsertEnter   * if &nu | set norelativenumber | endif
 augroup END
-
-highlight CursorLineNr ctermfg=202
