@@ -3,6 +3,7 @@
 .vim/bundle/
 tags
 **/tags
+**/notes*
 
 wikidata/
 
