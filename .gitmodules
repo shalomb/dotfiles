@@ -237,3 +237,6 @@
 [submodule ".config/vim/bundle/clever-f"]
 	path = .config/vim/bundle/clever-f
 	url = https://github.com/rhysd/clever-f.vim.git
+[submodule ".config/vim/bundle/visual-split"]
+	path = .config/vim/bundle/visual-split
+	url = https://github.com/wellle/visual-split.vim.git
