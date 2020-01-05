@@ -12,6 +12,9 @@
 --ignore-dir=.tmp/
 --ignore-dir=dist
 
+# Ignore specific files
+--ignore-file=match:/^\.?c?tags$/
+
 # Make ack recognize some filetypes 
 --type-set=json=.json
 --type-set=markdown=.md,.mkd,.markdown
