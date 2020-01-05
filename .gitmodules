@@ -241,3 +241,7 @@
 [submodule ".config/vim/bundle/visual-split"]
 	path = .config/vim/bundle/visual-split
 	url = https://github.com/wellle/visual-split.vim.git
+
+[submodule ".config/vim/bundle/cool"]
+	path = .config/vim/bundle/cool
+	url = https://github.com/romainl/vim-cool.git
