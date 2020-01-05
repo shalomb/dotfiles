@@ -245,3 +245,7 @@
 [submodule ".config/vim/bundle/cool"]
 	path = .config/vim/bundle/cool
 	url = https://github.com/romainl/vim-cool.git
+
+[submodule ".config/vim/bundle/targets"]
+	path = .config/vim/bundle/targets
+	url = https://github.com/wellle/targets.vim.git
