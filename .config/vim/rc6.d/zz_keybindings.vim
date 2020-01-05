@@ -16,9 +16,6 @@ cnoremap <C-l>                        <Right>
 cnoremap <C-p>                        <Up>
 cnoremap <C-n>                        <Down>
 
-inoremap <C-S>                        <C-O>:update<CR>
-inoremap <C-Enter>                    <C-o>o
-inoremap <C-S-Enter>                  <C-o>O
 inoremap <C-U>                        <C-G>u<C-U>
 inoremap <C-W>                        <C-G>u<C-W>
 
@@ -35,12 +32,12 @@ nnoremap <buffer>          <Enter>    <Nop>
 
 nnoremap <buffer>         S          :,%s@\v@@gi<Left><Left><Left><Left>
 
-noremap <leader>ee    :edit     %%
-noremap <leader>es    :split    %%
-noremap <leader>ev    :vsplit   %%
-noremap <leader>et    :tabedit  %%
-noremap <leader>cd    :cd       %%
-noremap <leader>lcd   :lcd      %%
+noremap <leader>ee    :edit     <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
+noremap <leader>es    :split    <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
+noremap <leader>ev    :vsplit   <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
+noremap <leader>et    :tabedit  <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
+noremap <leader>cd    :cd       <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
+noremap <leader>lcd   :lcd      <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
 
 noremap  <buffer> <silent> k          gk
 noremap  <buffer> <silent> j          gj
@@ -55,20 +52,17 @@ nnoremap <expr>           gV          "`[".getregtype(v:register)[0]."`]"
 vnoremap                  //          y/<C-R>"<CR>
 
 nnoremap          .                   .`[
-nnoremap <silent> <C-Tab>             <C-W><C-W>    " control-tab to next window
 " nnoremap <silent> P                   P`[   " jump back to position after put
 " nnoremap <silent> p                   p`[   " jump back to position after put
-  nnoremap <silent> Y                   y$
-  nnoremap <silent> z/                  :if AutoHighlightToggle()<Bar>set hlsearch<Bar>endif<CR>
+nnoremap <silent> Y                   y$
+nnoremap <silent> z/                  :if AutoHighlightToggle()<Bar>set hlsearch<Bar>endif<CR>
 nnoremap <silent> z!                  :set hlsearch!<cr>
 nnoremap          <leader>.           :ls<cr>:b<space>
-nnoremap          <leader>'           :ls<cr>:b<space>
+nnoremap          <leader>'           :ls<cr>:b<space>#
 nnoremap          <leader>"           :ls<cr>:vs<space>#
 nnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
 nnoremap <silent> <leader><space>     :edit #<cr>
-nnoremap <silent> <leader><Tab>       <C-w><C-w>
 nnoremap <silent> <leader>a           :edit #<cr>
-nnoremap <silent> <leader>A           :execute "set titlestring=".input("Set window title to: ")<cr>
 nnoremap <silent> <leader>c           :new<cr>:only<cr>
 
 nnoremap          <leader>e           :edit   <C-R>=expand('%:h').'/'<CR>
@@ -76,7 +70,6 @@ nnoremap          <leader>vs          :vsplit <C-R>=expand('%:h').'/'<CR>
 nnoremap          <leader>sp          :split  <C-R>=expand('%:h').'/'<CR>
 
 nnoremap          <leader>ba          :ls<cr>:b<space>
-nnoremap          <leader>be          :CommandTBuffer<cr>
 nnoremap <silent> <leader>bc          :close<cr>
 nnoremap <silent> <leader>bd          :bdelete<cr>
 nnoremap <silent> <leader>bh          :bprevious<cr>
@@ -129,18 +122,8 @@ nnoremap <silent> <leader>td          :tabclose<cr>
 nnoremap          <leader>te          :ls<cr>:tabedit #
 nnoremap          <leader>tf          :tabfind **/*
 nnoremap <silent> <leader>th          :tabprevious<cr>
-" nnoremap          <leader>tips      :!(cd ~/Desktop/tips/; find * -type f \| column)<cr>:vsplit ~/Desktop/tips/
-nnoremap <silent> <leader>tj          :tablast<cr>
-nnoremap <silent> <leader>tk          :tabfirst<cr>
-nnoremap <silent> <leader>tl          :tabnext<cr>
-nnoremap <silent> <leader>tm          :tabmove<cr>
-nnoremap <silent> <leader>tp          :tabprevious<cr><cr>
-nnoremap <silent> <leader>tx          :tabdo<space>
-nnoremap <silent> <leader>t^          :tabfirst<cr>
-nnoremap <silent> <leader>t$          :tablast<cr>
 nnoremap <silent> <leader>uv          :!x-terminal-emulator -e urlview % <cr>
 nnoremap <silent> <leader>\|          :vnew<cr>
-nnoremap <silent> <leader>g           :vimgrep /<c-r>=expand('<cword>') . '/j **/*' <cr>
 nnoremap          <leader>wr          :update<cr>
 nnoremap <silent> <leader>x           :close<cr>
 nnoremap <silent> <leader>Y           "+y   "copy
