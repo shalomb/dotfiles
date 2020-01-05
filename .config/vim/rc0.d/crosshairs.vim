@@ -14,6 +14,4 @@ function! ShowCrossHairs(...)
   let &cursorline = l:cursorline
 endfunction
 
-au BufEnter * call ShowCrossHairs('25m')
 nnoremap qq  :call ShowCrossHairs('100m')<CR>
-

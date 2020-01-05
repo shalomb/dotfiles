@@ -30,3 +30,14 @@ elseif &term =~ "xterm\\|rxvt\\|screen-256color\\|tmux-256color"
   autocmd VimLeave * silent !echo -ne "\033]112\007"
   " use \003]12;gray\007 for gnome-terminal
 endif
+
+" augroup ActiveWindow
+"   autocmd!
+"   autocmd VimEnter,WinEnter,BufEnter,BufWinEnter,FocusGained * highlight CursorColumn term=bold cterm=bold ctermbg=208 ctermfg=black
+"   autocmd VimEnter,WinEnter,BufEnter,BufWinEnter,FocusGained * highlight CursorLineNr term=bold cterm=bold ctermfg=202 ctermbg=232
+"   autocmd VimEnter,WinEnter,BufEnter,BufWinEnter,FocusGained * highlight CursorLine   term=bold cterm=bold ctermbg=NONE
+" augroup END
+
+highlight CursorColumn term=bold cterm=bold ctermbg=208 ctermfg=NONE guibg=NONE
+highlight CursorLineNr term=bold cterm=bold ctermfg=202 ctermbg=234 guibg=NONE
+highlight CursorLine   term=bold cterm=bold ctermbg=NONE guibg=NONE
