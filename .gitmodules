@@ -269,3 +269,19 @@
 [submodule ".config/vim/bundle/markology"]
 	path = .config/vim/bundle/markology
 	url = https://github.com/jeetsukumaran/vim-markology.git
+
+[submodule ".config/vim/bundle/incsearch-easymotion"]
+	path = .config/vim/bundle/incsearch-easymotion
+	url = https://github.com/haya14busa/incsearch-easymotion.vim
+
+[submodule ".config/vim/bundle/incsearch-fuzzy"]
+	path = .config/vim/bundle/incsearch-fuzzy
+	url = https://github.com/haya14busa/incsearch-fuzzy.vim.git
+
+[submodule ".config/vim/bundle/incsearch"]
+	path = .config/vim/bundle/incsearch
+	url = https://github.com/haya14busa/incsearch.vim
+
+[submodule ".config/vim/bundle/asterisk"]
+	path = .config/vim/bundle/asterisk
+	url = https://github.com/haya14busa/vim-asterisk.git

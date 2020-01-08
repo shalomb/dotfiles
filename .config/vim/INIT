@@ -54,6 +54,10 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/Glench/Vim-Jinja2-Syntax.git          bundle/jinja2-syntax
   git submodule add -f https://github.com/godlygeek/tabular.git                 bundle/tabular
   git submodule add -f https://github.com/hashivim/vim-terraform.git            bundle/terraform
+  git submodule add -f https://github.com/haya14busa/incsearch-easymotion.vim   bundle/incsearch-easymotion
+  git submodule add -f https://github.com/haya14busa/incsearch-fuzzy.vim.git    bundle/incsearch-fuzzy
+  git submodule add -f https://github.com/haya14busa/incsearch.vim              bundle/incsearch
+  git submodule add -f https://github.com/haya14busa/vim-asterisk.git           bundle/asterisk
   git submodule add -f https://github.com/honza/vim-snippets.git                bundle/snipmate-snippets
   git submodule add -f https://github.com/idbrii/textobj-word-column.vim.git    bundle/textobj-word-column
   git submodule add -f https://github.com/jeetsukumaran/vim-markology.git       bundle/markology
