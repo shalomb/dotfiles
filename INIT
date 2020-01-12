@@ -13,10 +13,12 @@ type -P ssh-askpass    &>/dev/null || pkgs_to_install+=( 'ssh-askpass' )
 type -P ssh            &>/dev/null || pkgs_to_install+=( 'openssh-client' )
 type -P sudo           &>/dev/null || pkgs_to_install+=( 'sudo' )
 type -P unclutter      &>/dev/null || pkgs_to_install+=( 'unclutter' )
+type -P vim            &>/dev/null || pkgs_to_install+=( 'vim-gtk3' )
 type -P xmodmap        &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
 type -P xrandr         &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
 type -P xsel           &>/dev/null || pkgs_to_install+=( 'xsel' )
 type -P xset           &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
+vim --version | grep -iq x11       || pkgs_to_install+=( 'vim-gtk3' )
 
 type -P xflux          &>/dev/null || {
   echo "xflux is a manual install" >&2
