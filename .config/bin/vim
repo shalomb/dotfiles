@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo 'Did you mean vi? ' >&2
+exit 1
