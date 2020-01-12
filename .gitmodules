@@ -301,3 +301,7 @@
 [submodule ".config/vim/bundle/unicode"]
 	path = .config/vim/bundle/unicode
 	url = https://github.com/chrisbra/unicode.vim.git
+
+[submodule ".config/vim/bundle/auto-pairs"]
+	path = .config/vim/bundle/auto-pairs
+	url = https://github.com/jiangmiao/auto-pairs.git
