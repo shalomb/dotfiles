@@ -61,20 +61,6 @@ highlight ColorColumn ctermbg=magenta
     augroup END
 
 
-"====[ Open any file with a pre-existing swapfile in readonly mode "]=========
-
-    augroup NoSimultaneousEdits
-        autocmd!
-        autocmd SwapExists * let v:swapchoice = 'o'
-        autocmd SwapExists * echohl ErrorMsg
-        autocmd SwapExists * echo 'Duplicate edit session (readonly)'
-        autocmd SwapExists * echohl None
-        autocmd SwapExists * sleep 2
-    augroup END
-
-    " Also consider the autoswap_mac.vim plugin (but beware its limitations)
-
-
 "====[ Mappings to activate spell-checking alternatives ]================
 
     nmap  <Leader>s     :set invspell spelllang=en<CR>
@@ -85,7 +71,6 @@ highlight ColorColumn ctermbg=magenta
     "     :mkspell  ~/.vim/spell/en-basic  basic_english_words.txt
     "
     " See :help mkspell
-
 
 "====[ Make CTRL-K list diagraphs before each digraph entry ]===============
 
@@ -100,4 +85,3 @@ highlight ColorColumn ctermbg=magenta
     " But also consider the hudigraphs.vim and betterdigraphs.vim plugins,
     " which offer smarter and less intrusive alternatives
     " œ ŋ  ß
-
