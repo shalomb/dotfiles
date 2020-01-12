@@ -58,6 +58,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/haya14busa/incsearch-fuzzy.vim.git    bundle/incsearch-fuzzy
   git submodule add -f https://github.com/haya14busa/incsearch.vim              bundle/incsearch
   git submodule add -f https://github.com/haya14busa/vim-asterisk.git           bundle/asterisk
+  git submodule add -f https://github.com/haya14busa/vim-operator-flashy.git    bundle/operator-flashy
   git submodule add -f https://github.com/honza/vim-snippets.git                bundle/snipmate-snippets
   git submodule add -f https://github.com/idbrii/textobj-word-column.vim.git    bundle/textobj-word-column
   git submodule add -f https://github.com/jeetsukumaran/vim-markology.git       bundle/markology
@@ -65,6 +66,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/junegunn/fzf.git                      bundle/fzf-core
   git submodule add -f https://github.com/junegunn/fzf.vim.git                  bundle/fzf
   git submodule add -f https://github.com/junegunn/vim-peekaboo.git             bundle/peekaboo
+  git submodule add -f https://github.com/kana/vim-operator-user.git            bundle/operator-user
   git submodule add -f https://github.com/kana/vim-textobj-fold.git             bundle/textobj-fold
   git submodule add -f https://github.com/kana/vim-textobj-function.git         bundle/textobj-function
   git submodule add -f https://github.com/kana/vim-textobj-indent.git           bundle/textobj-indent
