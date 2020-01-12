@@ -297,3 +297,7 @@
 [submodule ".config/vim/bundle/rainbow-parentheses"]
 	path = .config/vim/bundle/rainbow-parentheses
 	url = https://github.com/junegunn/rainbow_parentheses.vim.git
+
+[submodule ".config/vim/bundle/unicode"]
+	path = .config/vim/bundle/unicode
+	url = https://github.com/chrisbra/unicode.vim.git

@@ -42,6 +42,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/airblade/vim-gitgutter.git            bundle/gitgutter
   git submodule add -f https://github.com/AndrewRadev/switch.vim.git            bundle/switch
   git submodule add -f https://github.com/avakhov/vim-yaml.git                  bundle/yaml
+  git submodule add -f https://github.com/chrisbra/unicode.vim.git              bundle/unicode
   git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    bundle/tmux-navigator
   git submodule add -f https://github.com/davidhalter/jedi-vim.git              bundle/jedi-vim
   git submodule add -f https://github.com/dbeniamine/cheat.sh-vim.git           bundle/cheat.sh-vim
