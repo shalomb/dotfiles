@@ -15,29 +15,24 @@ if exists('$TMUX')
   " Setup normal mode shape when vim is started
   autocmd VimEnter * silent !echo -ne "\033Ptmux;\033\033[2 q\033\\"
 
-  " Insert Mode Cursor
-  let &t_SI = "\<Esc>Ptmux;\<Esc>\e[6 q\<Esc>\\"
   " Normal Mode Cursor
-  let &t_EI = "\<Esc>Ptmux;\<Esc>\e[2 q\<Esc>\\"
+  let &t_EI = "\033Ptmux;\033\033[2 q\033\\"
+  " Insert Mode Cursor
+  let &t_SI = "\033Ptmux;\033\033[6 q\033\\"
+  " Replace Mode Cursor
+  let &t_SR = "\033Ptmux;\033\033[3 q\033\\"
 
 elseif &term =~ "xterm\\|rxvt\\|screen-256color\\|tmux-256color"
   " use a red cursor otherwise
-  let &t_EI = "\<Esc>]12;red\x7"
+  let &t_EI = "\033]12;red\x7"
   " use an orange cursor in insert mode
-  let &t_SI = "\<Esc>]12;orange\x7"
+  let &t_SI = "\033]12;orange\x7"
   silent !echo -ne "\033]12;orange\007"
   " reset cursor when vim exits
   autocmd VimLeave * silent !echo -ne "\033]112\007"
   " use \003]12;gray\007 for gnome-terminal
 endif
 
-" augroup ActiveWindow
-"   autocmd!
-"   autocmd VimEnter,WinEnter,BufEnter,BufWinEnter,FocusGained * highlight CursorColumn term=bold cterm=bold ctermbg=208 ctermfg=black
-"   autocmd VimEnter,WinEnter,BufEnter,BufWinEnter,FocusGained * highlight CursorLineNr term=bold cterm=bold ctermfg=202 ctermbg=232
-"   autocmd VimEnter,WinEnter,BufEnter,BufWinEnter,FocusGained * highlight CursorLine   term=bold cterm=bold ctermbg=NONE
-" augroup END
-
 highlight CursorColumn term=bold cterm=bold ctermbg=208 ctermfg=NONE guibg=NONE
-highlight CursorLineNr term=bold cterm=bold ctermfg=202 ctermbg=234 guibg=NONE
+highlight CursorLineNr term=bold cterm=bold ctermfg=202 ctermbg=NONE guibg=NONE
 highlight CursorLine   term=bold cterm=bold ctermbg=NONE guibg=NONE
