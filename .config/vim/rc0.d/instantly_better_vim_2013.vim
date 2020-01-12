@@ -17,26 +17,6 @@ highlight ColorColumn ctermbg=magenta
     " exec 'set colorcolumn=' . join(range(2,80,3), ',')
 
 
-"=====[ Highlight matches when jumping to next ]=============
-
-  " This rewires n and N to do the highlighing...
-  nnoremap <silent> n   n:call HLNext(0.4)<cr>
-  nnoremap <silent> N   N:call HLNext(0.4)<cr>
-
-  " OR ELSE just highlight the match in red...
-  function! HLNext (blinktime)
-    highlight WhiteOnRed ctermfg=black ctermbg=DarkRed cterm=None
-    let [bufnum, lnum, col, off] = getpos('.')
-    let matchlen = strlen(matchstr(strpart(getline('.'),col-1),@/))
-    let target_pat = '\c\%#'.@/
-    let ring = matchadd('WhiteOnRed', target_pat, 101)
-    redraw
-    " exec 'sleep ' . float2nr(a:blinktime * 1000) . 'm'
-    " call matchdelete(ring)
-    " redraw
-  endfunction
-
-
 "====[ Make tabs, trailing whitespace, and non-breaking spaces visible ]======
 
     exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~,eol:$"
