@@ -1,0 +1,3 @@
+#!/bin/bash
+
+system-command tmux -2 -u "$@"
