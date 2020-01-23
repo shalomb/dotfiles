@@ -2,17 +2,17 @@
 
 THIS_SCRIPT="${BASH_SOURCE[0]}"
 
-_PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin' 
+_PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
 PATH="$_PATH" && source /etc/profile # &> /dev/null || true
 PATH="$PATH:$_PATH:~/.bin:~/bin"
 # echo "THIS_SCRIPT : $THIS_SCRIPT"
 echo "PATH        : $PATH"
 
 # Find other p4 candidates that are not this script
-p4=(); 
+p4=();
 while read _ _ path; do # p4 is /path/to/p4
-  [[ $path != $THIS_SCRIPT ]] && p4+=("$path"); 
-done < <(type -a p4); 
+  [[ $path != $THIS_SCRIPT ]] && p4+=("$path");
+done < <(type -a p4);
 
 # Bail if no other p4s exist in $PATH
 (( ${#p4[@]} == 0 )) && exit
