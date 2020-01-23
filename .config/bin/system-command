@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Lookup command in the system (vanilla) $PATH
+
+# In essence, use $PATH as defined by the OS disregarding any user additions to
+# $PATH and then exec $1 $@ but preserving $PATH
+# This has  the side  effect of  setting $0 to  be fully  qualified in  the new
+# process - which may or may not be desirable
+function system_cmd() {
+  unset PATH
+  for f in \
+    /etc/bash.bashrc \
+    /etc/profile     \
+    /etc/environment \
+  ; do
+    source "$f" &> /dev/null || true
+  done
+  invoke "$PATH" "$@"
+}
+
+function user_cmd() {
+  # TODO - determine the correct ordering
+  #      - use systemd-path user-binaries (eww)
+  local PATH="~/.bin:~/bin:~/.local/sbin:~/.local/bin"
+  invoke "$PATH" "$@"
+}
+
+function invoke() {
+  local PATH="$1"; shift;
+  local cmd="${1##*/}"; shift;
+  hash -r
+  local cmd_executable=$(type -P "$cmd")
+  if [[ -z $cmd_executable ]]; then
+    { echo "PATH: $PATH"
+      echo "${0##*/}: $cmd: command not found"
+    }
+    exit 127
+  fi
+  export PATH="$_PATH"
+  exec -a "$cmd" "$cmd_executable" "$@"
+}
+
+if [[ ${0##*/} == system-command ]]; then
+  system_cmd "$@"
+elif [[ ${0##*/} == user-command ]]; then
+  user_cmd "$@"
+else
+  echo "$0: missing handler $0" >&2
+  exit 127
+fi
+
