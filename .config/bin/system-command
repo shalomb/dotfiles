@@ -7,7 +7,6 @@
 # This has  the side  effect of  setting $0 to  be fully  qualified in  the new
 # process - which may or may not be desirable
 function system_cmd() {
-  unset PATH
   for f in \
     /etc/bash.bashrc \
     /etc/profile     \
@@ -39,6 +38,8 @@ function invoke() {
   export PATH="$_PATH"
   exec -a "$cmd" "$cmd_executable" "$@"
 }
+
+_PATH="$PATH"
 
 if [[ ${0##*/} == system-command ]]; then
   system_cmd "$@"
