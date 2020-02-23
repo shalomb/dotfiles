@@ -1,11 +1,11 @@
 # XScreenSaver Preferences File
-# Written by xscreensaver-demo 5.36 for unop on Sat Aug 12 16:46:49 2017.
+# Written by xscreensaver-demo 5.42 for unop on Sun Feb 23 18:32:45 2020.
 # https://www.jwz.org/xscreensaver/
 
 timeout:	0:03:00
 cycle:		0:02:00
 lock:		True
-lockTimeout:	0:10:00
+lockTimeout:	0:03:00
 passwdTimeout:	0:00:30
 visualID:	default
 installColormap:    True
@@ -35,7 +35,7 @@ chooseRandomImages: False
 imageDirectory:	
 
 mode:		blank
-selected:	-1
+selected:	21
 
 textMode:	url
 textLiteral:	XScreenSaver
@@ -254,7 +254,8 @@ programs:								      \
 - GL: 				geodesicgears -root			    \n\
 - GL: 				projectiveplane -root			    \n\
 - GL: 				romanboy -root				    \n\
-				tessellimage -root			    \n\
+				tessellimage -root -no-fill-screen	      \
+				  -no-outline -fps			    \n\
 - GL: 				winduprobot -root			    \n\
 - GL: 				splitflap -root				    \n\
 				testx11 -root				    \n\
@@ -268,6 +269,16 @@ programs:								      \
 - GL: 				raverhoop -root				    \n\
 - GL: 				splodesic -root				    \n\
 - GL: 				unicrud -root				    \n\
+- GL: 				esper -root				    \n\
+- GL: 				vigilance -root				    \n\
+- GL: 				crumbler -root				    \n\
+				filmleader -root			    \n\
+				glitchpeg -root				    \n\
+- GL: 				handsy -root				    \n\
+- GL: 				maze3d -root				    \n\
+- GL: 				peepers -root				    \n\
+- GL: 				razzledazzle -root			    \n\
+				vfeedback -root				    \n\
 
 
 pointerPollTime:    0:00:05
