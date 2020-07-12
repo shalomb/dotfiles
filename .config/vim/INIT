@@ -68,6 +68,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/jiangmiao/auto-pairs.git              bundle/auto-pairs
   git submodule add -f https://github.com/junegunn/fzf.git                      bundle/fzf-core
   git submodule add -f https://github.com/junegunn/fzf.vim.git                  bundle/fzf
+  git submodule add -f https://github.com/junegunn/goyo.vim.git                 bundle/goyo
   git submodule add -f https://github.com/junegunn/rainbow_parentheses.vim.git  bundle/rainbow-parentheses
   git submodule add -f https://github.com/junegunn/vim-peekaboo.git             bundle/peekaboo
   git submodule add -f https://github.com/kana/vim-operator-user.git            bundle/operator-user
