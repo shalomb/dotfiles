@@ -89,11 +89,8 @@ for f in "${files[@]}"; do
   fi
 done
 
-echo "$0 [$PWD]: Editing the following .. "
-printf "  %s\n" ${files[@]}
-
 search_term="${search_terms[@]}"
-vim -c "silent! /${search_term// /\\|}/e" -c 'norm ggnzv' "${files[@]:-.}"
+"${EDITOR:-vi}" -c "silent! /${search_term// /\\|}/e" -c 'norm ggnzv' "${files[@]:-.}"
 
 cd "$oldpwd"
 
