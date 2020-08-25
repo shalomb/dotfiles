@@ -1,0 +1,24 @@
+#!/bin/bash
+
+PROMPT_COMMAND='
+  _ec=$?;
+  if (( _ec != 0 )); then
+    bell-alert;
+  fi;
+  if (( _ec == 0 )); then
+    set_cdpath;
+  fi;
+'
+
+# If this is an xterm set the title to user@host:dir
+case "$TERM" in
+  screen*|tmux*)
+    PROMPT_COMMAND="$PROMPT_COMMAND"
+  ;;
+  *rxvt*|xterm*)
+    PROMPT_COMMAND="set-title"
+  ;;
+  *)
+  ;;
+esac
+

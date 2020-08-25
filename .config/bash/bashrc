@@ -12,7 +12,7 @@
 [[ ${-//[!i]/} ]] || return
 
 if [[ -e ~/.config/profile ]]; then
-  source ~/.config/profile
+  source ~/.config/profile &>/dev/null
 fi
 
 export FCEDIT="$EDITOR"
@@ -49,26 +49,6 @@ set -o ignoreeof
 set -o notify
 set -o vi
 
-# If this is an xterm set the title to user@host:dir
-case "$TERM" in screen*|xterm*|*rxvt*)
-    PROMPT_COMMAND='echo -ne "\033]0;${debian_chroot}${USER}@${screen_session:-$HOSTNAME}:$$: ${PWD/$HOME/~}\007"'
-    ;;
-*)
-    ;;
-esac
-
-function set_cdpath () {
-  CDPATH="$PWD:.:$OLDPWD:..:~:/media:/mnt"
-}
-
-# CDPATH does not seem to expand variables when cd is used
-# workaround: get PROMPT_COMMAND to do the expanding
-if [[ -n $PROMPT_COMMAND && $PROMPT_COMMAND != *set_cdpath* ]]; then
-    PROMPT_COMMAND="$PROMPT_COMMAND ; set_cdpath ;"
-else
-  PROMPT_COMMAND="set_cdpath"
-fi
-
 function source() {
   # echo "$(date --rfc-3339=ns): Sourcing $@"
   builtin source "$@"
@@ -79,11 +59,11 @@ function source() {
 function reload () {
   if [[ -n "$@" ]]; then
     for f; do
-      [[ -f "$f" && -r "$f" ]] && {
-        if ! file -i "$f" | grep -iq binary; then
+      if [[ -f "$f" && -r "$f" ]]; then
+        if [[ ${f##*/} != @(tags|ctags) ]] && ! file -i "$f" | grep -iq binary; then
           source "$f"
         fi
-      }
+      fi
     done
   else
     reload  /etc/bash_completion       \
@@ -117,9 +97,7 @@ clean_path PATH;    export PATH
 clean_path MANPATH; export MANPATH
 
 for script in ~/.config/bash/rc.d/{,.}*; do
-  if [[ -f $script && -r $script ]]; then
-    source "$script"
-  fi
+  reload "$script"
 done
 
 # Right, we're ready to hand over control to the user now!
