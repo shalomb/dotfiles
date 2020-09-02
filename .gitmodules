@@ -305,3 +305,7 @@
 [submodule ".config/vim/bundle/autoswap"]
 	path = .config/vim/bundle/autoswap
 	url = https://github.com/gioele/vim-autoswap.git
+
+[submodule ".config/vim/bundle/goyo"]
+	path = .config/vim/bundle/goyo
+	url = https://github.com/junegunn/goyo.vim.git
