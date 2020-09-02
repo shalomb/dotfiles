@@ -22,11 +22,7 @@ nnoremap <C-Right>                    <Nop>
 " like tmux - c-w,c-w switches to previous window
 nnoremap <C-W><C-W>                   <C-W>p
 
-" nnoremap <buffer>          ;           :call feedkeys('q:G')<CR>
-" nnoremap <buffer>          :           <Nop>
-noremap                    ;           :
 nnoremap                   <C-;>       :
-nnoremap                   :           q:
 
 nnoremap                   '           `
 nnoremap                   `           '
