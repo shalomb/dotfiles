@@ -1,0 +1,5 @@
+# CPAN - Comprehensive Perl Archive Network
+
+# URL: http://debian.pkgs.cpan.org/
+
+deb     http://debian.pkgs.cpan.org/debian            unstable              main

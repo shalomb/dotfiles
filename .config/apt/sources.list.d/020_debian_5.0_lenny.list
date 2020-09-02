@@ -1,0 +1,15 @@
+# Debian GNU/Linux 5.0 Lenny/Testing
+#deb 	  http://ftp.uk.debian.org/debian/	            lenny		              main contrib non-free
+deb-src http://ftp.uk.debian.org/debian/	            lenny		              main contrib non-free
+
+#deb     http://mirror.ox.ac.uk/debian                 lenny                 main contrib non-free
+#deb-src http://mirror.ox.ac.uk/debian                 lenny                 main contrib non-free
+
+deb     http://mirror.peer1.net/debian                lenny                 main contrib non-free
+deb-src http://mirror.peer1.net/debian                lenny                 main contrib non-free
+
+deb	    http://security.debian.org/		                lenny/updates         main contrib non-free
+deb-src http://security.debian.org/ 		              lenny/updates	        main contrib non-free
+
+#deb 	  http://volatile.debian.org/debian-volatile	  lenny/volatile        main contrib non-free
+#deb	    http://volatile.debian.org/debian-volatile	  lenny/volatile-sloppy main contrib non-free

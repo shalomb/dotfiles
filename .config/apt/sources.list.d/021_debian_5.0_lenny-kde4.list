@@ -1,0 +1,10 @@
+# KDE 4.1.x
+# - kde
+# - dolphin
+
+# KEY: unsigned
+# URL: http://kde4.debian.net/
+
+
+deb     http://kde4.debian.net/ lenny main
+deb-src http://kde4.debian.net/ lenny main

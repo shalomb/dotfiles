@@ -1,0 +1,5 @@
+#NS2 - Network Simulator
+#SRC: http://nuraini.net/2007/08/17/ns-2-debian-installation/
+
+deb http://bode.cs.uni-magdeburg.de/~aherms/debian sid ns2
+deb-src http://bode.cs.uni-magdeburg.de/~aherms/debian sid ns2
