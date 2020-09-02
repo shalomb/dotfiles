@@ -8,88 +8,444 @@ function  - () { cd -; }
 alias ~='cd ~'
 
 #| .. - cd ..
-alias     ..='cd ..'
+alias     ..='cdupto'
 #| ... - cd ...
 alias     ...='cd ../..'
 #| ... - cd ...
 alias     ....='cd ../../..'
 #| cd.. - cd ..
-alias     cd..='cd ..'
+alias     cd..='cdupto'
 #| cd... - cd ..
 alias     cd...='cd ../..'
 
-#| mcd - mkdir "$@" && cd "$@"
-function  mcd         { mkdir -p "$@" && builtin cd "$@"; }
+#| cd - smarter cd
+function cd {
+  local path="$1"
+  local qualifier="$2"
+  local alnum='[[:alnum:]]'
+  local bookmarks="${XDG_CONFIG_HOME:-$HOME/.config}/dirs"
 
-#| md - mcd "$@"
-alias     md=mcd
+  if [[ $path == -* ]]; then
+
+    if [[ $path == -h ]]; then
+			cat <<-EOD
+			  -b  - cd to one of the bookmarked directories
+			  -f  - cd to one of the frequently accessed directories
+			  -k  - Pass args verbatim to the 'builtin cd'
+			  -r  - cd to git toplevel directory
+			  -t  - cd to git toplevel directory
+			  -o  - cd to item in the omni list (all possible completions)
+			  -p  - cd to item in project list
+			  -v  - cd to item on dirstack
+			EOD
+      return
+
+    # Bookmark directories
+    elif [[ $path == -B ]]; then
+
+      shift
+      local args=( "$@" )
+
+      if [[ -z $args ]]; then
+        local dir="${args:-$PWD}"
+      fi
+
+      { echo "$dir";
+        [[ -e $bookmarks ]] && cat "$bookmarks"
+      } | awk '!a[$0]++' > "$bookmarks.tmp"
+      mv -- "$bookmarks.tmp" "$bookmarks"
+      return
+
+  # common locations
+  elif [[ $path == -@(b|f|o|p|v) ]]; then
+
+      shift
+      local query=( "$@" )
+      local candidates=()
+      local col=1
+      local cd=0
+
+      case "$path" in
+        # Bookmarks
+        -b)
+          while read -r i; do candidates+=("$i"); done < "$bookmarks"
+        ;;
+
+        # Frequently Accessed Dirs
+        -f)
+          # TODO Rename this file
+          while read -r i; do candidates+=("$i"); done < <(cwds-list)
+        ;;
+
+        # Omni
+        -o)
+          while read -r i; do candidates+=("$i"); done < <(
+            cwds-list
+            dirs -v
+            cat "$bookmarks"
+            projects-list
+          )
+        ;;
+
+        # Projects
+        -p)
+          while read -r i; do candidates+=("$i"); done < <(projects-list)
+        ;;
+
+        # Dirstack
+        -v)
+          cd=1
+          # TODO - Refactor
+          # This de-duplicates the dirstack (by way of a hack!)
+          local candidates=()
+          while read -r dir; do
+            candidates+=( "$dir" )
+          done < <(
+            ( dirs -v; echo "$PWD" ) | awk '!a[$2]++ && $2 { print $2 }' | tac
+          )
+          dirs -c
+          for dir in "${candidates[@]}"; do
+            echo "cd $dir"
+            builtin cd "$(tildeexpand "$dir")"
+          done
+          while read -r _ dir; do
+            candidates+=( "$dir" )
+          done < <( dirs -v )
+        ;;
+      esac
+
+      path=$(cdto "$query" "$col" "${candidates[@]}")
+      [[ -z $path ]] && return
+
+      if (( cd == 1 )); then
+        builtin cd "$path"
+        return
+      fi
+
+    # Pass args to 'builtin cd'
+    elif [[ $path == -k ]]; then
+      shift
+      builtin cd "$@"
+      return
+
+    # cd to git toplevel directory
+    elif [[ $path == -t ]] || [[ $path == -r ]]; then
+      path=$(git rev-parse --show-toplevel)
+      [[ -n $path ]] || return
+
+    fi
+
+  elif [[ -n $qualifier ]]; then
+    # Arg 2 qualifies the path
+    if [[ $qualifier == -* ]]; then
+      if [[ $qualifier == -h ]]; then
+				cat <<-EOD
+				  -c  - Create and then cd into directory
+				  -u  - Find and cd into directory matching regex in ancestors
+				  -d  - Find and cd into directory matching regex in children
+				  -a  - Find and cd into directory that is a child of an ancestor
+				  -k  - Use 'builtin cd' to change directory
+				EOD
+        return
+
+      # cd to ancestor's child
+      elif [[ $qualifier == -b ]]; then
+        local regex="$path"
+        # TODO
+
+      # cd to ancestor's child
+      elif [[ $qualifier == -a ]]; then
+        local regex="$path"
+        local path=
+        local basename="$PWD"
+
+        # Arg is regex
+        while [[ $basename == /* ]]; do
+          basename="${basename%/*}"
+          for d in "$basename"/*/; do
+            if [[ $d =~ $regex ]];  then path="$d" && break 2; fi
+            local c=( "$d"/"$regex"* )
+            if [[ $c != *\* ]]; then path="$c" && break 2; fi
+          done
+        done
+
+        if [[ -z $path ]]; then
+          warn "cd: No directories under ancestry match: $regex"
+          return
+        fi
+
+      # Create the directory
+      elif [[ $qualifier == -c ]]; then
+        mkdir -pv "$path"
+
+      # cd to child/descendant
+      elif [[ $qualifier == -d ]]; then
+        local regex="$path"
+        local candidates=()
+
+        while read -d $'\0' -r d; do
+          candidates+=("$d")
+        done < <(
+          find . \( -name .git -prune \) -o \
+            -type d -iregex ".*$regex.*" -print0 )
+
+        path=$(cdto "$regex" "1" "${candidates[@]}")
+        [[ -z $path ]] && return
+
+      # cd to ancestor
+      elif [[ $qualifier == -u ]]; then
+        local regex="$path"
+        local basename="$PWD"
+
+        # Arg is regex
+        while [[ $basename == /* ]]; do
+          basename="${basename%/*}"
+          if [[ ${basename##*/} =~ $regex ]]; then
+            path="$basename" && break
+          fi
+        done
+
+      # Pass args to 'builtin cd'
+      elif [[ $qualifier == -k ]]; then
+        local path=( "$@" )
+        path=( "${path[@]:0:${#path[@]}-1}" )  # Pop off last arg i.e. -k
+        builtin cd "$path"
+        return
+
+      fi
+
+    elif [[ -e $path ]] && [[ -e $qualifier ]]; then
+      die "ERROR: Multiple paths match patterns."
+      printf ' - %q\n' "$@"
+      return 1
+
+    else
+      # Arg 2 replaces $path in $PWD
+      local newpath="${PWD//$path/$qualifier}"
+      if [[ $newpath == $PWD ]]; then
+        warn "ERROR: Substitution of '$qualifier' with '$path' in '$PWD' failed."
+        return 1
+      fi
+      path="$newpath"
+    fi
+  fi
+
+  # Args is -
+  if [[ $path == '-' ]]; then
+    builtin cd "$OLDPWD"
+    return
+
+  # No args - emulate cd
+  elif [[ -z $path ]] || [[ $path =~ ^\~/?$ ]]; then
+    builtin cd ~
+    return
+
+  # Show help
+  elif [[ $path == -h ]]; then
+    while read -r _ c _ r; do
+      printf "  %-5s - %s\n" "$c" "$r"
+    done < <( grep -iE '^#\|' "$cd_source" | sort ) | column -s - | "$PAGER"
+    return
+
+  # Arg is a single +
+  elif [[ $path =~ ^\+$ ]]; then
+    cd -v && return
+
+  # Arg is a dirstack match
+  elif [[ $path =~ ^[+\-][[:alpha:]]+ ]]; then
+    path=$(dirs -l -v | grep -iP "${path##+}" | awk 'NR==1{print $2}')
+
+  # Arg is a signed number
+  elif [[ $path =~ ^[+\-][0-9]+$ ]]; then
+    if builtin dirs "$path" >/dev/null; then
+      path="$( builtin dirs "$path" )"
+      path="$( tildeexpand "$path" )"
+      # Use a regular cd here to not duplicate already existing items
+      # on the stack
+      echo >&2 "+ cd $path"
+      builtin cd "$path"
+      return
+    else
+      return
+    fi
+
+  # Arg is a shorthand path like /v/l/a/n
+  # TODO Make this regex more robust - for shorter cases
+  elif [[ $path =~ ^/?$alnum/?$|^/?$alnum/$alnum/?$|^/?$alnum/$alnum/ ]]; then
+    path="${path%/}"
+
+    # Create the path glob for the target directories
+    # e.g. /v/l/a/n becomes /v*/l*/a*/n*
+    path="${path//\//*\/}"
+    path="${path//[^[:alnum:]\/]/*}"
+    path="${path#\*}*"
+
+    # Expand the glob
+    local nullglob=0
+    shopt -q nullglob && nullglob=1
+    [[ $nullglob == 1 ]] || shopt -s nullglob
+    local dirs=($path)
+    [[ $nullglob == 1 ]] || shopt -u nullglob
+
+    if (( ${#dirs[@]} == 1 )) && [[ "${dirs%/}" != "${path%/}" ]]; then
+      path="$dirs"
+    elif (( ${#dirs[@]} >= 1 )); then
+      path="$(cdto "" 1 "${dirs[@]}")"
+    else
+      warn "No dirs match: $path"
+      return
+    fi
+  fi
+
+  # Arg is a file
+  if [[ -e ${path%/} ]]; then
+    path="${path%/}"
+
+    # Arg is a block device, use corresponding mount point
+    if [[ -b $path ]]; then
+      path="$(findmnt -no 'TARGET' -S "$path" | head -n1)"
+
+    # Arg is a non-directory (file), use its parent
+    elif [[ ! -d $path ]]; then
+      local dir="${path%/*}"
+      if [[ ${dir%/} == ${path%/} ]]; then
+        # case when $path is in $PWD
+        return
+      fi
+      echo "cd: $path: not a directory. using parent directory: $dir" >&2
+      path=$dir
+    fi
+
+  # Arg is the current directory
+  elif [[ ${PWD%/} == ${path%/} ]]; then
+    return
+
+  elif [[ ! -d $path ]]; then
+
+    # $path may be an item in $CDPATH
+    if [[ -n $CDPATH ]]; then
+      IFS=: read -a cdpaths <<<"$CDPATH"
+      for p in "${cdpaths[@]}"; do
+        local _path="$(tildeexpand "$p/$path")"
+        if [[ -e $_path ]]; then
+          # $_path could be a non-directory, we'll pass to out cd() again as
+          # its too late to go through the special handling checks again
+          cd "$_path"
+          return
+        fi
+      done
+    fi
+
+    # Arg does not exist, offer to create it via an alias if the user so wants
+    echo "cd: $path: No such file or directory. Append -c to create." >&2
+    return
+
+  fi
+
+  builtin pushd "$path" >/dev/null
+}
 
 #| cd- - cd to -
 function cd- {
   cd -
 }
 
-#| tildeexpand - expand tildes in path
-function tildeexpand {
-  local path="$1"
-  path="${path/#\~\//$HOME\/}"
-  if   [[ $path == ~ ]]; then
-    path="$HOME"
-  elif [[ $path == ~* ]]; then
-    user="${path%%/*}"
-    user="${user#\~}"
-    IFS=':' read -a a < <( getent passwd "$user" );
-    user_home="${a[5]}"
-    path="${path/#\~$user/$user_home}"
-    # cd "$path" && return
-  fi
-  echo "$path"
-}
+#| cdg - cd to repo root
+alias cdg='cd $(git rev-parse --show-toplevel)'
 
-#| cd - smarter cd
-function cd {
-  local path="$1"
+#| cdupto - cd upwards to first match
+function cdupto() {
+  local part="$1"
+  local basename="$PWD"
 
-  [[ -z $path ]] && { cd ~; return; }
-
-  if [[ -f $path ]]; then
-    path="${path%/*}"
-    echo >&2 "+ cd $path"
+  # No args - cd ..
+  if [[ -z $part ]]; then
+    cd .. && return
   fi
 
-  if [[ -b $path ]]; then
-    path="$(findmnt -no 'TARGET' -S "$path")"
-    echo >&2 "+ cd $path"
+  # Arg is a shorthand path like /v/l/a/n
+  if [[ $part =~ /?[[:alnum:]]/[[:alnum:]]/? ]]; then
+    cd "$part" || return
   fi
 
-  if [[ ${PWD%/} == ${path%/} ]]; then
-    echo >&2 "+ cd $path"
-    return
-  fi
-
-  if [[ $path == -h ]]; then
-    while read -r _ c _ r; do
-      printf "  %-5s - %s\n" "$c" "$r"
-    done < <( grep -iE '^#\|' "$cd_source" | sort ) | column -s - | "$PAGER"
-    return
-  fi
-
-  if [[ $path == -v ]]; then
-    builtin dirs -v | "$PAGER"
-    return
-  fi
-
-  if [[ $path =~ ^[+\-][0-9]+$ ]]; then
-    if builtin dirs "$path" >/dev/null; then
-      path="$( builtin dirs "$path" )"
-      path="$( tildeexpand "$path" )"
-      # Use a regular cd here to not duplicate already existing items
-      # on the stack
-      builtin cd "$path" && return
-    else
-      return
+  # Arg is part
+  while [[ $basename == /* ]]; do
+    basename="${basename%/*}"
+    if [[ ${basename##*/} =~ $part ]]; then
+      cd "$basename" && return
     fi
-  fi
-
-  builtin pushd "$path" >/dev/null
+  done
 }
+
+function cdto {
+  local query="$1"; shift
+  local col="${1:-1}"; shift
+  local candidates=("$@")
+  local dir
+
+  while [[ -z $dir ]]; do
+    local block="$(
+      printf "%s\n" "${candidates[@]}" |
+        fzf --bind='ctrl-s:toggle-sort' \
+          --header 'Select a directory' \
+          --cycle \
+          --sort \
+          --expect=ctrl-e \
+          --height 50% \
+          --no-mouse \
+          --print-query \
+          --query="$query" \
+          --reverse \
+          --tiebreak=index | awk '{ print $'$col' }'
+    )"
+
+    [[ -z $block ]] && return
+
+    # Search seed
+    query=$( sed -n '1p'   <<<"$block" );
+    # Key modifier
+    mod=$(   sed -n '2p'   <<<"$block" ); mod="${mod##ctrl-}"
+    # Selected items
+    items=$( sed -n '3,$p' <<<"$block" );
+
+    items="${items%$'\n'}"
+    items="${items##*$'\n'}"
+
+    # warn "query:[$query] mod:[$mod] items:[$items]"
+    # warn "selected: $selected"
+
+    if [[ -n $items ]]; then
+      if [[ -n $mod ]]; then
+        case "$mod" in
+          c|esc) return
+          ;;
+          e)
+            local tmpfile="$(mktemp)"
+            echo "$items" > "$tmpfile"
+            "${EDITOR:-$(type -P editor)}" "$tmpfile" > /dev/tty
+            local dir="$(< "$tmpfile")"
+            rm -f "$tmpfile"
+          ;;
+        esac
+      else
+        dir="$items"
+      fi
+    fi
+  done
+
+  [[ -z $dir && -z $query ]] && return
+
+  echo "$(tildeexpand "$dir")"
+}
+
+# TODO
+# Trigger update hooks
+#  tc - cd pan-net/leave fails
+# shopt -s cdspell
+# complete -d cd  # only suggest directories
+# ... to directory adjacent to any ancestor directory
+# shopt -s autocd
+#
+# https://github.com/haya14busa/enhancd
+
+# vim:ts=2
