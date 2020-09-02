@@ -1,6 +1,7 @@
 " <CR> in the Command Line/QuickFix mode shouldn't be overridden
-autocmd BufReadPost quickfix          nnoremap <CR> <CR>
-autocmd CmdwinEnter,BufEnter *        nnoremap <CR> <Nop>
+autocmd BufEnter     *        nnoremap <CR> <Nop>
+autocmd CmdwinEnter  *        nnoremap <buffer> <CR> <CR>
+autocmd BufReadPost quickfix  nnoremap <buffer> <CR> <CR>
 
 cnoremap <C-$>                        <End>
 cnoremap <C-^>                        <Home>
