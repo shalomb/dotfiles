@@ -9,7 +9,7 @@ set dictionary+=~/.config/dict/words
 set thesaurus+=~/.config/dict/thesaurus
 set complete-=k             " disable dictionary completion
 
-if len(&spellfile)
+if len(g:spelldir) && !isdirectory(g:spelldir)
   silent! execute '!mkdir -p ' . g:spelldir . ' > /dev/null'
 endif
 

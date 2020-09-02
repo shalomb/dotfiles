@@ -46,8 +46,16 @@ function! CurDirectory()
   return systemlist('pwd')[0]
 endfunction
 
-function! CurGitProjectRoot()
-  return systemlist('git rev-parse --show-toplevel')[0]
+function! CurGitProjectRoot(...)
+  let root = systemlist('git rev-parse --show-toplevel')[0]
+  if root 
+    return root
+  else
+    if a:0
+      return a:1
+    endif
+  endif
+  echoerr('We are not in a git project directory!!')
 endfunction
 
 function! CurGitBranch()

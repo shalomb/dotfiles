@@ -33,6 +33,5 @@ elseif &term =~ "xterm\\|rxvt\\|screen-256color\\|tmux-256color"
   " use \003]12;gray\007 for gnome-terminal
 endif
 
-highlight CursorColumn term=bold cterm=bold ctermbg=208 ctermfg=NONE guibg=NONE
 highlight CursorLineNr term=bold cterm=bold ctermfg=202 ctermbg=NONE guibg=NONE
 highlight CursorLine   term=bold cterm=bold ctermbg=NONE guibg=NONE

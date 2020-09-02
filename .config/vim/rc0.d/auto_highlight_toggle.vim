@@ -7,7 +7,6 @@ function! AutoHighlightToggle()
     au! auto_highlight
     augroup! auto_highlight
     setl updatetime=4000
-    echo 'AutoHiglight: OFF'
     return 0
   else
     augroup auto_highlight
@@ -15,7 +14,8 @@ function! AutoHighlightToggle()
       au CursorHold * let @/ = '\V\<'.escape(expand('<cword>'), '\').'\>'
     augroup end
     setl updatetime=500
-    echo 'AutoHighlight: ON'
     return 1
   endif
 endfunction
+
+nnoremap <silent> z/ :if AutoHighlightToggle()<Bar>set hlsearch<Bar>endif<CR>

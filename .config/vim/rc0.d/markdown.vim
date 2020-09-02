@@ -3,7 +3,7 @@
   if getline('.') =~ "^#"
     s/^\v\s*#+\s*//
   endif
-  call setline('.', (repeat('#',a:level) . ' ' . getline('.'))) 
+  call setline('.', (repeat('#',a:level) . ' ' . getline('.')))
   normal! $
 endfunction
 
@@ -101,7 +101,7 @@ function! UpdateProgressIndicator()
   let progress = EvalPerl(expr)
   echom begin_line . ' -> ' . end_line .
         \ ' ' . complete . '/' . (total) . ' ' . progress . ' ' . expr
-  call SetProgressIndicatorValue(begin_line, 
+  call SetProgressIndicatorValue(begin_line,
         \ complete . '/' . (total) . '=' . progress . '%')
 endfunction
 
@@ -253,13 +253,13 @@ endfunction
 func! MarkDownFoldExpr(lnum)
     let theline = getline(v:lnum)
     let nextline = getline(v:lnum+1)
-    if theline =~ '^# ' 
+    if theline =~ '^# '
         " begin a fold of level one here
             return ">1"
-    elseif theline =~ '^## ' 
+    elseif theline =~ '^## '
         " begin a fold of level two here
             return ">2"
-    elseif theline =~ '^### ' 
+    elseif theline =~ '^### '
         " begin a fold of level three here
             return ">3"
     elseif nextline =~ '^===*'
@@ -268,7 +268,7 @@ func! MarkDownFoldExpr(lnum)
     elseif nextline =~ '^---*'
         " elseif the line ends with at least two --
         return ">2"
-    elseif foldlevel(v:lnum-1) != "-1" 
+    elseif foldlevel(v:lnum-1) != "-1"
         return foldlevel(v:lnum-1)
     else
         return "="
@@ -303,12 +303,12 @@ function! SurroundWithChar(char)
   endif
 endfunction
 
-map <leader>mc :<c-u>call SurroundWithChar('`')<cr>
-map <leader>me :<c-u>call SurroundWithChar('_')<cr>
-map <leader>ms :<c-u>call SurroundWithChar('__')<cr>
-" map <leader>mt :<c-u>call SurroundWithChar('~~')<cr>
-map <leader>mb :call ConvertToBlockQuote()<cr>
-map <leader>ml :call InsertHyperLink()<cr>
+nnoremap <leader>mc :<c-u>call SurroundWithChar('`')<cr>
+nnoremap <leader>me :<c-u>call SurroundWithChar('_')<cr>
+nnoremap <leader>ms :<c-u>call SurroundWithChar('__')<cr>
+nnore" map <leader>mt :<c-u>call SurroundWithChar('~~')<cr>
+nnoremap <leader>mb :call ConvertToBlockQuote()<cr>
+nnoremap <leader>ml :call InsertHyperLink()<cr>
 
 augroup markdown
   autocmd!

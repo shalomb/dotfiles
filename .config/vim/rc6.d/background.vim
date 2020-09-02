@@ -4,5 +4,5 @@
 
 augroup TransparentBackground
   autocmd!
-  autocmd VimEnter,WinEnter,BufWinEnter * highlight Normal ctermbg=NONE
+  autocmd Syntax * highlight Normal ctermbg=NONE
 augroup END
