@@ -1,0 +1,20 @@
+# debian unofficial
+
+# PUBKEY: 394D199524C52AC3
+# KEY:
+# gpg --keyserver subkeys.pgp.net --recv-keys 0xFDB8D39A
+# gpg --armor --export 0xFDB8D39A | apt-key add -
+
+
+# URL: http://www.debian-unofficial.org/installation.html
+# deb     http://ftp.debian-unofficial.org/debian       testing               main contrib non-free restricted
+# deb-src http://ftp.debian-unofficial.org/debian       testing               main contrib non-free restricted
+
+# Mirror:
+deb     http://ftp.tiscali.nl/debian-unofficial/      testing               main contrib non-free restricted
+deb-src http://ftp.tiscali.nl/debian-unofficial/      testing               main contrib non-free restricted
+
+
+# URL: http://www.debian-unofficial.org/backports.html
+ deb     http://ftp.debian-unofficial.org/debian-backports/  etch-backports  main contrib non-free
+ deb-src http://ftp.debian-unofficial.org/debian-backports/  etch-backports  main contrib non-free

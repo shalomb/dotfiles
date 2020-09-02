@@ -1,0 +1,8 @@
+# URL: http://www.virtualbox.org/wiki/Linux_Downloads 
+
+# support - http://wiki.debian.org/VirtualBox
+
+# KEY: wget -q -O - http://download.virtualbox.org/virtualbox/debian/sun_vbox.asc | sudo apt-key add -
+ deb http://download.virtualbox.org/virtualbox/debian etch non-free
+
+#deb http://download.virtualbox.org/virtualbox/debian jaunty non-free

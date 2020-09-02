@@ -1,0 +1,25 @@
+# Debian Multimedia - Lenny
+#  - mplayer
+#  - ffmpeg
+#  - w32codecs
+
+# PUB_KEY: 07DC563D1F41B907
+# KEY: sudo aptitude install debian-multimedia-keyring
+
+
+# URL: http://debian-multimedia.org/debian-m.php
+# deb      http://www.debian-multimedia.org 	            lenny		              main
+# deb-src  http://www.debian-multimedia.org 	            lenny 		            main
+
+# Great Britain	Mirror
+# URL: http://debian-multimedia.org/debian-m-testing.php
+deb     http://debian-multimedia.fx-services.com      testing               main
+deb-src http://debian-multimedia.fx-services.com      testing               main
+
+# URL: http://debian-multimedia.org/debian-m-unstable.php
+# deb	    http://www.debian-multimedia.org 	            unstable                main
+# deb-src http://www.debian-multimedia.org 	            unstable    		        main
+
+deb     http://debian-multimedia.fx-services.com      unstable               main
+deb-src http://debian-multimedia.fx-services.com      unstable               main
+

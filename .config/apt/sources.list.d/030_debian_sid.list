@@ -1,0 +1,4 @@
+# Debian Sid/Unstable
+deb 	  http://ftp.uk.debian.org/debian		            sid 		              main contrib non-free
+deb-src http://ftp.uk.debian.org/debian		            sid 		              main contrib non-free
+

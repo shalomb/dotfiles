@@ -1,0 +1,6 @@
+## Sidux - The latest module upgrades and firmware:
+## sidux http://sidux.com/files/misc/sources.list
+
+deb     http://sidux.com/debian/ sid main contrib non-free firmware fix.main fix.contrib fix.non-free
+deb-src http://sidux.com/debian/ sid main contrib non-free firmware fix.main fix.contrib fix.non-free
+
