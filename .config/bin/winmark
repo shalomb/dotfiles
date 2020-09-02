@@ -3,6 +3,8 @@
 # NAME
 #   wminmark - mark and summon windows.
 
+set -eu -o pipefail
+
 shopt -s extglob
 
 # [[ ${-//[!i]/} ]] &&
@@ -26,6 +28,8 @@ action="${1:-"mark"}"
 mark="${2:-"'"}"
 curwin="${3:-$(get_curwin)}";
 duration="${osd_msg_duration:-"10"}"
+
+[[ $mark == . ]] && mark='dot'
 
 if   [[ $action = @(mark|add) ]]; then
   touch "$curwin";

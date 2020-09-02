@@ -5,6 +5,10 @@
 # Monitor changes in active window and mark the previous one for i3
 # to be able to use.
 
+# References
+# [Alt-tab like behavior - python equivalent]
+# (https://www.reddit.com/r/i3wm/comments/95b2hx/alttab_like_behavior/e3reu3q/
+
 last=
 xprop -root -spy _NET_ACTIVE_WINDOW | while read _ _ _ _ wid; do
   winmarkd "$wid"

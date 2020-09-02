@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# If not interactive, return
+[[ ${-//[!i]/} ]] || return
+
+alias fix-ssh-auth-sock='export $(tmux showenv SSH_AUTH_SOCK)'
+

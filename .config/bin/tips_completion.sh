@@ -17,14 +17,14 @@ _tips() {
   previous_word="${COMP_WORDS[COMP_CWORD-1]}"
   options=""
 
-  oldpwd="$PWD"
-  if cd "$tipsdir"; then
+  local oldpwd="$PWD"
+  if builtin cd "$tipsdir"; then
 
-    while read f; do 
+    while read f; do
       COMPREPLY+=( "$f" );
     done < <( find * \( -name ".hg" -type d -o -name ".*" \) -prune -o -type f -ipath "*$current_word*" -printf '%p\n' )
-    
-    cd "$oldpwd";
+
+    builtin cd "$oldpwd";
   fi
   return 0
 }

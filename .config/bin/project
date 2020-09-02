@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+action="$1"; shift;
+git_project="$1"; shift;
+git_project="${git_project%.git}"
+git_url="https://github.com/$git_project.git"
+
+function clone() {
+  local projects_dir=~/projects
+  local namespace="${git_project%/*}"
+  local project="${git_project##*/}"
+  local project_parent="$projects_dir/$namespace"
+  mkdir -pv "$project_parent"
+  local project_fqd="$projects_dir/$namespace/$project"
+  if [[ -e $project_fqd ]]; then
+    ( cd "$project_fqd"
+      # Again! git diff succeeds when there are no changes :|
+      git diff --quiet &&
+        git pull --rebase origin master
+    )
+  else
+    ( git clone "$git_url" "$project_fqd"
+    )
+  fi
+}
+
+function list() {
+  ( cd ~/projects/;
+    find * -type d -ipath "*$git_project*.git" \
+      -exec bash -eu -c '
+          for f; do
+            p="${f%/.git}";
+            f="$PWD/$p";
+            echo -n "$p	$f	";
+            cd $f && git remote -v get-url origin;
+          done
+      ' _ {} +
+  )
+}
+
+"$action" "$git_url"

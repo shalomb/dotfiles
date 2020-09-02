@@ -1,0 +1,48 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+shopt -s extglob
+
+[[ ${DEBUG-} ]] && set -xv
+
+open() {
+  local entry=$(tildeexpand "$1"); shift;
+
+  case "$entry" in
+    # entry is a url
+    *://*)
+      gio open "$entry"
+    ;;
+    *)
+      # entry is a regular file
+      if [[ -f $entry && ! -x $entry ]]; then
+        "${EDITOR:-vi}" "$@"
+
+      # entry is a directory
+      elif [[ -d $entry ]]; then
+        exec -a "${entry##*/}" \
+          bash -c "cd '$entry' && exec -a '${entry##*/}' bash"
+
+      # entry is an available command
+      elif type -a "$entry" &>/dev/null; then
+        exec -a "$entry" "$entry" "$@" &
+
+      # entry is another type of file (block/character device, etc)
+      elif [[ -e $entry ]]; then
+        echo >&2 "Refusing to open: $@"
+
+      # entry looks like a domain name (or a URL)
+      elif [[ $entry = *.* ]]; then
+        x-www-browser "$entry"
+
+      # entry is unidentified
+      else
+        x-www-browser "https://www.google.com/search?gws_rd=ssl&q=$*"
+
+      fi
+    ;;
+  esac
+}
+
+open "$@"

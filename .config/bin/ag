@@ -1,6 +1,29 @@
 #!/bin/bash
 
-# Wrapper around ack(1) to spoof ag(1)
-# Needed by ack.vim's :Ag command
+# Wrapper around ack(1) to spoof ag(1) and rg(1)
+# Needed by ack.vim's :Ag and :Rg commands
 
-command ack $@
+set -eu
+
+exec &> >( tee /tmp/rg.log )
+
+args=()
+
+for arg; do
+  case "$arg" in
+
+    *column*|*line-number*)
+      :
+    ;;
+
+    # *color*)
+    #   args+=( "--color" )
+    # ;;
+
+    [!-][!-]*)
+      args+=( "$arg" )
+    ;;
+  esac
+done
+
+echo command ack "${args[@]}"

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec -a "${0##*/}" system-command "${0##*/}" "$@"

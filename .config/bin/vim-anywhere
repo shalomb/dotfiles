@@ -1,0 +1,19 @@
+#!/bin/bash
+
+tmpfile=$(mktemp)
+
+function cleanup {
+  if [[ -e $tmpfile ]]; then
+    rm -f "$tmpfile"
+  fi
+}
+
+trap cleanup  EXIT INT QUIT TERM
+
+vim "$tmpfile"
+
+set -xv
+if [[ -s $tmpfile ]]; then
+  cat "$tmpfile"
+  xclip < "$tmpfile"
+fi

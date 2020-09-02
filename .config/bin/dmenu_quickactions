@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# quickactions
+# Allow for frequently used quick fire scripts
+# to be invoked through dmenu
+
+set -eu -o pipefail
+shopt -s nullglob extglob
+
+mkdir -p ~/.config/quickactions
+cd ~/.config/quickactions
+
+while read -r e; do
+  open "$e"
+done < <(
+  for i in *; do
+    echo "$i"
+  done | dmenu -b -l 10 -i
+)

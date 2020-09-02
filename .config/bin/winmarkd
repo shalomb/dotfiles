@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Automate the generation of winmarks using the first letter from 
+# the WMClass of the window
+#
+# TODO
+# Handle the case when there's
+#   1. contention of the mark letter - e.g. multiple "p" or "f"
+#   2. a manual mark in place - special case of 1
+
 set -eu
 
 source "$XDG_CONFIG_HOME/winmark/defaults"
@@ -39,5 +47,3 @@ elif [[ ${mark_file##*/} != $wid ]] || [[ ! -e $mark_file ]]; then
   winmark mark "$mark" "$wid"
 
 fi
-
-

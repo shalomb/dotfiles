@@ -2,6 +2,8 @@
 
 candidates=()
 
+# TODO
+# Use the winmark defaults
 if [[ ! -d $XDG_CACHE_HOME/winmarks ]]; then
   mkdir    $XDG_CACHE_HOME/winmarks
 fi
