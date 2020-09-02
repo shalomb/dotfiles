@@ -7,5 +7,45 @@
 }
 
 @has-cmd() {
-  type -a "$1" &>/dev/null
+  type -P "$1" &>/dev/null
+}
+
+warn() {
+  echo >&2 "$BOLD$RED$@$RESET"
+}
+
+die() {
+  warn "$@"
+  return 1  ## NOTE: not exit to allow for proper use
+             #       in interactive shells where this
+             #       would otherwise exit the shell
+}
+
+function set-title() {
+  local text="$1"
+  [[ -z $text ]] &&
+    text='\033]0;${debian_chroot}${USER}@${screen_session:-$HOSTNAME}:$$: ${PWD/$HOME/~}\007'
+  echo -ne "$text"
+}
+
+function chpwd() {
+  # called everytime working directory is changed
+  CDPATH="$PWD:$OLDPWD:..:~:/media:/mnt"
+}
+
+function bell-alert() {
+  printf '\a'
+
+  if [[ $# && $TMUX ]]; then
+    tmux list-clients -F "#{client_name}" |
+      xargs -n1 -I{} tmux display-message -c {} "$@"
+  fi
+}
+
+function defined() {
+  type "$1" &>/dev/null
+}
+
+function call-if-defined() {
+  defined "$1" && "$1"
 }
