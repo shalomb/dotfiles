@@ -4,6 +4,7 @@ apt                        install
 apt-utils                  install
 apvlv                      install
 atool                      install
+autocutsel                 install
 bash-builtins              install
 bash-completion            install
 bash-doc                   install
@@ -12,6 +13,7 @@ bc                         install
 bzip2                      install
 cabextract                 install
 ca-certificates            install
+calibre                    install
 catdoc                     install
 cheese                     install
 copyq                      install
@@ -74,6 +76,7 @@ irqbalance                 install
 jq                         install
 keybase                    install
 keyboard-configuration     install
+laptop-detect              install
 less                       install
 libcaca-dev                install
 libnotify-bin              install
@@ -173,4 +176,5 @@ xsel                       install
 xxd                        install
 xz-utils                   install
 yamllint                   install
+zathura                    install
 zip                        install
