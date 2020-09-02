@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# tildeexpand
+#   expand tildes in a given path
+#   e.g. ~/workspace/hgttg/ -> /home/me/workspace/hgttg/
+
+function tildeexpand {
+  local path="$1"
+
+  # Should catch the typical/simple case
+  path="${path/#\~\//$HOME\/}"
+
+  # A lone ~
+  if   [[ $path == ~ ]]; then
+    path="$HOME"
+
+  # Another user's homedir, relatively untested
+  elif [[ $path == ~* ]]; then
+    user="${path%%/*}"
+    user="${user#\~}"
+    IFS=':' read -a a < <( getent passwd "$user" );
+    user_home="${a[5]}"
+    path="${path/#\~$user/$user_home}"
+
+  fi
+
+  echo "$path"
+}
+
+tildeexpand "$@"

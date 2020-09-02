@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+/usr/bin/gs -o "${1%.pdf}-repaired.pdf"   -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress "$1"
+rm -v "$1"
+mv -v "${1%.pdf}-repaired.pdf" "$1"

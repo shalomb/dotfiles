@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Show a summary of the workspace
+# current branch, changed/cached files, change stats
+
+exec &> >(tee /tmp/tmux-git-status.log)
+
+set -eu -o pipefail
+
+git rev-parse --git-dir &>/dev/null
+
+OLDPWD="$PWD"
+
+cd $(git rev-parse --show-toplevel)
+
+diffstat_cwddir=$(git diff --color=always --stat | sort -k1)
+diffstat_cached=$(git diff --color=always --stat --cached | sort -k1)
+git_status=$(git -c color.status=always status --show-stash --ahead-behind --short | sort -k2)
+untracked=( $(git ls-files --others --exclude-standard) )
+
+echo -ne 'Origin: '
+git remote get-url origin
+
+git status --ahead-behind --show-stash |
+  grep -E -e '^On' -e 'stash.*has' -e 'branch.*(ahead|behind)' |
+  sed -r 's/Your branch is //' |
+  sed -r 's/Your stash currently /stash /' |
+  sed -r 's/On branch (.+)/branch '$(tput setaf 2)'\1'$(tput setaf 8)'/'
+
+echo " "
+git log -n 1 --pretty='%p - %s' | cat -
+echo ""
+echo "Workdir:$diffstat_cwddir" | sed -n 1p
+echo "Staged: $diffstat_cached" | sed -n 1p
+if (( ${#untracked[@]} > 0 )); then
+  echo "Other:   ${#untracked[@]} untracked"
+fi
+echo ""
+
+{ join -1 2 -2 1 -e '-' \
+    <( echo "$git_status" ) \
+    <({ echo "$diffstat_cwddir" | sed '1d'; echo "$diffstat_cached" | sed '1d'; } | sort -k1)
+} | awk '{print $2" "$4" "$3" "$1}' | sort -k2nr | while read -r s n _ f _; do
+      printf "%2s %3d %s\n" $s $n $f
+    done | column -t

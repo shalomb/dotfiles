@@ -1,0 +1,12 @@
+#!/usr/bin/perl -l
+
+use strict;
+use warnings;
+use utf8;
+
+my $pattern = $ARGV[0] // '.';
+
+print
+  for grep /$pattern/,
+  map { glob "$_/*"  } split /:/,
+  $ENV{PATH}

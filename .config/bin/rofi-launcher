@@ -1,0 +1,57 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+pattern="${1:-.}"
+
+history_file="$XDG_CACHE_HOME/rofi-launcher.history";
+
+update-history() {
+  (( ec != 0 )) && return
+  tmpfile=(mktemp)
+  { echo "$1"
+    head -n2 "$history_file"
+    tail -n1 ~/.gmrun_history
+    cat "$history_file"
+    cat ~/.gmrun_history
+  } | awk '!a[$0]++' > "$tmpfile"
+  mv "$tmpfile" "$history_file"
+  rm -f "$tmpfile"
+}
+
+entry=$(
+{
+  head -n3 "$history_file"
+  echo "x-terminal-emulator -e ranger"
+  echo "i3-dmenu-desktop"
+  echo "gmrun"
+  echo "dmenu_quickactions"
+  tail -n+4 "$history_file"
+  cat ~/.gmrun_history
+  pathgrep '.'
+} | awk '!a[$0]++' | grep "$pattern" |
+  rofi -dmenu -input /dev/stdin -async-pre-read 30 -markup-rows
+)
+
+if [[ $entry == *@@gmrun ]]; then
+  entry="${entry%%@@gmrun}"
+  exec -a gmrun gmrun "$entry"
+else
+  entry="${entry%%@@}"
+fi
+
+set -xv
+[[ -z $entry ]] && exit 123
+
+open $entry  # Note: $entry is unquoted, as it may have arguments
+
+trap "update-history '$entry'" INT EXIT HUP
+
+ec=$?
+exit $ec
+
+# TODO
+
+special handlers for http, etc
+last command in history
+frecency
