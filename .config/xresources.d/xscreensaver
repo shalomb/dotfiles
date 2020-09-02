@@ -1,0 +1,26 @@
+! xscreensaver ---------------------------------------------------------------
+
+xscreensaver.Dialog.bodyFont:                -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.buttonFont:              -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.dateFont:                -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.headingFont:             -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.labelFont:               -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.unameFont:               -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.passwd.passwdFont:              -misc-*-bold-r-normal-*-*-100-100-100-c-80-*-*
+xscreensaver.Dialog.background:              #073642
+xscreensaver.Dialog.bottomShadowColor:       #073642
+xscreensaver.Dialog.topShadowColor:          #073642
+xscreensaver.Dialog.Button.background:       #cb4b16
+xscreensaver.Dialog.Button.foreground:       #bcbcbc
+xscreensaver.Dialog.foreground:              #bcbcbc
+xscreensaver.Dialog.borderWidth:             0
+xscreensaver.Dialog.internalBorderWidth:     0
+xscreensaver.Dialog.shadowThickness:         2
+xscreensaver.Dialog.text.background:         #080808
+xscreensaver.Dialog.text.foreground:         #eee8d5
+xscreensaver.passwd.thermometer.background:  #000000
+xscreensaver.passwd.thermometer.foreground:  #dc322f
+xscreensaver.passwd.thermometer.width:       3
+xscreensaver.dateFormat:                     %a %FT%T
+
+! vi:ft=xresources

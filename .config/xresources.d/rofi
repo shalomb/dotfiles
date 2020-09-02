@@ -1,0 +1,39 @@
+bw: 2
+click-to-exit: true
+columns: 1
+combi-modi: drun,windowcd,run,window
+cycle: true
+disable-history: false
+display-combi: Combo
+display-drun: Applications
+display-keys: Keys
+display-run: Commands
+display-ssh: SSH Hosts
+display-windowcd: WindowCD
+display-window: Windows
+dpi: 96
+drun-display-format: {name} [<span weight='light' size='small'><i>({generic} | {categories} | {exec})</i></span>]
+drun-match-fields: name,generic,exec,categories
+drun-show-actions: true
+fake-background: background
+fixed-num-lines: false
+font: Bitstream Vera Sans 9
+fullscreen: false
+hide-scrollbar: true
+lines: 16
+location: 6
+matching: fuzzy
+matching-negate-char: @
+modi: drun,windowcd,run,window,combi
+pid: /run/user/1000/rofi.pid
+run-command: {cmd}
+scroll-method: 1
+show-icons: true
+sidebar-mode: true
+sorting-method: fzf
+sort: true
+ssh-client: ssh
+ssh-command: {terminal} -e {ssh-client} {host} [-p {port}]
+terminal: urxvt
+window-format: {w}    {c}   {t}	
+yoffset: -20

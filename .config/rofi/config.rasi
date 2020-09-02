@@ -1,0 +1,142 @@
+// Theme for rofi-launcher
+
+// See https://raw.githubusercontent.com/davatorium/rofi-themes/master/User%20Themes/material.rasi
+// Or  https://github.com/davatorium/rofi-themes/blob/master/User%20Themes/sidetab.rasi
+
+// rofi -dump-config
+configuration {
+  bw: 2;
+  click-to-exit: true;
+  columns: 1;
+  combi-modi: "drun,windowcd,run,window,keys";
+  cycle: true;
+  disable-history: false;
+  display-combi: "Combo";
+  display-drun: "Applications";
+  display-keys: "Keys";
+  display-run: "Commands";
+  display-ssh: "SSH Hosts";
+  display-windowcd: "WindowCD";
+  display-window: "Windows";
+  dpi: 96;
+  drun-match-fields: "name,generic,exec,categories";
+  drun-show-actions: true;
+  fake-background: "background";
+  fixed-num-lines: false;
+  font: "Bitstream Vera Sans Mono 9";
+  fullscreen: false;
+  hide-scrollbar: true;
+  lines: 16;
+  lines: 8;
+  location: 6;
+  matching: "fuzzy";
+  matching-negate-char: "@";
+  modi: "drun,windowcd,run,window,combi";
+  pid: "/run/user/1000/rofi.pid";
+  run-command: "{cmd}";
+  scroll-method: 1;
+  show-icons: true;
+  sidebar-mode: true;
+  sorting-method: "fzf";
+  sort: true;
+  ssh-client: "ssh";
+  ssh-command: "{terminal} -e {ssh-client} {host} [-p{port}]";
+  terminal: "urxvt";
+  window-format: "{w}    {c}   {t}";
+  yoffset: -30;
+}
+
+* {
+  line-margin:     0;
+  line-padding:    0;
+  separator-style: "none";
+  hide-scrollbar:  "true";
+  margin:          0;
+  padding: 0;
+  background-color: #303030;
+}
+
+window {
+  border-radius: 2px;
+  width: 448;
+  children: [listview, inputbar];
+}
+
+element {
+  children: [element-index, element-icon, element-text ];
+}
+
+mainbox {
+  children: [ entry,listview,sidebar ];
+  children: [ listview,entry ];
+}
+
+inputbar {
+  padding: 0 12px;
+  children: [textbox-prompt-colon, entry, case-indicator];
+  border-radius: 2px;
+  margin: 0 0 3px;
+}
+
+prompt {
+  text-color: green;
+  border: 10px;
+}
+
+textbox-prompt-colon {
+  expand: false;
+  str: "ん";
+  margin: 0 4px 0 0;
+}
+
+textbox-prompt-colon, entry, case-indicator {
+  padding: 1px 0;
+  text-color: #5c5c5c;
+}
+
+entry {
+  enabled: true;
+  margin: 2px 0;
+  border: 1px;
+  padding: 1px 5px;
+  border-color: #3c3c3c;
+  text-color: #b0b0b0;
+  background-color: #202020;
+  border-radius: 3px;
+}
+
+button {
+  padding: 5px 2px;
+}
+
+button selected {
+  background-color: #C3E88D;
+}
+
+listview {
+  scrollbar: false;
+  margin: 8px 8px 0 8px;
+  spacing: 0.1em;
+}
+
+element {
+  padding: 3px;
+  border-radius: 2px;
+}
+
+element normal {
+  background-color: #404040;
+  text-color: white;
+}
+
+element alternate {
+  margin: 1em;
+  text-color: white;
+  background-color: #303030;
+}
+
+element selected normal, element selected active {
+  background-color: #82AAFF;
+}
+
+// vi:ft=css
