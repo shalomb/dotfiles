@@ -309,3 +309,7 @@
 [submodule ".config/vim/bundle/goyo"]
 	path = .config/vim/bundle/goyo
 	url = https://github.com/junegunn/goyo.vim.git
+
+[submodule ".config/vim/bundle/pythonsense"]
+	path = .config/vim/bundle/pythonsense
+	url = https://github.com/jeetsukumaran/vim-pythonsense.git
