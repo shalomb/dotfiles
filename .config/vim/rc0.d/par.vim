@@ -1,5 +1,4 @@
 setglobal formatprg=par\ -jw79
-setglobal equalprg=par
 
 " Courtesty https://vi.stackexchange.com/a/12997/12589
 function! UpdateFormatprg()

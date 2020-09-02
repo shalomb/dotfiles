@@ -2,6 +2,6 @@
 
 augroup ActiveWindow
   autocmd!
-  autocmd VimEnter,WinEnter,BufWinEnter,FocusGained * setlocal cursorline | ColourColumn 72 80
-  autocmd WinLeave,BufLeave,FocusLost   * setlocal nocursorline | set colorcolumn=0
+  autocmd WinEnter,FocusGained * setlocal cursorline   | ColourColumn 72 80
+  autocmd WinLeave,FocusLost   * setlocal nocursorline | set colorcolumn=0
 augroup END

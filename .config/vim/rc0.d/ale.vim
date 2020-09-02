@@ -20,3 +20,28 @@ let g:ale_open_list = 1
 let g:ale_keep_list_window_open = 0
 
 let b:ale_warn_about_trailing_whitespace = 1
+
+let g:ale_fix_on_save = 1
+
+let g:ale_go_golangci_lint_package=1
+
+let g:ale_go_golangci_lint_options = ' --fast '
+
+let g:ale_linters = {
+\ 'go': [ 'golangci-lint', 'govet' ],
+\ 'python': ['pyls', 'autopep8', 'flake8']
+\}
+
+let g:ale_fixers = {
+\   '*': ['remove_trailing_lines', 'trim_whitespace'],
+\   'go': ['gofmt', 'goimports'],
+\   'javascript': ['eslint'],
+\}
+
+nmap <silent> <Leader>ck <Plug>(ale_previous_wrap)
+nmap <silent> <Leader>cj <Plug>(ale_next_wrap)
+
+nnoremap ]a :ALENextWrap<CR>
+nnoremap [a :ALEPreviousWrap<CR>
+nnoremap ]A :ALELast
+nnoremap [A :ALEFirst

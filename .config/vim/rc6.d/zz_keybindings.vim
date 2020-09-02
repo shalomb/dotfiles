@@ -1,10 +1,6 @@
-let mapleader = ","
-
-"""" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
 " <CR> in the Command Line/QuickFix mode shouldn't be overridden
-autocmd CmdwinEnter *                 nnoremap <CR> <CR>
 autocmd BufReadPost quickfix          nnoremap <CR> <CR>
+autocmd CmdwinEnter,BufEnter *        nnoremap <CR> <Nop>
 
 cnoremap <C-$>                        <End>
 cnoremap <C-^>                        <Home>
@@ -27,15 +23,19 @@ nnoremap <C-W><C-W>                   <C-W>p
 
 " nnoremap <buffer>          ;           :call feedkeys('q:G')<CR>
 " nnoremap <buffer>          :           <Nop>
+noremap                    ;           :
+nnoremap                   <C-;>       :
+nnoremap                   :           q:
 
-nnoremap <buffer>          <Enter>    <Nop>
+nnoremap                   '           `
+nnoremap                   `           '
 
-nnoremap <buffer>         S          :,%s@\v@@gi<Left><Left><Left><Left>
+nnoremap                  S          :,%s@\v@@gi<Left><Left><Left><Left>
 
 noremap <leader>ee    :edit     <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
 noremap <leader>es    :split    <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
+noremap <leader>eg    :FZFNeighbours <CR>
 noremap <leader>ev    :vsplit   <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
-noremap <leader>et    :tabedit  <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
 noremap <leader>cd    :cd       <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
 noremap <leader>lcd   :lcd      <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
 
@@ -49,25 +49,27 @@ noremap  <buffer> <silent> <C-y>      5<C-y>
 
 nnoremap <expr>           gV          "`[".getregtype(v:register)[0]."`]"
 
-vnoremap                  //          y/<C-R>"<CR>
+nnoremap                 g;           g;zvzz
+nnoremap                 g,           g,zvzz
 
-nnoremap          .                   .`[
-" nnoremap <silent> P                   P`[   " jump back to position after put
-" nnoremap <silent> p                   p`[   " jump back to position after put
+silent! vunmap            /
+xnoremap                  //          y/<C-R>"<CR>
+
+nnoremap                  .           .`[
+
 nnoremap <silent> Y                   y$
-nnoremap <silent> z/                  :if AutoHighlightToggle()<Bar>set hlsearch<Bar>endif<CR>
-nnoremap <silent> z!                  :set hlsearch!<cr>
+
+nnoremap <silent> <leader>,           :edit #<cr>
+nnoremap <silent> <leader>/           :Ag<cr>
 nnoremap          <leader>.           :ls<cr>:b<space>
-nnoremap          <leader>'           :ls<cr>:b<space>#
+nnoremap          <leader>'           :ls<cr>:b<space>
 nnoremap          <leader>"           :ls<cr>:vs<space>#
-nnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
 nnoremap <silent> <leader><space>     :edit #<cr>
 nnoremap <silent> <leader>a           :edit #<cr>
-nnoremap <silent> <leader>c           :new<cr>:only<cr>
-
-nnoremap          <leader>e           :edit   <C-R>=expand('%:h').'/'<CR>
-nnoremap          <leader>vs          :vsplit <C-R>=expand('%:h').'/'<CR>
-nnoremap          <leader>sp          :split  <C-R>=expand('%:h').'/'<CR>
+nnoremap <silent> <leader>M           :Maps<cr>
+silent! nunmap <leader>C
+nnoremap <silent> <leader>C           :Command<cr>
+nnoremap <silent> <leader>L           :Lines<cr>
 
 nnoremap          <leader>ba          :ls<cr>:b<space>
 nnoremap <silent> <leader>bc          :close<cr>
@@ -79,66 +81,49 @@ nnoremap <silent> <leader>bl          :bnext<cr>
 nnoremap          <leader>bs          :ls<cr>:vsplit #
 nnoremap          <leader>bS          :ls<cr>:split #
 
-nnoremap          <leader>?           :help
-nnoremap <silent> <leader>,           :edit #<cr>
+nnoremap          <leader>?           :help <C-D>
 
 nnoremap <silent> <leader>l           :redraw<cr>
 nnoremap <silent> <leader>m           g<  " last set of messages
-" nnoremap <silent> <leader>>         :new /tmp/exchange<cr>ggP`]a<cr><Esc>"_dGgg:w!<cr> " :close<cr>
-" nnoremap <silent> <leader><         :new ~/.tmp/exchange<cr>ggyG<Esc>:w!<cr>:close<cr>
-nnoremap <silent> <leader>>           :write! $TMP/exchange<cr>
-nnoremap <silent> <leader><           :split  $TMP/exchange<cr>
+
 nnoremap <silent> <leader>nh          :set hlsearch!      hlsearch?<cr>
+nnoremap <silent> <leader>nn          :set hlsearch!      hlsearch?<cr>
 nnoremap <silent> <leader>nl          :set list!          list?<cr>
-nnoremap <silent> <leader>nm          :if &guioptions =~ 'm'<bar>  set guioptions-=m <bar>else<bar>  set guioptions+=m<bar>endif<cr>
-nnoremap <silent> <leader>nn          :if &number == 1<bar>  set relativenumber<bar>else<bar>  set number<bar>endif<cr>
-nnoremap <silent> <leader>no          :if &number == 1<bar>  set number!<bar>       else<bar>  set number<bar>endif<cr>
 nnoremap <silent> <leader>np          :set paste!         paste?<cr>
 nnoremap <silent> <leader>ns          :set spell!         spell?<cr>
 nnoremap <silent> <leader>nw          :set wrap!          wrap?<cr>
 nnoremap <silent> <leader>nt2         :set ts=2 sw=2 et   ts? sw? et?<cr>
 nnoremap <silent> <leader>nt4         :set ts=4 sw=4 et   ts? sw? et?<cr>
 nnoremap <silent> <leader>nt8         :set ts=8 sw=8 et   ts? sw? et?<cr>
-nnoremap <silent> <leader>oh          :help <C-r><C-a><cr>
+nnoremap <silent> <leader>oh          :help <C-r><C-w><cr>
 nnoremap <silent> <leader>od          :Vexplore<cr>
 nnoremap <silent> <leader>oD          :!xdg-open %:h<cr>
 nnoremap <silent> <leader>of          :!xdg-open %:p<cr>
-nnoremap <silent> <leader>ofi         :vsplit ~/.config/i3/config<cr>
-nnoremap <silent> <leader>ogk         :vsplit ~/.gitconfig<cr>:1;/\[alias\]<cr>zt
-nnoremap <silent> <leader>otk         :vsplit ~/.tmux.conf<cr>:1;/keybindings<cr>zt
-nnoremap <silent> <leader>ovk         :vsplit ~/.vim/rc6.d/zz_keybindings.vim<cr>:1;/keybindings<cr>zt
+
 " nnoremap <silent> <leader>oh        "zyw:execute ":help ".@z.""<cr>
-nnoremap <silent> <leader>P           "+gP      "paste from gui-clipboard
 nnoremap <silent> <leader>Q           :only<cr>
-nnoremap <silent> <leader>r           :set wrap!<cr>
 nnoremap <silent> <leader>S           :new<cr>
 nnoremap <silent> <leader>V           :vnew<cr>
-nnoremap <silent> <leader>Sa          zg  " add word to dict
-nnoremap <silent> <leader>Sp          :set spell!<cr>
-nnoremap <silent> <leader>SP          :!x-terminal-emulator -e ispell -x -t %<cr>:redraw<cr>
-nnoremap          <leader>ta          :tabs<cr>:normal gt<Left><Left>
-nnoremap <silent> <leader>tc          :tabnew<cr>
-nnoremap <silent> <leader>td          :tabclose<cr>
-nnoremap          <leader>te          :ls<cr>:tabedit #
-nnoremap          <leader>tf          :tabfind **/*
-nnoremap <silent> <leader>th          :tabprevious<cr>
+nnoremap <silent> <leader>v           :vsplit #
+nnoremap <silent> <leader>sp          :!x-terminal-emulator -e ispell -x -t %<cr>:redraw<cr>
+nnoremap          <leader>t           :BTags<cr>
+nnoremap          <leader>T           :Tags<cr>
 nnoremap <silent> <leader>uv          :!x-terminal-emulator -e urlview % <cr>
 nnoremap <silent> <leader>\|          :vnew<cr>
-nnoremap          <leader>wr          :update<cr>
+silent! unmap <leader>wf
+nnoremap          <leader>w           :write<cr>:echomsg(expand('%'))<cr>
+nnoremap          <leader>q           :x<cr>
 nnoremap <silent> <leader>x           :close<cr>
-nnoremap <silent> <leader>Y           "+y   "copy
 
-vnoremap <silent> <leader>Y           "+y   " copy
-vnoremap <silent> <leader>D           "+x   " cut
-vnoremap <silent> <leader>d           "+x   " cut
-vnoremap <silent> <leader>x           "+x   " cut
 vnoremap          z/                  y/<C-R>"<CR>gv " put selected text in the search buffer
+
 vnoremap          <                   <gv   " move cursor to beginning of visual block move
 vnoremap          >                   >gv   " move cursor to the end of a visual block move
-vnoremap          <leader>##          :s/^/# /<cr>    " shell-type comments
-vnoremap          <leader>#"          :s/^/" /<cr>    " vim-type comments
-vnoremap          <leader>#//         :s@^@\/\/ @<cr> " c-type comments
-vnoremap          <leader>g           :vimgrep <c-r>=expand('<cword>') . ' **/*' <cr>
-vnoremap           <C-S>              <C-C>:update<CR>
-vnoremap <silent> <leader>[           :silent if &virtualedit == ""<cr>set virtualedit=all<cr>else<cr>set virtualedit=<cr>endif<cr>
+onoremap          gv                  :<c-u>normal! gv<cr>
+nnoremap          gh                  :<c-u>verbose cd <c-r>=CurGitProjectRoot(CurDirectory())<cr><cr>:Vex<cr>
 
+vnoremap          <leader>#           :Commentary
+vnoremap          <leader>g           :<C-U>Ag <c-r>=expand('<cword>')<cr>
+
+nnoremap          <leader>g           :Ag <c-r>=expand('<cword>')<cr>
+nnoremap          <leader>#           :Commentary<CR>

@@ -4,3 +4,6 @@ autocmd FileType qf wincmd J
 
 " Note this also affects the Location List window which has a
 " ftype=qf
+
+autocmd QuickFixCmdPost [^l]* nested cwindow
+autocmd QuickFixCmdPost    l* nested lwindow
