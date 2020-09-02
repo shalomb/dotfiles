@@ -1,0 +1,29 @@
+" Reset parameters to tridactyl's default
+" so there's nothing being kept when :source ing
+sanitise tridactyllocal tridactylsync
+
+colors dark
+
+set modeindicator true
+set allowautofocus false
+
+set home https://www.google.com/webhp?hl=en&complete=1&gws_rd=ssl&source=hp
+set homepages ["https://www.google.com/webhp?hl=en&complete=1&gws_rd=ssl&source=hp"]
+
+guiset_quiet gui none
+
+blacklistadd mail.google.com/mail
+
+
+bind ,g js tri.native.run("cd ~/projects; urxvt")
+
+" Comment toggler for Reddit and Hacker News
+bind ;c hint -c [class*="expand"],[class="togg"]
+
+" Get search working again
+" https://github.com/tridactyl/tridactyl/issues/64#issuecomment-496913151
+bind / fillcmdline find
+bind ? fillcmdline find -?
+bind n findnext 1
+bind N findnext -1
+bind ,<Space> nohlsearch
