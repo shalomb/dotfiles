@@ -1,5 +1,18 @@
 #!/bin/bash
 
+BOLD=$(    tput bold    )
+RED=$(     tput setaf 1 )
+GREEN=$(   tput setaf 2 )
+YELLOW=$(  tput setaf 3 )
+BLUE=$(    tput setaf 4 )
+MAGENTA=$( tput setaf 5 )
+CYAN=$(    tput setaf 6 )
+WHITE=$(   tput setaf 7 )
+RESET=$(   tput sgr0    )
+
+fz_config_base=~/.config/fz/
+mkdir -p "$fz_config_base"
+
 #| cdd - cd to directory
 function cdd {
   query="$@"
@@ -80,22 +93,8 @@ function cdr {
   fi
 }
 
-BOLD=$(    tput bold    )
-RED=$(     tput setaf 1 )
-GREEN=$(   tput setaf 2 )
-YELLOW=$(  tput setaf 3 )
-BLUE=$(    tput setaf 4 )
-MAGENTA=$( tput setaf 5 )
-CYAN=$(    tput setaf 6 )
-WHITE=$(   tput setaf 7 )
-RESET=$(   tput sgr0    )
-
-fz_config_base=~/.config/fz/
-mkdir -p "$fz_config_base"
-
 #| fz - File browser
 function fz {
-
   declare -A fz_vars;
   fz_vars[fz_query]='Search term for fz'
   fz_vars[fz_preview_cmd]='Command to use when previewing items'
@@ -235,7 +234,7 @@ function gB {
           --reverse --query="$query" \
           --tiebreak=index \
           --no-mouse --print-query \
-          --border --height 70% --cycle \
+          --border --height 100% --cycle \
           --preview 'git show --color=always $(echo "{}" | perl -lane "print /([[:xdigit:]]\{7})/")' \
           --expect=ctrl-d,ctrl-e,ctrl-v,ctrl-f,ctrl-j,ctrl-m
     ); do
@@ -248,15 +247,6 @@ function gB {
     key=$(   sed  -n '2p' <<<"$block" ); key="${key##ctrl-}"
     items=$( tail -n +3   <<<"$block" );
     shasums=( $( perl -lne 'print /(\w{7})/' <<<"$block" ) )
-
-    echo '----'
-    echo "query: $query"
-    echo "key:   $key"
-    echo -e "items: \n$items"
-    echo "sums:  ${shasums[@]}"
-    echo ''
-    echo -e "block: [$block\n]"
-    echo '----'
 
     [[ -z $key ]] && key=m
 
@@ -302,4 +292,3 @@ EOHELP
 
   done
 }
-
