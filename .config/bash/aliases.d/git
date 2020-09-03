@@ -418,7 +418,7 @@ function gundo { command git reset --mixed HEAD~1; }
 #| gwip - ga .; gca WIP
 function gwip {
   if [[ $# == 0 ]]; then
-    local msg='WIPE'
+    local msg='WIP'
   else
     local msg="$@"
   fi
@@ -512,4 +512,3 @@ complete -o bashdefault -o default -o nospace -F revision_completion gS
 complete -o bashdefault -o default -o nospace -F revision_completion_full glg
 complete -o bashdefault -o default -o nospace -F file_completion glf
 complete -o bashdefault -o default -F complete_branches gP
-
