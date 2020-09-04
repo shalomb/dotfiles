@@ -27,9 +27,6 @@ fi
 
 git_bar_entry_point=$BASH_SOURCE
 
-#| cdg - cd to repo root
-alias cdg='cd $(git rev-parse --show-toplevel)'
-
 _git_args=()
 function _git_arg_wrapper {
   local cmd="$1"; shift;

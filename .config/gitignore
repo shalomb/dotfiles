@@ -6,6 +6,7 @@ tags
 **/notes*
 
 wikidata/
+.config/vim/bundle/cheat.sh-vim
 
 # Compiled source #
 ###################
@@ -54,3 +55,7 @@ Thumbs.db
 tags
 .tags
 *.tmp*
+
+# Project
+.vim/bundle/**
+.config/vim/bundle/**

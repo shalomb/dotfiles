@@ -21,7 +21,7 @@ set backupdir=/tmp          " put backups in /tmp
 set backupdir-=.            " ...and not in cwd
 
 set hidden                  " hide, don't close, undisplayed buffers
-set history=8192            " lines of command history to keep
+set history=10000           " lines of command history to keep
 
 set laststatus=2            " always show status line
 
@@ -70,13 +70,13 @@ set shiftwidth=2            " 2 characters
 set expandtab               " expand tabs to spaces
 set smarttab                " smart tab size
 set shiftround              " indent rounded to shiftwidth
-
 set numberwidth=3           " with 3 digits by default
 
 set wrap                    " wrap long lines
 set wrapmargin=2            " clear 2 at the RHS
 set linebreak               " soft-break at non-word characters
 set nolist                  " soft-wrap seems to play up if list is set
+
 set splitright              " create new vsplits to the right of current window
 set splitbelow              " create new splits to the bottom of current window
 
@@ -122,12 +122,18 @@ let g:pwd            = getcwd()
 let g:invocation_pwd = getcwd()
 
 """" Set Viminfo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"            .------------------- # of MRU files
+"           |     .-------------- # of register lines    |viminfo-quote|
+"           |    |     .--------- # of CLI history items |viminfo-:|
+"           |    |    |    .----- all buffers are stored
+"           |    |    |    |  .-- location
+"           v    v    v    v v
 set viminfo='10,\"100,:256,%,n~/.local/viminfo
 
 """" abbrevs """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 """" Keybindings """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-let mapleader = ","
+let mapleader = "\<space>"
 
 """" Source RC File """"""""""""""""""""""""""""""""""""""""""""""""""""""""""
 function! SourceRcFiles(path)

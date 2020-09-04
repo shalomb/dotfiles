@@ -1,0 +1,5 @@
+# packages: freenx
+# URL: http://wiki.debian.org/freenx
+
+deb       http://ppa.launchpad.net/freenx-team/ppa/ubuntu   karmic  main
+deb-src   http://ppa.launchpad.net/freenx-team/ppa/ubuntu   karmic  main

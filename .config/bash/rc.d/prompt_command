@@ -1,24 +1,29 @@
 #!/bin/bash
 
+function prompt-command() {
+  # If this is an xterm set the title to user@host:dir
+  case "$TERM" in
+    screen*|tmux*)
+      PROMPT_COMMAND="$PROMPT_COMMAND"
+    ;;
+    *rxvt*|xterm*)
+      PROMPT_COMMAND="set-title"
+    ;;
+    *)
+    ;;
+  esac
+
+  if [[ $TMUX ]]; then
+    TMUX_WINDOW=$(tmux display-message -p '#{window_id}')
+  fi
+}
+
+# Setup some zsh-like special functions
+# See http://zsh.sourceforge.net/Doc/Release/Functions.html
 PROMPT_COMMAND='
-  _ec=$?;
-  if (( _ec != 0 )); then
-    bell-alert;
-  fi;
-  if (( _ec == 0 )); then
-    set_cdpath;
-  fi;
+  _last_cmd_ec=$?;
+  (( _last_cmd_ec != 0 )) && call-if-defined bell-alert;
+  [[ ${_pwd:=$PWD} != $PWD ]] && call-if-defined chpwd;
+  call-if-defined prompt-command;
+  _pwd="$PWD";
 '
-
-# If this is an xterm set the title to user@host:dir
-case "$TERM" in
-  screen*|tmux*)
-    PROMPT_COMMAND="$PROMPT_COMMAND"
-  ;;
-  *rxvt*|xterm*)
-    PROMPT_COMMAND="set-title"
-  ;;
-  *)
-  ;;
-esac
-

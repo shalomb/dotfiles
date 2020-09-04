@@ -1,0 +1,6 @@
+# local apt repository
+
+# KEY: unsigned
+# URL: file://home/cache/debian
+
+deb   file:/bkp/debian/ /

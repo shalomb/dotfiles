@@ -1,0 +1,8 @@
+# DESC: WINE repository for debian squeeze
+
+# URL: http://www.winehq.org/download/debsqueeze
+
+# PUBKEY:
+# wget -O - http://www.lamaresh.net/apt/key.gpg | apt-key add - 
+
+deb http://www.lamaresh.net/apt squeeze main

@@ -20,7 +20,7 @@
 	n       = !git --no-pager
   pom     = push origin master
   pum     = pull origin master
-  review  = !vim -p $(git files) +\"tabdo Gvdiff $(git base)\" +\"let g:gitgutter_diff_base = '$(git base)'\"
+  review  = !vi -p $(git files) +\"tabdo Gvdiff $(git base)\" +\"let g:gitgutter_diff_base = '$(git base)'\"
   s       = status --porcelain
   stat    = !git diff --stat $(git merge-base HEAD \"$(git base)\")
   st      = status --short
@@ -62,7 +62,7 @@
 	gpgsign = true
 
 [core]
-  editor = vim
+  editor = vi
 	pager = less
 
 [diff]
@@ -105,4 +105,4 @@
   name   = Shalom Bhooshi
   signingkey = XXXXXXXXXX
 
-# vim:filetype=gitconfig:sw=2:ts=2:et
+# vi:filetype=gitconfig

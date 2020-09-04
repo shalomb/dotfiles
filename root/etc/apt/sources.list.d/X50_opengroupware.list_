@@ -1,0 +1,2 @@
+# opengroupware:
+deb     http://download.opengroupware.org/nightly/packages/debian/dists/sid/trunk/binary-i386/ ./
