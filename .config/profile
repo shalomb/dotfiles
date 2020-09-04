@@ -1,4 +1,5 @@
 #!/bin/sh
+
  ##############################################################################
 #   ~/.profile: executed by the command interpreter for login shells           #
 #   (including bash when invoked as a --login shell).                          #
@@ -18,34 +19,34 @@
  ##############################################################################
 
 PATH="$HOME/.local/bin:$HOME/.bin:$PATH"
+PATH="$PATH:/usr/local/sbin:/usr/sbin:/sbin"
+PATH="$PATH:/usr/local/bin:/usr/bin/:/bin/"
+PATH="$PATH:/opt/bin:/usr/lib/pm-utils/bin/";
+export PATH;
 
-PATH="$PATH:/usr/bin/:/bin/:/usr/local/sbin:/usr/sbin:/sbin:/opt/bin"
-PATH="$PATH:/usr/local/bin/:/usr/lib/pm-utils/bin/";
-                                          export PATH;
 # The default umask is set in /etc/profile; for setting the umask
 # for ssh logins, install and configure the libpam-umask package.
 umask 022
 
 # Environment Variables
-BROWSER="`/usr/bin/which x-www-browser`";      export BROWSER;
-EDITOR="${EDITOR:-"`/usr/bin/which vim`"}";    export EDITOR;
+BROWSER="$(/usr/bin/which x-www-browser)";      export BROWSER;
+EDITOR="${EDITOR:-"$(/usr/bin/which vi)"}";     export EDITOR;
 VISUAL="$EDITOR";                              export VISUAL;
-XEDITOR="${XEDITOR:-"`/usr/bin/which gvim`"}"; export XEDITOR;
+XEDITOR="${XEDITOR:-"$(/usr/bin/which gvim)"}"; export XEDITOR;
 
-GZIP="-9v";                               export GZIP;
 BZIP2="-9v";                              export BZIP2;
 
-HOSTNAME="${HOSTNAME:-"`cat /etc/hostname`"}";
-HOSTNAME="${HOSTNAME:-"`hostname -s`"}";  export HOSTNAME;
+HOSTNAME="${HOSTNAME:-"$(cat /etc/hostname)"}";
+HOSTNAME="${HOSTNAME:-"$(hostname -s)"}";  export HOSTNAME;
 HOST="${HOST:-"$HOSTNAME"}";              export HOST;
 
-USER="${USER:-`id -un`}"
+USER="${USER:-$(id -un)}"
 
 # Redirect $TMP to ~/.tmp
 TMP=/tmp/"$USER"
 PRIVATE_TMP="$HOME/.tmp"
 [ ! -e "$TMP" ] && (umask 027; mkdir -p "$TMP")
-if [ `readlink -f "$PRIVATE_TMP"` != "$TMP" ]; then
+if [ "$(readlink -f "$PRIVATE_TMP")" != "$TMP" ]; then
   rm "$PRIVATE_TMP"
   ln -sf "$TMP/" "$PRIVATE_TMP"
 fi
@@ -75,7 +76,7 @@ LESSHISTFILE="$XDG_CACHE_HOME/lesshst";   export LESSHISTFILE;
 LESSHISTSIZE="512";                       export LESSHISTSIZE;
 LESSKEY="$XDG_CONFIG_HOME/less/lesskey";  export LESSKEY;
 LESS=' -CiMNR';                           export LESS;
-type -p lesspipe &>/dev/null && eval "$(lesspipe)";
+type lesspipe >/dev/null 2>&1 && eval "$(lesspipe)";
 
 # colourise manpages
 # Begin blink

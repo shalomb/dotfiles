@@ -102,3 +102,5 @@ cmap           <Left>       <Nop>
 cmap           <Up>         <Nop>
 cmap           <Down>       <Nop>
 cmap           <Right>      <Nop>
+
+nnoremap       ;  :
