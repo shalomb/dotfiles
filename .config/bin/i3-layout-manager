@@ -13,8 +13,8 @@ function get_output {
 
 laptop_output=$(  get_output eDP-?1  )
 if (( ${#active_outputs[@]} > 1 )); then
-  external_output_1=$( get_output 'DP-?[0-9]?-1|HDMI-?1' )
-  external_output_2=$( get_output 'DP-?[0-9]?-2|HDMI-?2' || echo $external_output_1 )
+  external_output_1=$( get_output '^DP-?[0-9]-1|HDMI-?1' )
+  external_output_2=$( get_output '^DP-?[0-9]-2|HDMI-?2' || echo $external_output_1 )
 fi
 
 function is-workspace-available {
@@ -30,9 +30,8 @@ function move-workspace-to-output {
 
   echo "$workspace -> $output"
 
-  ( is-workspace-available "$workspace" &&
+  is-workspace-available "$workspace" &&
     i3-msg "workspace $workspace, move workspace to output $output"
-  )
 }
 
 function dock {
