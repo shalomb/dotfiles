@@ -3,14 +3,16 @@
 # SYNOPSIS
 #   kubectl aliases
 
+# from https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
 install-kubectl() {
-  type -a kubectl &>/dev/null && return
-  local latest=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
-  curl -C - -LO https://storage.googleapis.com/kubernetes-release/release/$latest/bin/linux/amd64/kubectl
-  chmod +x kubectl
-  install -p kubectl ~/.local/bin/
-  hash -r
-  kubectl version
+  # Add the Cloud SDK distribution URI as a package source
+  echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+  # Import the Google Cloud Platform public key
+  curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+
+  # Update the package list and install kubectl
+  sudo apt-get update && sudo apt-get install kubectl
 }
 
 @has-cmd kubectl || return

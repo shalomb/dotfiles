@@ -1,0 +1,13 @@
+# debian unofficial
+
+# PUBKEY: 394D199524C52AC3
+# KEY:
+# gpg --keyserver subkeys.pgp.net --recv-keys 0xFDB8D39A
+# gpg --armor --export 0xFDB8D39A | apt-key add -
+
+# URL: http://unofficial.debian-maintainers.org/
+
+# Unofficial Maintainers (squeeze/testing backports)
+# Unofficial Maintainers (sid/unstable snapshots)
+deb 		http://unofficial.debian-maintainers.org/ 	sid/snapshots 	main contrib non-free restricted
+deb-src 	http://unofficial.debian-maintainers.org/ 	sid/snapshots 	main contrib non-free restricted

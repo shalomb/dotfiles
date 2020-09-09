@@ -1,0 +1,4 @@
+# dropbox
+# URL: https://www.dropbox.com/downloading?os=lnx
+deb 	http://linux.dropbox.com/ubuntu   maverick   main
+deb-src http://linux.dropbox.com/ubuntu   maverick   main

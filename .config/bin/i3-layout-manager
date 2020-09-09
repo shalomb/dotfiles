@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -eu
+set -xv
 
 active_outputs=( $(xrandr -q | grep -Po '^\K(\S+)(?= connected)') )
 active_workspaces=$( i3-msg -t get_workspaces )
@@ -12,8 +13,8 @@ function get_output {
 
 laptop_output=$(  get_output eDP-?1  )
 if (( ${#active_outputs[@]} > 1 )); then
-  external_output_1=$( get_output DP-?1-1 )
-  external_output_2=$( get_output DP-?1-2 )
+  external_output_1=$( get_output '^DP-?[0-9]-1|HDMI-?1' )
+  external_output_2=$( get_output '^DP-?[0-9]-2|HDMI-?2' || echo $external_output_1 )
 fi
 
 function is-workspace-available {
@@ -29,9 +30,8 @@ function move-workspace-to-output {
 
   echo "$workspace -> $output"
 
-  ( is-workspace-available "$workspace" &&
+  is-workspace-available "$workspace" &&
     i3-msg "workspace $workspace, move workspace to output $output"
-  )
 }
 
 function dock {
@@ -47,8 +47,11 @@ function dock {
 
   xrandr --output "$external_output_1" \
           --right-of "$laptop_output" --auto --primary
-  xrandr --output "$external_output_2"    \
-          --right-of "$external_output_1" --auto
+
+  if [[ $external_output_1 != $external_output_2 ]]; then
+    xrandr --output "$external_output_2"    \
+            --right-of "$external_output_1" --auto
+  fi
 
   declare -A workspace_output_map
 
@@ -105,6 +108,7 @@ function undock {
   done
 
 }
+
 
 cmd="$1"
 

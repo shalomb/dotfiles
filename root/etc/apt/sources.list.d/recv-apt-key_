@@ -1,0 +1,10 @@
+#!/bin/bash
+
+for key; do
+	gpg --keyserver keyserver.ubuntu.com --recv-key "$key";
+#	gpg --keyserver subkeys.pgp.net --recv-key "$key";
+	gpg --fingerprint "$key"
+	gpg --armor --export  "$key" | sudo apt-key add -
+done
+
+

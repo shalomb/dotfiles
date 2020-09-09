@@ -1,0 +1,6 @@
+This directory contains a mirror of /etc/apt/sources.list.d/
+
+Mirrors are not done automatically and must be done via the 
+following command.
+
+  rsync -acv --progress --delete /etc/apt/sources.list.d ./
