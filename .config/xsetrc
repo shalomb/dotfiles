@@ -18,4 +18,3 @@ xset dpms 420 480 600  # timeouts for standby, suspend, off
 xset b on           # Turn the bell on
 xset -b             # Disable bell/speaker completely
 xset r rate 175 40  # Set the keyboard repeat-rate:
-

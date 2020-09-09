@@ -1,34 +1,34 @@
 #!/bin/sh
 
-# Under xdm(1), it appears the environment is not setup
-# appropriately, so source ~/.profile
+# SYNOPSIS
+#   xinitrc - setup the xsession before the workspace is setup
+#   also see workspacerc
 
-if [ "$TMP" = "" ]; then
-  TMP=/tmp/`id -un`
-  mkdir -p "$TMP"
-fi
+[ -n "${DEBUG-}" ] && set -xv
+
+set -eu
 
 script="${0##*/}"
-args="$@"
 session=${1:-i3}
-tmpfile="$TMP/$script.log"
+
+test -r ~/.profile && . ~/.profile
+
+logfile="$TMP/$script.log"
+exec > "$logfile" 2>&1
 
 log() {
-  echo "`date +%FT%T.%N` $script '$args' $$ $PPID : $@"
+  echo >&2 "$(date +%FT%T.%N) $script '$*' $$ $PPID : $*"
 }
 
-start_desktop() {
-  log "Starting $session"
-  log "pwd : `pwd`"
-  log "env : `env`"
+start_xsession() {
 
-  test -r ~/.config/profile && source ~/.config/profile
+  log "Starting session '$session'"
 
-  test -d ~/.config/fonts || {
+  if ! test -d ~/.config/fonts; then
     mkdir -p ~/.config/fonts;
-    chmod 755 ~/.config/fonts;
-    mkfontdir ~/.config/fonts;
-  } &                 # set-up user fonts dir
+    # set-up user fonts dir
+    mkfontdir ~/.config/fonts &
+  fi
 
   test -r ~/.config/Xdefaults  && xrdb -merge ~/.config/Xdefaults
   test -r ~/.config/Xresources && xrdb -merge ~/.config/Xresources
@@ -36,7 +36,7 @@ start_desktop() {
   for file in \
     ~/.config/xmodmap \
     ~/.config/xmodmap.d/* \
-    ~/.config/xmodmap.`hostname -s`.d/* \
+    ~/.config/xmodmap."$(hostname -s)".d/* \
     ; do
       test -e "$file" && xmodmap "$file"
   done
@@ -48,11 +48,11 @@ start_desktop() {
   systemctl --user import-environment DISPLAY
   dbus-update-activation-environment --systemd DISPLAY
 
-  eval "$(gpg-agent --daemon --write-env-file $XDG_CACHE_HOME/gpg-agent-info)"
+  eval "$(gpg-agent --daemon --write-env-file "$XDG_CACHE_HOME/gpg-agent-info")"
 
   unset SSH_AGENT_PID SSH_AUTH_SOCK
   if ! kill -0 "$SSH_AGENT_PID"; then
-    eval $(ssh-agent -s);
+    eval "$(ssh-agent -s)";
   fi
 
   dbus-launch start-pulseaudio-x11 &
@@ -60,9 +60,6 @@ start_desktop() {
   xscreensaver -no-splash &
 
   exec dbus-launch --exit-with-session i3
-
-  log "Ending $session"
 }
 
-start_desktop >> "$tmpfile"
-
+start_xsession
