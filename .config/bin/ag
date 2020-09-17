@@ -5,8 +5,6 @@
 
 set -eu
 
-exec &> >( tee /tmp/rg.log )
-
 args=()
 
 for arg; do
@@ -16,14 +14,11 @@ for arg; do
       :
     ;;
 
-    # *color*)
-    #   args+=( "--color" )
-    # ;;
-
     [!-][!-]*)
       args+=( "$arg" )
     ;;
   esac
 done
 
-echo command ack "${args[@]}"
+# redirect to ack(1)
+command ack "${args[@]}"
