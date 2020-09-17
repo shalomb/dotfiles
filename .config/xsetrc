@@ -14,6 +14,6 @@ xset +dpms          # enable DPMS (Energy Star) features.
 xset dpms 120 480 600  # timeouts for standby, suspend, off
 
 # override some settings that gnome-settings-daemon might set
-xset b on           # Turn the bell on
+xset b off          # Turn the bell off
 xset -b             # Disable bell/speaker completely
 xset r rate 175 40  # Set the keyboard repeat-rate:
