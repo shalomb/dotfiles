@@ -15,7 +15,9 @@ highlight NonText ctermbg=NONE guibg=NONE
 highlight ErrorMsg     cterm=bold ctermbg=160 ctermfg=232
 highlight FoldColumn   ctermbg=NONE
 highlight LineNr       cterm=bold ctermfg=242 ctermbg=234
-highlight MatchParen   cterm=none ctermbg=green ctermfg=black
+
+highlight CurSearch    cterm=none ctermbg=green ctermfg=red
+highlight MatchParen   cterm=none ctermbg=black ctermfg=cyan
 
 highlight SignColumn   ctermbg=NONE
 highlight Visual       cterm=reverse ctermbg=172 ctermfg=238
