@@ -17,7 +17,7 @@ open() {
     *)
       # entry is a regular file
       if [[ -f $entry && ! -x $entry ]]; then
-        "${EDITOR:-vi}" "$@"
+        "${EDITOR:-vi}" "$entry"
 
       # entry is a directory
       elif [[ -d $entry ]]; then
