@@ -19,18 +19,21 @@ update-history() {
   rm -f "$tmpfile"
 }
 
+get-history() {
+  {
+    head -n3 "$history_file"
+    echo "x-terminal-emulator -e ranger"
+    echo "i3-dmenu-desktop"
+    echo "gmrun"
+    echo "dmenu_quickactions"
+    tail -n+4 "$history_file"
+    cat ~/.gmrun_history
+    pathgrep '.'
+  } | awk '!a[$0]++' | grep "$pattern"
+}
+
 entry=$(
-{
-  head -n3 "$history_file"
-  echo "x-terminal-emulator -e ranger"
-  echo "i3-dmenu-desktop"
-  echo "gmrun"
-  echo "dmenu_quickactions"
-  tail -n+4 "$history_file"
-  cat ~/.gmrun_history
-  pathgrep '.'
-} | awk '!a[$0]++' | grep "$pattern" |
-  rofi -dmenu -input /dev/stdin -async-pre-read 30 -markup-rows
+  get-history | rofi -dmenu -input /dev/stdin -async-pre-read 30 -markup-rows
 )
 
 if [[ $entry == *@@gmrun ]]; then
