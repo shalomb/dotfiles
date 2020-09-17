@@ -99,7 +99,7 @@
   sort = version:refname
 
 [url "ssh://git@gitlab.tools.in.pan-net.eu/"]
-	insteadOf = https://gitlab.tools.in.pan-net.eu/
+  insteadOf = https://gitlab.tools.in.pan-net.eu/
 
 [user]
   name   = Shalom Bhooshi
