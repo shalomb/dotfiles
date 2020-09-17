@@ -102,7 +102,8 @@
   insteadOf = https://gitlab.tools.in.pan-net.eu/
 
 [user]
-  name   = Shalom Bhooshi
-  signingkey = XXXXXXXXXX
+  name = Shalom Bhooshi
+  email = s.bhooshi@gmail.com
+  signingkey = 62346401075080B1DADDD4EAC9DFB9FD0BFCA396
 
 # vi:filetype=gitconfig
