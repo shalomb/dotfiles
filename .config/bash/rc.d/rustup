@@ -1,0 +1,16 @@
+#!/bin/bash
+
+load-env() {
+  if [[ -r ~/.cargo/env ]]; then
+    source ~/.cargo/env
+  fi
+}
+
+rustup-install() {
+  # https://github.com/rust-lang/rustup/issues/297#issuecomment-444818896
+  curl https://sh.rustup.rs -sSf | sh -s -- -y
+  load-env
+  rustup update
+}
+
+load-env

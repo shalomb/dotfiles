@@ -28,3 +28,5 @@ if [[ ${TTY:-$(tty)} == /dev/tty1 ]]; then
   TMOUT=120
   clear
 fi
+
+export PATH="$HOME/.cargo/bin:$PATH"
