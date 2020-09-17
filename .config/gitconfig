@@ -17,7 +17,7 @@
   lola    = log --graph --decorate --pretty=oneline --abbrev-commit --all
   lol     = log --graph --decorate --pretty=oneline --abbrev-commit
   ls      = ls-files
-	n       = !git --no-pager
+  n       = !git --no-pager
   pom     = push origin master
   pum     = pull origin master
   review  = !vi -p $(git files) +\"tabdo Gvdiff $(git base)\" +\"let g:gitgutter_diff_base = '$(git base)'\"
@@ -59,11 +59,11 @@
   new       = 42  bold   # green
 
 [commit]
-	gpgsign = true
+  gpgsign = true
 
 [core]
   editor = vi
-	pager = less
+  pager = less
 
 [diff]
   tool = vimdiff
