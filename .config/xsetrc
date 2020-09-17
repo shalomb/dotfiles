@@ -11,8 +11,7 @@ xset s blank        # screensaver blank
 xset s 300          # after 5*60 seconds
 
 xset +dpms          # enable DPMS (Energy Star) features.
-xset dpms 420 480 600  # timeouts for standby, suspend, off
-
+xset dpms 120 480 600  # timeouts for standby, suspend, off
 
 # override some settings that gnome-settings-daemon might set
 xset b on           # Turn the bell on
