@@ -101,6 +101,10 @@ for my $file ( map { bsd_glob $_ } @globs ) {
 
 }
 
+sub debug {
+  warn @_ if defined $ENV{DEBUG};
+  return 1;
+}
 
 sub usage {
   print <<"EOF";
@@ -111,6 +115,11 @@ EOF
 
 sub make_link {
   my ($target, $link, $force) = (@_, 0);
+
+  return 1
+    if ( $target =~ /.sw\w$/ and
+      debug("Ignoring '$target'")
+    );
 
   if ($force and -e $target) {
     unlink $link and print "  rm '$link'";
@@ -211,5 +220,3 @@ sub readlink_f {
 
   return fsc(@left);
 }
-
-
