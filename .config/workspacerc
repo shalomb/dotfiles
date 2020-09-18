@@ -53,6 +53,8 @@ launch() {
   launch spotify &
   launch slack &
 
+  run_keybase -g &
+
   nice -n 0 urxvtd -q -f -o &
   launch qterm &
 
