@@ -57,8 +57,6 @@ start_xsession() {
 
   dbus-launch start-pulseaudio-x11 &
 
-  xscreensaver -no-splash &
-
   exec dbus-launch --exit-with-session i3
 }
 

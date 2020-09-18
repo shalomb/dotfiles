@@ -226,4 +226,3 @@ URxvt*fading:               30
 ! URxvt.font: xft:monaco:bold:size=10
 
 #include ".config/xresources.d/rofi"
-#include ".config/xresources.d/xscreensaver"
