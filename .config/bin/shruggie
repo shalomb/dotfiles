@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# rofi/dmenu wrapper to show/select emojis
+
+# pip install emojicons
+# for i in {1..1024}; do
+#   ( set -xv; emoji save --file ~/.cache/emojis.json "$i"; );
+# done
+
+type -P emoji &>/dev/null || {
+  echo >&2 "emojicons not installed?";
+  exit 2
+}
+
+emoji list --file ~/.cache/emojis.json |
+  tail -n +3 |
+  perl -lne '
+    use strict;
+    use warnings;
+    use utf8;
+    use Unicode::GCString;
+    use Unicode::Normalize;
+
+    sub pad {
+      my ($s, $length) = @_;
+      my $gcs = Unicode::GCString->new($s);
+      my $l = ($length - $gcs->columns);
+      $l = $l > 0 ? $l : 0;
+      return $s . (" " x $l);
+    }
+
+    my $id = substr $_, 0, 4;
+    my $te = substr $_, 4, 77;
+    $te = lc $te;
+    $te =~ s/\s+$//g;
+    my $em = pad((substr $_, 78, length($_)), 24);
+    $em =~ s/^\s+|\s+$//g;
+
+    printf "%s\t%s\t%s\n", $id, $em, $te;
+  ' |
+  rofi -dmenu -input /dev/stdin -async-pre-read 30 -markup-rows -pid "$TMP/shruggie" |
+  while IFS=$'\t' read -r id em te; do
+    echo "$em" | xclip -i
+  done
