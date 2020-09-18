@@ -1,0 +1,14 @@
+#!/bin/bash
+
+logger -is "Invoking $0 with $@ ($PWD)"
+
+# https://github.com/phillipberndt/autorandr/issues/214#issuecomment-645325415
+if pgrep -f i3lock; then
+  exit 7
+fi
+
+# Lockfile to prevent duplicate events firing off in quick succession
+# This will be cleaned up in postinst.d
+lockfile="$TMP/autorandr.lock"
+[[ -e $lockfile ]] && exit 5
+touch "$lockfile"

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -eu
-set -xv
 
 active_outputs=( $(xrandr -q | grep -Po '^\K(\S+)(?= connected)') )
 active_workspaces=$( i3-msg -t get_workspaces )
@@ -18,102 +17,30 @@ if (( ${#active_outputs[@]} > 1 )); then
   external_output_2="${external_output_2:-$external_output_1}"
 fi
 
-function is-workspace-available {
-  local workspace=$1
-  jq -e -r '
-    .[] | select(.name=="'"$workspace"'")
-  ' &>/dev/null <<<"$active_workspaces"
-}
-
-function move-workspace-to-output {
-  local workspace="$1"
-  local output="$2"
-
-  echo "$workspace -> $output"
-
-  is-workspace-available "$workspace" &&
-    i3-msg "workspace $workspace, move workspace to output $output"
-}
-
 function dock {
-
   if (( ${#active_outputs[@]} == 1 )); then
     echo "Only ${#active_outputs[@]} output (${active_outputs[@]}) active."
     echo "ERROR: Device appears to be undocked, cannot continue .." >&2
     return
   fi
 
-  xrandr --auto  # refresh the state of all outputs
+  i3-msg "[workspace=\"^(q|w|3|4|5)\"] move workspace to output $external_output_1"
 
-  xrandr --output "$external_output_1" --off
-  xrandr --output "$external_output_1" --off
+  i3-msg "[workspace=\"^(f|s|e|6|7|8|9)\"] move workspace to output $external_output_2"
+  i3-msg "workspace f"
+  wmctrl -a firefox  # give focus
 
-  xrandr --output "$external_output_1" \
-          --right-of "$laptop_output" --auto --primary
+  i3-msg "[workspace=\"^(p|m|0|1|2)\"] move workspace to output $laptop_output"
+  i3-msg "workspace m"
+  wmctrl -a evolution  # give focus
 
-  if [[ $external_output_1 != $external_output_2 ]]; then
-    xrandr --output "$external_output_2"    \
-            --right-of "$external_output_1" --auto
-  fi
-
-  declare -A workspace_output_map
-
-  workspace_output_map[0]="$laptop_output"
-  workspace_output_map[p]="$laptop_output"
-
-  workspace_output_map[1]="$external_output_1"
-  workspace_output_map[2]="$external_output_1"
-  workspace_output_map[3]="$external_output_1"
-  workspace_output_map[4]="$external_output_1"
-  workspace_output_map[5]="$external_output_1"
-
-  workspace_output_map[6]="$external_output_2"
-  workspace_output_map[7]="$external_output_2"
-  workspace_output_map[8]="$external_output_2"
-  workspace_output_map[9]="$external_output_2"
-  workspace_output_map[2]="$external_output_2"
-
-  workspace_output_map[q]="$external_output_1"
-  workspace_output_map[w]="$external_output_1"
-
-  workspace_output_map[f]="$external_output_2"
-  workspace_output_map[m]="$external_output_2"
-  workspace_output_map[s]="$external_output_2"
-  workspace_output_map[e]="$external_output_2"
-
-  for i in ${!workspace_output_map[@]}; do
-    if ! move-workspace-to-output "$i" "${workspace_output_map[$i]}"; then
-      echo "Unable to move workspace $i to output ${workspace_output_map[$i]}" >&2
-    fi
-  done
-
+  i3-msg "workspace q"
+  wmctrl -a qterm  # give focus
 }
 
 function undock {
-
-  workspaces=(
-    $(  jq -r '
-          .[] | select(.output != "'"$laptop_output"'").name
-        ' <<<"$active_workspaces" | sort
-     )
-  )
-
-  for i in "${workspaces[@]}"; do
-    if ! move-workspace-to-output "$i" "$laptop_output"; then
-      echo "Unable to move workspace $i to output $laptop_output" >&2
-    fi
-  done
-
-  xrandr --output "$laptop_output" --auto --primary
-
-  for output in "${active_outputs[@]:1: ${#active_outputs[@]}}"; do
-    xrandr --output "$output" --off || true
-  done
-
+  i3-msg '[class=".*"] move workspace to output '"$laptop_output"
 }
-
-
-cmd="$1"
 
 while getopts 'aduhx' opt; do
   case "$opt" in

@@ -62,5 +62,6 @@ launch() {
 
   run_keybase -g
 
+  autorandr --change
   i3-layout-manager -a
 }
