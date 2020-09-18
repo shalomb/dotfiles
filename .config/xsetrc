@@ -8,10 +8,10 @@ xset fp rehash      # rehash the font path
 
 xset s on           # screensaver
 xset s blank        # screensaver blank
-xset s 300          # after 5*60 seconds
+xset s 180          # after 3*60 seconds, value used by xidlehook
 
 xset +dpms          # enable DPMS (Energy Star) features.
-xset dpms 120 480 600  # timeouts for standby, suspend, off
+xset dpms 120 210 300  # timeouts for standby, suspend, off
 
 # override some settings that gnome-settings-daemon might set
 xset b off          # Turn the bell off

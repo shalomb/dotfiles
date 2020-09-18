@@ -79,7 +79,7 @@ mode "workspace control" {
   bindsym Shift+r         exec --no-startup-id i3-layout-manager -u
   bindsym r               exec --no-startup-id i3-layout-manager -d
 
-  bindsym l               exec --no-startup-id xset dpms force off; exec --no-startup-id xscreensaver-command -lock ; mode "default"
+  bindsym l               exec --no-startup-id screen-lock; mode "default"
 
   bindsym Shift+h         move container to output left
   bindsym Shift+j         move container to output down

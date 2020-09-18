@@ -1,0 +1,15 @@
+#!/bin/bash
+
+xset dpms force off
+
+state_file="$TMP/screen-lock-audio-muted"
+if pactl list | grep -iq 'State: RUNNING'; then
+  dbus-launch pactl set-sink-mute   @DEFAULT_SINK@ 1
+  touch "$state_file"
+fi
+
+killall -SIGUSR1 dunst
+
+if i3lock -i ~/.config/wallpapers/Autumn_in_Proteus.png -c 000000 -nef; then
+  screen-unlock
+fi
