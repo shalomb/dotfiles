@@ -24,5 +24,5 @@ while read -r l; do
 done < <(
   for i in "${candidates[@]}"; do
     echo -e "$i"
-  done  | dmenu -b -l 10 -i
+  done  | rofi -dmenu
 )
