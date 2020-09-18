@@ -171,7 +171,6 @@ xdotool                    install
 xfonts-base                install
 xfsprogs                   install
 xosd-bin                   install
-xscreensaver               install
 xsel                       install
 xxd                        install
 xz-utils                   install
