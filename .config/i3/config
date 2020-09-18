@@ -219,17 +219,17 @@ bindsym Pause                  exec gmrun "Pause"
 bindsym Print                  exec --no-startup-id flameshot gui
 bindsym Super_R                exec gmrun "Super_R"
 bindsym XF86AudioForward       exec gmrun "XF86AudioForward"
-bindsym XF86AudioLowerVolume   exec pactl set-sink-volume @DEFAULT_SINK@ -10%
+bindsym XF86AudioLowerVolume   exec dbus-launch pactl set-sink-volume @DEFAULT_SINK@ -10%
 bindsym XF86AudioMedia         exec gmrun "XF86AudioMedia"
 bindsym XF86AudioMicMute       exec gmrun "XF86AudioMicMute"
 bindsym Shift+XF86AudioMicMute exec gmrun "Shift+XF86AudioMicMute"
-bindsym XF86AudioMute          exec pactl set-sink-mute   @DEFAULT_SINK@ toggle
-bindsym Shift+XF86AudioMute    exec pactl set-source-mute $(pacmd list-sources | awk '/\* index:/{ print $3 }') toggle
+bindsym XF86AudioMute          exec dbus-launch pactl set-sink-mute   @DEFAULT_SINK@ toggle
+bindsym Shift+XF86AudioMute    exec dbus-launch pactl set-source-mute $(pacmd list-sources | awk '/\* index:/{ print $3 }') toggle
 bindsym XF86AudioNext          exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
 bindsym XF86AudioPause         exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause
 bindsym XF86AudioPlay          exec gmrun "XF86AudioPlay"
 bindsym XF86AudioPrev          exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
-bindsym XF86AudioRaiseVolume   exec pactl set-sink-volume @DEFAULT_SINK@ +10%
+bindsym XF86AudioRaiseVolume   exec dbus-launch pactl set-sink-volume @DEFAULT_SINK@ +10%
 bindsym XF86AudioRecord        exec gmrun "XF86AudioRecord"
 bindsym XF86AudioRewind        exec gmrun "XF86AudioRewind"
 bindsym XF86AudioStop          exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Stop
