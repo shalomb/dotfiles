@@ -15,5 +15,5 @@ while read -r e; do
 done < <(
   for i in *; do
     echo "$i"
-  done | dmenu -b -l 10 -i
+  done | rofi -dmenu -input /dev/stdin -markup-rows
 )
