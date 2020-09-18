@@ -190,7 +190,7 @@ bindsym Control+$mod+apostrophe   [con_mark=_last] focus
 bindsym Control+$mod+numbersign   mode "workspace control"
 bindsym Control+$mod+Shift+colon  exec i3-input -P 'workspace: ' -F "exec i3-msg 'workspace %s'"
 bindsym Control+$mod+m            exec i3-input -l 1 -P 'Mark: ' -F 'exec ~/.bin/winmark mark "%s"' ; mode "default"
-# bindsym Control+$mod+period       scratchpad show
+bindsym Control+$mod+n            scratchpad show
 
 bindsym Control+$mod+slash        exec rofi -show window; mode "default"
 bindsym Control+$mod+Mod1+slash   exec dmenu_winmarks
@@ -212,7 +212,7 @@ bindsym Control+XF86WakeUp     exec gmrun "Control + XF86WakeUp"
 bindsym Control+Menu           exec gmrun "C-Menu"
 bindsym Mod1+Menu              exec gmrun "A-Menu"
 bindsym $mod+Menu              exec rofi-launcher
-bindsym Control+$mod+Menu      exec gmrun "Mod-Menu"
+bindsym Control+$mod+Menu      exec gmrun "C-Mod-Menu"
 
 bindsym NoSymbol               exec gmrun "NoSymbol"
 bindsym Pause                  exec gmrun "Pause"
@@ -444,4 +444,3 @@ for_window [class="Spotify"] move to workspace $wsp
 
 # Startup tasks
 exec --no-startup-id  ~/.config/workspacerc
-
