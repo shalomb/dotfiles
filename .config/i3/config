@@ -16,6 +16,7 @@ popup_during_fullscreen       smart
 focus_on_window_activation    smart
 focus_follows_mouse           no
 new_window pixel              0
+show_marks                    yes
 
 # Super key
 set $mod Mod4
