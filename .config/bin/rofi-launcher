@@ -43,7 +43,6 @@ else
   entry="${entry%%@@}"
 fi
 
-set -xv
 [[ -z $entry ]] && exit 123
 
 open $entry  # Note: $entry is unquoted, as it may have arguments
