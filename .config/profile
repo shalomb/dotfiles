@@ -76,7 +76,7 @@ LESSHISTFILE="$XDG_CACHE_HOME/lesshst";   export LESSHISTFILE;
 LESSHISTSIZE="512";                       export LESSHISTSIZE;
 LESSKEY="$XDG_CONFIG_HOME/less/lesskey";  export LESSKEY;
 LESS=' -CiMNR';                           export LESS;
-type lesspipe >/dev/null 2>&1 && eval "$(lesspipe)";
+type lesspipe >/dev/null 2>&1 && eval "$(lesspipe)" >/dev/null
 
 # colourise manpages
 # Begin blink
