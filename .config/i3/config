@@ -30,8 +30,8 @@ for_window [window_role="task_dialog"] floating enable
 font pango:monospace 9
 
 bindsym $mod+Return                split h; exec rofi-launcher; mode "default"
-bindsym Control+$mod+Return        split h; exec rofi -show run
-bindsym Control+$mod+mod1+Return   split v; exec rofi-launcher
+bindsym Control+$mod+Return        split h; exec rofi-launcher; mode "default"
+bindsym Control+$mod+mod1+Return   split v; exec rofi -show run
 bindsym $mod+Shift+Return          exec x-terminal-emulator
 bindsym $mod+mod1+Return           exec rofi -show window -drun-use-desktop-cache
 
