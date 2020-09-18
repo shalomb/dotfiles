@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+
+# ovpn.py - expect wrapper around totp & openvpn to keep VPNs alive
+
+# Usage
+# ovpn [/path/to/cfg.yml]
+
+# Setup
+# See below for setup instructions
+
+import os
+from os.path import expanduser as expand
+import pexpect
+import subprocess
+import sys
+import time
+import yaml
+
+if os.name == 'nt':
+  raise Exception(f'Errm? wrong os you got there: {os.name}')
+
+DEBUG = True if 'DEBUG' in os.environ.keys() else False
+
+cfg_file = sys.argv[1] if len(sys.argv) > 1 else expand('~/.config/vpnd/ovpn.yaml')
+
+with open(cfg_file) as fd:
+  config = yaml.load(fd, Loader=yaml.SafeLoader)
+
+totp = subprocess.check_output(['totp', f'{config["totp_token_name"]}']).decode('utf-8').strip()
+config['password'] = f'{config["password"]}{totp}'
+
+if DEBUG:
+  print(f'configuration file: {cfg_file}')
+  print(config)
+
+child = pexpect.spawn(f'sudo openvpn {config["openvpn_config"]}')
+
+child.expect('.*Enter Auth Username:')
+child.sendline(f'{config["username"]}')
+
+child.expect('.*Enter Auth Password: ')
+child.sendline(f'{config["password"]}')
+
+if DEBUG:
+  print(child.after)
+
+sys.stdout.flush()
+child.interact() # Escape character defaults to ^]
+
+# We should not normally reach here if child is still interacting - but anyway ..
+while child.isalive():
+  time.sleep(2)
+  print('.')
+
+child.close()
+
+# child has exited, openvpn session timed out or error occurred
+# Invoke this script again
+time.sleep(1)  # Allow for SIGINT to be handled gracefully
+os.execl(sys.executable, 'python', __file__, *sys.argv[1:])
+
+# setup
+
+# Make note of your OTP token's seed (in base32 form)
+#  looks something like Base32: 3JHD52VCHTU3M4TFUZ579L78JHD12345
+
+# go get -u       github.com/arcanericky/totp
+#  Make sure it gets installed somewhere into $PATH as `totp`
+
+# register the token
+# totp config add mytoken 3JHD52VCHTU3M4TFUZ579L78JHD12345
+
+# Test that totp displays the same value as google authenticator, etc
+# totp config list
+# totp mytoken
+
+# sudo visudo # set sudoers to run openvpn with NOPASSWD
+# %sudo   ALL=(ALL:ALL) NOPASSWD: /usr/sbin/openvpn, /bin/ip
+
+# create ~/.config/ovpn.yaml configuration for this script
+#  username: foo
+#  password: bar
+#  totp_token_name: mytoken
+#  openvpn_config: /path/to/my_openvpn.ovpn
+
+# test
+# dig +short txt 3.maybethiscould.work @10.235.0.92
