@@ -1,0 +1,6 @@
+#!/bin/bash
+
+logger -is "Invoking $0 with $@"
+
+# delay before running xrandr
+sleep 2

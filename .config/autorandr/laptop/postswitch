@@ -1,0 +1,7 @@
+#!/bin/bash
+
+logger -is "Invoking ${0##*/} with $@"
+
+# when in laptop
+notify-send "laptop set us" --expire-time=2500
+setxkbmap -layout us
