@@ -35,8 +35,6 @@ launch() {
 {
   log "Starting session '$session'"
 
-  i3-layout-manager -a
-
   wpset &
 
   pgrep -f mark_last_window || mark_last_window &
@@ -53,12 +51,16 @@ launch() {
   launch spotify &
   launch slack &
 
-  run_keybase -g &
-
   nice -n 0 urxvtd -q -f -o &
   launch qterm &
 
   xrandr --dpi 96
 
-  sleep 10 && ~/.config/xsetrc
+  source ~/.config/xsetrc
+  timeout=$(xset q | grep 'Screen Saver' -A 2 | awk '/timeout/{ print $2}')
+  xidlehook --socket /tmp/xidlehook.sock --timer "$timeout" screen-lock screen-unlock &
+
+  run_keybase -g
+
+  i3-layout-manager -a
 }

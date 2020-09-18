@@ -1,0 +1,11 @@
+#!/bin/bash
+
+xset dpms force on
+
+state_file="$TMP/screen-lock-audio-muted"
+if [[ -f $state_file ]]; then
+  dbus-launch pactl set-sink-mute   @DEFAULT_SINK@ 0
+  rm -f "$state_file"
+fi
+
+killall -SIGUSR2 dunst
