@@ -9,104 +9,6 @@ Xft.hinting:            1
 Xft.hintstyle:          hintslight
 Xft.lcdfilter:          lcddefault
 
-URxvt*termName:         rxvt
-URxvt*saveLines:        16384
-!URxvt*visualBell:      true
-URxvt*borderLess:       false
-
-URxvt*cursorColor:      #666699
-URxvt*cursorColor2:     #3399cc
-
-URxvt.underlineColor:   #3399cc
-
-URxvt.urlLauncher   :  xdg-open
-URxvt.underlineURLs :  true
-
-URxvt.keysym.M-u    :  perl:mark-yank-urls:activate_mark_mode
-URxvt.perl-lib      :  /home/unop/.local/lib/urxvt
-URxvt.perl-ext      :  selection,mark-yank-urls,default,matcher,font-size,selection-to-clipboard,selection-autotransform
-URxv.perl-ext-common: default,selection-autotransform
-
-! Convert a line of grep -n into a less command
-URxvt.selection-autotransform.0: s@(.+):(\\d+):\\s+(.+)$@sprintf "less +%s +/'%s' %s",$2-1,$3,$1@gme
-
-! Trim surrounding whitespace
-URxvt.selection-autotransform.1: s@^\\s+|\\s+$@@gm
-
-! Trim borders
-URxvt.selection-autotransform.2: s@^│+|│+$@@gm
-
-! Ensure font-size is included in your URxvt.perl-ext comma separated list of extensions, like below
-URxvt.font-size.step: 1
-! Bind Ctrl+Up and Ctrl+Down to font increment and decrement respectively
-URxvt.keysym.CM-Up:     perl:font-size:incglobal
-URxvt.keysym.CM-Down:   perl:font-size:decglobal
-
-!URxvt.letterSpace:      -1
-
-URxvt.resize-font.smaller: C-Down
-URxvt.resize-font.bigger: C-Up
-
-! URxvt.font: 9x15
-! URxvt.font:             xft:monaco:size=10,true
-URxvt*font:             xft:Bitstream Vera Sans mono:size=12,antialiased=true
-URxvt.italicFont:       xft:Bitstream Vera Sans Mono:italic:autohint=true
-URxvt.boldFont:         xft:Bitstream Vera Sans Mono:bold:autohint=true
-URxvt.boldItalicFont:   xft:Bitstream Vera Sans Mono:bold:italic:autohint=true
-! URxvt*font:             xft:Droid Sans Mono:size=10,style=Regular,antialiased=true
-!URxvt*font:             xft:Bitstream Vera Sans mono:size=9,antialiased=true
-!urXVT.FOnt:            9x15,xft:Kochi Gothic:antialiased=true
-
-URxvt.iso14755: false
-URxvt.iso14755_52: false
-
-
-URxvt*inheritPixmap:    true
-URxvt*transparent:      true
-URxvt*shading:          16
-!URxvt*tintColor:        #ffffff
-URxvt*foreground:       #cfcfcf
-URxvt*background:       #000000
-URxvt*iconFile:         /usr/share/icons/Gion/scalable/apps/terminal.svg
-
-URxvt*scrollBar:        false
-URxvt*scrollBar_right:  false
-URxvt*transpscrollbar:  true
-!URxvt*scrollColor:     #424242
-
-! black
-URxvt*color0:           #000000
-! red
-URxvt*color1:           #b21818
-! green
-URxvt*color2:           #18b218
-! yellow
-URxvt*color3:           #BE5F00
-! b3a2322lue
-URxvt*color4:           #6D85BA
-! magenta
-URxvt*color5:           #b218b2
-! cyan
-URxvt*color6:           #18b2b2
-! white
-URxvt*color7:           #b2b2b2
-! bight black
-URxvt*color8:           #686868
-! bright red
-URxvt*color9:           #FF5454
-! bright green
-URxvt*color10:          #54FF54
-! bright yellow
-URxvt*color11:          #FFFF54
-! bright blue
-URxvt*color12:          #73A5FF
-! bright magenta
-URxvt*color13:          #FF54FF
-! bright cyan
-URxvt*color14:          #54FFFF
-! bright white
-URxvt*color15:          #FFFFFF
-
 ! black
 XTerm*color0:           #000000
 ! red
@@ -226,3 +128,4 @@ URxvt*fading:               30
 ! URxvt.font: xft:monaco:bold:size=10
 
 #include ".config/xresources.d/rofi"
+#include ".config/xresources.d/urxvt"
