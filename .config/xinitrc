@@ -41,10 +41,6 @@ start_xsession() {
       test -e "$file" && xmodmap "$file"
   done
 
-  setxkbmap -option ctrl:nocaps &
-  # xbindkeys
-  # setxkbmap -option ctrl:nocaps -option altwin:swap_alt_win &
-
   systemctl --user import-environment DISPLAY
   dbus-update-activation-environment --systemd DISPLAY
 

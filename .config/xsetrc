@@ -17,3 +17,6 @@ xset dpms 120 210 300  # timeouts for standby, suspend, off
 xset b off          # Turn the bell off
 xset -b             # Disable bell/speaker completely
 xset r rate 175 40  # Set the keyboard repeat-rate:
+
+# keyboard layout
+setxkbmap -option ctrl:nocaps
