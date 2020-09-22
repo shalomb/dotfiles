@@ -10,6 +10,8 @@ fi
 
 killall -SIGUSR1 dunst
 
-if i3lock -i ~/.config/wallpapers/Autumn_in_Proteus.png -c 000000 -nef; then
+i3lock_options="-i $HOME/.config/wallpapers/Autumn_in_Proteus.png -c 000000 -nef"
+
+if i3lock $i3lock_options ; then
   screen-unlock
 fi
