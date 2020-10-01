@@ -13,7 +13,8 @@ session=${1:-i3}
 
 test -r ~/.profile && . ~/.profile
 
-logfile="$TMP/$script.log"
+logdir="$TMP/log"; mkdir -p "$logdir"
+logfile="$logdir/$script.log"
 exec > "$logfile" 2>&1
 
 log() {
