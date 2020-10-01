@@ -59,7 +59,7 @@
 	url = https://github.com/takac/vim-hardtime.git
 
 [submodule   ".tmux/plugins/tpm"]
-        path = .tmux/plugins/tpm
+        path = .config/tmux/plugins/tpm
         url = https://github.com/tmux-plugins/tpm.git
 
 [submodule   ".config/vim/bundle/tmux"]
