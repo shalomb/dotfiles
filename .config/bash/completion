@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# If not running interactively, return
-[[ -n "$PS1" ]] || return
-test -t 0       || return
-
-# tips
-reload  ~/.bin/tips_completion.sh

@@ -9,7 +9,7 @@
  #######################################################################
 
 # If not running interactively, don't do anything, just return
-[[ ${-//[!i]/} ]] || return
+[[ ${-//[!i]/} ]] || return 0
 
 # the default umask is set in /etc/login.defs
 umask 022

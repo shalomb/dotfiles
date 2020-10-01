@@ -50,8 +50,16 @@ set -o notify
 set -o vi
 
 function source() {
-  # echo "$(date --rfc-3339=ns): Sourcing $@"
+  if [[ ${TRACE_SOURCE-} ]]; then
+    before=$(date +%s%N)
+  fi
+
   builtin source "$@"
+
+  if [[ ${TRACE_SOURCE-} ]]; then
+    after=$(date +%s%N)
+    printf '%10d ns %s %s\n' "$(( after - before ))" "$(date --rfc-3339=ns)" "$@"
+  fi
 }
 
 # reload - convenience function around source

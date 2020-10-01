@@ -1,5 +1,0 @@
-#!/bin/bash
-
-if [[ -n $DISPLAY ]]; then
-	source ~/.config/xsetrc
-fi

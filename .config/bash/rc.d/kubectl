@@ -36,7 +36,12 @@ else
   }
 fi
 
-source <(kubectl completion bash)
+kubectl() {
+  if ! type _kubectl_completion &> /dev/null; then
+    source <(command kubectl completion bash)
+  fi
+  command kubectl $@
+}
 
 alias k='kubectl'
 complete -o default -F __start_kubectl k
