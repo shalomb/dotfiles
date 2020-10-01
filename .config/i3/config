@@ -9,8 +9,6 @@
 # mode "window mark"
 # mode "i3 control"
 
-ipc-socket ~/.tmp/i3/i3-ipc.sock
-
 workspace_auto_back_and_forth yes
 popup_during_fullscreen       smart
 focus_on_window_activation    smart
