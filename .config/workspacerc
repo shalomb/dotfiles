@@ -36,34 +36,29 @@ launch() {
 # Also see .xinitrc for daemons started early before the desktop environment
 {
   log "Starting session '$session'"
+  launch wpset
+  pgrep -f mark_last_window ||
+    launch mark_last_window
 
-  wpset &
+  launch unclutter  -idle 5
+  launch autocutsel
+  launch copyq
+  laptop-detect &&
+    launch numlockx off
 
-  pgrep -f mark_last_window || mark_last_window &
+  nice -n 0 urxvtd -q -f -o
+  launch qterm
+  # xrandr --dpi 96
 
-  unclutter  -idle 5 &
-  autocutsel --fork &
-  copyq &
-  laptop-detect && numlockx off &
+  launch xflux -l 48.1439 -g 17.1097
+  launch firefox
+  launch evolution
+  launch spotify
+  launch slack
+  launch run_keybase -g
 
-  launch xflux -l 48.1439 -g 17.1097 &
-
-  launch firefox >/dev/null 2>&1 &
-  launch evolution >/dev/null 2>&1 &
-  launch spotify &
-  launch slack &
-
-  nice -n 0 urxvtd -q -f -o &
-  launch qterm &
-
-  xrandr --dpi 96
-
-  source ~/.config/xsetrc
+  . ~/.config/xsetrc
   timeout=$(xset q | grep 'Screen Saver' -A 2 | awk '/timeout/{ print $2}')
-  xidlehook --socket /tmp/xidlehook.sock --timer "$timeout" screen-lock screen-unlock &
-
-  run_keybase -g
-
-  autorandr --change
-  i3-layout-manager -a
+  launch autorandr --change
+  launch i3-layout-manager -a
 }
