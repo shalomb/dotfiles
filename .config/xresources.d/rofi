@@ -35,5 +35,7 @@ sort: true
 ssh-client: ssh
 ssh-command: {terminal} -e {ssh-client} {host} [-p {port}]
 terminal: urxvt
-window-format: {w}    {c}   {t}	
+window-format: {w}    {c}   {t}
 yoffset: -20
+
+! vim:ft=xdefaults
