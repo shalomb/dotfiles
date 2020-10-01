@@ -1,11 +1,17 @@
 #!/bin/bash
 
+set -eu -o pipefail
+
+lock_state_file="$TMP/screen-locked"
+audio_state_file="$TMP/screen-lock-audio-muted"
+
 xset dpms force on
 
-state_file="$TMP/screen-lock-audio-muted"
-if [[ -f $state_file ]]; then
+if [[ -f $audio_state_file ]]; then
   dbus-launch pactl set-sink-mute   @DEFAULT_SINK@ 0
-  rm -f "$state_file"
+  rm -f "$audio_state_file"
 fi
 
 killall -SIGUSR2 dunst
+
+rm -f "$lock_state_file"

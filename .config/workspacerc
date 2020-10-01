@@ -59,6 +59,7 @@ launch() {
 
   . ~/.config/xsetrc
   timeout=$(xset q | grep 'Screen Saver' -A 2 | awk '/timeout/{ print $2}')
+  launch xidlehook --socket /tmp/xidlehook.sock --timer "$timeout" screen-lock screen-unlock
   launch autorandr --change
   launch i3-layout-manager -a
 }
