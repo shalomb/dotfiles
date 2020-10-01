@@ -1,6 +1,7 @@
 #!/bin/bash
 
-load-env() {
+
+cargo-init() {
   if [[ -r ~/.cargo/env ]]; then
     source ~/.cargo/env
   fi
@@ -12,5 +13,3 @@ rustup-install() {
   load-env
   rustup update
 }
-
-load-env
