@@ -60,7 +60,7 @@ done
 # We now go on to setup the env. for the interactive command shell.
 
 # If we're not running interactively, return.
-test -t 0 || return
+test -t 0 || return 0
 
 GREP_COLOR="0;36";                        export GREP_COLOR;
 GREP_COLORS="${GREP_COLOR:-"1;36"}";      export GREP_COLORS;
