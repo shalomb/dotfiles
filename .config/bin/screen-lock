@@ -1,17 +1,37 @@
 #!/bin/bash
 
-xset dpms force off
+set -eu -o pipefail
 
-state_file="$TMP/screen-lock-audio-muted"
+lock_state_file="$TMP/screen-locked"
+audio_state_file="$TMP/screen-lock-audio-muted"
+
 if pactl list | grep -iq 'State: RUNNING'; then
   dbus-launch pactl set-sink-mute   @DEFAULT_SINK@ 1
-  touch "$state_file"
+  touch "$audio_state_file"
 fi
 
 killall -SIGUSR1 dunst
 
-i3lock_options="-i $HOME/.config/wallpapers/Autumn_in_Proteus.png -c 000000 -nef"
+i3-lock() {
+  tmpbg="$(mktemp).png"
+  trap "rm -fv '$tmpbg'" EXIT INT QUIT
 
-if i3lock $i3lock_options ; then
-  screen-unlock
-fi
+  icon="$HOME/.local/share/icons/lock.png"
+
+  scrot "$tmpbg"
+  # pixelate
+  convert "$tmpbg" -scale 10% -scale 1000% "$tmpbg"
+  # overlay icon
+  convert "$tmpbg" "$icon" -gravity center -composite -matte "$tmpbg"
+
+  { sleep 120
+    [[ -e $lock_state_file ]] && xset dpms force off
+  } &
+
+  touch "$lock_state_file"
+  i3lock_options="-i $tmpbg -c 000000 -nef"
+  i3lock $i3lock_options
+}
+
+# blocking lock
+i3-lock && screen-unlock
