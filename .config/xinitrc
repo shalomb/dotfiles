@@ -44,10 +44,10 @@ start_xsession() {
   systemctl --user import-environment DISPLAY
   dbus-update-activation-environment --systemd DISPLAY
 
-  eval "$(gpg-agent --daemon --write-env-file "$XDG_CACHE_HOME/gpg-agent-info")"
+  eval "$(gpg-agent --daemon --disable-scdaemon)"
 
-  unset SSH_AGENT_PID SSH_AUTH_SOCK
-  if ! kill -0 "$SSH_AGENT_PID"; then
+  if ! kill -0 "${SSH_AGENT_PID-}"; then
+    unset SSH_AGENT_PID SSH_AUTH_SOCK
     eval "$(ssh-agent -s)";
   fi
 
