@@ -78,6 +78,9 @@
   user  = shalomb
   token = 822bb43c9861d41e965eb83b72d4736d
 
+[gpg]
+  program = /usr/bin/gpg2
+
 [merge]
   tool = vimdiff
   conflictstyle = diff3
