@@ -1,11 +1,11 @@
 #!/bin/sh
 
-SHELL="`readlink -f /proc/$$/exe`";       export SHELL
-TTY=`tty`;                                export TTY
+SHELL="$(readlink -f /proc/$$/exe)";      export SHELL
+TTY=$(tty || true);                       export TTY
 
 VT=""
 pid=$(pidof X || pidof xinit) &&
-  VT=`ps -o command= -p "$pid" 2>/dev/null | sed -r 's/.*(vt[0-9]+).*/\1/'`
+  VT=$(ps -o command= -p "$pid" 2>/dev/null | sed -r 's/.*(vt[0-9]+).*/\1/')
 export VT
 
 runlevel=$(runlevel | awk '{print $2}')
