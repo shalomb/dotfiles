@@ -42,19 +42,15 @@ HOST="${HOST:-"$HOSTNAME"}";              export HOST;
 
 USER="${USER:-$(id -un)}"
 
-# Redirect $TMP to ~/.tmp
-TMP=/tmp/"$USER"
-PRIVATE_TMP="$HOME/.tmp"
-[ ! -e "$TMP" ] && (umask 027; mkdir -p "$TMP")
-if [ "$(readlink -f "$PRIVATE_TMP")" != "$TMP" ]; then
-  rm "$PRIVATE_TMP"
-  ln -sf "$TMP/" "$PRIVATE_TMP"
-fi
-
-   TMP="$PRIVATE_TMP"; export    TMP;
+# # Redirect $TMP to ~/.tmp
+: ${TMP=/tmp/$USER}
+                       export TMP
   TEMP="$TMP";         export   TEMP;
 TMPDIR="$TMP";         export TMPDIR;
-unset PRIVATE_TMP
+
+mkdir -p "$TMP"
+chown "$USER:$USER" "$TMP/"
+chmod 1770 "$TMP/"
 
 for file in ~/.config/profile.d/*.sh; do
   . "$file"
