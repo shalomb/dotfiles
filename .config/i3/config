@@ -219,7 +219,7 @@ bindsym Super_R                exec gmrun "Super_R"
 bindsym XF86AudioForward       exec gmrun "XF86AudioForward"
 bindsym XF86AudioLowerVolume   exec dbus-launch pactl set-sink-volume @DEFAULT_SINK@ -10%
 bindsym XF86AudioMedia         exec gmrun "XF86AudioMedia"
-bindsym XF86AudioMicMute       exec gmrun "XF86AudioMicMute"
+bindsym XF86AudioMicMute       exec dbus-launch pactl set-source-mute 1 toggle
 bindsym Shift+XF86AudioMicMute exec gmrun "Shift+XF86AudioMicMute"
 bindsym XF86AudioMute          exec dbus-launch pactl set-sink-mute   @DEFAULT_SINK@ toggle
 bindsym Shift+XF86AudioMute    exec dbus-launch pactl set-source-mute $(pacmd list-sources | awk '/\* index:/{ print $3 }') toggle
