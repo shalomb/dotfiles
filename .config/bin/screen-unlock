@@ -6,6 +6,7 @@ lock_state_file="$TMP/screen-locked"
 audio_state_file="$TMP/screen-lock-audio-muted"
 
 xset dpms force on
+xbacklight -steps 400 -set 30 || true
 
 if [[ -f $audio_state_file ]]; then
   dbus-launch pactl set-sink-mute   @DEFAULT_SINK@ 0
@@ -13,5 +14,3 @@ if [[ -f $audio_state_file ]]; then
 fi
 
 killall -SIGUSR2 dunst
-
-rm -f "$lock_state_file"
