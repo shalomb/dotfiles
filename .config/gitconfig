@@ -107,6 +107,6 @@
 [user]
   name = Shalom Bhooshi
   email = s.bhooshi@gmail.com
-  signingkey = 5DE3E0509C47EA3CF04A42D34AEE18F83AFDEB23
+  signingkey = 6E58CBDB4D4FFAF09114729738495CCA2D2EF563
 
 # vi:filetype=gitconfig
