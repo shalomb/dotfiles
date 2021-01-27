@@ -313,3 +313,7 @@
 [submodule ".config/vim/bundle/pythonsense"]
 	path = .config/vim/bundle/pythonsense
 	url = https://github.com/jeetsukumaran/vim-pythonsense.git
+
+[submodule ".config/vim/bunble/redact-pass"]
+	path = .config/vim/bunble/redact-pass
+	url = https://github.com/tyjak/vim-redact-pass.git
