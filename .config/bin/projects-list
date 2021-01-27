@@ -14,19 +14,31 @@ while getopts 'u' opt; do
 done
 shift $((OPTIND -1))
 
+git(){
+  command git "$@" 2>/dev/null
+}
+
 projects_find() {
-find ~/* -iname ".git" |
-  sed -r 's@/.git@@' |
-  while read d; do
-    dir="${d##$HOME}"
-    dir="~$dir"
-    ( cd "$d" && git remote -v | awk '/fetch/{ print $2 }'
-    ) 2>/dev/null | sed -r 's@^@'"$dir"' @';
-  done
+  find ~/* -iname ".git" |
+    sed -r 's@/.git@@' |
+    while read d; do
+      dir="${d##$HOME}"
+      dir="~$dir"
+      if cd "$d"; then
+        remotes=$(git remote -v | awk '/fetch/{ print $2 }')
+        if [[ ${remotes-} ]]; then
+          while read -r remote; do
+            printf '%s\t%s\n' "$dir" "$remote"
+          done <<< "$remotes"
+        else
+          printf '%s\t%s\n' "$dir" "$(git branch --show-current)"
+        fi
+      fi
+    done
 }
 
 if (( update == 1 )) || [[ ! -e $projects_list ]]; then
   projects_find > "$projects_list"
+else
+  cat "$projects_list"
 fi
-
-cat "$projects_list"
