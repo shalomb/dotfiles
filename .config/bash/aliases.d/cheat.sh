@@ -4,8 +4,10 @@ cheat() {
   local topic="$1"; shift;
   local IFS="+"
   local search_term="$*"
-  curl "cht.sh/$topic/$search_term"
+  curl -fsSL "cht.sh/$topic/$search_term" | "$PAGER"
 }
+
+alias cht='cheat'
 
 gen_cheat_completions() {
 
@@ -43,3 +45,4 @@ __cheat_completion(){
 }
 
 complete -o bashdefault -o default -F __cheat_completion cheat
+complete -o bashdefault -o default -F __cheat_completion cht
