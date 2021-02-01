@@ -9,6 +9,7 @@
   dc      = diff --cached
   df      = diff
   ec      = config -e
+  exec    = "!exec "
   files   = !git diff --name-only $(git merge-base HEAD \"$(git base)\")
   ign     = ls-files -o -i --exclude-standard
   k       = !gitk
