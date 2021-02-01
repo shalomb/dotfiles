@@ -67,6 +67,7 @@
   pager = less
 
 [diff]
+  ignoreSubmodules = dirty
   tool = vimdiff
 
 [difftool]
