@@ -314,6 +314,18 @@
 	path = .config/vim/bundle/pythonsense
 	url = https://github.com/jeetsukumaran/vim-pythonsense.git
 
-[submodule ".config/vim/bunble/redact-pass"]
-	path = .config/vim/bunble/redact-pass
+[submodule ".config/vim/bundle/redact-pass"]
+	path = .config/vim/bundle/redact-pass
+	url = https://github.com/tyjak/vim-redact-pass.git
+
+[submodule ".config/vim/bundle/markdown-preview"]
+	path = .config/vim/bundle/markdown-preview
+	url = https://github.com/iamcco/markdown-preview.nvim.git
+
+[submodule ".config/vim/bundle/instant-markdown"]
+	path = .config/vim/bundle/instant-markdown
+	url = https://github.com/instant-markdown/vim-instant-markdown.git
+
+[submodule ".config/vim/bundle/redact-pass"]
+	path = .config/vim/bundle/redact-pass
 	url = https://github.com/tyjak/vim-redact-pass.git
