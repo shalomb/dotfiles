@@ -29,10 +29,12 @@ function cd {
 
     if [[ $path == -h ]]; then
 			cat <<-EOD
+			  -B  - add current directory to bookmarks ($bookmarks)
 			  -b  - cd to one of the bookmarked directories
 			  -f  - cd to one of the frequently accessed directories
 			  -k  - Pass args verbatim to the 'builtin cd'
 			  -r  - cd to git toplevel directory
+			  -s  - cd to dir held in selection/clipboard
 			  -t  - cd to git toplevel directory
 			  -o  - cd to item in the omni list (all possible completions)
 			  -p  - cd to item in project list
@@ -57,7 +59,7 @@ function cd {
       return
 
   # common locations
-  elif [[ $path == -@(b|f|o|p|v) ]]; then
+  elif [[ $path == -@(b|f|o|p|s|v) ]]; then
 
       shift
       local query=( "$@" )
@@ -66,6 +68,11 @@ function cd {
       local cd=0
 
       case "$path" in
+        # dir/path held in selection (clipboard)
+        -s)
+          candidates=("$(< ~/.cache/dir-selected)")
+        ;;
+
         # Bookmarks
         -b)
           while read -r i; do candidates+=("$i"); done < "$bookmarks"
@@ -79,9 +86,12 @@ function cd {
 
         # Omni
         -o)
-          while read -r i; do candidates+=("$i"); done < <(
+          while read -r i; do
+            candidates+=("$i");
+          done < <(
+            cat ~/.cache/dir-selected
+            dirs -l -p
             cwds-list
-            dirs -v
             cat "$bookmarks"
             projects-list
           )

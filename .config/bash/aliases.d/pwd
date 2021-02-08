@@ -3,5 +3,7 @@
 # emit pwd(1) and also copy $PWD to the clipboard
 function pwd() {
   builtin pwd
-  echo "$PWD" | xclip -in
+  echo "$PWD" |
+    tee ~/.cache/dir-selected |
+    { [[ -n $DISPLAY ]] && xclip -in; }
 }
