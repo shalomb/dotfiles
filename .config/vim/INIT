@@ -63,6 +63,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/haya14busa/vim-operator-flashy.git    bundle/operator-flashy
   git submodule add -f https://github.com/honza/vim-snippets.git                bundle/snipmate-snippets
   git submodule add -f https://github.com/idbrii/textobj-word-column.vim.git    bundle/textobj-word-column
+  git submodule add -f https://github.com/instant-markdown/vim-instant-markdown.git  bundle/instant-markdown
   git submodule add -f https://github.com/jeetsukumaran/vim-markology.git       bundle/markology
   git submodule add -f https://github.com/jeetsukumaran/vim-pythonsense.git     bundle/pythonsense
   git submodule add -f https://github.com/jgdavey/tslime.vim.git                bundle/tslime
