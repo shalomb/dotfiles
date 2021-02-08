@@ -122,13 +122,15 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
 
   git submodule update --init --recursive
   git submodule sync
-  git submodule -q foreach '
-    echo "Synchronizing ${PWD##*dotfiles/}";
-    git fetch -q --all --prune;
-    git checkout -q master;
-    git reset -q --hard origin/master;
-    git pull -q origin master;
-  '
+  git submodule foreach --recursive --quiet pwd |
+    xargs -I{} -P10 sh -c '
+      echo {};
+      cd "{}";
+      git fetch -q --all --prune;
+      git checkout -q master;
+      git reset -q --hard origin/master;
+      git pull -q origin master
+    '
   git submodule status | sed -r 's/[()]//g' | column -t
 )
 
