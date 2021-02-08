@@ -107,7 +107,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/tpope/vim-surround.git                bundle/surround
   git submodule add -f https://github.com/tpope/vim-unimpaired.git              bundle/unimpaired
   git submodule add -f https://github.com/tpope/vim-vinegar.git                 bundle/vinegar
-  git submodule add -f https://github.com/tyjak/vim-redact-pass.git             bunble/redact-pass
+  git submodule add -f https://github.com/tyjak/vim-redact-pass.git             bundle/redact-pass
   git submodule add -f https://github.com/vim-scripts/genutils.git              bundle/genutils
   git submodule add -f https://github.com/vim-scripts/Gundo.git                 bundle/gundo
   git submodule add -f https://github.com/vim-scripts/matchit.zip.git           bundle/matchit
