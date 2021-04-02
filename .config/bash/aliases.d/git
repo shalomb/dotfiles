@@ -39,7 +39,6 @@ function _git_arg_wrapper {
     # Don't go messing around with history -p unless you
     # really know what it is doing.
     args=( $( history -p "!$hist_index:1*" &>/dev/null ) );
-    # echo "args: ${args[@]} || ${#args[@]}"
 
     if [[ -n ${args[0]} ]]; then
       :;
@@ -63,7 +62,7 @@ function gb  {
   if [[ $# == 0 ]]; then
     local cur_branch=$(gbr)
     local branch=$(
-      { command git branch --color --sort=committerdate;
+      { gbranches;
         printf "%s\n" $(git-default-branch)
         [[ $old_branch ]] && echo "$old_branch"
         echo "$cur_branch"
@@ -119,7 +118,10 @@ function summarize_refs {
 }
 
 #| gbranches - list branches
-function gbranches { git branch --sort=committerdate "$@" | awk '{print $NF}'; }
+function gbranches {
+  command git branch --no-color --sort=committerdate "$@" |
+    awk '{print $NF}' | sed -r 's/\)$//' | sort
+}
 
 #| gbar - (re-)load git-bar aliases
 function gbar { source "$git_bar_entry_point"; }
@@ -186,7 +188,8 @@ function gcm {
 function gco {
   # TODO
   # Manage a branch stack - gbpush/gbpop
-  if [[ -e $1 ]]; then
+  local pathspec="$1"
+  if [[ -e $pathspec ]]; then
     command git checkout "$@"
     return
   fi
@@ -198,9 +201,9 @@ function gco {
       set -- "develop"
     fi
   elif [[ $# == 1 ]]; then
-    available=( $( gbranches | grep -iP -- "$1" ) )
+    available=( $( gbranches | grep -iP -- "$pathspec" ) )
     if [[ -z $available ]]; then
-      { echo "No branch names match '$1', aborting .."; } >&2; return
+      set -- "$pathspec"
     elif (( ${#available[@]} > 1 )); then
       { echo 'Multiple branches available ..'
         printf "  %s\n" "${available[@]}";
@@ -332,16 +335,16 @@ function gP  {
 }
 
 #| gPa - git push --all
-function gPa  { command git push --all; }
+function gPa  { gP --all; }
 
 #| gPt - git push --tags
-function gPt  { command git push --tags; }
+function gPt  { gP --tags; }
 
 #| gPA - gPa; gPt
 function gPA  { gPt; gPa; }
 
 #| gpom - git push origin master
-function gPo { git push origin "$@"; }
+function gPo { gP origin "$@"; }
 
 #| gpr - gp --rebase
 function gpr { gp "$@" --rebase; }
@@ -427,6 +430,11 @@ function gwipe {
   gwip "WIPE" && command git reset --hard HEAD~1
 }
 
+#! vi - launch last related-in-flow files in vim
+function vi {
+  command vi "${_git_args[@]}"
+}
+
 function revision_completion {
   local cur="${COMP_WORDS[COMP_CWORD]}";
   local revs=( $(gbp | sed -r -e 's/^\*//' -e 's/\ +//' | grep -iP -- "$cur") )
@@ -495,17 +503,19 @@ function complete_features { branch_completion gffl ;}
 function complete_bugfixes { branch_completion gfbl ;}
 
 #| g - git
-    alias g=git
+alias g=git
+
 complete -o bashdefault -o default -o nospace -F __git_wrap__git_main g
-complete -o bashdefault -o default -o nospace -F unstaged_completion ga
-complete -o bashdefault -o default -o nospace -F unstaged_completion gd
-complete -o bashdefault -o default -o nospace -F complete_branches gb
-complete -o bashdefault -o default -o nospace -F complete_branches gbd
-complete -o bashdefault -o default -o nospace -F complete_branches gco
-complete -o bashdefault -o default -o nospace -F complete_features gffco
-complete -o bashdefault -o default -o nospace -F complete_features gffd
-complete -o bashdefault -o default -o nospace -F complete_bugfixes gfbco
-complete -o bashdefault -o default -o nospace -F revision_completion gS
+complete -o bashdefault -o default -o nospace -F complete_branches    gb
+complete -o bashdefault -o default -o nospace -F complete_branches    gbd
+complete -o bashdefault -o default -o nospace -F complete_branches    gco
+complete -o bashdefault -o default -o nospace -F complete_branches    gP
+complete -o bashdefault -o default -o nospace -F complete_branches    gp
+complete -o bashdefault -o default -o nospace -F complete_bugfixes    gfbco
+complete -o bashdefault -o default -o nospace -F complete_features    gffco
+complete -o bashdefault -o default -o nospace -F complete_features    gffd
+complete -o bashdefault -o default -o nospace -F file_completion      glf
 complete -o bashdefault -o default -o nospace -F revision_completion_full glg
-complete -o bashdefault -o default -o nospace -F file_completion glf
-complete -o bashdefault -o default -F complete_branches gP
+complete -o bashdefault -o default -o nospace -F revision_completion  gS
+complete -o bashdefault -o default -o nospace -F unstaged_completion  ga
+complete -o bashdefault -o default -o nospace -F unstaged_completion  gd
