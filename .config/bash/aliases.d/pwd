@@ -5,5 +5,7 @@ function pwd() {
   builtin pwd
   echo "$PWD" |
     tee ~/.cache/dir-selected |
-    { [[ -n $DISPLAY ]] && xclip -in; }
+    if [[ -n $DISPLAY ]]; then
+      command -v xclip && xclip -in
+    fi &>/dev/null
 }
