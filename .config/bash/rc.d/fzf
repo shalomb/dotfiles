@@ -1,16 +1,40 @@
 #!/bin/bash
 
-## fzf's installer (./install) sets this up in bashrc, may need
-## updating in the future
+fzf_install_dir="$XDG_DATA_HOME/fzf"
+fzf_bin_dir="$fzf_install_dir/bin"
+
+install-fzf() {
+  if [[ ! -d $fzf_install_dir ]]; then
+    git clone https://github.com/junegunn/fzf.git "$fzf_install_dir"
+  fi
+
+  ( builtin cd $fzf_install_dir;
+    echo "Updating $fzf_install_dir"
+    git remote -v
+    git clean -f -d -q
+    git reset --hard origin/master
+    git pull origin master
+  )
+
+  cp -av "$fzf_bin_dir/"* ~/.local/bin/
+
+  local latest_tag=$(curl -fsSL 'https://api.github.com/repos/junegunn/fzf/releases/latest' | jq -cer '.tag_name')
+  local url="https://github.com/junegunn/fzf/releases/download/$latest_tag/fzf-${latest_tag}-linux_amd64.tar.gz"
+  local file="${url##*/}"
+  local _TMP=$(mktemp -d)
+
+  ( cd "$_TMP"
+    echo "Fetching release $latest_tag from $url"
+    wget -qc "$url" -O "$file"
+    tar zxvf "$file" -C ~/.local/bin
+  )
+
+  rm -fr "$_TMP"
+  fzf --version
+}
 
 if [[ $- == *i* ]]; then
-  fzf_install_dir="$XDG_DATA_HOME/fzf"
-  fzf_overlay_dir="$XDG_DATA_HOME/fzf-overlay"
-  fzf_bin_dir="$fzf_install_dir/bin"
-
-  if [[ ! $PATH == *$fzf_bin_dir* ]]; then
-    export PATH="$PATH:$fzf_bin_dir"
-  fi
+  fzf_overlay_dir="${fzf_install_dir}-overlay"
 
   source "$fzf_install_dir/shell/completion.bash"   2> /dev/null
   source "$fzf_install_dir/shell/key-bindings.bash" 2> /dev/null
@@ -21,4 +45,3 @@ if [[ $- == *i* ]]; then
     done
   fi
 fi
-
