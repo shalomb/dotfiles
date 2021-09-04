@@ -432,7 +432,13 @@ function gwipe {
 
 #! vi - launch last related-in-flow files in vim
 function vi {
-  command vi "${_git_args[@]}"
+  if (( $# > 0 )); then
+    command vi "$@"
+  elif (( ${#_git_args[@]} > 0 )); then
+    command vi "${_git_args[@]}"
+  else
+    v
+  fi
 }
 
 function revision_completion {
