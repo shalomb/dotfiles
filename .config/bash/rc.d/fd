@@ -1,0 +1,15 @@
+#!/bin/bash
+
+install-fd() {
+  local latest_tag=$(curl -fsSL 'https://api.github.com/repos/sharkdp/fd/releases/latest' | jq -cer '.tag_name')
+  echo "sharkdp/fd/releases/latest reports $latest_tag"
+  fd --version | grep "$latest_tag$" || rm -fv ~/.local/bin/fd
+  local url="https://github.com/sharkdp/fd/releases/download/$latest_tag/fd_${latest_tag#v}_amd64.deb"
+  local file="${url##*/}"
+  _TMP=$(mktemp -d)
+  ( cd "$_TMP"
+    wget -c "$url" -O "$file"
+    sudo dpkg -i "$file"
+  )
+  rm -fr "$_TMP"
+}
