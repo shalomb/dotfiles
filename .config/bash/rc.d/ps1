@@ -33,6 +33,7 @@ case "$TERM" in
     PS1+='\[$cyan\]$(e=$?;date +%T|tr -d :;exit $e)'
     PS1+='\[$reverse\]'
     PS1+='\[$bold$blue_32\] \W '
+    PS1+='\[$reset\]'
     PS1+='$(e=$?;__my_git_ps1;exit $e)'
     PS1+='\[$bold\]'
     PS1+=' '

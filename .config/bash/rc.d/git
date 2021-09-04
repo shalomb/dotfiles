@@ -15,6 +15,10 @@ function __my_git_ps1 {
   git_ps1_text="${git_ps1_text//hotfix\//h\/}"
   git_ps1_text="${git_ps1_text//support\//s\/}"
 
+  if (( ${#git_ps1_text} > 24 )); then
+    git_ps1_text="${git_ps1_text:0:24}⋯"
+  fi
+
   gs=$(git status --ignore-submodules=all)
 
   if grep -iq "Changes not staged" <<<"$gs"; then
@@ -22,7 +26,7 @@ function __my_git_ps1 {
   elif grep -iq "^Untracked files:" <<<"$gs"; then
     printf '\001%s\002%s\001%s\002' "$yellow_222" "$git_ps1_text" "$reset"
   elif grep -iq "^Changes to be committed:" <<<"$gs"; then
-    printf '\001%s\002%s\001%s\002' "$underline$blue_30" "$git_ps1_text" "$reset"
+    printf '\001%s\002%s\001%s\002' "$underline$yellow_222" "$git_ps1_text" "$reset"
   else
     printf '\001%s\002%s\001%s\002' "$green_36" "$git_ps1_text" "$reset"
   fi
@@ -42,3 +46,5 @@ function __my_git_ps1 {
 }
 
 export GIT_PAGER="less"
+
+# vim:fenc=utf8
