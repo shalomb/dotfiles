@@ -24,7 +24,6 @@ type -P git      &>/dev/null || pkgs_to_install+=( 'git' )
 type -P jq       &>/dev/null || pkgs_to_install+=( 'jq' )
 type -P par      &>/dev/null || pkgs_to_install+=( 'par' )
 type -P sudo     &>/dev/null || pkgs_to_install+=( 'sudo' )
-type -P ssh-askpass     &>/dev/null || pkgs_to_install+=( 'ssh-askpass' )
 
 if (( ${#pkgs_to_install[@]} >= 1 )); then
   echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
