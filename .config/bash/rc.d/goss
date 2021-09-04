@@ -12,5 +12,4 @@ install-goss() {
     test -x goss || wget -c "$url" -O goss
     chmod +x goss
   )
-  set +xv
 }
