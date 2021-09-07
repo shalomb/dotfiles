@@ -25,8 +25,10 @@
   s       = status --porcelain
   stat    = !git diff --stat $(git merge-base HEAD \"$(git base)\")
   st      = status --short
+  today   = log --since "yesterday"
   tree    = log --graph --oneline --decorate
   vimdiff = difftool -y -t vimdiff
+  wow     = log --graph --decorate --pretty=oneline --abbrev-commit --name-status
 
 [branch]
   autosetupmerge  = always
