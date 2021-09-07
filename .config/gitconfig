@@ -27,6 +27,7 @@
   st      = status --short
   today   = log --since "yesterday"
   tree    = log --graph --oneline --decorate
+  undo    = reset HEAD~1 --mixed
   up      = !git pull --rebase --prune $@ && git submodule update --init --recursive
   vimdiff = difftool -y -t vimdiff
   wow     = log --graph --decorate --pretty=oneline --abbrev-commit --name-status
