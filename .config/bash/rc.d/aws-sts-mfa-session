@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# This function sets up the
+#   AWS_ACCESS_KEY_ID,
+#   AWS_SECRET_ACCESS_KEY and
+#   AWS_SESSION_TOKEN
+# environment variables necessary for the AWS CLI (awscli)
+# command to authenticate with the AWS Control Plane APIs.
+# Therefore, this function is meant to be sourced directly
+# into the bash shell and so should be placed into ~/.bashrc or similar.
+#
+# The aws command can be wrapped like so
+# alias aws=aws-sts-mfa-session
+#
+# If a valid STS token is not present or is not cached, a new STS session
+# is setup and you will be prompted for an MFA token from the virtual
+# device you registered in IAM
+
+function aws-sts-mfa-session {
+  local AWS_MFA_AUTH_CODE
+  : ${AWS_MFA_AUTH_CODE:=''}
+  : ${AWS_MFA_PROFILE:=default}
+  : ${STS_SESSION_CACHE:=~/.aws/sts-mfa-session.json}
+  : ${STS_SESSION_DURATION:=86400} #24 hours
+
+  function _aws { command aws "$@" --profile "$AWS_MFA_PROFILE"; }
+
+  function pluck { jq -cer "$@" "$STS_SESSION_CACHE"; }
+
+  function load-sts-cached-session {
+    export AWS_ACCESS_KEY_ID=$(pluck '.Credentials.AccessKeyId')
+    export AWS_SECRET_ACCESS_KEY=$(pluck '.Credentials.SecretAccessKey')
+    export AWS_SESSION_TOKEN=$(pluck '.Credentials.SessionToken')
+    export AWS_SESSION_TOKEN_EXPIRY_TIME=$(
+      date '+%s' -d $(pluck '.Credentials.Expiration') || true
+    )
+  }
+
+  function new-sts-session {
+    local mfa_device
+
+    if ! mfa_device=$(
+      _aws iam list-mfa-devices | jq -cer .MFADevices[0].SerialNumber
+    ); then
+      echo >&2 "ERROR: No MFA devices listed. Is \$AWS_MFA_PROFILE ($AWS_MFA_PROFILE) set?"
+      return 1
+    fi
+
+    if [[ -z $AWS_MFA_AUTH_CODE ]]; then
+      read -p "Enter the MFA token for $mfa_device: " -r AWS_MFA_AUTH_CODE
+    fi
+
+    if session_object=$(_aws sts get-session-token \
+      --duration-seconds "$STS_SESSION_DURATION" \
+      --serial-number    "$mfa_device" \
+      --token-code       "$AWS_MFA_AUTH_CODE"); then
+      echo "$session_object" > "$STS_SESSION_CACHE"
+    else
+      echo >&2 "ERROR: Unable to get an STS token. Check MFA token ($AWS_MFA_AUTH_CODE) for correctness."
+      return 1
+    fi
+
+    load-sts-cached-session
+  }
+
+  if [[ $1 == test ]]; then command aws sts get-caller-identity; return $?; fi
+  if [[ $1 == @(refresh|login) ]]; then new-sts-session; ec=$?; command aws sts get-caller-identity; return $?; fi
+
+  if [[ -z $AWS_ACCESS_KEY_ID             ||
+        -z $AWS_SECRET_ACCESS_KEY         ||
+        -z $AWS_SESSION_TOKEN             ||
+        -z $AWS_SESSION_TOKEN_EXPIRY_TIME
+    ]]; then
+      load-sts-cached-session
+  fi
+
+  local now=$(date +%s)
+  (( now > AWS_SESSION_TOKEN_EXPIRY_TIME )) && { new-sts-session || return $?; }
+
+  command aws "$@"
+}
