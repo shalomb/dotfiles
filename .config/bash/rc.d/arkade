@@ -13,4 +13,4 @@ install-arkade() {
   )
 }
 
-PATH="$PATH:~/.arkade/bin"
+PATH="$PATH:$HOME/.arkade/bin"
