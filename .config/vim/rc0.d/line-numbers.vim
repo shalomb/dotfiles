@@ -5,8 +5,8 @@ set number relativenumber
 
 augroup numbertoggle
   autocmd!
-  autocmd BufEnter,FocusGained,InsertLeave * if &nu | set relativenumber   | endif
-  autocmd BufLeave,FocusLost,InsertEnter   * if &nu | set norelativenumber | endif
+  autocmd BufEnter,CmdLineLeave,FocusGained,InsertLeave * if &nu | set relativenumber   | redraw | endif
+  autocmd BufLeave,CmdLineEnter,FocusLost,InsertEnter   * if &nu | set norelativenumber | redraw | endif
 augroup END
 
 highlight LineNr ctermbg=NONE
