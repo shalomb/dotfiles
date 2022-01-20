@@ -165,8 +165,8 @@ function gbvv { gbranches --all | summarize_refs; }
 #| gbvvv - branch ref info
 function gbvvv { git for-each-ref --format="%(refname)" | summarize_refs; }
 
-#| gca - ga; gcm
-function gca { ga; gcm "$@"; }
+#| gc - ga; gcm
+function gc { ga; gcm "$@"; }
 
 #| gcam - git commit --ammend
 function gcam { command git commit --amend "$@"; }
@@ -415,14 +415,14 @@ function gtvvv { command git tag | summarize_refs;  }
 #| gundo - git reset HEAD~1 --mixed
 function gundo { command git reset --mixed HEAD~1; }
 
-#| gwip - ga .; gca WIP
+#| gwip - ga .; gc WIP
 function gwip {
   if [[ $# == 0 ]]; then
     local msg='WIP'
   else
     local msg="$@"
   fi
-  ga . && gca "$(date +%FT%T): $msg on $(gbr): $(git log --format=%B -n 1 HEAD)"
+  ga . && gc "$msg on $(gbr): $(git log --format=%B -n 1 HEAD)"
 }
 
 #| gwipe - gwipe; git reset --hard HEAD~1
