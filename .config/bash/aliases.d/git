@@ -490,10 +490,26 @@ function file_completion {
   COMPREPLY=( $(compgen -W "${files[*]}" ) );
 }
 
+function git_top_level {
+  git rev-parse --show-toplevel 2>/dev/null
+}
+
+function this_git_dir {
+  local top_level=$(git_top_level)
+  echo "${PWD##$top_level/}"
+}
+
 function unstaged_completion {
   local cmd="$1"
   local cur="${COMP_WORDS[COMP_CWORD]}";
-  local files=( $(git status --porcelain | awk -v p="$cur" '$0~p{ print $2 }') )
+  local this_git_dir=$(this_git_dir)
+  local files=( $(
+    git status -s |
+      awk -v p="$cur" '$0 ~ p{ print $2 }' |
+      while read -r f; do
+        echo "${f#$this_git_dir/}"
+      done
+  ) )
   COMPREPLY=( $(compgen -W "${files[*]}" ) );
 }
 
