@@ -59,12 +59,14 @@ nnoremap <silent> Y                   y$
 nnoremap <silent> <leader>,           :edit #<cr>
 nnoremap <silent> <leader>/           :Ag<cr>
 nnoremap          <leader>.           :ls<cr>:b<space>
-nnoremap          <leader>'           :ls<cr>:b<space>
+nnoremap          <leader>'           :Buffers<cr>
 nnoremap          <leader>"           :ls<cr>:vs<space>#
 nnoremap <silent> <leader><space>     :edit #<cr>
 nnoremap <silent> <leader>a           :edit #<cr>
 nnoremap <silent> <leader>M           :Maps<cr>
-silent! nunmap <leader>C
+nnoremap <silent> <leader>B           :Buffers<cr>
+nnoremap <silent> <leader>F           :Files<cr>
+silent!  nunmap   <leader>C
 nnoremap <silent> <leader>C           :Command<cr>
 nnoremap <silent> <leader>L           :Lines<cr>
 
