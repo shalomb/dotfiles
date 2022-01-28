@@ -1,22 +1,22 @@
 #### dotfiles
 
-dotfiles for my workspace.
+Track dotfiles as hardlinks to versions in a local git repo
 
 #### Installation
 
     mkdir ~/.config/dotfiles/
     cd !$
     git clone git://github.com/shalomb/dotfiles.git .
-    ./dotfile_stash export ./
+    ./dotfile_stash export ./  # Install all dotfiles
 
 #### Managing change
 
 ##### Managed files
 
-`./dotfile_stash` exports files within the repository as hardlinks to expected
-locations in the home directory (the repo needs to exist on the same file
-system) and so changes to any of the managed dotfiles appear as changes in the
-repository.
+`./dotfile_stash` install files within the repository as hard links to
+counterpart locations in the home directory (and as such the repo needs to
+exist on the same file system) and so changes to any of the managed
+dotfiles appear as changes in the repository.
 
     cd ~/.config/dotfiles/
     git status --
@@ -38,4 +38,3 @@ New files can be imported into the repository.
 * make the map script configurable
 * encrypt certain files ??
 * enlist more candidates for inclusion
-
