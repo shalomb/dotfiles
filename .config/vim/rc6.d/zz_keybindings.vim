@@ -82,7 +82,7 @@ nnoremap          <leader>bS          :ls<cr>:split #
 
 nnoremap          <leader>?           :help <C-D>
 
-nnoremap <silent> <leader>l           :redraw<cr>
+nnoremap <leader>l :nohlsearch<cr>:diffupdate<cr>:syntax sync fromstart<cr><c-l>
 nnoremap <silent> <leader>m           g<  " last set of messages
 
 nnoremap <silent> <leader>nh          :set hlsearch!      hlsearch?<cr>
