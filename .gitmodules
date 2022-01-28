@@ -329,3 +329,6 @@
 [submodule ".config/vim/bundle/redact-pass"]
 	path = .config/vim/bundle/redact-pass
 	url = https://github.com/tyjak/vim-redact-pass.git
+[submodule ".config/vim/bundle/vimwiki"]
+	path = .config/vim/bundle/vimwiki
+	url = https://github.com/vimwiki/vimwiki.git

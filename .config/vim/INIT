@@ -113,6 +113,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/vim-scripts/netrw.vim.git             bundle/netrw
   git submodule add -f https://github.com/vim-scripts/underlinetag.git          bundle/underlinetag
   git submodule add -f https://github.com/vim-scripts/vis.git                   bundle/vis  # Extended VISual commands
+  git submodule add -f https://github.com/vimwiki/vimwiki.git                   bundle/vimwiki
   git submodule add -f https://github.com/wellle/targets.vim.git                bundle/targets
   git submodule add -f https://github.com/wellle/visual-split.vim.git           bundle/visual-split
   git submodule add -f https://github.com/xolox/vim-easytags.git                bundle/easytags
