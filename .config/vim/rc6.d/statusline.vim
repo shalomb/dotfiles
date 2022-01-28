@@ -14,6 +14,9 @@ highlight User9  ctermbg=234 ctermfg=8  cterm=bold
 set statusline=%1*
 set statusline+=\ %2*%t     " filename (tail)
 set statusline+=%3*\ %n\    " buffer #
+set statusline+=            "
+set statusline+=%3*\ %{ALELinterStatus()} " Our custom linter status
+set statusline+=            "
 set statusline+=%4*%{substitute(fugitive#statusline(),\'GIT\\(.*\\)(\\(.*\\))\',\'\\2\\1\',\'g\')}
 set statusline+=%9*\%<\ \   " Where to truncate a long line
 set statusline+=%a          " argument list status (e.g. 1 of 3)
