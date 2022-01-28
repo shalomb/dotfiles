@@ -1,0 +1,11 @@
+# Google
+#  - Picasa
+
+# URL: http://www.google.com/linuxrepositories/apt.html
+# KEY: wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+
+
+# URL: http://google.com/linuxrepositories/
+
+# Google testing repository
+deb     http://dl.google.com/linux/deb/               testing   non-free
