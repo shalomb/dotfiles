@@ -1,9 +1,0 @@
-# wine
-#  - wine
-
-# PUBKEY: 58403026387EE263
-# URL: http://www.winehq.org/site/download-deb
-# wget -q http://wine.budgetdedicated.com/apt/387EE263.gpg -O- | sudo apt-key add -
-
-deb     http://wine.budgetdedicated.com/apt   etch  main
-deb-src http://wine.budgetdedicated.com/apt   etch  main

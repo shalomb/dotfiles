@@ -1,0 +1,16 @@
+# Debian GNU/Linux 8.0 jessie/Testing
+
+#deb      http://ftp.uk.debian.org/debian/              jessie                  main contrib non-free
+#deb-src  http://ftp.uk.debian.org/debian/              jessie                  main contrib non-free
+
+deb       http://mirror.ox.ac.uk/debian                 jessie                  main contrib non-free
+deb-src   http://mirror.ox.ac.uk/debian                 jessie                  main contrib non-free
+
+#deb      http://mirror.peer1.net/debian                jessie                  main contrib non-free
+#deb-src  http://mirror.peer1.net/debian                jessie                  main contrib non-free
+
+deb       http://security.debian.org/                   jessie/updates          main contrib non-free
+deb-src   http://security.debian.org/                   jessie/updates          main contrib non-free
+
+#deb       http://volatile.debian.org/debian-volatile    jessie/volatile         main contrib non-free
+#deb       http://volatile.debian.org/debian-volatile    jessie/volatile-sloppy  main contrib non-free
