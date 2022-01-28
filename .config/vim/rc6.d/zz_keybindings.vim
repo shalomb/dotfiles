@@ -83,7 +83,7 @@ nnoremap          <leader>bS          :ls<cr>:split #
 nnoremap          <leader>?           :help <C-D>
 
 nnoremap <leader>l :nohlsearch<cr>:diffupdate<cr>:syntax sync fromstart<cr><c-l>
-nnoremap <silent> <leader>m           g<  " last set of messages
+nnoremap <leader>m  :<c-u><c-r><c-r>='let @'. v:register .' = '. string(getreg(v:register))<cr><c-f><left>
 
 nnoremap <silent> <leader>nh          :set hlsearch!      hlsearch?<cr>
 nnoremap <silent> <leader>nn          :set hlsearch!      hlsearch?<cr>
