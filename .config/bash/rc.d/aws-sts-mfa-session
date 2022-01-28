@@ -79,3 +79,5 @@ function aws-sts-mfa-session {
 
   command aws "$@"
 }
+
+alias aws=aws-sts-mfa-session
