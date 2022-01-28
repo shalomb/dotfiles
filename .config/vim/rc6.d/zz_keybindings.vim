@@ -10,8 +10,8 @@ cnoremap w!!                          %!SUDO_ASKPASS=$(which ssh-askpass) sudo -
 
 cnoremap <C-h>                        <Left>
 cnoremap <C-l>                        <Right>
-cnoremap <C-p>                        <Up>
-cnoremap <C-n>                        <Down>
+cnoremap <expr> <c-n> wildmenumode() ? "\<c-n>" : "\<down>"
+cnoremap <expr> <c-p> wildmenumode() ? "\<c-p>" : "\<up>"
 
 inoremap <C-U>                        <C-G>u<C-U>
 inoremap <C-W>                        <C-G>u<C-W>
