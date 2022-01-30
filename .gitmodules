@@ -26,10 +26,6 @@
 	path = .config/vim/bundle/dockerfile
 	url = https://github.com/ekalinin/Dockerfile.vim.git
 
-[submodule   ".config/vim/bundle/markdown"]
-	path = .config/vim/bundle/markdown
-	url = https://github.com/tamlok/vim-markdown.git
-
 [submodule   ".config/vim/bundle/snipmate"]
 	path = .config/vim/bundle/snipmate
 	url = https://github.com/garbas/vim-snipmate.git
@@ -322,13 +318,10 @@
 	path = .config/vim/bundle/markdown-preview
 	url = https://github.com/iamcco/markdown-preview.nvim.git
 
-[submodule ".config/vim/bundle/instant-markdown"]
-	path = .config/vim/bundle/instant-markdown
-	url = https://github.com/instant-markdown/vim-instant-markdown.git
-
 [submodule ".config/vim/bundle/redact-pass"]
 	path = .config/vim/bundle/redact-pass
 	url = https://github.com/tyjak/vim-redact-pass.git
+
 [submodule ".config/vim/bundle/vimwiki"]
 	path = .config/vim/bundle/vimwiki
 	url = https://github.com/vimwiki/vimwiki.git
