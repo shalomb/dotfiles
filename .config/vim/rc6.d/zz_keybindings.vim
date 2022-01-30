@@ -61,7 +61,7 @@ nnoremap <silent> <leader>/           :Ag<cr>
 nnoremap          <leader>.           :ls<cr>:b<space>
 nnoremap          <leader>'           :Buffers<cr>
 nnoremap          <leader>"           :ls<cr>:vs<space>#
-nnoremap <silent> <leader><space>     :edit #<cr>
+nnoremap <silent> <leader><space>     :update<cr>:echomsg(substitute(expand('%:p'), glob('~/'), '~/', '') . ' updated! ' . strftime('%FT%T%z')) . ' ' . substitute(getcwd(), glob('~'), '~', '')<cr>
 nnoremap <silent> <leader>a           :edit #<cr>
 nnoremap <silent> <leader>M           :Maps<cr>
 nnoremap <silent> <leader>B           :Buffers<cr>
@@ -103,16 +103,13 @@ nnoremap <silent> <leader>of          :!xdg-open %:p<cr>
 nnoremap <silent> <leader>Q           :only<cr>
 nnoremap <silent> <leader>S           :new<cr>
 nnoremap <silent> <leader>V           :vnew<cr>
-nnoremap <silent> <leader>v           :vsplit #
+nnoremap <silent> <leader>v           :vsplit #<cr>
 nnoremap <silent> <leader>sp          :!x-terminal-emulator -e ispell -x -t %<cr>:redraw<cr>
 nnoremap          <leader>t           :BTags<cr>
 nnoremap          <leader>T           :Tags<cr>
 nnoremap <silent> <leader>uv          :!x-terminal-emulator -e urlview % <cr>
 nnoremap <silent> <leader>\|          :vnew<cr>
-silent! unmap <leader>wf
-nnoremap          <leader>w           :write<cr>:echomsg(expand('%'))<cr>
 nnoremap          <leader>q           :x<cr>
-nnoremap <silent> <leader>x           :close<cr>
 
 vnoremap          z/                  y/<C-R>"<CR>gv " put selected text in the search buffer
 
