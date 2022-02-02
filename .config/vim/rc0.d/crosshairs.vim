@@ -10,7 +10,6 @@ function! GetHlValue(...)
 endfunction
 
 function! SetHlValue(...)
-  echo (a:1)
   execute(':highlight ' . a:1)
 endfunction
 
