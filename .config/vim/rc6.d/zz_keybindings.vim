@@ -61,7 +61,7 @@ nnoremap <silent> <leader>/           :Ag<cr>
 nnoremap          <leader>.           :ls<cr>:b<space>
 nnoremap          <leader>'           :Buffers<cr>
 nnoremap          <leader>"           :ls<cr>:vs<space>#
-nnoremap <silent> <leader><space>     :update<cr>:echomsg(substitute(expand('%:p'), glob('~/'), '~/', '') . ' updated! ' . strftime('%FT%T%z')) . ' ' . substitute(getcwd(), glob('~'), '~', '')<cr>
+nnoremap <silent> <leader><space>     :update<cr>:call ShowCrossHairs('20m')<cr>:echomsg(substitute(expand('%:p'), glob('~/'), '~/', '') . ' updated! ' . strftime('%FT%T%z')) . ' ' . substitute(getcwd(), glob('~'), '~', '')<cr>
 nnoremap <silent> <leader>a           :edit #<cr>
 nnoremap <silent> <leader>M           :Maps<cr>
 nnoremap <silent> <leader>B           :Buffers<cr>
