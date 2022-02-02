@@ -10,7 +10,7 @@ let wiki.auto_generate_links = 1
 let wiki.auto_generate_tags = 1
 let wiki.auto_tags = 1
 let wiki.ext = '.md'
-let wiki.nested_syntaxes = {'ruby': 'ruby', 'python': 'python', 'c++': 'cpp', 'sh': 'sh', 'racket': 'racket'}
+let wiki.nested_syntaxes = {'ruby': 'ruby', 'python': 'python', 'c++': 'cpp', 'bash':'sh', 'sh': 'sh', 'racket': 'racket'}
 let wiki.syntax = 'markdown'
 
 let tips = {}
@@ -84,9 +84,11 @@ vmap wal <Plug>VimwikiTextObjListChildrenV
 omap wil <Plug>VimwikiTextObjListSingle
 vmap wil <Plug>VimwikiTextObjListSingleV
 
-highlight VimwikiHeader1 ctermfg=DarkRed
-highlight VimwikiHeader2 ctermfg=DarkRed
-highlight VimwikiHeader3 ctermfg=DarkRed
-highlight VimwikiHeader4 ctermfg=DarkRed
-highlight VimwikiHeader5 ctermfg=DarkRed
-highlight VimwikiHeader6 ctermfg=DarkRed
+highlight link VimwikiHeader1 Title
+highlight link VimwikiHeader2 Title
+highlight link VimwikiHeader3 Title
+highlight link VimwikiHeader4 Title
+highlight link VimwikiHeader5 Title
+highlight link VimwikiHeader6 Title
+highlight link VimwikiPre LineNr
+highlight VimwikiLink cterm=underline ctermfg=cyan ctermbg=234
