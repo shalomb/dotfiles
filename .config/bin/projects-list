@@ -19,7 +19,9 @@ git(){
 }
 
 projects_find() {
-  find ~/* -iname ".git" |
+  # Find all git projects under ~/ returning their
+  # directory and remote names TSV tuples
+  find -L ~/* -type d -iname ".git" |
     sed -r 's@/.git@@' |
     while read d; do
       dir="${d##$HOME}"
@@ -38,7 +40,8 @@ projects_find() {
 }
 
 if (( update == 1 )) || [[ ! -e $projects_list ]]; then
-  projects_find > "$projects_list"
+  projects_find > "$projects_list.tmp"
+  mv "$projects_list.tmp" "$projects_list"
 else
   cat "$projects_list"
 fi
