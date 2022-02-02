@@ -38,5 +38,5 @@ command! -bang -nargs=* -complete=dir Tip :call fzf#run(fzf#wrap({
     \ }, <bang>0))
 
 cabbrev tip    <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'Tip' :    'tip')<CR>
-cabbrev tips   <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'Tip' :    'tip')<CR>
+cabbrev tips   <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'Tip' :    'tips')<CR>
 cabbrev tipnew <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'Tipnew' : 'tip')<CR>
