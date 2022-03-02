@@ -25,17 +25,6 @@ function aws-sts-mfa-session {
 
   function _aws { command aws "$@" --profile "$AWS_MFA_PROFILE"; }
 
-  function pluck { jq -cer "$@" "$STS_SESSION_CACHE"; }
-
-  function load-sts-cached-session {
-    export AWS_ACCESS_KEY_ID=$(pluck '.Credentials.AccessKeyId')
-    export AWS_SECRET_ACCESS_KEY=$(pluck '.Credentials.SecretAccessKey')
-    export AWS_SESSION_TOKEN=$(pluck '.Credentials.SessionToken')
-    export AWS_SESSION_TOKEN_EXPIRY_TIME=$(
-      date '+%s' -d $(pluck '.Credentials.Expiration') || true
-    )
-  }
-
   function new-sts-session {
     local mfa_device
 
@@ -60,7 +49,7 @@ function aws-sts-mfa-session {
       return 1
     fi
 
-    load-sts-cached-session
+    aws-load-sts-session-from-file "$STS_SESSION_CACHE"
   }
 
   if [[ $1 == test ]]; then command aws sts get-caller-identity; return $?; fi
@@ -71,7 +60,7 @@ function aws-sts-mfa-session {
         -z $AWS_SESSION_TOKEN             ||
         -z $AWS_SESSION_TOKEN_EXPIRY_TIME
     ]]; then
-      load-sts-cached-session
+      aws-load-sts-session-from-file "$STS_SESSION_CACHE"
   fi
 
   local now=$(date +%s)
@@ -81,3 +70,34 @@ function aws-sts-mfa-session {
 }
 
 alias aws=aws-sts-mfa-session
+
+# Given a JSON file output by `aws sts ...`, wire up the values to the
+# required environment variables for the aws(1) command to run correctly.
+# This is useful both in assuming a different role (`aws sts assume-role`)
+# and in setting up a new session (`aws sts get-session`), etc
+
+function aws-load-sts-session-from-file {
+  local sts_session_cache="${1:-$STS_SESSION_CACHE}"
+  if ! jq -Scer .Credentials "$sts_session_cache" &>/dev/null; then
+    echo >&2 "Unable to load .Credentials from '$sts_session_cache'"
+  fi
+  function pluck { jq -cer "$@" "$sts_session_cache"; }
+  export AWS_ACCESS_KEY_ID=$(pluck '.Credentials.AccessKeyId')
+  export AWS_SECRET_ACCESS_KEY=$(pluck '.Credentials.SecretAccessKey')
+  export AWS_SESSION_TOKEN=$(pluck '.Credentials.SessionToken')
+  export AWS_SESSION_TOKEN_EXPIRY_TIME=$(
+    date '+%s' -d $(pluck '.Credentials.Expiration') || true
+  )
+  export AWS_ASSUMED_ROLE_ID=$(pluck '.AssumedRoleUser.AssumedRoleId')
+  export AWS_ASSUMED_ROLE_ARN=$(pluck '.AssumedRoleUser.Arn')
+}
+
+function aws-whoami {
+  env |
+    perl -ne '
+      s/(AWS_(?:SECRET_ACCESS_KEY|SESSION_TOKEN)=)(.*)/
+        $1 . q[X] x 32/ex;
+      /^AWS/ and print
+    ' | sort | grep -P '.*='
+  command aws sts get-caller-identity | jq -S .
+}
