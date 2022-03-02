@@ -13,6 +13,21 @@ let wiki.ext = '.md'
 let wiki.nested_syntaxes = {'ruby': 'ruby', 'python': 'python', 'c++': 'cpp', 'bash':'sh', 'sh': 'sh', 'racket': 'racket'}
 let wiki.syntax = 'markdown'
 
+let diary = {}
+let diary.name = 'diary'
+let diary.path = '~/diary/'
+let diary.path_html = '~/diary/html/'
+let diary.auto_diary_index = 0
+let diary.syntax = 'markdown'
+let diary.auto_toc = 1
+let diary.auto_export = 1
+let diary.auto_generate_links = 1
+let diary.auto_generate_tags = 1
+let diary.auto_tags = 1
+let diary.ext = '.md'
+let diary.nested_syntaxes = {'ruby': 'ruby', 'python': 'python', 'c++': 'cpp', 'bash':'sh', 'sh': 'sh', 'racket': 'racket'}
+let diary.syntax = 'markdown'
+
 let tips = {}
 let tips.name = 'tips'
 let tips.path = '~/tips/'
@@ -28,7 +43,7 @@ let tips.ext = '.md'
 let tips.nested_syntaxes = {'ruby': 'ruby', 'python': 'python', 'c++': 'cpp', 'sh': 'sh', 'racket': 'racket'}
 let tips.syntax = 'markdown'
 
-let g:vimwiki_list = [wiki, tips]
+let g:vimwiki_list = [wiki, diary, tips]
 
 let g:vimwiki_auto_chdir = 1
 let g:vimwiki_auto_header = 1
