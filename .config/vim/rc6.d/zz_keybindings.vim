@@ -58,6 +58,7 @@ nnoremap <silent> Y                   y$
 
 nnoremap <silent> <leader>,           :edit #<cr>
 nnoremap <silent> <leader>/           :Ag<cr>
+vnoremap <silent> <leader>/           :<c-u>Rg <c-r>=fnameescape(GetVisualSelection())<cr><cr><cr>
 nnoremap          <leader>.           :ls<cr>:b<space>
 nnoremap          <leader>'           :Buffers<cr>
 nnoremap          <leader>"           :ls<cr>:vs<space>#
