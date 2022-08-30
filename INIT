@@ -3,34 +3,38 @@
 pkgs_to_install=()
 
 # Install packages providing our required commands
-type -P dmenu          &>/dev/null || pkgs_to_install+=( 'suckless-tools' )
-type -P flock          &>/dev/null || pkgs_to_install+=( 'util-linux' )
-type -P setxkbmap      &>/dev/null || pkgs_to_install+=( 'x11-xkb-utils ' )
-type -P ssh            &>/dev/null || pkgs_to_install+=( 'openssh-client' )
-type -P vim            &>/dev/null || pkgs_to_install+=( 'vim-gtk3' )
-type -P xmodmap        &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
-type -P xrandr         &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
-type -P xset           &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
-vi  --version | grep -iq x11       || pkgs_to_install+=( 'vim-gtk3' )
+if (( ${GUI:-0} == 1 )); then
+  type -P dmenu          &>/dev/null || pkgs_to_install+=( 'suckless-tools' )
+  type -P flock          &>/dev/null || pkgs_to_install+=( 'util-linux' )
+  type -P setxkbmap      &>/dev/null || pkgs_to_install+=( 'x11-xkb-utils ' )
+  type -P ssh            &>/dev/null || pkgs_to_install+=( 'openssh-client' )
+  type -P vim            &>/dev/null || pkgs_to_install+=( 'vim-gtk3' )
+  type -P xmodmap        &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
+  type -P xrandr         &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
+  type -P xset           &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
+  vi  --version | grep -iq x11       || pkgs_to_install+=( 'vim-gtk3' )
 
-# Install packages making up our desktop
-pkgs_to_install+=( $(awk '{ print $1 }' .config/apt/dpkg--set-selections) )
+  # Install packages making up our GUI desktop
+  pkgs_to_install+=( $(awk '/^[a-z]/ {print $1}' .config/apt/dpkg--set-selections.gui) )
+fi
+
+# Install packages making up our workspace
+pkgs_to_install+=( $(awk '/^[a-z]/ {print $1}' .config/apt/dpkg--set-selections) )
 
 if (( ${#pkgs_to_install[@]} >= 1 )); then
   echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
-  (set -xv; sudo aptitude install ${pkgs_to_install[@]})
+  (set -xv; sudo apt install -yqq --no-install-recommends ${pkgs_to_install[@]})
 fi
 
 fail=0
 for cmd in \
   fzf \
-  bat \
   xflux \
 ; do
   echo >&2 "Checking $cmd .."
   if ! type -P "$cmd" &>/dev/null; then
     echo >&2 "$cmd requires manual installation."
-    fail=1
+    (( ${GUI:-0} == 1 )) && fail=1
   fi
 done
 if (( fail == 1 )); then
