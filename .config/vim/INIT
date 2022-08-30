@@ -27,7 +27,7 @@ type -P sudo     &>/dev/null || pkgs_to_install+=( 'sudo' )
 
 if (( ${#pkgs_to_install[@]} >= 1 )); then
   echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
-  (set -xv; sudo aptitude install ${pkgs_to_install[@]})
+  (set -xv; sudo apt install -yqq ${pkgs_to_install[@]})
 fi
 
 mkdir -p "$vim_base/bundle/"
