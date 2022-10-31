@@ -7,10 +7,16 @@ if [[ $aws_completer ]]; then
 fi
 
 function install-awscli {
-  TMP=$(mktemp -d)
-  if cd "$TMP"; then
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    unzip awscliv2.zip
-    sudo ./aws/install
+  awscli_src="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+  if uname -m | grep -q aarch64; then
+    awscli_src="https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"
   fi
+  ( if cd "$TMP"; then
+      echo >&2 "Downloading $awscli_src in $TMP"
+      curl -cfsSL "$awscli_src" -o "awscliv2.zip"
+      unzip awscliv2.zip
+      sudo ./aws/install --update
+      aws --version
+    fi
+  )
 }
