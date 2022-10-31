@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# ssh-retry
+# Keep trying to establish an ssh(1) connection to the target.
+# Give up and retry intelligently.
+# If an established connection did not terminate successfully, retry again.
+
+set -eu -o pipefail
+
 retry_floor="${min:-2}"               # Minimum time to wait before a retry if ssh was unsucessful
 retry_ceil="${max:-20}"               # Maximum time to wait before a retry if ssh was unsuccessful
 retry_interval="$retry_floor"         # How often to retry if ssh was unsuccessful
@@ -26,7 +33,7 @@ while :; do
   else
     retry_interval="$retry_floor"
   fi
-  
+
   (( quiet == 1 )) || \
     printf "%s  %s %s #%04.1f : " "$(date --rfc-3339=seconds | tr ' ' T)" "${0##*/}" "$*" "$retry_interval"
 
@@ -45,7 +52,7 @@ while :; do
     # ssh exited successfully, drop back to the floor
     retry_interval="$retry_floor"
   fi
-  
+
   sleep "$retry_interval"
 done
 
