@@ -110,9 +110,13 @@
 [url "ssh://git@gitlab.tools.in.pan-net.eu/"]
   insteadOf = https://gitlab.tools.in.pan-net.eu/
 
+[credential]
+  helper = store --file ~/.config/git-credentials
+  helper = cache --timeout 86400
+
 [user]
   name = Shalom Bhooshi
   email = s.bhooshi@gmail.com
   signingkey = 6E58CBDB4D4FFAF09114729738495CCA2D2EF563
 
-# vi:filetype=gitconfig
+# vi:filetype=gitconfig ts=2 sw=2 et
