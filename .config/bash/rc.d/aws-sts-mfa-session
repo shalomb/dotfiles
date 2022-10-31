@@ -99,5 +99,5 @@ function aws-whoami {
         $1 . q[X] x 32/ex;
       /^AWS/ and print
     ' | sort | grep -P '.*='
-  command aws sts get-caller-identity | jq -S .
+  command aws sts get-caller-identity --output json | jq -S .
 }
