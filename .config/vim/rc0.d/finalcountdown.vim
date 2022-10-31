@@ -2,6 +2,6 @@
 " close if final buffer is netrw or the quickfix
 augroup finalcountdown
   autocmd!
-  autocmd WinEnter * if winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&filetype") == "netrw" || &buftype == 'quickfix' | q | endif
+  autocmd WinEnter * if winnr('$') == 1 && (getbufvar(winbufnr(winnr()), "&filetype") == "netrw" || &buftype == 'quickfix') | q | endif
   nmap - :Vexplore<cr>
 augroup END

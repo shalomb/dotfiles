@@ -1,8 +1,10 @@
 let g:ale_sign_column_always = 1
 
+let g:ale_sign_error = '>>'
+let g:ale_sign_warning = '--'
+
 " Error Highlighting
 let g:ale_set_highlights = 1
-highlight ALEWarning ctermbg=DarkMagenta
 
 " Formatting
 let g:ale_echo_msg_error_str = 'E'
@@ -29,7 +31,7 @@ let g:ale_go_golangci_lint_options = ' --fast '
 
 let g:ale_linters = {
 \ 'go': [ 'golangci-lint', 'govet' ],
-\ 'python': ['pyls', 'autopep8', 'flake8']
+\ 'python': ['pylint', 'pyls', 'autopep8', 'flake8', 'bandit']
 \}
 
 let g:ale_fixers = {
