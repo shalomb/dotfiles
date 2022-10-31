@@ -77,11 +77,6 @@ elif [[ -n $session_name ]]; then
     echo "launching prepared session ~/.config/tmuxie/sessions/$session_name"
     ~/.config/tmuxie/sessions/$session_name
     exit $?
-  else
-    read -p "Session '$session_name' doesn't exist!! Create? [N] " reply
-    if [[ -z $reply || $reply != 'y' ]]; then
-      exit 3
-    fi
   fi
 elif [[ -z $session_name ]] && test -t 0; then
   # We have no session name and we are interactive
