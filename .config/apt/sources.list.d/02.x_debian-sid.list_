@@ -1,6 +1,8 @@
 # Debian Sid/Unstable
-deb     http://mirror.peer1.net/debian  sid   main contrib non-free
-deb-src http://mirror.peer1.net/debian  sid   main contrib non-free
-#deb 	  http://ftp.uk.debian.org/debian		            sid 		              main contrib non-free
-#deb-src http://ftp.uk.debian.org/debian		            sid 		              main contrib non-free
+
+# deb     http://mirror.peer1.net/debian  sid   main contrib non-free
+# deb-src http://mirror.peer1.net/debian  sid   main contrib non-free
+
+deb 	  http://ftp.uk.debian.org/debian		            sid 		              main contrib non-free
+# deb-src http://ftp.uk.debian.org/debian		            sid 		              main contrib non-free
 
