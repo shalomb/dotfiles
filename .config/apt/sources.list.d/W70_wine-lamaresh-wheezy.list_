@@ -1,8 +1,0 @@
-# DESC: WINE repository for debian wheezy
-
-# URL: http://www.winehq.org/download/debwheezy
-
-# PUBKEY:
-# wget -O - http://www.lamaresh.net/apt/key.gpg | apt-key add - 
-
-deb http://www.lamaresh.net/apt wheezy main

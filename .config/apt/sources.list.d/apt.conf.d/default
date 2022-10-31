@@ -1,4 +1,0 @@
-Dir::Ignore-Files-Silently:: "(.save|.distupgrade|_)$";
-Acquire::Languages { "none"; };
-APT::Get::Install-Recommends "false";
-APT::Get::Install-Suggests "false";

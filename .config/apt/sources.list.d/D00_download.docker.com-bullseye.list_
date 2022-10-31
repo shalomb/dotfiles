@@ -1,0 +1,1 @@
+deb [signed-by=/etc/apt/trusted.gpg.d/7EA0A9C3F273FCD8.gpg] https://download.docker.com/linux/debian   bullseye stable
