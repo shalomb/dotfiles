@@ -1,6 +1,6 @@
 # git submodules
-.config/vim/bundle/
-.vim/bundle/
+.config/vim/bundle/*
+.vim/bundle/*
 tags
 **/tags
 **/notes*
