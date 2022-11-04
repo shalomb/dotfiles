@@ -80,7 +80,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/kana/vim-textobj-user.git             bundle/textobj-user
   git submodule add -f https://github.com/kana/vim-textobj-user.git             bundle/vim-textobj-user.git
   git submodule add -f https://github.com/majutsushi/tagbar.git                 bundle/tagbar
-  git submodule add -f https://github.com/MarcWeber/vim-addon-mw-utils.git      bundle/mw-utils
+  git submodule add -f https://github.com/MarcWeber/vim-addon-mw-utils.git      bundle/mw-utils   # rdep snipmate
   git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack
   git submodule add -f https://github.com/preservim/vim-markdown.git            bundle/markdown
   git submodule add -f https://github.com/romainl/vim-cool.git                  bundle/cool
@@ -94,7 +94,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/tmux-plugins/vim-tmux.git             bundle/tmux
   git submodule add -f https://github.com/tomasr/molokai.git                    bundle/molokai
   git submodule add -f https://github.com/tommcdo/vim-exchange.git              bundle/exchange
-  git submodule add -f https://github.com/tomtom/tlib_vim.git                   bundle/tlib
+  git submodule add -f https://github.com/tomtom/tlib_vim.git                   bundle/tlib    # rdep snipmate
   git submodule add -f https://github.com/tpope/vim-abolish.git                 bundle/abolish
   git submodule add -f https://github.com/tpope/vim-commentary.git              bundle/commentary
   git submodule add -f https://github.com/tpope/vim-endwise.git                 bundle/endwise
