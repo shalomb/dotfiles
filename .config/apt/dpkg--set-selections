@@ -61,6 +61,7 @@ fortune-mod                install
 fortunes-bofh-excuses      install
 fortunes                   install
 fortunes-min               install
+fzf                        install
 gawk                       install
 gcc                        install
 geoip-database             install
@@ -100,7 +101,6 @@ jq                         install
 keyboard-configuration     install
 kmod                       install
 krb5-locales               install
-
 laptop-detect              install
 less                       install
 libc-bin                   install
@@ -127,7 +127,6 @@ ncurses-bin                install
 netbase                    install
 openssl                    install
 os-prober                  install
-
 p7zip                      install
 pandoc-data                install
 pandoc                     install
@@ -160,7 +159,6 @@ python3-pygments           install
 python3-setuptools         install
 python3-six                install
 python3-wheel              install
-
 rake                       install
 ranger                     install
 readline-common            install
