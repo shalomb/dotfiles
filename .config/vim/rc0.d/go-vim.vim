@@ -18,3 +18,5 @@ au filetype go inoremap <buffer> . .<C-x><C-o>
 let g:go_list_type = "quickfix"
 
 let g:go_test_timeout = '10s'
+
+au BufNewFile,BufRead *.go set completeopt-=preview
