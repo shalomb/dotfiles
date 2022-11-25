@@ -21,5 +21,5 @@ let g:jedi#show_call_signatures = "1"
 let g:jedi#use_splits_not_buffers = "left"
 let g:jedi#auto_initialization = 1
 
-set completeopt=longest,menuone,preview
-set splitright
+au BufNewFile,BufRead *.py set completeopt=longest,menuone
+au BufNewFile,BufRead *.py set splitright
