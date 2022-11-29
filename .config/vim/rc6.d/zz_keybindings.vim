@@ -119,8 +119,16 @@ vnoremap          >                   >gv   " move cursor to the end of a visual
 onoremap          gv                  :<c-u>normal! gv<cr>
 nnoremap          gh                  :<c-u>verbose cd <c-r>=CurGitProjectRoot(CurDirectory())<cr><cr>:Vex<cr>
 
-vnoremap          <leader>#           :Commentary
 vnoremap          <leader>g           :<C-U>Ag <c-r>=expand('<cword>')<cr>
-
 nnoremap          <leader>g           :Ag <c-r>=expand('<cword>')<cr>
+
+vnoremap          <leader>#           :Commentary
 nnoremap          <leader>#           :Commentary<CR>
+nnoremap          <leader>gt          :Tweaks<cr>
+nnoremap          <leader>gb          :Buffers<cr>
+nnoremap          <leader>gf          :GFiles<cr>
+nnoremap          <leader>gc          :Readme fzf<cr>
+nnoremap          <leader>gg          :Tweaks<cr>
+
+nnoremap          <leader>nn          :Lines<cr>
+nnoremap          <leader>nb          :BLines<cr>
