@@ -83,6 +83,7 @@ ln -svf "$vim_base/vimrc.gvim" .gvimrc
   git submodule add -f https://github.com/MarcWeber/vim-addon-mw-utils.git      bundle/mw-utils   # rdep snipmate
   git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack
   git submodule add -f https://github.com/preservim/vim-markdown.git            bundle/markdown
+  git submodule add -f https://github.com/rhysd/clever-f.vim.git                bundle/rhysd-clever-f.vim
   git submodule add -f https://github.com/romainl/vim-cool.git                  bundle/cool
   git submodule add -f https://github.com/rstacruz/vim-closer.git               bundle/closer
   git submodule add -f https://github.com/shalomb/ansible-snippets.git          bundle/ansible-snippets
