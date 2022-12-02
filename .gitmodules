@@ -250,3 +250,6 @@
 [submodule ".config/vim/bundle/schlepp"]
 	path = .config/vim/bundle/schlepp
 	url = https://github.com/zirrostig/vim-schlepp.git
+[submodule ".config/vim/bundle/rhysd-clever-f.vim"]
+	path = .config/vim/bundle/rhysd-clever-f.vim
+	url = https://github.com/rhysd/clever-f.vim.git
