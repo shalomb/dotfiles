@@ -34,5 +34,5 @@ elseif &term =~ "xterm\\|rxvt\\|screen-256color\\|tmux-256color"
 endif
 
 highlight CursorLineNr term=bold cterm=bold ctermfg=202 ctermbg=NONE guibg=NONE
-highlight CursorLine   term=bold cterm=bold ctermbg=234 guibg=NONE
+highlight CursorLine   term=bold cterm=bold ctermbg=233 guibg=NONE
 highlight CursorColumn term=bold cterm=bold ctermbg=234 guibg=NONE
