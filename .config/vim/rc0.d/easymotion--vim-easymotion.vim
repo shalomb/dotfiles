@@ -28,6 +28,8 @@ map   <Leader>F <Plug>(easymotion-linebackward)
 map   <Leader>f <Plug>(easymotion-lineforward)
 map   <Leader>j <Plug>(easymotion-j)
 map   <Leader>k <Plug>(easymotion-k)
+map   <Leader>W <Plug>(easymotion-w)
+nmap  <Leader>L <Plug>(easymotion-overwin-line)
 
 " map  n <Plug>(easymotion-next)
 " map  N <Plug>(easymotion-prev)

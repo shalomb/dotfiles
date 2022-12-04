@@ -35,92 +35,110 @@ mkdir -p "$vim_base/bundle/"
 ln -svf "$vim_base/vimrc"      .vimrc
 ln -svf "$vim_base/vimrc.gvim" .gvimrc
 
-( set +e -xv
+install-vimplugin() {
+  local github_repo="$1"
+  local github_repo_normalized="${github_repo//\//--}"
+  github_repo="https://github.com/$github_repo.git"
+  bundle_dir="bundle/$github_repo_normalized"
+  tweak_file="rc0.d/$github_repo_normalized.vim"
+  # Install submodule
+  ( set -xv
+    git submodule add -f "$github_repo" "$bundle_dir"
+    touch "$tweak_file"
+    git add "$tweak_file"
+    echo
+  )
+}
+
+( set +e
   cd "$vim_base"
 
-  git submodule add -f https://github.com/airblade/vim-gitgutter.git            bundle/gitgutter
-  git submodule add -f https://github.com/AndrewRadev/switch.vim.git            bundle/switch
-  git submodule add -f https://github.com/avakhov/vim-yaml.git                  bundle/yaml
-  git submodule add -f https://github.com/chrisbra/unicode.vim.git              bundle/unicode
-  git submodule add -f https://github.com/christoomey/vim-tmux-navigator.git    bundle/tmux-navigator
-  git submodule add -f https://github.com/davidhalter/jedi-vim.git              bundle/jedi-vim
-  git submodule add -f https://github.com/dbeniamine/cheat.sh-vim.git           bundle/cheat.sh-vim
-  git submodule add -f https://github.com/dense-analysis/ale.git                bundle/ale
-  git submodule add -f https://github.com/easymotion/vim-easymotion.git         bundle/easymotion
-  git submodule add -f https://github.com/editorconfig/editorconfig-vim.git     bundle/editorconfig
-  git submodule add -f https://github.com/ekalinin/Dockerfile.vim.git           bundle/dockerfile
-  git submodule add -f https://github.com/fatih/vim-go.git                      bundle/go
-  git submodule add -f https://github.com/garbas/vim-snipmate.git               bundle/snipmate
-  git submodule add -f https://github.com/gioele/vim-autoswap.git               bundle/autoswap
-  git submodule add -f https://github.com/Glench/Vim-Jinja2-Syntax.git          bundle/jinja2-syntax
-  git submodule add -f https://github.com/godlygeek/tabular.git                 bundle/tabular
-  git submodule add -f https://github.com/hashivim/vim-terraform.git            bundle/terraform
-  git submodule add -f https://github.com/haya14busa/incsearch-easymotion.vim   bundle/incsearch-easymotion
-  git submodule add -f https://github.com/haya14busa/incsearch-fuzzy.vim.git    bundle/incsearch-fuzzy
-  git submodule add -f https://github.com/haya14busa/incsearch.vim              bundle/incsearch
-  git submodule add -f https://github.com/haya14busa/vim-asterisk.git           bundle/asterisk
-  git submodule add -f https://github.com/haya14busa/vim-operator-flashy.git    bundle/operator-flashy
-  git submodule add -f https://github.com/honza/vim-snippets.git                bundle/snipmate-snippets
-  git submodule add -f https://github.com/idbrii/textobj-word-column.vim.git    bundle/textobj-word-column
-  git submodule add -f https://github.com/instant-markdown/vim-instant-markdown.git  bundle/instant-markdown
-  git submodule add -f https://github.com/jeetsukumaran/vim-markology.git       bundle/markology
-  git submodule add -f https://github.com/jeetsukumaran/vim-pythonsense.git     bundle/pythonsense
-  git submodule add -f https://github.com/jgdavey/tslime.vim.git                bundle/tslime
-  git submodule add -f https://github.com/jiangmiao/auto-pairs.git              bundle/auto-pairs
-  git submodule add -f https://github.com/junegunn/fzf.git                      bundle/fzf-core
-  git submodule add -f https://github.com/junegunn/fzf.vim.git                  bundle/fzf
-  git submodule add -f https://github.com/junegunn/goyo.vim.git                 bundle/goyo
-  git submodule add -f https://github.com/junegunn/rainbow_parentheses.vim.git  bundle/rainbow-parentheses
-  git submodule add -f https://github.com/junegunn/vim-peekaboo.git             bundle/peekaboo
-  git submodule add -f https://github.com/kana/vim-operator-user.git            bundle/operator-user
-  git submodule add -f https://github.com/kana/vim-textobj-fold.git             bundle/textobj-fold
-  git submodule add -f https://github.com/kana/vim-textobj-function.git         bundle/textobj-function
-  git submodule add -f https://github.com/kana/vim-textobj-indent.git           bundle/textobj-indent
-  git submodule add -f https://github.com/kana/vim-textobj-line.git             bundle/textobj-line
-  git submodule add -f https://github.com/kana/vim-textobj-user.git             bundle/textobj-user
-  git submodule add -f https://github.com/kana/vim-textobj-user.git             bundle/vim-textobj-user.git
-  git submodule add -f https://github.com/majutsushi/tagbar.git                 bundle/tagbar
-  git submodule add -f https://github.com/MarcWeber/vim-addon-mw-utils.git      bundle/mw-utils   # rdep snipmate
-  git submodule add -f https://github.com/mileszs/ack.vim.git                   bundle/ack
-  git submodule add -f https://github.com/preservim/vim-markdown.git            bundle/markdown
-  git submodule add -f https://github.com/rhysd/clever-f.vim.git                bundle/rhysd-clever-f.vim
-  git submodule add -f https://github.com/romainl/vim-cool.git                  bundle/cool
-  git submodule add -f https://github.com/rstacruz/vim-closer.git               bundle/closer
-  git submodule add -f https://github.com/shalomb/ansible-snippets.git          bundle/ansible-snippets
-  git submodule add -f https://github.com/takac/vim-hardtime.git                bundle/hardtime
-  git submodule add -f https://github.com/tamlok/vim-markdown.git               bundle/markdown
-  git submodule add -f https://github.com/terryma/vim-multiple-cursors.git      bundle/multiple-cursors
-  git submodule add -f https://github.com/thanthese/Tortoise-Typing.git         bundle/tortoise-typing
-  git submodule add -f https://github.com/tmux-plugins/vim-tmux-focus-events.git bundle/tmux-focus-events
-  git submodule add -f https://github.com/tmux-plugins/vim-tmux.git             bundle/tmux
-  git submodule add -f https://github.com/tomasr/molokai.git                    bundle/molokai
-  git submodule add -f https://github.com/tommcdo/vim-exchange.git              bundle/exchange
-  git submodule add -f https://github.com/tomtom/tlib_vim.git                   bundle/tlib    # rdep snipmate
-  git submodule add -f https://github.com/tpope/vim-abolish.git                 bundle/abolish
-  git submodule add -f https://github.com/tpope/vim-commentary.git              bundle/commentary
-  git submodule add -f https://github.com/tpope/vim-endwise.git                 bundle/endwise
-  git submodule add -f https://github.com/tpope/vim-fugitive.git                bundle/fugitive
-  git submodule add -f https://github.com/tpope/vim-pathogen.git                bundle/pathogen
-  git submodule add -f https://github.com/tpope/vim-ragtag.git                  bundle/ragtag
-  git submodule add -f https://github.com/tpope/vim-repeat.git                  bundle/repeat
-  git submodule add -f https://github.com/tpope/vim-sleuth.git                  bundle/sleuth
-  git submodule add -f https://github.com/tpope/vim-speeddating.git             bundle/speeddating
-  git submodule add -f https://github.com/tpope/vim-surround.git                bundle/surround
-  git submodule add -f https://github.com/tpope/vim-unimpaired.git              bundle/unimpaired
-  git submodule add -f https://github.com/tpope/vim-vinegar.git                 bundle/vinegar
-  git submodule add -f https://github.com/tyjak/vim-redact-pass.git             bundle/redact-pass
-  git submodule add -f https://github.com/vim-scripts/genutils.git              bundle/genutils
-  git submodule add -f https://github.com/vim-scripts/Gundo.git                 bundle/gundo
-  git submodule add -f https://github.com/vim-scripts/matchit.zip.git           bundle/matchit
-  git submodule add -f https://github.com/vim-scripts/netrw.vim.git             bundle/netrw
-  git submodule add -f https://github.com/vim-scripts/underlinetag.git          bundle/underlinetag
-  git submodule add -f https://github.com/vim-scripts/vis.git                   bundle/vis  # Extended VISual commands
-  git submodule add -f https://github.com/vimwiki/vimwiki.git                   bundle/vimwiki
-  git submodule add -f https://github.com/wellle/targets.vim.git                bundle/targets
-  git submodule add -f https://github.com/wellle/visual-split.vim.git           bundle/visual-split
-  git submodule add -f https://github.com/xolox/vim-easytags.git                bundle/easytags
-  git submodule add -f https://github.com/xolox/vim-misc.git                    bundle/vim-misc
-  git submodule add -f https://github.com/zirrostig/vim-schlepp.git             bundle/schlepp
+  # for some reason pathogen has to be installed as ~/.vim/bundle/pathogen
+  git submodule add -f https://github.com/tpope/vim-pathogen.git bundle/pathogen
+
+  install-vimplugin airblade/vim-gitgutter
+  install-vimplugin AndrewRadev/switch.vim
+  install-vimplugin avakhov/vim-yaml
+  install-vimplugin chrisbra/unicode.vim
+  install-vimplugin christoomey/vim-tmux-navigator
+  install-vimplugin davidhalter/jedi-vim
+  install-vimplugin dbeniamine/cheat.sh-vim
+  install-vimplugin dense-analysis/ale
+  install-vimplugin easymotion/vim-easymotion
+  install-vimplugin editorconfig/editorconfig-vim
+  install-vimplugin ekalinin/Dockerfile.vim
+  install-vimplugin fatih/vim-go
+  install-vimplugin garbas/vim-snipmate
+  install-vimplugin gioele/vim-autoswap
+  install-vimplugin Glench/Vim-Jinja2-Syntax
+  install-vimplugin godlygeek/tabular
+  install-vimplugin hashivim/vim-terraform
+  install-vimplugin haya14busa/incsearch-easymotion.vim   bundle/incsearch-easymotion
+  install-vimplugin haya14busa/incsearch-fuzzy.vim
+  install-vimplugin haya14busa/incsearch.vim              bundle/incsearch
+  install-vimplugin haya14busa/vim-asterisk
+  install-vimplugin haya14busa/vim-operator-flashy
+  install-vimplugin honza/vim-snippets
+  install-vimplugin idbrii/textobj-word-column.vim
+  install-vimplugin instant-markdown/vim-instant-markdown
+  install-vimplugin jeetsukumaran/vim-markology
+  install-vimplugin jeetsukumaran/vim-pythonsense
+  install-vimplugin jgdavey/tslime.vim
+  install-vimplugin jiangmiao/auto-pairs
+  install-vimplugin junegunn/fzf
+  install-vimplugin junegunn/fzf.vim
+  install-vimplugin junegunn/goyo.vim
+  install-vimplugin junegunn/rainbow_parentheses.vim
+  install-vimplugin junegunn/vim-peekaboo
+  install-vimplugin kana/vim-operator-user
+  install-vimplugin kana/vim-textobj-fold
+  install-vimplugin kana/vim-textobj-function
+  install-vimplugin kana/vim-textobj-indent
+  install-vimplugin kana/vim-textobj-line
+  install-vimplugin kana/vim-textobj-user
+  install-vimplugin kana/vim-textobj-user
+  install-vimplugin majutsushi/tagbar
+  install-vimplugin MarcWeber/vim-addon-mw-utils
+  install-vimplugin mileszs/ack.vim
+  install-vimplugin preservim/vim-markdown
+  install-vimplugin rhysd/clever-f.vim
+  install-vimplugin romainl/vim-cool
+  install-vimplugin rstacruz/vim-closer
+  install-vimplugin shalomb/ansible-snippets
+  install-vimplugin takac/vim-hardtime
+  install-vimplugin tamlok/vim-markdown
+  install-vimplugin terryma/vim-multiple-cursors
+  install-vimplugin thanthese/Tortoise-Typing
+  install-vimplugin tmux-plugins/vim-tmux
+  install-vimplugin tmux-plugins/vim-tmux-focus-events
+  install-vimplugin tomasr/molokai
+  install-vimplugin tommcdo/vim-exchange
+  install-vimplugin tomtom/tlib_vim
+  install-vimplugin tpope/vim-abolish
+  install-vimplugin tpope/vim-commentary
+  install-vimplugin tpope/vim-endwise
+  install-vimplugin tpope/vim-fugitive
+  install-vimplugin tpope/vim-pathogen
+  install-vimplugin tpope/vim-ragtag
+  install-vimplugin tpope/vim-repeat
+  install-vimplugin tpope/vim-sleuth
+  install-vimplugin tpope/vim-speeddating
+  install-vimplugin tpope/vim-surround
+  install-vimplugin tpope/vim-unimpaired
+  install-vimplugin tpope/vim-vinegar
+  install-vimplugin tyjak/vim-redact-pass
+  install-vimplugin vim-scripts/genutils
+  install-vimplugin vim-scripts/Gundo
+  install-vimplugin vim-scripts/matchit.zip
+  install-vimplugin vim-scripts/netrw.vim
+  install-vimplugin vim-scripts/underlinetag
+  install-vimplugin vim-scripts/vis
+  install-vimplugin vimwiki/vimwiki
+  install-vimplugin wellle/targets.vim
+  install-vimplugin wellle/visual-split.vim
+  install-vimplugin xolox/vim-easytags
+  install-vimplugin xolox/vim-misc
+  install-vimplugin zirrostig/vim-schlepp
 
   git submodule update --init --recursive
   git submodule sync

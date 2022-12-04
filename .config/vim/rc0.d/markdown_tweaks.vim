@@ -8,4 +8,3 @@ augroup markdown
   autocmd BufRead,BufNewFile *.md,*.mkd,*.markdown
           \ set formatoptions-=t
 augroup END
-
