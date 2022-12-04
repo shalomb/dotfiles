@@ -64,12 +64,6 @@ nnoremap          <leader>'           :Buffers<cr>
 nnoremap          <leader>"           :ls<cr>:vs<space>#
 nnoremap <silent> <leader><space>     :update<cr>:call ShowCrossHairs('20m')<cr>:echomsg(substitute(expand('%:p'), glob('~/'), '~/', '') . ' updated! ' . strftime('%FT%T%z')) . ' ' . substitute(getcwd(), glob('~'), '~', '')<cr>
 nnoremap <silent> <leader>a           :edit #<cr>
-nnoremap <silent> <leader>M           :Maps<cr>
-nnoremap <silent> <leader>B           :Buffers<cr>
-nnoremap <silent> <leader>F           :Files<cr>
-silent!  nunmap   <leader>C
-nnoremap <silent> <leader>C           :Command<cr>
-nnoremap <silent> <leader>L           :Lines<cr>
 
 nnoremap          <leader>ba          :ls<cr>:b<space>
 nnoremap <silent> <leader>bc          :close<cr>
@@ -129,6 +123,12 @@ nnoremap          <leader>gb          :Buffers<cr>
 nnoremap          <leader>gf          :GFiles<cr>
 nnoremap          <leader>gc          :Readme fzf<cr>
 nnoremap          <leader>gg          :Tweaks<cr>
+nnoremap <silent> <leader>gM           :Maps<cr>
+nnoremap <silent> <leader>gB           :Buffers<cr>
+nnoremap <silent> <leader>gF           :Files<cr>
+silent!  nunmap   <leader>gC
+nnoremap <silent> <leader>gC           :Command<cr>
+nnoremap <silent> <leader>gL           :Lines<cr>
 
 nnoremap          <leader>nn          :Lines<cr>
 nnoremap          <leader>nb          :BLines<cr>
