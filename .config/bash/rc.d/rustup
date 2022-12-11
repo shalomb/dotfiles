@@ -1,15 +1,19 @@
 #!/bin/bash
 
-
-cargo-init() {
+cargo-install() {
   if [[ -r ~/.cargo/env ]]; then
+    echo >&2 "Sourcing ~/.cargo/env"
     source ~/.cargo/env
+  else
+    sudo apt-get install pkg-config libssl-dev
+    # https://github.com/rust-lang/rustup/issues/297#issuecomment-444818896
+    curl https://sh.rustup.rs -sSf | sh -s -- -y
+    cargo-init
   fi
-}
 
-rustup-install() {
-  # https://github.com/rust-lang/rustup/issues/297#issuecomment-444818896
-  curl https://sh.rustup.rs -sSf | sh -s -- -y
-  load-env
+  ( set -xv
   rustup update
+  cargo install cargo-update
+  cargo install-update cargo-update
+  )
 }

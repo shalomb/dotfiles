@@ -107,6 +107,7 @@ libc-bin                   install
 libc-dev-bin               install
 libc-l10n                  install
 libfile-which-perl         install
+libssl-dev                 install
 locales                    install
 login                      install
 logrotate                  install
@@ -125,6 +126,7 @@ mount                      install
 ncurses-base               install
 ncurses-bin                install
 netbase                    install
+net-tools                  install
 openssl                    install
 os-prober                  install
 p7zip                      install
