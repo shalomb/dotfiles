@@ -8,9 +8,6 @@ debconf                    install
 dia                        install
 dia-shapes                 install
 dunst                      install
-evolution-ews              install
-evolution                  install
-evolution-plugins          install
 exiftran                   install
 exiv2                      install
 feh                        install
@@ -49,9 +46,6 @@ ssh-askpass                install
 system-config-printer      install
 systemd                    install
 systemd-sysv               install
-ttf-mscorefonts-installer  install
-ufraw-batch                install
-ufraw                      install
 unclutter                  install
 unicode                    install
 vim                        install
