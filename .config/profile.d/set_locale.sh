@@ -31,4 +31,3 @@ for i in             \
   ; do
     is_locale_available "$locale" && set_locale "$locale" && return
 done
-

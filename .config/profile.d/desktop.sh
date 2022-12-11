@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# If we're not running interactively, return.
+test -t 0 || return 0
+
+: ${BROWSER="$(/usr/bin/which x-www-browser)"}; export BROWSER;
+: ${XEDITOR="$(/usr/bin/which gvim)"};          export XEDITOR;
+
 # required by gnome-control-center > 1:3.28
 XDG_CURRENT_DESKTOP=GNOME-Classic:GNOME;  export XDG_CURRENT_DESKTOP;
 GNOME_SHELL_SESSION_MODE=classic;         export GNOME_SHELL_SESSION_MODE;

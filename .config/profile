@@ -1,5 +1,4 @@
 #!/bin/sh
-
  ##############################################################################
 #   ~/.profile: executed by the command interpreter for login shells           #
 #   (including bash when invoked as a --login shell).                          #
@@ -29,24 +28,22 @@ export PATH;
 umask 022
 
 # Environment Variables
-BROWSER="$(/usr/bin/which x-www-browser)";      export BROWSER;
-EDITOR="${EDITOR:-"$(/usr/bin/which vi)"}";     export EDITOR;
-VISUAL="$EDITOR";                              export VISUAL;
-XEDITOR="${XEDITOR:-"$(/usr/bin/which gvim)"}"; export XEDITOR;
 
-BZIP2="-9v";                              export BZIP2;
+: ${EDITOR="$(/usr/bin/which vi)"};             export EDITOR;
 
-HOSTNAME="${HOSTNAME:-"$(cat /etc/hostname)"}";
-HOSTNAME="${HOSTNAME:-"$(hostname -s)"}";  export HOSTNAME;
-HOST="${HOST:-"$HOSTNAME"}";              export HOST;
+: ${VISUAL="$EDITOR"};                          export VISUAL;
 
-USER="${USER:-$(id -un)}"
+BZIP2="-9v";                                    export BZIP2;
+
+: ${HOSTNAME="$(cat /etc/hostname)"};
+: ${HOSTNAME="$(hostname -s)"};                 export HOSTNAME
+
+: ${USER=$(id -un)};                            export USER
 
 # # Redirect $TMP to ~/.tmp
-: ${TMP=/tmp/$USER}
-                       export TMP
-  TEMP="$TMP";         export   TEMP;
-TMPDIR="$TMP";         export TMPDIR;
+: ${TMP=/tmp/$USER};                            export TMP
+TEMP="$TMP";                                    export   TEMP;
+TMPDIR="$TMP";                                  export TMPDIR;
 
 mkdir -p "$TMP"
 chown "$USER:$USER" "$TMP/"
@@ -63,7 +60,7 @@ done
 test -t 0 || return 0
 
 GREP_COLOR="0;36";                        export GREP_COLOR;
-GREP_COLORS="${GREP_COLOR:-"1;36"}";      export GREP_COLORS;
+: ${GREP_COLORS=$GREP_COLOR};             export GREP_COLORS;
 
 INPUTRC=~/.inputrc;                       export INPUTRC;
 
