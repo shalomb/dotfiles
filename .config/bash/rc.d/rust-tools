@@ -1,0 +1,9 @@
+#!/bin/bash
+
+rust-tools-install() {
+  local tools=(exa eva tldr)
+  cargo install "${tools[@]}"
+  for tool in "${tools[@]}"; do
+    type -P "$tool"
+  done
+}
