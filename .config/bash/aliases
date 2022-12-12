@@ -76,13 +76,13 @@ perljoin ()
 
 eval "$(dircolors -b)"
 export    LS_OPTS='--color=auto'
-alias     ls='\ls $LS_OPTS'
-alias     l='ls -Fhpqs'
+alias     ls='\exa $LS_OPTS'
+alias     l='ls -Fhs modified'
 alias     l1='\ls -1'
 alias     lA='ls -A'
-alias     la='ls -aBFilos'
-alias     ll='ls -BFilos'
-alias     lt='ls -lt'
+alias     la='ls -aBFgils modified'
+alias     ll='ls -BFgils modified'
+alias     lt='ls -lt modified'
 
 function lr() {
   find . | g "$*"
@@ -236,10 +236,10 @@ function  dirs () {
   fi
 }
 
-function  sendkey () {
-    if [[ -n $1 ]]; then
-        ssh "$1" 'test -d ~/.ssh || mkdir -p ~/.ssh; cat ->> ~/.ssh/authorized_keys' < ~/.ssh/id_rsa.pub
-    fi
+function sendkey () {
+  if [[ -n $1 ]]; then
+    ssh "$1" 'test -d ~/.ssh || mkdir -p ~/.ssh; cat ->> ~/.ssh/authorized_keys' < ~/.ssh/id_rsa.pub
+  fi
 }
 
 function  reset_screen () {
