@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+set -xv
+
+BINDIR="$HOME/.local/bin/"
+
+# TPM
+git submodule add -f https://github.com/tmux-plugins/tpm .config/tmux/plugins/tpm
+
+git submodule add -f https://github.com/shalomb/octo     .config/submodules/octo
+( cd .config/submodules/octo
+  ln -svf  "$PWD"/{v,bin/*} "$BINDIR"
+)

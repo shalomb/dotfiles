@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -eu
+
+# Update all submodules to the upstream "main" branch
+( git submodule update --init --recursive
+  git submodule sync
+  git submodule foreach --recursive --quiet pwd |
+    xargs -I{} -P16 sh -c '
+      set -eu
+      pwd="{}";
+      pwd="${pwd#$PWD/}";
+      cd "$pwd";
+      if git show-ref --quiet master; then
+        main_branch="master"
+      elif git show-ref --quiet main; then
+        main_branch="main"
+      else
+        main_branch=$(git branch --show-current);
+      fi
+      echo "Updating $pwd to $main_branch ...";
+      git fetch -q --all --prune;
+      git checkout -q "$main_branch";
+      git reset -q --hard "origin/$main_branch";
+      git pull -q origin "$main_branch"
+    '
+  git submodule status | sed -r 's/[()]//g' | column -t
+)
