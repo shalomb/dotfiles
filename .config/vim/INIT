@@ -42,11 +42,10 @@ install-vimplugin() {
   bundle_dir="bundle/$github_repo_normalized"
   tweak_file="rc0.d/$github_repo_normalized.vim"
   # Install submodule
-  ( set -xv
+  ( set -eu
     git submodule add -f "$github_repo" "$bundle_dir"
     touch "$tweak_file"
     git add "$tweak_file"
-    echo
   )
 }
 
@@ -140,18 +139,6 @@ install-vimplugin() {
   install-vimplugin xolox/vim-misc
   install-vimplugin zirrostig/vim-schlepp
 
-  git submodule update --init --recursive
-  git submodule sync
-  git submodule foreach --recursive --quiet pwd |
-    xargs -I{} -P10 sh -c '
-      echo {};
-      cd "{}";
-      git fetch -q --all --prune;
-      git checkout -q master;
-      git reset -q --hard origin/master;
-      git pull -q origin master
-    '
-  git submodule status | sed -r 's/[()]//g' | column -t
 )
 
 exit $?

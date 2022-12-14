@@ -1,4 +1,4 @@
 #!/bin/bash
 
-go install -v golang.org/x/lint/golint
-go install -v github.com/golangci/golangci-lint/cmd/golangci-lint
+go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go install -v golang.org/x/lint/golint@latest
