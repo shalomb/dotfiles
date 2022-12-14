@@ -1,5 +1,15 @@
-goss
-arkade
-helm
-nvm
-awscli
+arkade     install-arkade      https://github.com/alexellis/arkade
+awscli     install-awscli      https://github.com/aws/aws-cli
+bat        install-bat         https://github.com/sharkdp/bat
+fd         install-fd          https://github.com/sharkdp/fd
+fzf        install-fzf         https://github.com/junegunn/fzf
+gcloud     install-gcloud      https://github.com/GoogleCloudPlatform
+goss       install-goss        https://github.com/goss-org/goss
+helm       install-helm        https://github.com/helm/helm
+k3s        install-k3s         https://github.com/k3s-io/k3s
+k3sup      install-k3sup       https://github.com/alexellis/k3sup
+k9s        install-k9s         https://github.com/derailed/k9s
+kubectl    install-kubectl     https://github.com/kubernetes/kubectl
+kustomize  install-kustomize   https://github.com/kubernetes-sigs/kustomize
+minicube   install-minicube    https://github.com/kubernetes/minikube
+nvm        install-nvm         https://github.com/nvm-sh/nvm
