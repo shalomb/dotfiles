@@ -1,40 +1,43 @@
-#### dotfiles
+## dotfiles
 
-Track dotfiles as hardlinks to versions in a local git repo
+Track dotfiles as hardlinks to files tracked in a git repo
 
-#### Installation
+## Installation
 
-    mkdir ~/.config/dotfiles/
-    cd !$
-    git clone git://github.com/shalomb/dotfiles.git .
-    ./dotfile_stash export ./  # Install all dotfiles
+```bash
+mkdir ~/.config/dotfiles/
+cd !$
+git clone git://github.com/shalomb/dotfiles.git .
+make install
+```
 
-#### Managing change
+## Managing change
 
-##### Managed files
+## Managed files
 
 `./dotfile_stash` install files within the repository as hard links to
 counterpart locations in the home directory (and as such the repo needs to
 exist on the same file system) and so changes to any of the managed
 dotfiles appear as changes in the repository.
 
-    cd ~/.config/dotfiles/
-    git status --
+```bash
+cd ~/.config/dotfiles/
+git status --
+```
 
-##### New files
+## New files
 
 New files can be imported into the repository.
 
-    cd ~/.config/dotfiles/
-    ./dotfile_stash import .bin/somefile
-    git add !$
-    git commit -m 'Added .bin/somefile'
+```bash
+cd ~/.config/dotfiles/
+./dotfile_stash import .bin/somefile
+git add !$
+git commit -m 'Added .bin/somefile'
+```
 
-#### TODO
+## TODO
 
-* fix map such that add actions can be reversed
-* target files that exist at a different depth (other than ~/) should be accepted
-* consider --delete for rsync
-* make the map script configurable
 * encrypt certain files ??
-* enlist more candidates for inclusion
+* rewrite `./dotfile_stash`
+* decompose the monolith - into submodules?
