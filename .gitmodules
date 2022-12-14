@@ -259,3 +259,6 @@
 [submodule ".config/vim/bundle/pathogen"]
 	path = .config/vim/bundle/pathogen
 	url = https://github.com/tpope/vim-pathogen.git
+[submodule ".config/submodules/octo"]
+	path = .config/submodules/octo
+	url = https://github.com/shalomb/octo
