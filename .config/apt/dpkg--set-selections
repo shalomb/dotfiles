@@ -122,6 +122,7 @@ manpages                   install
 markdown                   install
 mawk                       install
 mime-support               install
+mlocate                    install
 mount                      install
 ncurses-base               install
 ncurses-bin                install
