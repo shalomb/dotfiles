@@ -70,6 +70,10 @@
   editor = vi
   pager = less
 
+[credential]
+  helper = store --file ~/.config/git-credentials
+  helper = cache --timeout 86400
+
 [diff]
   ignoreSubmodules = dirty
   tool = vimdiff
@@ -86,6 +90,9 @@
 
 [gpg]
   program = /usr/bin/gpg2
+
+[init]
+  defaultBranch = main
 
 [merge]
   tool = vimdiff
@@ -106,13 +113,6 @@
 
 [tag]
   sort = version:refname
-
-[url "ssh://git@gitlab.tools.in.pan-net.eu/"]
-  insteadOf = https://gitlab.tools.in.pan-net.eu/
-
-[credential]
-  helper = store --file ~/.config/git-credentials
-  helper = cache --timeout 86400
 
 [user]
   name = Shalom Bhooshi
