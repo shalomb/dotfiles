@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Access
-MimeType=application/msaccess
-Exec=wine start /ProgIDOpen Access.ACCDRFile.12 %f
-NoDisplay=true
-StartupNotify=true

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=XML Editor
-MimeType=application/xml
-Exec=wine start /ProgIDOpen xmlfile %f
-NoDisplay=true
-StartupNotify=true

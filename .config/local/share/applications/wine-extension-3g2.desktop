@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Spotify
-MimeType=video/3gpp
-Exec=wine start /ProgIDOpen Spotify.3g2 %f
-NoDisplay=true
-StartupNotify=true

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Microsoft Office Access 2007
-Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\MSACCESS.EXE" 
-Type=Application
-StartupNotify=true
-Comment=Create databases and programs to track and manage your information by using Microsoft Office Access.
-Icon=/home/unop/.local/share/icons/9ede_accicons.0.png

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office OneNote
-MimeType=application/x-wine-extension-EMPTYBINARYREGISTRY
-Exec=wine start /ProgIDOpen OneNote %f
-NoDisplay=true
-StartupNotify=true

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Access
-MimeType=application/x-wine-extension-mdt
-Exec=wine start /ProgIDOpen Access.WizardDataFile.12 %f
-NoDisplay=true
-StartupNotify=true

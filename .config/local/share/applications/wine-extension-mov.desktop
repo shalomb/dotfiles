@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Spotify
-MimeType=video/quicktime
-Exec=wine start /ProgIDOpen Spotify.mov %f
-NoDisplay=true
-StartupNotify=true

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Groove
-MimeType=application/x-wine-extension-glk
-Exec=wine start /ProgIDOpen GrooveLinkFile %f
-NoDisplay=true
-StartupNotify=true

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Access
-MimeType=application/x-wine-extension-mdbhtml
-Exec=wine start /ProgIDOpen accesshtmlfile %f
-NoDisplay=true
-StartupNotify=true

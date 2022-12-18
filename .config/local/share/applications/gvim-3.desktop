@@ -1,6 +1,0 @@
-[Desktop Entry]
-Exec=gvim
-MimeType=application/x-shellscript;
-Name=gvim
-NoDisplay=true
-Type=Application

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office InfoPath 2007
-MimeType=application/x-wine-extension-xsn
-Exec=wine start /ProgIDOpen InfoPath.Solution.2 %f
-NoDisplay=true
-StartupNotify=true

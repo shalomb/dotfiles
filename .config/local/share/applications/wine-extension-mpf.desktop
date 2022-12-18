@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Clip Organizer
-MimeType=application/vnd.ms-mediapackage
-Exec=wine start /ProgIDOpen MediaPackageFile %f
-NoDisplay=true
-StartupNotify=true

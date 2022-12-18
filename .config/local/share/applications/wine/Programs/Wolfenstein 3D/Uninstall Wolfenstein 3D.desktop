@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Uninstall Wolfenstein 3D
-Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\windows\\system32\\msiexec.exe" /x{69FDD4EA-9D68-11D5-8A28-005004D37F93}
-Type=Application
-StartupNotify=true
-Path=/home/unop/.wine/dosdevices/c:/windows/system32/
-Icon=/home/unop/.local/share/icons/3550_msiexec.0.png

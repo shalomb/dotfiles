@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Outlook
-MimeType=application/x-wine-extension-msg
-Exec=wine start /ProgIDOpen Outlook.File.msg %f
-NoDisplay=true
-StartupNotify=true

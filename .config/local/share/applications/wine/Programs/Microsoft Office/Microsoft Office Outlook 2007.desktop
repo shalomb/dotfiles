@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Microsoft Office Outlook 2007
-Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\OUTLOOK.EXE" 
-Type=Application
-StartupNotify=true
-Comment=Send and receive e-mail; manage your schedule, contacts, and tasks; and record your activities by using Microsoft Office Outlook.
-Icon=/home/unop/.local/share/icons/9ede_outicon.0.png

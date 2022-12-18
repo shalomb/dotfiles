@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Publisher
-MimeType=application/vnd.ms-publisher
-Exec=wine start /ProgIDOpen OfficeListShortcut %f
-NoDisplay=true
-StartupNotify=true

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office OneNote
-MimeType=application/msonenote
-Exec=wine start /ProgIDOpen OneNote.Section.1 %f
-NoDisplay=true
-StartupNotify=true

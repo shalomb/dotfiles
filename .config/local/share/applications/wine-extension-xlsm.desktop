@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Excel
-MimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-Exec=wine start /ProgIDOpen Excel.SheetMacroEnabled.12 %f
-NoDisplay=true
-StartupNotify=true

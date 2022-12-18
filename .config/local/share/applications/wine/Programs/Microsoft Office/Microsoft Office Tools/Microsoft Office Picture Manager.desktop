@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Microsoft Office Picture Manager
-Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\OIS.EXE" 
-Type=Application
-StartupNotify=true
-Comment=Organize, edit, and share picture files by using Microsoft Office Picture Manager.
-Icon=/home/unop/.local/share/icons/9ede_oisicon.0.png
