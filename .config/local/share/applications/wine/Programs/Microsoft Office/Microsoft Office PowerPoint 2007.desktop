@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Microsoft Office PowerPoint 2007
-Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\POWERPNT.EXE" 
-Type=Application
-StartupNotify=true
-Comment=Create and edit presentations for slide shows, meetings, and Web pages by using Microsoft Office PowerPoint.
-Icon=/home/unop/.local/share/icons/9ede_pptico.0.png

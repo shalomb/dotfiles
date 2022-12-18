@@ -1,7 +1,0 @@
-[MIME Cache]
-application/x-ms-dos-executable=cxassoc-cxoffice-0:application_x-crossover-exe::run.desktop
-text/plain=gvim-2.desktop
-application/x-crossover-exe=cxassoc-cxoffice-0:application_x-crossover-exe::run.desktop
-text/x-uri=firefox.desktop
-image/bmp=gqview-2.desktop
-text/html=x-www-browser.desktop

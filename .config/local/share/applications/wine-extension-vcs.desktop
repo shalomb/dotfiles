@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Outlook
-MimeType=text/calendar
-Exec=wine start /ProgIDOpen Outlook.File.vcs %f
-NoDisplay=true
-StartupNotify=true

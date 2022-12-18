@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Excel
-MimeType=text/csv
-Exec=wine start /ProgIDOpen Excel.CSV %f
-NoDisplay=true
-StartupNotify=true

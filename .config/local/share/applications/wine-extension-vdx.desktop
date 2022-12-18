@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=A Wine application
-MimeType=application/vnd.ms-visio.viewer
-Exec=wine start /ProgIDOpen VisioViewer.Viewer %f
-NoDisplay=true
-StartupNotify=true

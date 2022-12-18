@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Access
-MimeType=application/x-wine-extension-mdn
-Exec=wine start /ProgIDOpen Access.BlankDatabaseTemplate.12 %f
-NoDisplay=true
-StartupNotify=true

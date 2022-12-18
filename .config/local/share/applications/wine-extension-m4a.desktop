@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Spotify
-MimeType=audio/mp4
-Exec=wine start /ProgIDOpen Spotify.m4a %f
-NoDisplay=true
-StartupNotify=true

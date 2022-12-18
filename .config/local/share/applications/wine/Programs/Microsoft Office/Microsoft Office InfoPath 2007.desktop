@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Microsoft Office InfoPath 2007
-Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\INFOPATH.EXE" 
-Type=Application
-StartupNotify=true
-Comment=Design and fill out dynamic forms to gather and reuse information throughout the organization using Microsoft Office InfoPath.
-Icon=/home/unop/.local/share/icons/9ede_inficon.0.png

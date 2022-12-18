@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Microsoft Office Word 2007
-Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Microsoft Office\\Office12\\WINWORD.EXE" 
-Type=Application
-StartupNotify=true
-Comment=Create and edit professional-looking documents such as letters, papers, reports, and booklets by using Microsoft Office Word.
-Icon=/home/unop/.local/share/icons/9ede_wordicon.0.png

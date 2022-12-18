@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Play Wolfenstein 3D
-Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Wolfenstein 3D\\wolf3d\\WOLF3D.EXE" 
-Type=Application
-StartupNotify=true
-Path=/home/unop/.wine/dosdevices/c:/Program Files/Wolfenstein 3D/wolf3d/
-Icon=/home/unop/.local/share/icons/8c29_wolf3d.xpm

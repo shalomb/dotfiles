@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Spotify
-Exec=env WINEPREFIX="/home/unop/.wine" wine "C:\\Program Files\\Spotify\\spotify.exe" 
-Type=Application
-StartupWMClass=Wine
-Path=/home/unop/.wine/dosdevices/c:/Program Files/Spotify
-Icon=bdbf_spotify.0

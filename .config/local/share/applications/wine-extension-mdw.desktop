@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Access
-MimeType=application/x-wine-extension-mdw
-Exec=wine start /ProgIDOpen Access.Workgroup.12 %f
-NoDisplay=true
-StartupNotify=true

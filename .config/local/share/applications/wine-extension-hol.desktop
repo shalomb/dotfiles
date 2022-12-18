@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Microsoft Office Outlook
-MimeType=application/x-wine-extension-hol
-Exec=wine start /ProgIDOpen Outlook.File.hol %f
-NoDisplay=true
-StartupNotify=true
