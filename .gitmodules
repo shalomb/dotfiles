@@ -262,3 +262,6 @@
 [submodule ".config/submodules/octo"]
 	path = .config/submodules/octo
 	url = https://github.com/shalomb/octo
+[submodule ".config/submodules/fetch-me"]
+	path = .config/submodules/fetch-me
+	url = https://github.com/shalomb/fetch-me
