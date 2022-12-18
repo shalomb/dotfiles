@@ -61,3 +61,4 @@ tags
 .config/vim/bundle/**
 .config/tmux/plugins/**
 submodules/**
+.config/submodules/**
