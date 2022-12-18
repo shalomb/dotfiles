@@ -288,3 +288,4 @@ alias theos='ssh-x -Y theos.ath.cx'
 alias todo='t '
 
 alias env_init='source ~/.bin/env_init'
+alias so='source '
