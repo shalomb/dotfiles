@@ -13,3 +13,8 @@ git submodule add -f https://github.com/shalomb/octo     .config/submodules/octo
 ( cd .config/submodules/octo
   ln -svf  "$PWD"/{v,bin/*} "$BINDIR"
 )
+
+git submodule add -f https://github.com/shalomb/fetch-me .config/submodules/fetch-me
+( cd .config/submodules/fetch-me
+  ln -svf  "$PWD"/fetch-me "$BINDIR"
+)

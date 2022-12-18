@@ -22,12 +22,16 @@ refresh:  ## refresh all dotfiles in $HOME with versions in repo
 .config/apt/INIT: ## Install all apt packages
 	.config/apt/INIT
 
+.PHONY: .config/submodules/INIT
+.config/submodules/INIT: ## Init git submodules
+	.config/submodules/INIT
+
 .PHONY: .config/submodules/UPDATE
 .config/submodules/UPDATE: ## Update all git submodules
 	.config/submodules/UPDATE
 
 .PHONY: submodules
-submodules: .config/submodules/UPDATE
+submodules: .config/submodules/INIT .config/submodules/UPDATE
 
 .PHONY: .config/vim/INIT
 .config/vim/INIT: ## Run vim installer
