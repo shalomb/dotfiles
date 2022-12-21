@@ -6,11 +6,22 @@ MAKEFILE := $(realpath $(lastword $(MAKEFILE_LIST)))
 .PHONY: install
 .SILENT: install
 
-install: init submodules refresh  ## Init/update submodules and refresh dotfiles
+install: init submodules refresh cronjobs  ## Init/update submodules and refresh dotfiles
 
 init: ## Run all package installers
 	# Call all other INIT scripts in this directory hierarchy
 	find -L .config/ -name "INIT" -type f -exec {} \;
+
+cronjobs: ## Install our cronjobs
+	@{ \
+	  echo "SHELL=/bin/bash"; \
+	  echo "PATH=$$PATH"; \
+	  echo; \
+	  crontab -l | grep -v '^PATH='; \
+	  echo "*/1  * * * *   cwds-list -u"     &>/dev/null; \
+	  echo "*/30 * * * *   projects-list -u" &>/dev/null;  \
+	} | awk '(/^#/ || !a[$$0]++)' \
+	  | crontab -
 
 refresh:  ## refresh all dotfiles in $HOME with versions in repo
 	# Install all dotfiles into the home directory
