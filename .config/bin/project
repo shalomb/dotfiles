@@ -4,6 +4,7 @@ set -eu -o pipefail
 
 action="$1"; shift;
 git_project="$1"; shift;
+git_project="${git_project#https://github.com/}"
 git_project="${git_project%.git}"
 git_url="https://github.com/$git_project.git"
 
