@@ -1,5 +1,9 @@
 #!/bin/bash
 
+function gitignore() {
+  cp -v ~/.gitignore .
+}
+
 function __my_git_ps1 {
   git_ps1_text=$(__git_ps1 '%s')
 
