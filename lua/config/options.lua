@@ -19,6 +19,7 @@ options.modeline = true
 options.mouse = nil
 options.number = true
 options.numberwidth = 2
+options.hidden = true
 options.relativenumber = true
 options.scrolloff = 8
 options.sidescroll = 16
