@@ -1,5 +1,7 @@
 -- keymaps
 
+local vim = vim
+
 local map = vim.keymap.set
 -- local opt = { noremap = true, silent = true }
 
@@ -48,7 +50,9 @@ map('n', '<leader>a', ':edit #<cr>')
 map('n', '<leader><leader>', ":update<cr>:call ShowCrossHairs('20m')<cr>:lua vim.fn.updatemsg()<cr>")
 map('n', '<leader>"', vim.cmd.Buffers)
 map('n', '<leader>w', vim.cmd.update)
+map('n', '<leader>i', ':echo("hi mom")')
 map('n', '<leader>ls', ':!less %<cr>')
+map('n', '<leader>ca', vim.lsp.buf.code_action)
 map('n', '<leader>q', vim.cmd.quit)
 map('n', '<leader>u', vim.cmd.UndotreeToggle)
 map('n', '<leader>rl', ":source $MYVIMRC<cr>:lua vim.fn.OK(vim.fn.expand('$MYVIMRC') .. ' reloaded')<cr>")

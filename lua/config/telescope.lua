@@ -1,14 +1,12 @@
 -- config for telescope
 
+local vim = vim
+
 local builtin = require('telescope.builtin')
 
 local actions = require 'telescope.actions'
-local actions = require 'telescope.actions'
-local finders = require 'telescope.finders'
 local finders = require 'telescope.finders'
 local pickers = require 'telescope.pickers'
-local pickers = require 'telescope.pickers'
-local sorters = require 'telescope.sorters'
 local sorters = require 'telescope.sorters'
 local state = require 'telescope.actions.state'
 
@@ -25,11 +23,11 @@ vim.keymap.set('n', '<leader>fm', builtin.marks, {})
 
 local builtins = require('telescope.builtin')
 local arr = {}
-for k,v in pairs(builtins) do
+for k,_ in pairs(builtins) do
   table.insert(arr, k)
 end
 
-local function my_custom_picker(results)
+local function show_telescope_commands(results)
   pickers.new(_, {
     prompt_title = 'Telescope Command Finder',
     finder = finders.new_table(results),
@@ -48,6 +46,6 @@ local function my_custom_picker(results)
 end
 
 vim.keymap.set('n', '<leader>fn', function()
-  my_custom_picker(arr)
+  show_telescope_commands(arr)
 end)
 

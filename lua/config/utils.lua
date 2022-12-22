@@ -1,5 +1,7 @@
 -- utils
 
+local vim = vim
+
 -- OK
 vim.fn.OK = function(msg)
   -- TODO luaize this
