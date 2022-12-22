@@ -99,10 +99,10 @@ nnoremap <silent> <leader>Q           :only<cr>
 nnoremap <silent> <leader>S           :new<cr>
 nnoremap <silent> <leader>V           :vnew<cr>
 nnoremap <silent> <leader>v           :vsplit #<cr>
-nnoremap <silent> <leader>sp          :!x-terminal-emulator -e ispell -x -t %<cr>:redraw<cr>
+" nnoremap <silent> <leader>sp          :!x-terminal-emulator -e ispell -x -t %<cr>:redraw<cr>
 nnoremap          <leader>t           :BTags<cr>
 nnoremap          <leader>T           :Tags<cr>
-nnoremap <silent> <leader>uv          :!x-terminal-emulator -e urlview % <cr>
+" nnoremap <silent> <leader>uv          :!x-terminal-emulator -e urlview % <cr>
 nnoremap <silent> <leader>\|          :vnew<cr>
 nnoremap          <leader>q           :x<cr>
 

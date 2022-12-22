@@ -4,9 +4,9 @@ let s:source = 'find bundle/ -type f'
 
 command! -bang -nargs=? -complete=dir Bundle
     \ call fzf#vim#files(
-    \    g:vimdir,
+    \    g:packer_package_root,
     \    fzf#vim#with_preview(
-    \      { 'source': 'find bundle/ \( -iname ".*" -o -iname "*pycache*" -o -iname "*.pyc" \) -prune -o -iname "*" -type f -print',
+    \      { 'source': 'find */ \( -iname ".*" -o -iname "*pycache*" -o -iname "*.pyc" \) -prune -o -iname "*" -type f -print',
     \        'options': FZFPreviewOptions('--query='. <q-args>),
     \        'window': 'tabnew'
     \      }
@@ -16,9 +16,9 @@ command! -bang -nargs=? -complete=dir Bundle
 
 command! -bang -nargs=? -complete=dir Readme
     \ call fzf#vim#files(
-    \    g:vimdir,
+    \    g:packer_package_root,
     \    fzf#vim#with_preview(
-    \      { 'source': 'find bundle/ \( -iname ".*" \) -prune -o -iname "*readme*" -print',
+    \      { 'source': 'find */ \( -iname ".*" \) -prune -o -iname "*readme*" -print',
     \        'options': FZFPreviewOptions('--query='. <q-args>),
     \        'window': 'tabnew'
     \      }

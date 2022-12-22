@@ -61,3 +61,5 @@ tags
 .config/tmux/plugins/**
 submodules/**
 .config/submodules/**
+
+plugin/**compiled*
