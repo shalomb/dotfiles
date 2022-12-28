@@ -1,6 +1,16 @@
 -- options
 
+local vim = vim
 local options = vim.opt
+
+-- autoload config on writeout
+local config_reload = vim.api.nvim_create_augroup("config_reload", {clear = true})
+vim.api.nvim_create_autocmd(
+  { "BufWritePost", "FileWritePost" }, {
+    command = ':source <afile> | :echomsg("config sourced")',
+    pattern = '*/lua/config/*.lua, */lua/config/*.vim',
+    group = config_reload
+})
 
 options.cindent = true
 options.backup = false

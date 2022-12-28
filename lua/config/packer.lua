@@ -21,13 +21,21 @@ local packer_bootstrap = ensure_packer()
 -- Only required if you have packer configured as `opt`
 vim.cmd([[packadd packer.nvim]])
 
-vim.cmd([[
-augroup Packer_aug
-  autocmd!
-  autocmd BufWritePost,FileWritePost packer.lua :so
-  autocmd BufWritePost,FileWritePost packer.lua PackerUpdate
-augroup end
-]])
+-- TODO - Do a PackerUpdate/PackerSync on writeout
+-- We can't currently do this as Packer wants to delete the plugins it
+-- manages for some reason
+-- -- autoload packer on writeout
+-- local packer_reload = vim.api.nvim_create_augroup("packer_reload", {clear = true})
+
+-- vim.api.nvim_create_autocmd(
+--   { "BufWritePost", "FileWritePost" }, {
+--     pattern = '*/lua/config/packer.lua',
+--     group = packer_reload,
+--     command = ':source <afile>',
+--     -- callback = function()
+--     --   packer.sync()
+--     -- end
+-- })
 
 return packer.startup(function(use)
   use "wbthomason/packer.nvim" -- Packer can manage itself
@@ -109,6 +117,7 @@ return packer.startup(function(use)
   -- use 'haya14busa/incsearch-fuzzy.vim'
   -- use 'haya14busa/incsearch.vim' -- TODO, error with / inserting weird chars
   use "haya14busa/vim-asterisk"
+  use "ibhagwan/smartyank.nvim"
   use "idbrii/textobj-word-column.vim"
   use "jgdavey/tslime.vim"
   use "junegunn/fzf"
