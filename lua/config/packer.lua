@@ -1,6 +1,22 @@
 -- This file can be loaded by calling `lua require('plugins')` from your init.vim
 
+local vim = vim
+
+vim.cmd [[packadd packer.nvim]]
+
 local packer = require("packer")
+
+local ensure_packer = function()
+  local fn = vim.fn
+  local install_path = fn.stdpath('data')..'/site/pack/packer/start/packer.nvim'
+  if fn.empty(fn.glob(install_path)) > 0 then
+    fn.system({'git', 'clone', '--depth', '1', 'https://github.com/wbthomason/packer.nvim', install_path})
+    vim.cmd [[packadd packer.nvim]]
+    return true
+  end
+  return false
+end
+local packer_bootstrap = ensure_packer()
 
 -- Only required if you have packer configured as `opt`
 vim.cmd([[packadd packer.nvim]])
@@ -64,34 +80,37 @@ return packer.startup(function(use)
     requires = { "nvim-lua/plenary.nvim" },
   })
 
-  use({
-    "glepnir/lspsaga.nvim",
-    branch = "main",
-    config = function()
-      local saga = require("lspsaga")
-      saga.init_lsp_saga({
-        -- your configuration
-      })
-    end,
-  })
+-- use({
+--   "glepnir/lspsaga.nvim",
+--   branch = "main",
+--   config = function()
+--     local saga = require("lspsaga")
+--     saga.init_lsp_saga({
+--       -- your configuration
+--     })
+--   end,
+-- })
 
   -- colorschemes
-  use { "ellisonleao/gruvbox.nvim" }
+
+  use "ellisonleao/gruvbox.nvim"
+  use "mhartington/oceanic-next"
+  use "rebelot/kanagawa.nvim"
 
   -- plugins
 
-  use "nvim-lualine/lualine.nvim" -- configure Neovim statusline
-  use "folke/which-key.nvim" -- which-key displays popups of possible keybindings
   use "airblade/vim-gitgutter"
   use "christoomey/vim-tmux-navigator"
   use "easymotion/vim-easymotion"
-  use "ThePrimeagen/harpoon" -- Manage quickly accessed files
+  use "ellisonleao/glow.nvim"
+  use "folke/which-key.nvim" -- which-key displays popups of possible keybindings
   use "godlygeek/tabular"
   use "haya14busa/incsearch-easymotion.vim"
   -- use 'haya14busa/incsearch-fuzzy.vim'
   -- use 'haya14busa/incsearch.vim' -- TODO, error with / inserting weird chars
   use "haya14busa/vim-asterisk"
   use "idbrii/textobj-word-column.vim"
+  use "jgdavey/tslime.vim"
   use "junegunn/fzf"
   use "junegunn/fzf.vim"
   use "junegunn/rainbow_parentheses.vim"
@@ -102,9 +121,11 @@ return packer.startup(function(use)
   use "kana/vim-textobj-user"
   use "L3MON4D3/LuaSnip"
   use "mbbill/undotree"
+  use "nvim-lualine/lualine.nvim" -- configure Neovim statusline
   use "romainl/vim-cool"
   use "saadparwaiz1/cmp_luasnip"
   use "takac/vim-hardtime"
+  use "ThePrimeagen/harpoon" -- Manage quickly accessed files
   use "tommcdo/vim-exchange"
   use "tpope/vim-abolish"
   use "tpope/vim-commentary"
@@ -120,6 +141,15 @@ return packer.startup(function(use)
   use "wellle/targets.vim" -- Add mode text objects
 
   if packer_bootstrap then
+   -- basically used to "pause" and remind me it'll quit
+    vim.fn.input "bootstrapping, press any key (exit after)"
+    vim.api.nvim_create_autocmd({ "PackerCompileDone" }, {
+      callback = function(ev)
+        vim.cmd.quitall()
+      end
+    })
+    packer.install()
+    packer.compile()
     packer.sync()
   end
 end)

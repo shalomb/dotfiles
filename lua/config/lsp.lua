@@ -4,6 +4,8 @@
 local vim = vim
 
 local lsp = require("lsp-zero")
+local lspconfig = require("lspconfig")
+local util = require('lspconfig').util
 
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
@@ -76,10 +78,11 @@ lsp.setup_nvim_cmp({
     fields = { "menu", "abbr", "kind" },
     format = function(entry, item)
       local menu_icon = {
-        nvim_lsp = "λ",
-        luasnip = "⋗",
         buffer = "Ω",
-        path = "📁",
+        luasnip = "⋗",
+        nvim_lsp = "λ",
+        nvim_lua = "[lua]",
+        path = "",
       }
       item.menu = menu_icon[entry.source.name]
       return item
@@ -115,7 +118,7 @@ cmp.setup.cmdline(':', {
 })
 
 lsp.set_preferences({
-  suggest_lsp_servers = false,
+  suggest_lsp_servers = true,
   sign_icons = {
     error = "E",
     warn = "W",
@@ -124,7 +127,7 @@ lsp.set_preferences({
   }
 })
 
-lsp.on_attach(function(client, bufnr)
+local on_attach = function(client, bufnr)
   -- Enable completion triggered by <c-x><c-o>
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
@@ -153,13 +156,35 @@ lsp.on_attach(function(client, bufnr)
   end, opts)
   vim.keymap.set("n", "<space>wa", vim.lsp.buf.add_workspace_folder, opts)
   vim.keymap.set("n", "<space>wr", vim.lsp.buf.remove_workspace_folder, opts)
-end)
+end
 
+lsp.on_attach(on_attach)
 lsp.setup()
 
 vim.diagnostic.config({
   virtual_text = true,
+  signs = true,
+  update_in_insert = false,
+  underline = true,
+  severity_sort = false,
+  float = true,
 })
+
+lspconfig.pyright.setup({
+    on_attach = on_attach,
+    flags = { debounce_text_changes = 150 },
+    root_dir = util.root_pattern('.venv', 'venv', 'pyrightconfig.json'),
+    settings = {
+      pyright = { disableLanguageServices = false, disableOrganizeImports = true },
+      python = {
+        analysis = {
+          autoSearchPaths = true;
+          useLibraryCodeForTypes = true,
+          diagnosticMode = 'openFilesOnly',
+        },
+      },
+    },
+  })
 
 -- debugging
 -- vim.lsp.set_log_level("debug")
