@@ -2,8 +2,13 @@
 -- https://github.com/hashicorp/terraform-ls/blob/main/docs/installation.md#other-platforms
 
 local lspconfig = require("lspconfig")
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities.textDocument.completion.completionItem.snippetSupport = true
 
-lspconfig.terraformls.setup {}
+lspconfig.terraformls.setup {
+  flags = { debounce_text_changes = 150 },
+  capabilities = capabilities
+}
 
 -- vim.api.nvim_create_autocmd({ "BufWritePre" }, {
 --   pattern = { "*.tf", "*.tfvars" },
@@ -19,13 +24,3 @@ lspconfig.terraformls.setup {}
 --     },
 --   },
 -- })
-
-lspconfig.sumneko_lua.setup({
-  settings = {
-    Lua = {
-      diagnostics = {
-        globals = {"vim"},
-      },
-    },
-  },
-})

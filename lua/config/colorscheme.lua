@@ -1,5 +1,7 @@
 -- setup must be called before loading the colorscheme
 
+local vim = vim
+
 -- Default options:
 require("gruvbox").setup({
   undercurl = true,
@@ -21,7 +23,7 @@ require("gruvbox").setup({
 
 vim.cmd([[
 let $NVIM_TUI_ENABLE_TRUE_COLOR=1
-let g:gruvbox_contrast_dark = 'soft'
+let g:gruvbox_contrast_dark = 'light'
 let g:gruvbox_transparent_bg = 1
 set background=dark
 set termguicolors
@@ -30,12 +32,11 @@ augroup MyColorScheme
   autocmd InsertEnter * set nocursorline
   autocmd InsertLeave * set cursorline
 
-  autocmd BufEnter,CmdLineLeave,InsertLeave * set relativenumber   | redraw 
+  autocmd BufEnter,CmdLineLeave,InsertLeave * set relativenumber   | redraw
   autocmd BufLeave,CmdLineEnter,InsertEnter * set norelativenumber | redraw
 
-  autocmd VimEnter * ++nested colorscheme gruvbox
+  autocmd VimEnter * ++nested colorscheme kanagawa " gruvbox
   autocmd VimEnter * hi! Normal ctermbg=none guibg=none
   autocmd VimEnter * hi! NormalFloat ctermbg=none guibg=none
-  colorscheme gruvbox
 augroup end
 ]])

@@ -1,4 +1,6 @@
 require('nvim-treesitter.configs').setup {
+  enable = true,
+
   -- A list of parser names, or "all"
   ensure_installed = {
     "bash",

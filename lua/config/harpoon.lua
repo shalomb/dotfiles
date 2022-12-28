@@ -1,6 +1,6 @@
 -- config for ThePrimeagen/harpoon
 
-require("telescope").load_extension('harpoon')
+-- require("telescope").load_extension('harpoon')
 
 local harpoon_ui = require('harpoon.ui')
 local harpoon_tmux = require('harpoon.tmux')

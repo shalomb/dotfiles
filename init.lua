@@ -1,0 +1,2 @@
+-- require("packer")
+require("config")

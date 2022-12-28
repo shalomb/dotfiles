@@ -37,19 +37,19 @@ nullls.setup {
   sources = {
     with_diagnostics_code(diagnostics.shellcheck),
     formatting.shfmt,
-    formatting.fixjson,
+    -- formatting.fixjson,
     formatting.black.with { extra_args = { "--fast" } },
-    formatting.autopep8,
-    formatting.isort,
-    formatting.autoflake,
-    formatting.beautysh,
+    -- formatting.autopep8,
+    -- formatting.isort,
+    -- formatting.autoflake,
+    -- formatting.beautysh,
     formatting.black,
     with_root_file(formatting.stylua, "stylua.toml"),
     formatting.gofumpt,
-    formatting.prettier.with {
-      extra_filetypes = { "toml", "solidity" },
-      extra_args = { "--no-semi", "--single-quote", "--jsx-single-quote" },
-    },
+    -- formatting.prettier.with {
+    --   extra_filetypes = { "toml", "solidity" },
+    --   extra_args = { "--no-semi", "--single-quote", "--jsx-single-quote" },
+    -- },
     formatting.yamlfmt,
 
     code_actions.gitrebase,
@@ -62,24 +62,24 @@ nullls.setup {
     completions.tags,
 
     -- code_actions.gitsigns,
-    diagnostics.actionlint,
+    -- diagnostics.actionlint,
     diagnostics.ansiblelint,
-    diagnostics.buf, -- protocol buffers
-    diagnostics.cfn_lint,
+    -- diagnostics.buf, -- protocol buffers
+    -- diagnostics.cfn_lint,
     diagnostics.checkmake,
     diagnostics.codespell,
-    diagnostics.commitlint,
-    diagnostics.curlylint, -- jinja, django, nunjucks templates
-    diagnostics.djlint, -- html linter/formatter
-    diagnostics.dotenv_linter,
+    -- diagnostics.commitlint,
+    -- diagnostics.curlylint, -- jinja, django, nunjucks templates
+    -- diagnostics.djlint, -- html linter/formatter
+    -- diagnostics.dotenv_linter,
     -- diagnostics.editorconfig_checker, -- missing executable ec
     diagnostics.flake8,
-    diagnostics.gitlint,
+    -- diagnostics.gitlint,
     diagnostics.golangci_lint,
-    diagnostics.hadolint,
-    diagnostics.jshint,
-    diagnostics.jsonlint,
-    diagnostics.ltrs,
+    -- diagnostics.hadolint,
+    -- diagnostics.jshint,
+    -- diagnostics.jsonlint,
+    -- diagnostics.ltrs, -- not found
     diagnostics.luacheck.with {
       settings = {
         Lua = {
@@ -89,34 +89,34 @@ nullls.setup {
         }
       }
     },
-    diagnostics.markdownlint,
-    diagnostics.misspell,
-    diagnostics.opacheck,
-    diagnostics.perlimports,
-    diagnostics.proselint,
-    diagnostics.protoc_gen_lint,
-    diagnostics.protolint,
-    diagnostics.pycodestyle,
-    diagnostics.pydocstyle,
-    diagnostics.pylama,
-    diagnostics.pylint, -- can be customized, see BUILTINS.md
-    diagnostics.pyproject_flake8,
+    -- diagnostics.markdownlint,
+    -- diagnostics.misspell,
+    -- diagnostics.opacheck,
+    -- diagnostics.perlimports,
+    -- diagnostics.proselint, -- not found 
+    -- diagnostics.protoc_gen_lint,
+    -- diagnostics.protolint,
+    -- diagnostics.pycodestyle,
+    -- diagnostics.pydocstyle,
+    -- diagnostics.pylama,
+    -- diagnostics.pylint, -- can be customized, see BUILTINS.md
+    -- diagnostics.pyproject_flake8,
     diagnostics.revive,
-    diagnostics.rstcheck,
-    diagnostics.ruff,
-    diagnostics.semgrep,
+    -- diagnostics.rstcheck,
+    -- diagnostics.ruff,
+    -- diagnostics.semgrep,
     diagnostics.shellcheck,
-    nullls.builtins.diagnostics.sqlfluff.with({
-      extra_args = { "--dialect", "postgres" }, -- change to your dialect
-    }),
-    diagnostics.standardjs,
+    -- nullls.builtins.diagnostics.sqlfluff.with({
+    --   extra_args = { "--dialect", "postgres" }, -- change to your dialect
+    -- }),
+    -- diagnostics.standardjs,
     diagnostics.staticcheck,
-    diagnostics.stylelint,
+    -- diagnostics.stylelint,
     diagnostics.tidy,
     diagnostics.todo_comments,
     diagnostics.trail_space,
     diagnostics.vint,
-    diagnostics.vulture,
+    -- diagnostics.vulture,
     -- diagnostics.write_good, -- plugin missing
     diagnostics.yamllint,
 
