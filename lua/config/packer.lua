@@ -107,6 +107,7 @@ return packer.startup(function(use)
 
   -- plugins
 
+  use "p00f/nvim-ts-rainbow"
   use "airblade/vim-gitgutter"
   use "christoomey/vim-tmux-navigator"
   use "easymotion/vim-easymotion"
