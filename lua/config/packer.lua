@@ -107,7 +107,6 @@ return packer.startup(function(use)
 
   -- plugins
 
-  use "p00f/nvim-ts-rainbow"
   use "airblade/vim-gitgutter"
   use "christoomey/vim-tmux-navigator"
   use "easymotion/vim-easymotion"
@@ -121,6 +120,7 @@ return packer.startup(function(use)
   use "ibhagwan/smartyank.nvim"
   use "idbrii/textobj-word-column.vim"
   use "jgdavey/tslime.vim"
+  use "jghauser/follow-md-links.nvim"
   use "junegunn/fzf"
   use "junegunn/fzf.vim"
   use "junegunn/rainbow_parentheses.vim"
@@ -132,7 +132,9 @@ return packer.startup(function(use)
   use "L3MON4D3/LuaSnip"
   use "mbbill/undotree"
   use "nvim-lualine/lualine.nvim" -- configure Neovim statusline
+  use "p00f/nvim-ts-rainbow"
   use "romainl/vim-cool"
+  use "RRethy/nvim-treesitter-textsubjects"
   use "saadparwaiz1/cmp_luasnip"
   use "takac/vim-hardtime"
   use "ThePrimeagen/harpoon" -- Manage quickly accessed files

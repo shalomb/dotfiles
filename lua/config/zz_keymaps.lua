@@ -40,6 +40,7 @@ vim.keymap.set("n", "N", "Nzzzv")
 map("x", "<leader>p", [["_dP]])
 
 map('n', '<leader>q', vim.cmd.quit)
+map('n', '<leader>on', vim.cmd.only)
 map("n", "S", [[:%s/\<<C-r>/\>/<C-r><C-w>/gI<Left><Left><Left>]])
 
 map('n', '<c-b>', '<c-b>zz')
