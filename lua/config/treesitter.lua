@@ -1,5 +1,14 @@
-require('nvim-treesitter.configs').setup {
+local treesitter_config = require('nvim-treesitter.configs')
+
+treesitter_config.setup {
   enable = true,
+
+  -- Automatically install missing parsers when entering buffer
+  -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
+  auto_install = true,
+
+  -- Install parsers synchronously (only applied to `ensure_installed`)
+  sync_install = false,
 
   -- A list of parser names, or "all"
   ensure_installed = {
@@ -42,13 +51,6 @@ require('nvim-treesitter.configs').setup {
     "yaml",
   },
 
-  -- Install parsers synchronously (only applied to `ensure_installed`)
-  sync_install = false,
-
-  -- Automatically install missing parsers when entering buffer
-  -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
-  auto_install = true,
-
   highlight = {
     -- `false` will disable the whole extension
     enable = true,
@@ -68,4 +70,15 @@ require('nvim-treesitter.configs').setup {
     -- colors = {}, -- table of hex strings
     -- termcolors = {} -- table of colour name strings
   },
+
+  textsubjects = {
+    enable = true,
+    prev_selection = ',', -- (Optional) keymap to select the previous selection
+    keymaps = {
+      ['.'] = 'textsubjects-smart',
+      [';'] = 'textsubjects-container-outer',
+      ['i;'] = 'textsubjects-container-inner',
+    },
+  },
+
 }
