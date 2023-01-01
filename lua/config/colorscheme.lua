@@ -2,23 +2,49 @@
 
 local vim = vim
 
--- Default options:
-require("gruvbox").setup({
-  undercurl = true,
-  underline = true,
-  bold = true,
-  italic = true,
-  strikethrough = true,
-  invert_selection = false,
-  invert_signs = false,
-  invert_tabline = false,
-  invert_intend_guides = false,
-  inverse = true, -- invert background for search, diffs, statuslines and errors
-  contrast = "", -- can be "hard", "soft" or empty string
-  palette_overrides = {},
-  overrides = {},
-  dim_inactive = false,
-  transparent_mode = false,
+-- -- Default options:
+-- require("gruvbox").setup({
+--   undercurl = true,
+--   underline = true,
+--   bold = true,
+--   italic = true,
+--   strikethrough = true,
+--   invert_selection = false,
+--   invert_signs = false,
+--   invert_tabline = false,
+--   invert_intend_guides = false,
+--   inverse = true, -- invert background for search, diffs, statuslines and errors
+--   contrast = "", -- can be "hard", "soft" or empty string
+--   palette_overrides = {},
+--   overrides = {},
+--   dim_inactive = false,
+--   transparent_mode = false,
+-- })
+
+vim.opt.laststatus = 3
+vim.opt.fillchars:append({
+    horiz = '━',
+    horizup = '┻',
+    horizdown = '┳',
+    vert = '┃',
+    vertleft = '┨',
+    vertright = '┣',
+    verthoriz = '╋',
+})
+
+local overrides = {
+  VertSplit  = {
+    fg = "#ffffff",
+    bg = "#ffffff",
+  },
+  StatusLine = { bg = "#ffffff" }
+}
+
+require'kanagawa'.setup({
+  overrides = overrides,
+  globalStatus = true,
+  transparent = true,
+  dimInactive = true,
 })
 
 vim.cmd([[
@@ -34,6 +60,8 @@ augroup MyColorScheme
 
   autocmd BufEnter,CmdLineLeave,InsertLeave * set relativenumber   | redraw
   autocmd BufLeave,CmdLineEnter,InsertEnter * set norelativenumber | redraw
+  autocmd BufEnter * set cursorline
+  autocmd BufLeave * set nocursorline
 
   autocmd VimEnter * ++nested colorscheme kanagawa " gruvbox
   autocmd VimEnter * hi! Normal ctermbg=none guibg=none

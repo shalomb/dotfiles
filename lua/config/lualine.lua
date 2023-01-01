@@ -1,12 +1,15 @@
 -- Eviline config for lualine
 -- Author: shadmansaleh
 -- Credit: glepnir
+local vim = vim
 local lualine = require('lualine')
 
 -- Color table for highlights
 -- stylua: ignore
 local colors = {
-  bg       = '#202328',
+  -- bg       = '#202328',
+  -- bg       = '#304328', -- army green
+  bg       = '#302328', -- wine red
   fg       = '#bbc2cf',
   yellow   = '#ECBE7B',
   cyan     = '#008080',
@@ -73,7 +76,7 @@ local function ins_left(component)
   table.insert(config.sections.lualine_c, component)
 end
 
--- Inserts a component in lualine_x ot right section
+-- Inserts a component in lualine_x to right section
 local function ins_right(component)
   table.insert(config.sections.lualine_x, component)
 end
@@ -172,6 +175,7 @@ ins_left {
   function()
     return '%='
   end,
+  cond = conditions.hide_in_width,
 }
 
 ins_left {
@@ -193,6 +197,7 @@ ins_left {
   end,
   icon = ' ',
   color = { fg = '#ffffff', gui = 'bold' },
+  cond = conditions.hide_in_width,
 }
 
 ins_left { 'filetype' }
