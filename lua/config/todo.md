@@ -1,5 +1,8 @@
 # Todo
 
+ctrl-k conflict with lsp
+filename not prominent in statusline when using multiple windows
+
 google keep
 copilot
 

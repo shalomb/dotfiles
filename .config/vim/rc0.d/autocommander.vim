@@ -4,9 +4,9 @@ function! s:AuRsyncTargetCompletion(ArgLead, CmdLine, CursorPos)
   let l:cmdline = getcmdline()
   let l:char_at_pos = a:CmdLine[a:CursorPos-1]
 
-  if char_at_pos == ':'
+  if char_at_pos ==# ':'
     return join( map( split(expand('%'), '\n'), '"' . a:ArgLead . '"' . ' . v:val' ), '\n')
-  elseif char_at_pos == ' '
+  elseif char_at_pos ==# ' '
     return system("perl -lne '($h)=/Host +([^\*]+)$/i; print for split /\\s+/, $h' ~/.ssh/*config* ~/.ssh/config.d/*")
   else
     return system("perl -lne '($h)=/Host +([^\*]+)$/i; print for grep /^" . a:ArgLead . "/, split /\\s+/, $h' ~/.ssh/*config* ~/.ssh/config.d/*")
@@ -15,7 +15,7 @@ function! s:AuRsyncTargetCompletion(ArgLead, CmdLine, CursorPos)
 endfunction
 
 function! NormalizeWS(v)
-  return join(split(v:val, " "), " ")
+  return join(split(v:val, ' '), ' ')
 endfunction
 
 function! AuStartCmdHistoryEditing(...)
@@ -30,7 +30,7 @@ function! AuStartCmdHistoryEditing(...)
 
   let l:feed_keys = 'q:Gk$'
 
-  if l:subcmd == 'AuRsyncFile'
+  if l:subcmd ==# 'AuRsyncFile'
     let l:hist_args = [
       \  'au BufWritePost,FileWritePost <buffer> silent',
       \  ':!',
@@ -38,7 +38,7 @@ function! AuStartCmdHistoryEditing(...)
       \    'rsync -a % ' . l:subcmd_target,
       \ ]
 
-  elseif l:subcmd == 'AuRsyncGitProject'
+  elseif l:subcmd ==# 'AuRsyncGitProject'
     let l:git_root = GitRoot()
     let l:hist_args = [
       \  'au BufWritePost,FileWritePost * silent',
@@ -53,7 +53,7 @@ function! AuStartCmdHistoryEditing(...)
       \ ]
     let l:feed_keys = 'q:Gk?' . l:subcmd . 'j$F/'
 
-  elseif l:subcmd == 'AuRunCommand'
+  elseif l:subcmd ==# 'AuRunCommand'
     let l:hist_args = [
       \  'au BufWritePost,FileWritePost * silent',
       \  ':!(',
@@ -62,7 +62,7 @@ function! AuStartCmdHistoryEditing(...)
       \ ]
     let l:feed_keys = 'q:Gk$F;'
 
-  elseif l:subcmd == 'AuRunGitCommand'
+  elseif l:subcmd ==# 'AuRunGitCommand'
     let l:git_root = GitRoot()
     let l:hist_args = [
       \  'au BufWritePost,FileWritePost * silent',
@@ -74,7 +74,7 @@ function! AuStartCmdHistoryEditing(...)
       \ ]
     let l:feed_keys = 'q:Gk$F&w'
 
-  elseif l:subcmd == 'AuRunTmuxCommand'
+  elseif l:subcmd ==# 'AuRunTmuxCommand'
 
     try
       let l:target_directory = GitRoot()

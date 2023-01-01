@@ -137,7 +137,7 @@ local on_attach = function(client, bufnr)
   -- Enable completion triggered by <c-x><c-o>
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
-  local opts = { buffer = bufnr, remap = false }
+  local opts = { buffer = bufnr, remap = false, noremap=true, silent=true }
 
   if client.name == "eslint" then
     vim.cmd.LspStop("eslint")
@@ -153,6 +153,7 @@ local on_attach = function(client, bufnr)
   vim.keymap.set("n", "<leader>vca", vim.lsp.buf.code_action, opts)
   vim.keymap.set("n", "<leader>vrr", vim.lsp.buf.references, opts)
   vim.keymap.set("n", "<leader>vrn", vim.lsp.buf.rename, opts)
+  vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
   vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
   vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
   vim.keymap.set("n", "<space>D", vim.lsp.buf.type_definition, opts)
