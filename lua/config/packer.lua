@@ -129,7 +129,6 @@ return packer.startup(function(use)
   use "mbbill/undotree"
   use "nvim-lualine/lualine.nvim" -- configure Neovim statusline
   use "p00f/nvim-ts-rainbow"
-  use "phaazon/hop.nvim"
   use "preservim/vim-markdown"
   use "romainl/vim-cool"
   use "RRethy/nvim-treesitter-textsubjects"
