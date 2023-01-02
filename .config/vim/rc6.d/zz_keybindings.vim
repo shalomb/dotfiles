@@ -36,10 +36,10 @@ noremap <leader>ev    :vsplit   <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
 noremap <leader>cd    :cd       <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
 noremap <leader>lcd   :lcd      <C-R>=fnameescape(expand('%:h:p')).'/'<CR>
 
-noremap  <buffer> <silent> k          gk
-noremap  <buffer> <silent> j          gj
-noremap  <buffer> <silent> 0          g0
-noremap  <buffer> <silent> $          g$
+" noremap  <buffer> <silent> k          gk
+" noremap  <buffer> <silent> j          gj
+" noremap  <buffer> <silent> 0          g0
+" noremap  <buffer> <silent> $          g$
 
 noremap  <buffer> <silent> <C-e>      5<C-e>
 noremap  <buffer> <silent> <C-y>      5<C-y>

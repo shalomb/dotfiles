@@ -57,7 +57,7 @@ nullls.setup {
     code_actions.shellcheck,
     code_actions.shellcheck,
 
-    completions.luasnip,
+    -- completions.luasnip,
     completions.spell,
     completions.tags,
 

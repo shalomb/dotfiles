@@ -11,30 +11,25 @@ vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
 lsp.preset("recommended")
 
+-- language servers
 lsp.ensure_installed({
+  "awk_ls",
   "bashls",
   "cssls",
   "gopls",
   "html",
   "pyright",
   "rust_analyzer",
-  "sumneko_lua",
+  "sqls",
   "sumneko_lua",
   "tsserver",
   "vimls",
   "yamlls",
 })
 
--- Fix Undefined global 'vim'
-lsp.configure("sumneko_lua", {
-  settings = {
-    Lua = {
-      diagnostics = {
-        globals = { "vim" }
-      }
-    }
-  }
-})
+-- Get around bug in the mapcheck at
+-- https://github.com/VonHeikemen/lsp-zero.nvim/blob/main/lua/lsp-zero/server.lua#L75
+vim.keymap.set('n', '<c-k>', ':TmuxNavigateUp<cr>')
 
 local cmp = require("cmp")
 local cmp_select = { behavior = cmp.SelectBehavior.Select }
@@ -67,8 +62,8 @@ lsp.setup_nvim_cmp({
   sources = {
     {name = 'path'},
     {name = 'nvim_lsp', keyword_length = 3},
-    {name = 'buffer', keyword_length = 3},
-    {name = 'luasnip', keyword_length = 2},
+    -- {name = 'buffer', keyword_length = 3},
+    -- {name = 'luasnip', keyword_length = 2},
   },
   window = {
     completion = cmp.config.window.bordered(),
@@ -106,22 +101,22 @@ cmp.setup.cmdline({ '/', '?' }, {
   }
 })
 
--- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
-cmp.setup.cmdline(':', {
-  sources = cmp.config.sources({
-    { name = 'path' }
-  }, {
-    { name = 'cmdline' }
-  })
-})
+-- -- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
+-- cmp.setup.cmdline(':', {
+--   sources = cmp.config.sources({
+--     { name = 'path' }
+--   }, {
+--     { name = 'cmdline' }
+--   })
+-- })
 
--- setup cmdline completion to keep order reversed
-cmp.setup.cmdline({ ':', '/', '?' }, {
-  mapping = cmp.mapping.preset.cmdline(),
-  view = {
-    entries = {name = 'custom', selection_order = 'near_cursor' }
-  },
-})
+-- -- setup cmdline completion to keep order reversed
+-- cmp.setup.cmdline({ ':', '/', '?' }, {
+--   mapping = cmp.mapping.preset.cmdline(),
+--   view = {
+--     entries = {name = 'custom', selection_order = 'near_cursor' }
+--   },
+-- })
 
 lsp.set_preferences({
   suggest_lsp_servers = true,
@@ -144,6 +139,7 @@ local on_attach = function(client, bufnr)
     return
   end
 
+  -- vim.keymap.set("n", "<leader>D", ':lua vim.diagnostic.setqflist()<cr>') -- TODO This doesnt' appear to work
   vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
   vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
   vim.keymap.set("n", "<leader>vws", vim.lsp.buf.workspace_symbol, opts)
@@ -178,20 +174,20 @@ vim.diagnostic.config({
 })
 
 lspconfig.pyright.setup({
-    on_attach = on_attach,
-    flags = { debounce_text_changes = 150 },
-    root_dir = util.root_pattern('.venv', 'venv', 'pyrightconfig.json'),
-    settings = {
-      pyright = { disableLanguageServices = false, disableOrganizeImports = true },
-      python = {
-        analysis = {
-          autoSearchPaths = true;
-          useLibraryCodeForTypes = true,
-          diagnosticMode = 'openFilesOnly',
-        },
+  on_attach = on_attach,
+  flags = { debounce_text_changes = 150 },
+  root_dir = util.root_pattern('.venv', 'venv', 'pyrightconfig.json'),
+  settings = {
+    pyright = { disableLanguageServices = false, disableOrganizeImports = true },
+    python = {
+      analysis = {
+        autoSearchPaths = true;
+        useLibraryCodeForTypes = true,
+        diagnosticMode = 'openFilesOnly',
       },
     },
-  })
+  },
+})
 
 -- debugging
 -- vim.lsp.set_log_level("debug")
