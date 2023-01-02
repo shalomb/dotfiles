@@ -109,13 +109,9 @@ return packer.startup(function(use)
 
   use "airblade/vim-gitgutter"
   use "christoomey/vim-tmux-navigator"
-  use "easymotion/vim-easymotion"
   use "ellisonleao/glow.nvim"
   use "folke/which-key.nvim" -- which-key displays popups of possible keybindings
   use "godlygeek/tabular"
-  use "haya14busa/incsearch-easymotion.vim"
-  -- use 'haya14busa/incsearch-fuzzy.vim'
-  -- use 'haya14busa/incsearch.vim' -- TODO, error with / inserting weird chars
   use "haya14busa/vim-asterisk"
   use "ibhagwan/smartyank.nvim"
   use "idbrii/textobj-word-column.vim"
@@ -133,6 +129,8 @@ return packer.startup(function(use)
   use "mbbill/undotree"
   use "nvim-lualine/lualine.nvim" -- configure Neovim statusline
   use "p00f/nvim-ts-rainbow"
+  use "phaazon/hop.nvim"
+  use "preservim/vim-markdown"
   use "romainl/vim-cool"
   use "RRethy/nvim-treesitter-textsubjects"
   use "saadparwaiz1/cmp_luasnip"

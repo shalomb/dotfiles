@@ -1,5 +1,9 @@
 # Todo
 
+lsp completion for functions missing
+
+switch to foreign project directories
+
 ctrl-k conflict with lsp
 filename not prominent in statusline when using multiple windows
 
