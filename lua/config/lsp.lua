@@ -236,6 +236,9 @@ lspconfig.sumneko_lua.setup({
   flags = { debounce_text_changes = 150 },
   settings = {
     Lua = {
+      completion = {
+        callSnippet = "Replace"
+      },
       diagnostics = {
         globals = { "_", "_G", "vim", }
       },

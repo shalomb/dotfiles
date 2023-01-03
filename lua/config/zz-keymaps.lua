@@ -52,7 +52,6 @@ whichkey.register({
   ['<leader>a'] = { ':edit #<cr>', "edit alt" },
   ['<leader>ca'] = { vim.lsp.buf.code_action, "code action" },
   ['<leader>ls'] = { ':!less %<cr>', "less %" },
-  -- ['<leader>?'] = { ":lua require'hop'.hint_patterns({}, vim.fn.getreg('/'))<cr>", "" },
   ['<leader>on'] = { vim.cmd.only, "only" },
   ['<leader>rl'] = { ":source $MYVIMRC<cr>:lua vim.fn.OK(vim.fn.expand('$MYVIMRC') .. ' reloaded')<cr>", "reload" },
   ['<leader>so'] = { ":so<cr>:lua vim.fn.OK(vim.fn.expand('%') .. ' sourced')<cr>", "source" },
