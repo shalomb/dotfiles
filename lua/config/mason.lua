@@ -1,3 +1,17 @@
+-- lua
+
+local vim = vim
+
+local mason = require('mason')
+
+mason.setup({
+  log_level = vim.log.levels.INFO,
+  max_concurrent_installers = 8,
+  ui = {
+    border = 'rounded'
+  }
+})
+
 local mti = require('mason-tool-installer')
 
 mti.setup {
@@ -44,6 +58,7 @@ mti.setup {
   -- e.g.: 5000 = 5 second delay, 10000 = 10 second delay, etc...
   -- Default: 0
   start_delay = 3000, -- 3 second delay
+
 }
 
 -- On update run
