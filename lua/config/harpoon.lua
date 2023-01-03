@@ -2,6 +2,8 @@
 
 -- require("telescope").load_extension('harpoon')
 
+local vim = vim
+
 local harpoon_ui = require('harpoon.ui')
 local harpoon_tmux = require('harpoon.tmux')
 local harpoon_mark = require('harpoon.mark')
