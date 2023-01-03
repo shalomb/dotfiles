@@ -8,7 +8,7 @@ vim.g.vimdir = vim.fn.expand("$VIM")
 vim.g.vimrc  = vim.fn.expand("$MYVIMRC")
 vim.g.vimruntime  = vim.fn.expand("$VIMRUNTIME")
 
--- vim.g.packer_package_root = require('packer').config.package_root
+vim.g.packer_package_root = require('packer').config.package_root
 vim.g.python3_host_prog = '/usr/bin/python3'
 
 -- runtime
