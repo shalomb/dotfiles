@@ -1,5 +1,7 @@
 # Todo
 
+- completion a la traditional vim with words from buffers first
+
 lsp completion for functions missing
 
 switch to foreign project directories
