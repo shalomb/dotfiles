@@ -1,4 +1,5 @@
--- diagnostics config
+-- lua
+-- debugging and diagnostics
 
 local vim = vim
 
@@ -80,24 +81,24 @@ autocmd('ModeChanged', {
   command = 'lua vim.diagnostic.enable(0)'
 })
 
--- disable diagnostics in snippet expansion
--- https://www.reddit.com/r/neovim/comments/ug2s4s/disable_diagnostic_while_expanding_luasnip/
-autocmd("ModeChanged", {
-  group    = augroup,
-  pattern  = "*:s",
-  callback = function()
-    if luasnip.in_snippet() then
-      return vim.diagnostic.disable()
-    end
-  end
-})
+-- -- disable diagnostics in snippet expansion
+-- -- https://www.reddit.com/r/neovim/comments/ug2s4s/disable_diagnostic_while_expanding_luasnip/
+-- autocmd("ModeChanged", {
+--   group    = augroup,
+--   pattern  = "*:s",
+--   callback = function()
+--     if luasnip.in_snippet() then
+--       return vim.diagnostic.disable()
+--     end
+--   end
+-- })
 
-autocmd("ModeChanged", {
-  group    = augroup,
-  pattern  = "[is]:n",
-  callback = function()
-    if luasnip.in_snippet() then
-      return vim.diagnostic.enable()
-    end
-  end
-})
+-- autocmd("ModeChanged", {
+--   group    = augroup,
+--   pattern  = "[is]:n",
+--   callback = function()
+--     if luasnip.in_snippet() then
+--       return vim.diagnostic.enable()
+--     end
+--   end
+-- })

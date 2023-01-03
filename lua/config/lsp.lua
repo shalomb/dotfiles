@@ -3,9 +3,12 @@
 
 local vim = vim
 
-local lsp = require("lsp-zero")
+local cmp = require("cmp")
 local lspconfig = require("lspconfig")
+local lsp = require("lsp-zero")
+local luasnip = require("luasnip")
 local util = require("lspconfig").util
+local whichkey = require("which-key")
 
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
@@ -18,12 +21,12 @@ lsp.set_preferences({
   configure_diagnostics = true,
   cmp_capabilities = true,
   manage_nvim_cmp = true,
-  call_servers = 'local',
+  call_servers = "local",
   sign_icons = {
-    error = '✘',
-    warn = '▲',
-    hint = '⚑',
-    info = ''
+    error = "✘",
+    warn = "▲",
+    hint = "⚑",
+    info = ""
   }
 })
 
@@ -48,7 +51,6 @@ local language_servers = {
 }
 lsp.ensure_installed(language_servers)
 
-local cmp = require("cmp")
 local cmp_select = { behavior = cmp.SelectBehavior.Select }
 local cmp_mappings = lsp.defaults.cmp_mappings({
   ["<C-Space>"] = cmp.mapping.complete(),
@@ -58,27 +60,35 @@ local cmp_mappings = lsp.defaults.cmp_mappings({
   ["<C-u>"] = cmp.mapping.scroll_docs(-4),
   ["<C-d>"] = cmp.mapping.scroll_docs(4),
 
-  ["<C-j>"] = cmp.mapping.confirm({ select = true }),
+   ['<CR>'] = cmp.mapping.confirm({ select = true }),
+
+  ["<c-j>"] = cmp.mapping(function(_, _)
+    if luasnip.expand_or_jumpable() then
+      luasnip.expand_or_jump()
+    else
+      cmp.mapping.confirm({ select = true })
+    end
+  end, { "i", "s" }),
 })
 
 -- disable completion with tab
 -- this helps with copilot setup
 cmp_mappings["<Tab>"] = nil
 cmp_mappings["<S-Tab>"] = nil
-cmp_mappings["<CR>"] = nil
+-- cmp_mappings["<CR>"] = nil
 
 lsp.setup_nvim_cmp({
   snippet = {
     expand = function(args)
-      require("luasnip").lsp_expand(args.body)
+      luasnip.lsp_expand(args.body)
     end,
   },
   mapping = cmp_mappings,
   sources = {
     { name = "path" },
     { name = "nvim_lsp", keyword_length = 3 },
-    -- {name = 'buffer', keyword_length = 3},
-    -- {name = 'luasnip', keyword_length = 2},
+    { name = "buffer", keyword_length = 3 },
+    { name = "luasnip", keyword_length = 2 },
   },
   window = {
     completion = cmp.config.window.bordered(),
@@ -135,11 +145,17 @@ cmp.setup.cmdline({ "/", "?" }, {
 
 lsp.set_preferences({
   suggest_lsp_servers = true,
+  setup_servers_on_start = true,
+  set_lsp_keymaps = false,
+  configure_diagnostics = true,
+  cmp_capabilities = true,
+  manage_nvim_cmp = true,
+  call_servers = "local",
   sign_icons = {
-    error = "E",
-    warn = "W",
-    hint = "H",
-    info = "I"
+    error = "✘",
+    warn = "▲",
+    hint = "⚑",
+    info = ""
   }
 })
 
@@ -147,61 +163,84 @@ local on_attach = function(client, bufnr)
   -- Enable completion triggered by <c-x><c-o>
   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
-  local opts = { buffer = bufnr, remap = false, noremap=true, silent=true }
-
   if client.name == "eslint" then
     vim.cmd.LspStop("eslint")
     return
   end
 
-  -- vim.keymap.set("n", "<leader>D", ':lua vim.diagnostic.setqflist()<cr>') -- TODO This doesnt' appear to work
-  vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-  vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-  vim.keymap.set("n", "<leader>vws", vim.lsp.buf.workspace_symbol, opts)
-  vim.keymap.set("n", "<leader>vd", vim.diagnostic.open_float, opts)
-  vim.keymap.set("n", "]d", vim.diagnostic.goto_next, opts)
-  vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, opts)
-  vim.keymap.set("n", "<leader>vca", vim.lsp.buf.code_action, opts)
-  vim.keymap.set("n", "<leader>vrr", vim.lsp.buf.references, opts)
-  vim.keymap.set("n", "<leader>vrn", vim.lsp.buf.rename, opts)
-  vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
-  vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
-  vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
-  vim.keymap.set("n", "<space>D", vim.lsp.buf.type_definition, opts)
-  vim.keymap.set("n", "<space>f", function() vim.lsp.buf.format { async = true } end, opts)
-  vim.keymap.set("n", "<space>wl", function()
-    print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-  end, opts)
-  vim.keymap.set("n", "<space>wa", vim.lsp.buf.add_workspace_folder, opts)
-  vim.keymap.set("n", "<space>wr", vim.lsp.buf.remove_workspace_folder, opts)
+  whichkey.register({
+    ["]d"] = { vim.diagnostic.goto_next, "diag goto next" },
+    ["[d"] = { vim.diagnostic.goto_prev, "diag goto prev" },
+  }, { mode = "n", prefix = "" })
+
+  whichkey.register({
+    d = {
+      name = "diagnostics",
+      ["f"] = { vim.diagnostic.open_float, "diag float" },
+      ["l"] = { vim.diagnostic.setloclist, "diags in loclist" },
+      ["n"] = { vim.diagnostic.goto_next, "]d" },
+      ["p"] = { vim.diagnostic.goto_prev, "[d" },
+      ["q"] = { vim.diagnostic.setqflist, "diags in loclist" },
+    }
+  }, { mode = "n", prefix = "<leader>" })
+
+  whichkey.register({
+    ["="] = { function() vim.lsp.buf.format { async = true } end, "format buffer" },
+    l = {
+      name = "lsp actions",
+      ["a"] = { vim.lsp.buf.code_action, "code action" },
+      ["wa"] = { vim.lsp.buf.add_workspace_folder, "wksp add folder" },
+      ["wr"] = { vim.lsp.buf.remove_workspace_folder, "wksp remove folder" },
+      ["D"] = { vim.lsp.buf.declaration, "declaration" },
+      ["d"] = { vim.lsp.buf.definition, "definition" },
+      ["="] = { function() vim.lsp.buf.format { async = true } end, "format buffer" },
+      ["k"] = { vim.lsp.buf.hover, "hover" },
+      ["h"] = { vim.lsp.buf.signature_help, "help" },
+      ["r"] = { vim.lsp.buf.references, "references" },
+      ["R"] = { vim.lsp.buf.rename, "rename symbol" },
+      ["S"] = { vim.lsp.buf.workspace_symbol, "workspace symbol" },
+      ["l"] = { function()
+        print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+      end, "" },
+    },
+  }, { mode = "n", prefix = "<leader>" })
 end
 
 lsp.on_attach(on_attach)
 lsp.setup()
 
-vim.diagnostic.config({
-  virtual_text = true,
-  signs = true,
-  update_in_insert = false,
-  underline = true,
-  severity_sort = false,
-  float = true,
-})
-
 lspconfig.pyright.setup({
   on_attach = on_attach,
   flags = { debounce_text_changes = 150 },
-  root_dir = util.root_pattern('.venv', 'venv', 'pyrightconfig.json'),
+  root_dir = util.root_pattern(".venv", "venv", "pyrightconfig.json"),
   settings = {
-    pyright = { disableLanguageServices = false, disableOrganizeImports = true },
+    pyright = {
+      disableLanguageServices = false,
+      disableOrganizeImports = true
+    },
     python = {
       analysis = {
         autoSearchPaths = true;
         useLibraryCodeForTypes = true,
-        diagnosticMode = 'openFilesOnly',
+        diagnosticMode = "openFilesOnly",
       },
     },
   },
+})
+
+-- Lua Diagnostics.: Undefined global `vim`.
+-- luacheck reports 113 accessing undefined variable 'vim'
+-- that is fixed by a setting in ~/.luacheckrc
+lspconfig.sumneko_lua.setup({
+  on_attach = on_attach,
+  flags = { debounce_text_changes = 150 },
+  settings = {
+    Lua = {
+      diagnostics = {
+        globals = { "_", "vim" }
+      },
+    }
+  }
 })
 
 -- debugging
