@@ -20,6 +20,13 @@ vim.fnlocal.exec = function(cmd)
 end
 
 vim.cmd([[
+function! VisualSelectLastChange()
+  let vr = getregtype(v:register)[0]
+  call feedkeys("`[" . vr . "`]")
+endfunction
+]])
+
+vim.cmd([[
 function! GetVisualSelection()
   " Why is this not a built-in Vim script function?!
   let [line_start, column_start] = getpos("'<")[1:2]
@@ -72,7 +79,7 @@ local fnlocal = {
   end,
   ['CurGitRoot']         = os_exec('git rev-parse --show-toplevel'),
   ['CurHostname']        = os_exec('hostname -s'),
-  ['CurHostId']        = os_exec('hostid'),
+  ['CurHostId']          = os_exec('hostid'),
   ['CurKernel']          = os_exec('uname -r'),
   ['CurLine']            = func(vim.fn.getline, '.'),
   ['CurLuaVersion']      = function()
@@ -91,9 +98,11 @@ local fnlocal = {
     return not(arg == nil or arg == '')
   end,
   ['GetVisualSelection'] = func(vim.fn.GetVisualSelection),
+  ['VisualSelectLastChange'] = func(vim.fn.VisualSelectLastChange),
   ['pwd']                = func(vim.fn.getcwd),
 }
 
 for k, v in pairs(fnlocal) do
   vim.fnlocal[k] = v
 end
+
