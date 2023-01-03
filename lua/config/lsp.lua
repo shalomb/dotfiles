@@ -5,31 +5,32 @@ local vim = vim
 
 local lsp = require("lsp-zero")
 local lspconfig = require("lspconfig")
-local util = require('lspconfig').util
+local util = require("lspconfig").util
 
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
 lsp.preset("recommended")
 
 -- language servers
-lsp.ensure_installed({
-  "awk_ls",
+local language_servers = {
+  "ansiblels",
   "bashls",
   "cssls",
+  "awk_ls",
   "gopls",
   "html",
+  "jsonls",
   "pyright",
   "rust_analyzer",
   "sqls",
   "sumneko_lua",
+  "terraformls",
+  "tflint",
   "tsserver",
   "vimls",
   "yamlls",
-})
-
--- Get around bug in the mapcheck at
--- https://github.com/VonHeikemen/lsp-zero.nvim/blob/main/lua/lsp-zero/server.lua#L75
-vim.keymap.set('n', '<c-k>', ':TmuxNavigateUp<cr>')
+}
+lsp.ensure_installed(language_servers)
 
 local cmp = require("cmp")
 local cmp_select = { behavior = cmp.SelectBehavior.Select }
