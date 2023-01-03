@@ -53,14 +53,14 @@ lsp.ensure_installed(language_servers)
 
 local cmp_select = { behavior = cmp.SelectBehavior.Select }
 local cmp_mappings = lsp.defaults.cmp_mappings({
-  ["<C-Space>"] = cmp.mapping.complete(),
-  ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
-  ["<C-n>"] = cmp.mapping.select_next_item(cmp_select),
+  ["<c-Space>"] = cmp.mapping.complete(),
+  ["<c-p>"] = cmp.mapping.select_prev_item(cmp_select),
+  ["<c-n>"] = cmp.mapping.select_next_item(cmp_select),
 
-  ["<C-u>"] = cmp.mapping.scroll_docs(-4),
-  ["<C-d>"] = cmp.mapping.scroll_docs(4),
+  ["<c-u>"] = cmp.mapping.scroll_docs(-4),
+  ["<c-d>"] = cmp.mapping.scroll_docs(4),
 
-   ['<CR>'] = cmp.mapping.confirm({ select = true }),
+  ["<c-k>"] = cmp.mapping.confirm({ select = true }),
 
   ["<c-j>"] = cmp.mapping(function(_, _)
     if luasnip.expand_or_jumpable() then
@@ -75,7 +75,7 @@ local cmp_mappings = lsp.defaults.cmp_mappings({
 -- this helps with copilot setup
 cmp_mappings["<Tab>"] = nil
 cmp_mappings["<S-Tab>"] = nil
--- cmp_mappings["<CR>"] = nil
+cmp_mappings["<CR>"] = nil
 
 lsp.setup_nvim_cmp({
   snippet = {
@@ -237,7 +237,7 @@ lspconfig.sumneko_lua.setup({
   settings = {
     Lua = {
       diagnostics = {
-        globals = { "_", "vim" }
+        globals = { "_", "_G", "vim", }
       },
     }
   }
