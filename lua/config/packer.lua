@@ -8,9 +8,10 @@ local packer = require("packer")
 
 local ensure_packer = function()
   local fn = vim.fn
-  local install_path = fn.stdpath('data')..'/site/pack/packer/start/packer.nvim'
+  local install_path = fn.stdpath("data") .. "/site/pack/packer/start/packer.nvim"
   if fn.empty(fn.glob(install_path)) > 0 then
-    fn.system({'git', 'clone', '--depth', '1', 'https://github.com/wbthomason/packer.nvim', install_path})
+    fn.system({ "git", "clone", "--depth", "1",
+      "https://github.com/wbthomason/packer.nvim", install_path })
     vim.cmd [[packadd packer.nvim]]
     return true
   end
@@ -88,16 +89,16 @@ return packer.startup(function(use)
     requires = { "nvim-lua/plenary.nvim" },
   })
 
--- use({
---   "glepnir/lspsaga.nvim",
---   branch = "main",
---   config = function()
---     local saga = require("lspsaga")
---     saga.init_lsp_saga({
---       -- your configuration
---     })
---   end,
--- })
+  -- use({
+  --   "glepnir/lspsaga.nvim",
+  --   branch = "main",
+  --   config = function()
+  --     local saga = require("lspsaga")
+  --     saga.init_lsp_saga({
+  --       -- your configuration
+  --     })
+  --   end,
+  -- })
 
   -- colorschemes
 
@@ -126,6 +127,7 @@ return packer.startup(function(use)
   use "kana/vim-textobj-line"
   use "kana/vim-textobj-user"
   use "L3MON4D3/LuaSnip"
+  use "majutsushi/tagbar"
   use "mbbill/undotree"
   use "nvim-lualine/lualine.nvim" -- configure Neovim statusline
   use "p00f/nvim-ts-rainbow"
@@ -150,7 +152,7 @@ return packer.startup(function(use)
   use "wellle/targets.vim" -- Add mode text objects
 
   if packer_bootstrap then
-   -- basically used to "pause" and remind me it'll quit
+    -- basically used to "pause" and remind me it'll quit
     vim.fn.input "bootstrapping, press any key (exit after)"
     vim.api.nvim_create_autocmd({ "PackerCompileDone" }, {
       callback = function(ev)
