@@ -45,7 +45,7 @@ whichkey.register({
   ['^'] = { 'g0', "g0" },
   ['g;'] = { 'g;zvzz',  'go to older change' },
   ["g,"] = { 'g,zvzz', "to to newer change" },
-  ["gV"] = { vim.fnlocal.VisualSelectLastChange, "reselect last paste" },
+  ["gV"] = { _G.VisualSelectLastChange, "reselect last paste" },
   ['j'] = { 'gj', "gj" },
   ["J"] = { "mzJ`z", "join lines but stay put" },
   ['k'] = { 'gk', "gk" },

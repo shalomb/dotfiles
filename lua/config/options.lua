@@ -59,13 +59,3 @@ options.listchars =  {eol = '↲', tab = '▸ ', trail = '·'}
 -- autocmd('TextYankPost', {pattern = '*', command = 'source $MYVIMRC'})
 
 -- https://github.com/nanotee/nvim-lua-guide
-
-vim.cmd([[
-augroup jump_to_last_position
-  autocmd!
-  autocmd BufReadPost *
-    \ if line("'\"") >= 1 && line("'\"") <= line("$") && &ft !~# 'commit'
-    \ |   exe "normal! g`\""
-    \ | endif
-augroup end
-]])
