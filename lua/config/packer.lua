@@ -108,9 +108,13 @@ return packer.startup(function(use)
 
   -- plugins
 
+  use "L3MON4D3/LuaSnip"
+  use "RRethy/nvim-treesitter-textsubjects"
+  use "ThePrimeagen/harpoon" -- Manage quickly accessed files
   use "airblade/vim-gitgutter"
   use "christoomey/vim-tmux-navigator"
   use "ellisonleao/glow.nvim"
+  use "folke/neodev.nvim"
   use "folke/which-key.nvim" -- which-key displays popups of possible keybindings
   use "godlygeek/tabular"
   use "haya14busa/vim-asterisk"
@@ -126,17 +130,14 @@ return packer.startup(function(use)
   use "kana/vim-textobj-indent"
   use "kana/vim-textobj-line"
   use "kana/vim-textobj-user"
-  use "L3MON4D3/LuaSnip"
   use "majutsushi/tagbar"
   use "mbbill/undotree"
   use "nvim-lualine/lualine.nvim" -- configure Neovim statusline
   use "p00f/nvim-ts-rainbow"
   use "preservim/vim-markdown"
   use "romainl/vim-cool"
-  use "RRethy/nvim-treesitter-textsubjects"
   use "saadparwaiz1/cmp_luasnip"
   use "takac/vim-hardtime"
-  use "ThePrimeagen/harpoon" -- Manage quickly accessed files
   use "tommcdo/vim-exchange"
   use "tpope/vim-abolish"
   use "tpope/vim-commentary"
