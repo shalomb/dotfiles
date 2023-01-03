@@ -70,13 +70,13 @@ cmp_mappings["<CR>"] = nil
 lsp.setup_nvim_cmp({
   snippet = {
     expand = function(args)
-      require('luasnip').lsp_expand(args.body)
+      require("luasnip").lsp_expand(args.body)
     end,
   },
   mapping = cmp_mappings,
   sources = {
-    {name = 'path'},
-    {name = 'nvim_lsp', keyword_length = 3},
+    { name = "path" },
+    { name = "nvim_lsp", keyword_length = 3 },
     -- {name = 'buffer', keyword_length = 3},
     -- {name = 'luasnip', keyword_length = 2},
   },
@@ -101,18 +101,18 @@ lsp.setup_nvim_cmp({
 })
 
 -- Set configuration for specific filetype.
-cmp.setup.filetype('gitcommit', {
+cmp.setup.filetype("gitcommit", {
   sources = cmp.config.sources({
-    { name = 'cmp_git' }, -- You can specify the `cmp_git` source if you were installed it.
+    { name = "cmp_git" }, -- You can specify the `cmp_git` source if you were installed it.
   }, {
-    { name = 'buffer' },
+    { name = "buffer" },
   })
 })
 
 -- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
-cmp.setup.cmdline({ '/', '?' }, {
+cmp.setup.cmdline({ "/", "?" }, {
   sources = {
-    { name = 'buffer' }
+    { name = "buffer" }
   }
 })
 
