@@ -19,10 +19,10 @@ vim.fn.updatemsg = function()
     echohl None
     echon(
       \ strftime('%T') .. ': ' ..
-      \ substitute(expand('%:p'), glob('~/'), '~/', '') .. ' ' ..
+      \ substitute(expand('%'), glob('~/'), '~/', '') .. ' ' ..
       \ substitute(getcwd(), glob('~'), '~', '')
     \ )
-]])
+]] )
 end
 
 local whichkey = require("which-key")
@@ -43,7 +43,7 @@ whichkey.register({
   ["<c-y>"] = { "5<c-y>", "5 down" },
   ["<C-W><C-W>"] = { "<C-W>p", "last window" },
   ['^'] = { 'g0', "g0" },
-  ['g;'] = { 'g;zvzz',  'go to older change' },
+  ['g;'] = { 'g;zvzz', 'go to older change' },
   ["g,"] = { 'g,zvzz', "to to newer change" },
   ["gV"] = { _G.VisualSelectLastChange, "reselect last paste" },
   ['j'] = { 'gj', "gj" },
@@ -83,7 +83,7 @@ whichkey.register({
     vim.fn.chdir(pwd)
   end, "launch vinegar in git root" },
 
-}, { mode = "n", prefix = "" } )
+}, { mode = "n", prefix = "" })
 
 whichkey.register({
   name = "chords",
@@ -107,36 +107,36 @@ whichkey.register({
   ['/'] = { telescope.live_grep, "live_grep" },
   ['m'] = { [[:<c-u><c-r><c-r>='let @'. v:register .' = '. string(getreg(v:register))<cr><c-f><left>]], "edit macro?" },
   ["gr"] = { function()
-      vim.cmd(string.format([[:grep %s]], vim.fnlocal.CurWord()))
-    end,
+    vim.cmd(string.format([[:grep %s]], vim.fnlocal.CurWord()))
+  end,
     "grep selection" },
-}, { mode = "n", prefix = "<leader>" } )
+}, { mode = "n", prefix = "<leader>" })
 
 whichkey.register({
   name = "quickies",
   ['p'] = { [["_dP]], "Paste last yank over visual selection" },
-}, { mode = "x", prefix = "<leader>" } )
+}, { mode = "x", prefix = "<leader>" })
 
 whichkey.register({
   name = "quickies",
   ['gv'] = { [[<cmd>normal! gv<cr>]], "" },
-}, { mode = "o", prefix = "" } )
+}, { mode = "o", prefix = "" })
 
 whichkey.register({
   name = "quickies",
   ['%%'] = { "<C-R>=fnameescape(expand('%:h:p')).'/'<space><cr>", "expand dir of curfile" },
   ['w!!'] = { [[%!SUDO_ASKPASS=$(which ssh-askpass) sudo -A tee % > /dev/null]], "write file out as root" },
-}, { mode = "c", prefix = "" } )
+}, { mode = "c", prefix = "" })
 
 -- cnoremap <expr> <c-n> wildmenumode() ? "\<c-n>" : "\<down>"
 -- cnoremap <expr> <c-p> wildmenumode() ? "\<c-p>" : "\<up>"
-map('i', '<c-w>', '<c-g>u<c-w>', {expr = false, desc = ""})
-map('c', '<c-n>', '<down>', {expr = false})
-map('c', '<c-p>', '<up>', {expr = false})
+map('i', '<c-w>', '<c-g>u<c-w>', { expr = false, desc = "" })
+map('c', '<c-n>', '<down>', { expr = false })
+map('c', '<c-p>', '<up>', { expr = false })
 
 local invert = function(opt)
-	vim.opt_local[opt] = not(vim.opt_local[opt]:get())
-	vim.fn.OK((vim.opt_local[opt]:get() and '' or 'no') .. opt)
+  vim.opt_local[opt] = not (vim.opt_local[opt]:get())
+  vim.fn.OK((vim.opt_local[opt]:get() and '' or 'no') .. opt)
 end
 
 whichkey.register({
@@ -151,8 +151,14 @@ whichkey.register({
 
     b = { telescope.buffers, "buffers" },
     c = { telescope.commands, "commands" },
-    d = { ":lua require('todo').qf_todo()<cr>:copen<cr>", "copen todos" },
     f = { telescope.resume, "resume" },
+    g = { function()
+      vim.cmd([[
+        :GkeepLogin
+        :lua require('telescope').load_extension('gkeep')
+        :Telescope gkeep
+      ]])
+    end, "gkeep" },
     h = { telescope.help_tags, "help_tags" },
     m = { telescope.marks, "marks" },
     -- s = { ':lua <Plug>NormalModeSendToTmux', "SendSelectionToTmux" },
@@ -196,11 +202,11 @@ map("v", "K", ":m '<-2<CR>gv=gv")
 -- map("x", "<leader>p", [["_dP]], {desc = 'Paste last yank over visual selection'}) -- greatest remap ever
 
 map('v', '<leader>/', ':<c-u>lua vim.b.visual_selection=vim.fnlocal.GetVisualSelection()<cr>' ..
-                      ':grep <c-r>=fnameescape(expand(b:visual_selection))<c-j>',
-                      {desc = 'Search for term selected'})
+  ':grep <c-r>=fnameescape(expand(b:visual_selection))<c-j>',
+  { desc = 'Search for term selected' })
 map('i', '<Tab>', function()
   return vim.fn.pumvisible() == 1 and '<C-N>' or '<Tab>'
-end, {expr = true})
+end, { expr = true })
 
 -- vim:nowrap
 

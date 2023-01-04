@@ -81,6 +81,15 @@ autocmd('ModeChanged', {
   command = 'lua vim.diagnostic.enable(0)'
 })
 
+autocmd({ 'CursorHold', 'CursorHoldI' }, {
+  desc = 'Show box with diagnostics for current line',
+  pattern = '*',
+  callback = function()
+    vim.diagnostic.open_float({ focusable = false })
+  end,
+  group = augroup,
+})
+
 -- -- disable diagnostics in snippet expansion
 -- -- https://www.reddit.com/r/neovim/comments/ug2s4s/disable_diagnostic_while_expanding_luasnip/
 -- autocmd("ModeChanged", {
