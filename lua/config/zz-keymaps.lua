@@ -32,7 +32,8 @@ whichkey.register({
   name = "chords",
   ["'"] = { "`", "`" },
   ["`"] = { "'", "'" },
-  ['0'] = { '^', "" },
+  ['0'] = { '^', "bol" },
+  ['$'] = { 'g_', "eol" },
   ['<c-b>'] = { '<c-b>zz', "backwards" },
   ["<c-d>"] = { "<C-d>zz", "down" },
   ['<c-f>'] = { '<c-f>zz', "forwards" },
@@ -63,6 +64,7 @@ whichkey.register({
   ["."] = { ".`[", "repeat + go to last change" },
   ["Y"] = { "y$", "y$" },
   ["v"] = { "<c-v>", "<c-v>" },
+  ["<cr>"] = { "<Nop>", "nop" },
 
   ["gh"] = {
     function()
@@ -105,7 +107,9 @@ whichkey.register({
   ["q"] = { vim.cmd.quit, "quit" },
   ['w'] = { vim.cmd.update, "update" },
   ['/'] = { telescope.live_grep, "live_grep" },
-  ['m'] = { [[:<c-u><c-r><c-r>='let @'. v:register .' = '. string(getreg(v:register))<cr><c-f><left>]], "edit macro?" },
+  ['ma'] = { [[:<c-u><c-r><c-r>='let @'. v:register .' = '. string(getreg(v:register))<cr><c-f><left>]], "edit macro?" },
+  ['ms'] = { '<cmd>messages<cr>', ":messages" },
+  ['mc'] = { '<cmd>messages clear<cr>', ":messages clear" },
   ["gr"] = { function()
     vim.cmd(string.format([[:grep %s]], vim.fnlocal.CurWord()))
   end,

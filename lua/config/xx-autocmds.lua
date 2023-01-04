@@ -58,11 +58,11 @@ vim.api.nvim_create_autocmd(
 
 -- extraneous whitespace
 vim.api.nvim_set_hl(0, 'ExtraneousWhitepsace', { bg = 'red', underline = false })
-local ew_group = vim.api.nvim_create_augroup('extraneous_whitespace', { clear = true })
+vim.api.nvim_create_augroup('extraneous_whitespace', { clear = true })
 
 vim.api.nvim_create_autocmd(
   { 'BufEnter', 'InsertLeave' }, {
-  group = ew_group,
+  group = 'bufcheck',
   callback = function()
     vim.fn.matchadd('extraneous_whitespace', '/\\v(\\S\zs\\s+$| +\\zs\\t|\\t\\ze +)/')
   end
@@ -70,7 +70,7 @@ vim.api.nvim_create_autocmd(
 
 vim.api.nvim_create_autocmd(
   { 'InsertEnter' }, {
-  group = ew_group,
+  group = 'bufcheck',
   callback = function()
     vim.fn.matchadd('extraneous_whitespace', '/\\v\\s+\\%#\\@<!$/')
   end
@@ -78,8 +78,52 @@ vim.api.nvim_create_autocmd(
 
 vim.api.nvim_create_autocmd(
   { 'BufCreate', 'BufWritePre' }, {
-  group = ew_group,
+  group = 'bufcheck',
   callback = function()
     vim.cmd([[:silent! %s/\v\s+$//ge]])
   end
 })
+
+-- rebalance size of windows on vim window resize
+vim.api.nvim_create_autocmd(
+  { 'VimResized' }, {
+  group = 'bufcheck',
+  callback = function()
+    vim.cmd([[:wincmd =]])
+  end
+})
+
+-- python
+vim.api.nvim_create_autocmd(
+  { 'BufNewFile', 'BufRead' }, {
+  group = 'bufcheck',
+  pattern = { '*.py' },
+  callback = function()
+    vim.cmd([[
+      set et ts=4 sts=4 sw=4 sw=78 ai cin ff=unix enc=utf-8 fenc=utf-8
+    ]])
+  end
+})
+
+-- quickfix
+vim.api.nvim_create_autocmd(
+  { 'BufReadPost' }, {
+  group = 'bufcheck',
+  pattern = { 'quickfix' },
+  callback = function()
+    vim.keymap.set("n", "<cr>", "<cr>", { noremap = true })
+  end
+})
+
+
+-- cmdwin
+vim.api.nvim_create_autocmd(
+  { 'CmdWinEnter' }, {
+  group = 'bufcheck',
+  pattern = { '*' },
+  callback = function()
+    vim.keymap.set("n", "<cr>", "<cr>", { noremap = true })
+  end
+})
+
+

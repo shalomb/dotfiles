@@ -11,6 +11,8 @@ vim.g.vimruntime  = vim.fn.expand("$VIMRUNTIME")
 vim.g.packer_package_root = require('packer').config.package_root
 vim.g.python3_host_prog = '/usr/bin/python3'
 
+vim.g.editorconfig_enable = true -- nvim-0.9
+
 -- runtime
 vim.g.package_path = package.path
 

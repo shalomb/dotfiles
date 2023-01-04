@@ -63,3 +63,4 @@ submodules/**
 .config/submodules/**
 
 plugin/**compiled*
+.luarc.json
