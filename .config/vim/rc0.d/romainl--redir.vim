@@ -8,9 +8,9 @@ function! Redir(cmd)
 			execute win . 'windo close'
 		endif
 	endfor
-	if a:cmd =~ '^!'
-		let cmd = a:cmd =~' %' ? substitute(a:cmd, ' %', ' ' . expand('%:p'), '') : a:cmd
-		let output = system(matchstr(cmd, '^!\zs.*'))
+	if a:cmd =~# '^!'
+		let cmd = a:cmd =~# ' %' ? substitute(a:cmd, ' %', ' ' . expand('%:p'), '') : a:cmd
+		let output = system(matchstr(cmd, '^!\zs.*')) " strip out ! and run command
 	else
 		redir => output
 		execute a:cmd
@@ -25,5 +25,5 @@ endfunction
 command! -nargs=1 -complete=command Redir silent call Redir(<q-args>)
 
 " Usage:
-" 	:Redir hi ............. show the full output of command ':hi' in a scratch window
-" 	:Redir !ls -al ........ show the full output of command ':!ls -al' in a scratch window
+"  :Redir hi ............. show the full output of command ':hi' in a scratch window
+"  :Redir !ls -al ........ show the full output of command ':!ls -al' in a scratch window

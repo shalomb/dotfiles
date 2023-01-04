@@ -9,7 +9,7 @@ Subcommands:
   add     - Add a remote host's hostkey.
   remove  - Remove a remote host's hostkey.
   refresh - Remove, then add a host's hostkey.
-  copyid  - Copy the current ~/.ssh/id_rsa.pub to 
+  copyid  - Copy the current ~/.ssh/id_rsa.pub to
             the remote host's ~/.ssh/authorized_keys file.
   sendkey - Alias for copyid.
   --help  - Show this help message.
@@ -19,15 +19,15 @@ EOF
 
 set -eu
 
-if (( $# == 0 )); then 
+if (( $# == 0 )); then
   echo -e "Arguments expected.\n" >&2
-  show_help; 
-  exit; 
+  show_help;
+  exit;
 fi
 action="$1"
 host="$2"
 
-case "$action" in 
+case "$action" in
   add)
     keyscan=$(ssh-keyscan "$host" 2>/dev/null)
     if [[ $keyscan ]]; then
@@ -47,8 +47,8 @@ case "$action" in
     if type -P ssh-copy-id >/dev/null 2>&1; then
       ssh-copy-id "$host"
     else
-      ssh "$host" ' umask 077; 
-                    test -d ~/.ssh || mkdir -p ~/.ssh; 
+      ssh "$host" ' umask 077;
+                    test -d ~/.ssh || mkdir -p ~/.ssh;
                     cat ->> ~/.ssh/authorized_keys; ' < ~/.ssh/id_rsa.pub
     fi
     ;;
@@ -59,4 +59,3 @@ case "$action" in
     echo "Unknown action '$action' for '$host'." 1>&2
     ;;
 esac
-

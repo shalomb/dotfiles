@@ -8,6 +8,6 @@ ranger() {
   fi
 }
 
-alias rg='ranger'
-alias rG='ranger /'
-alias rg~='ranger ~'
+alias rng='ranger'
+alias rnG='ranger /'
+alias rng~='ranger ~'

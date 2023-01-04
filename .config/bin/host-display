@@ -1,0 +1,12 @@
+#!/bin/bash
+
+ssh -TX shalom.bhooshi@laufey.theos.local <<EOF
+osascript -e 'display notification "Notification from VM\nThis is a test\nFoo and Bar" with title "BUILD Status" subtitle "Build Failure" sound name "Submarine"'
+EOF
+
+exit
+
+---
+ssh_host:
+ssh_args:
+client_name:

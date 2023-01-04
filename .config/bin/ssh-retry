@@ -1,5 +1,6 @@
 #!/bin/bash
 
+o 'Hello World'
 # ssh-retry
 # Keep trying to establish an ssh(1) connection to the target.
 # Give up and retry intelligently.

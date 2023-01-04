@@ -19,4 +19,5 @@ git submodule add -f https://github.com/shalomb/fetch-me .config/submodules/fetc
   ln -svf  "$PWD"/fetch-me "$BINDIR"
 )
 
-git submodule add -f https://github.com/wbthomason/packer.nvim .local/share/nvim/site/pack/packer/start/packer.nvim
+git clone https://github.com/wbthomason/packer.nvim \
+  .local/share/nvim/site/pack/packer/start/packer.nvim || true

@@ -1,8 +1,8 @@
--- wezterm ls-fonts --list-system
+-- wezterm ls-fonts --list-system 
 local wezterm = require 'wezterm'
 return {
   scrollback_lines = 16384,
-  window_background_opacity = 0.95,
+  window_background_opacity = 0.97,
   hide_tab_bar_if_only_one_tab = true,
   color_scheme = 'Batman',
   colors = {
@@ -82,5 +82,8 @@ return {
       regex = [[["]?([\w\d]{1}[-\w\d]+)(/){1}([-\w\d\.]+)["]?]],
       format = 'https://www.github.com/$1/$3',
     },
+  },
+  keys = {
+    { mods = "CTRL", key = "q", action=wezterm.action{ SendString="\x11" } },
   },
 }
