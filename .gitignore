@@ -3,7 +3,6 @@
 .vim/bundle/*
 tags
 **/tags
-**/notes*
 
 wikidata/
 .config/vim/bundle/cheat.sh-vim
