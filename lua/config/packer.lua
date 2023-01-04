@@ -152,11 +152,12 @@ return packer.startup(function(use)
   use "tpope/vim-vinegar"
   use "wellle/targets.vim" -- Add mode text objects
 
+  use { "stevearc/gkeep.nvim", run = ':UpdateRemotePlugins' }
+
   if packer_bootstrap then
     -- basically used to "pause" and remind me it'll quit
-    vim.fn.input "bootstrapping, press any key (exit after)"
     vim.api.nvim_create_autocmd({ "PackerCompileDone" }, {
-      callback = function(ev)
+      callback = function(_)
         vim.cmd.quitall()
       end
     })
@@ -164,4 +165,5 @@ return packer.startup(function(use)
     packer.compile()
     packer.sync()
   end
-end)
+end
+)

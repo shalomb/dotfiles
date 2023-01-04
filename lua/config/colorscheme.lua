@@ -55,14 +55,6 @@ set background=dark
 set termguicolors
 
 augroup MyColorScheme
-  autocmd InsertEnter * set nocursorline
-  autocmd InsertLeave * set cursorline
-
-  autocmd BufEnter,CmdLineLeave,InsertLeave * set relativenumber   | redraw
-  autocmd BufLeave,CmdLineEnter,InsertEnter * set norelativenumber | redraw
-  autocmd BufEnter * set cursorline
-  autocmd BufLeave * set nocursorline
-
   autocmd VimEnter * ++nested colorscheme kanagawa " gruvbox
   autocmd VimEnter * hi! Normal ctermbg=none guibg=none
   autocmd VimEnter * hi! NormalFloat ctermbg=none guibg=none

@@ -2,6 +2,7 @@
 
 - completion a la traditional vim with words from buffers first
 - add neovim directories to lsp workspace for completion
+- lualine filename
 
 lsp completion for functions missing
 
