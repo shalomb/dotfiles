@@ -15,7 +15,6 @@ function M.qf_todo()
   -- vim.fn.chdir(gitroot)
 
   -- https://neovim.io/doc/user/quickfix.html#getqflist-examples
-  local qfid = vim.fn.getqflist({ id = 0 }).id
   local filelist = {}
   local lines = {}
 
@@ -39,15 +38,11 @@ function M.qf_todo()
     })
   end
 
-  vim.fn.setqflist(
-    {},
-    "r",
-    {
-      id = qfid,
-      title = "TODO list",
-      items = lines
-    }
-  )
+  vim.fn.setqflist({}, "r", {
+    id = vim.fn.getqflist({ id = 0 }).id,
+    title = "TODO list",
+    items = lines
+  })
 end
 
 local whichkey = require("which-key")

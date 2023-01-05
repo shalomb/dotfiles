@@ -30,35 +30,51 @@ local telescope = require("telescope.builtin")
 
 whichkey.register({
   name = "chords",
+
+  ["#"] = { "#``", "*``" },
   ["'"] = { "`", "`" },
+  ["*"] = { "*``", "*``" },
   ["`"] = { "'", "'" },
-  ['0'] = { '^', "bol" },
   ['$'] = { 'g_', "eol" },
-  ['<c-b>'] = { '<c-b>zz', "backwards" },
-  ["<c-d>"] = { "<C-d>zz", "down" },
-  ['<c-f>'] = { '<c-f>zz', "forwards" },
-  ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
-  ['<c-p>'] = { function() telescope.find_files() end, "find_files" },
-  ["<c-u>"] = { "<c-u>zz", "up" },
-  ["<c-e>"] = { "5<c-e>", "5 up" },
-  ["<c-y>"] = { "5<c-y>", "5 down" },
-  ["<C-W><C-W>"] = { "<C-W>p", "last window" },
+  ['0'] = { function()
+    local col = vim.fn.col('.')
+    local line = vim.fn.getline('.')
+    local lead = string.sub(line, 0, col - 1)
+    local match = string.find(lead, '[^%s]')
+    if match == nil then
+      local beg = string.find(line, '[^%s]')
+      if beg ~= nil and beg ~= col then
+        vim.fn.cursor('.', beg)
+      else
+        vim.fn.feedkeys('g_')
+      end
+    else
+      vim.fn.feedkeys('g^')
+    end
+  end, "bol" },
   ['^'] = { 'g0', "g0" },
+
+  ["<c-d>"] = { "<C-d>zz", "down" },
+  ['<c-b>'] = { '<c-b>zz', "backwards" },
+  ["<c-e>"] = { "5<c-e>", "5 up" },
+  ['<c-f>'] = { '<c-f>zz', "forwards" },
+  ['<c-p>'] = { function()
+    if vim.fnlocal.CurPath() ~= 'dotfiles' then
+      telescope.find_files({ hidden = true })
+    else
+      telescope.find_files()
+    end
+  end, "find_files" },
+  ["<c-u>"] = { "<c-u>zz", "up" },
+  ["<c-w><c-w>"] = { "<C-W>p", "last window" },
+  ["<c-y>"] = { "5<c-y>", "5 down" },
+
   ['g;'] = { 'g;zvzz', 'go to older change' },
   ["g,"] = { 'g,zvzz', "to to newer change" },
   ["gV"] = { _G.VisualSelectLastChange, "reselect last paste" },
   ['j'] = { 'gj', "gj" },
   ["J"] = { "mzJ`z", "join lines but stay put" },
   ['k'] = { 'gk', "gk" },
-  ['<leader>a'] = { ':edit #<cr>', "edit alt" },
-  ['<leader>ca'] = { vim.lsp.buf.code_action, "code action" },
-  ['<leader>ls'] = { ':!less %<cr>', "less %" },
-  ['<leader>on'] = { vim.cmd.only, "only" },
-  ['<leader>rl'] = { ":source $MYVIMRC<cr>:lua vim.fn.OK(vim.fn.expand('$MYVIMRC') .. ' reloaded')<cr>", "reload" },
-  ['<leader>so'] = { ":so<cr>:lua vim.fn.OK(vim.fn.expand('%') .. ' sourced')<cr>", "source" },
-  ['<leader>"'] = { telescope.buffers, "Buffers" },
-  ['<leader>u'] = { vim.cmd.UndotreeToggle, "UndotreeToggle" },
-  ['<leader>w'] = { vim.cmd.update, "update" },
   ["n"] = { "nzzzv", "next match" },
   ["N"] = { "Nzzzv", "prev match" },
   ["."] = { ".`[", "repeat + go to last change" },
@@ -90,9 +106,10 @@ whichkey.register({
 whichkey.register({
   name = "chords",
   ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
+  ['//'] = { 'y/<C-R>"<CR>gv', 'put selected text in the search buffer' },
   ['<'] = { '<gv', 'move cursor to beg. of visual block' },
   ['>'] = { '>gv', 'move cursor to end  of visual block' },
-  ['//'] = { 'y/<C-R>"<CR>gv', 'put selected text in the search buffer' },
+  ['x'] = { 'x', 'x' }, -- to stop leap from claiming this
   ['z/'] = { 'y/<C-R>"<CR>gv', 'put selected text in the search buffer' },
 }, { mode = "v", prefix = "" })
 
@@ -117,7 +134,37 @@ whichkey.register({
 }, { mode = "n", prefix = "<leader>" })
 
 whichkey.register({
-  name = "quickies",
+  name = "pasties",
+  p = {
+    ["a'"] = { [["_da'P]], '' },
+    ["i'"] = { [["_di'P]], '' },
+    ['a"'] = { '"_da"P', '' },
+    ['i"'] = { '"_di"P', '' },
+    ['a{'] = { '"_da{P', '' },
+    ['i{'] = { '"_di{P', '' },
+    ['a}'] = { '"_da}P', '' },
+    ['i}'] = { '"_di}P', '' },
+    ['a('] = { '"_da(P', '' },
+    ['i('] = { '"_di(P', '' },
+    ['a)'] = { '"_da]P', '' },
+    ['i)'] = { '"_di]P', '' },
+    ['a['] = { '"_da[P', '' },
+    ['i['] = { '"_di[P', '' },
+    ['a]'] = { '"_da]P', '' },
+    ['i]'] = { '"_di]P', '' },
+    ['al'] = { '"_dalP', '' },
+    ['il'] = { '"_dilP', '' },
+    ['ap'] = { '"_dapP', '' },
+    ['ip'] = { '"_dipP', '' },
+    ['aW'] = { '"_daWP', '' },
+    ['iW'] = { '"_diWP', '' },
+    ['aw'] = { '"_dawP', '' },
+    ['iw'] = { '"_diwP', '' },
+  },
+}, { mode = "n", prefix = "<leader>" })
+
+whichkey.register({
+  name = "pasties",
   ['p'] = { [["_dP]], "Paste last yank over visual selection" },
 }, { mode = "x", prefix = "<leader>" })
 
@@ -130,6 +177,8 @@ whichkey.register({
   name = "quickies",
   ['%%'] = { "<C-R>=fnameescape(expand('%:h:p')).'/'<space><cr>", "expand dir of curfile" },
   ['w!!'] = { [[%!SUDO_ASKPASS=$(which ssh-askpass) sudo -A tee % > /dev/null]], "write file out as root" },
+  ['!!'] = { function()
+  end, '' }
 }, { mode = "c", prefix = "" })
 
 -- cnoremap <expr> <c-n> wildmenumode() ? "\<c-n>" : "\<down>"
@@ -143,13 +192,40 @@ local invert = function(opt)
   vim.fn.OK((vim.opt_local[opt]:get() and '' or 'no') .. opt)
 end
 
+local cd = function(dir)
+  if vim.fn.isdirectory(dir) then
+    vim.fn.chdir(dir)
+    vim.fn.OK(string.format('cd %s', dir))
+  end
+end
+
 whichkey.register({
+
+  ['"'] = { telescope.buffers, "Buffers" },
+  ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
+
+  ['a'] = { ':edit #<cr>', "edit alt" },
+  ['ca'] = { vim.lsp.buf.code_action, "code action" },
+  ['ls'] = { ':!less %<cr>', "less %" },
+  ['on'] = { vim.cmd.only, "only" },
+  ['rl'] = { ":source $MYVIMRC<cr>:lua vim.fn.OK(vim.fn.expand('$MYVIMRC') .. ' reloaded')<cr>", "reload" },
+  ['so'] = { ":so<cr>:lua vim.fn.OK(vim.fn.expand('%') .. ' sourced')<cr>", "source" },
+  ['u'] = { vim.cmd.UndotreeToggle, "UndotreeToggle" },
+  ['w'] = { vim.cmd.update, "update" },
+
+  c = {
+    name = "cd",
+    ["d"] = { function() cd(vim.fn.expand('%:h')) end, 'lcd local' },
+    ["r"] = { function() cd(vim.fnlocal.CurGitRoot()) end, 'lcd root' },
+  },
+
   i = {
     name = "inversions",
     p = { function() invert('paste') end, 'invert paste' },
     s = { function() invert('spell') end, 'invert spell' },
     x = { function() invert('cursorline'); invert('cursorcolumn') end, 'invert cursorline/column' },
   },
+
   t = {
     name = "two-step",
 
@@ -178,7 +254,7 @@ whichkey.register({
         end,
         "zebra from tanzania"
       }
-    }
+    },
 
   }
 
