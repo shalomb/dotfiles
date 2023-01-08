@@ -1,3 +1,9 @@
+-- lua
+
+-- sort.lua
+-- implement a sort operator with 'gs' that works with text objects and is
+-- dot-repeatable
+
 local vim = vim
 local _G = _G
 
@@ -31,5 +37,5 @@ function _G.__dot_repeat(motion, direction)
   vim.fn.winrestview(view)
 end
 
-vim.keymap.set("n", "gt", _G.__dot_repeat, { expr = true })
-vim.keymap.set("v", "gt", _G.__dot_repeat, { expr = true })
+vim.keymap.set("n", "gs", _G.__dot_repeat, { expr = true })
+vim.keymap.set("v", "gs", _G.__dot_repeat, { expr = true })

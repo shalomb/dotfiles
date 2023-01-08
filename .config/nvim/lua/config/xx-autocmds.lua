@@ -41,7 +41,7 @@ autocmd(
   group = 'restore_last_position',
   pattern = { '*' },
   callback = function()
-    if vim.o.filetype == "" and next(vim.fn.argv()) == nil  then
+    if vim.o.filetype == "" and next(vim.fn.argv()) == nil then
       vim.fn.feedkeys('')
     end
   end
