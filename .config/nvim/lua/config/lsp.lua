@@ -5,32 +5,32 @@ local vim = vim
 
 local cmp = require("cmp")
 local lspconfig = require("lspconfig")
-local lsp = require("lsp-zero")
+local lsz = require("lsp-zero")
 local luasnip = require("luasnip")
 local util = require("lspconfig").util
 local whichkey = require("which-key")
 
-vim.opt.completeopt = { "menu", "menuone", "noselect" }
+vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect" }
 
-lsp.preset("recommended")
+lsz.preset("recommended")
 
-lsp.set_preferences({
-  suggest_lsp_servers = true,
-  setup_servers_on_start = true,
-  set_lsp_keymaps = false,
-  configure_diagnostics = true,
-  cmp_capabilities = true,
-  manage_nvim_cmp = true,
+lsz.set_preferences({
   call_servers = "local",
+  cmp_capabilities = true,
+  configure_diagnostics = true,
+  manage_nvim_cmp = true,
+  set_lsp_keymaps = false,
+  setup_servers_on_start = true,
   sign_icons = {
     error = "✘",
     warn = "▲",
     hint = "⚑",
     info = ""
-  }
+  },
+  suggest_lsp_servers = true,
 })
 
--- language servers
+-- language servers for mason-lspconfig
 local language_servers = {
   "ansiblels",
   "bashls",
@@ -49,20 +49,20 @@ local language_servers = {
   "vimls",
   "yamlls",
 }
-lsp.ensure_installed(language_servers)
+lsz.ensure_installed(language_servers)
 
 local cmp_select = { behavior = cmp.SelectBehavior.Select }
-local cmp_mappings = lsp.defaults.cmp_mappings({
-  ["<c-Space>"] = cmp.mapping.complete(),
-  ["<c-p>"] = cmp.mapping.select_prev_item(cmp_select),
-  ["<c-n>"] = cmp.mapping.select_next_item(cmp_select),
+local cmp_mappings = lsz.defaults.cmp_mappings({
+  ["<C-Space>"] = cmp.mapping.complete(),
+  ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
+  ["<C-n>"] = cmp.mapping.select_next_item(cmp_select),
 
-  ["<c-u>"] = cmp.mapping.scroll_docs(-4),
-  ["<c-d>"] = cmp.mapping.scroll_docs(4),
+  ["<C-u>"] = cmp.mapping.scroll_docs(-4),
+  ["<C-d>"] = cmp.mapping.scroll_docs(4),
 
-  ["<c-k>"] = cmp.mapping.confirm({ select = true }),
+  ["<C-j>"] = cmp.mapping.confirm({ select = true }),
 
-  ["<c-j>"] = cmp.mapping(function(_, _)
+  ["<C-k>"] = cmp.mapping(function(_, _)
     if luasnip.expand_or_jumpable() then
       luasnip.expand_or_jump()
     else
@@ -73,27 +73,16 @@ local cmp_mappings = lsp.defaults.cmp_mappings({
 
 -- disable completion with tab
 -- this helps with copilot setup
+-- case matters
 cmp_mappings["<Tab>"] = nil
 cmp_mappings["<S-Tab>"] = nil
 cmp_mappings["<CR>"] = nil
+cmp_mappings["<C-y>"] = nil
+cmp_mappings["<C-e>"] = nil
 
-lsp.setup_nvim_cmp({
-  snippet = {
-    expand = function(args)
-      luasnip.lsp_expand(args.body)
-    end,
-  },
-  mapping = cmp_mappings,
-  sources = {
-    { name = "path" },
-    { name = "nvim_lsp", keyword_length = 3 },
-    { name = "buffer", keyword_length = 3 },
-    { name = "luasnip", keyword_length = 2 },
-  },
-  window = {
-    completion = cmp.config.window.bordered(),
-    documentation = cmp.config.window.bordered(),
-  },
+lsz.setup_nvim_cmp({
+  enabled = true,
+
   formatting = {
     fields = { "menu", "abbr", "kind" },
     format = function(entry, item)
@@ -108,6 +97,34 @@ lsp.setup_nvim_cmp({
       return item
     end,
   },
+
+  mapping = cmp_mappings,
+  preselect = cmp.PreselectMode.None,
+
+  snippet = {
+    expand = function(args)
+      luasnip.lsp_expand(args.body)
+    end,
+  },
+
+  sources = {
+    { name = "path", keyword_length = 3 },
+    { name = "nvim_lsp", keyword_length = 3 },
+    { name = "buffer", keyword_length = 3 },
+    { name = "luasnip", keyword_length = 2 },
+  },
+
+  window = {
+    completion = cmp.config.window.bordered(),
+    documentation = cmp.config.window.bordered(),
+  },
+})
+
+cmp.setup({
+  enabled = true,
+  sources = {
+    {name = 'nvim_lsp'}
+  }
 })
 
 -- Set configuration for specific filetype.
@@ -143,7 +160,7 @@ cmp.setup.cmdline({ "/", "?" }, {
 --   },
 -- })
 
-lsp.set_preferences({
+lsz.set_preferences({
   suggest_lsp_servers = true,
   setup_servers_on_start = true,
   set_lsp_keymaps = false,
@@ -188,26 +205,26 @@ local on_attach = function(client, bufnr)
     ["="] = { function() vim.lsp.buf.format { async = true } end, "format buffer" },
     l = {
       name = "lsp actions",
+      ["="] = { function() vim.lsp.buf.format { async = true } end, "format buffer" },
       ["a"] = { vim.lsp.buf.code_action, "code action" },
-      ["wa"] = { vim.lsp.buf.add_workspace_folder, "wksp add folder" },
-      ["wr"] = { vim.lsp.buf.remove_workspace_folder, "wksp remove folder" },
       ["D"] = { vim.lsp.buf.declaration, "declaration" },
       ["d"] = { vim.lsp.buf.definition, "definition" },
-      ["="] = { function() vim.lsp.buf.format { async = true } end, "format buffer" },
-      ["k"] = { vim.lsp.buf.hover, "hover" },
       ["h"] = { vim.lsp.buf.signature_help, "help" },
+      ["k"] = { vim.lsp.buf.hover, "hover" },
+      ["l"] = { function()
+        print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+      end, "list wksp folders" },
       ["r"] = { vim.lsp.buf.references, "references" },
       ["R"] = { vim.lsp.buf.rename, "rename symbol" },
       ["S"] = { vim.lsp.buf.workspace_symbol, "workspace symbol" },
-      ["l"] = { function()
-        print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-      end, "" },
+      ["wa"] = { vim.lsp.buf.add_workspace_folder, "wksp add folder" },
+      ["wr"] = { vim.lsp.buf.remove_workspace_folder, "wksp remove folder" },
     },
   }, { mode = "n", prefix = "<leader>" })
 end
 
-lsp.on_attach(on_attach)
-lsp.setup()
+lsz.on_attach(on_attach)
+lsz.setup()
 
 lspconfig.pyright.setup({
   on_attach = on_attach,
