@@ -36,6 +36,8 @@ whichkey.register({
   ["*"] = { "*``", "*``" },
   ["`"] = { "'", "'" },
   ['$'] = { 'g_', "eol" },
+  ['^'] = { 'g0', "g0" },
+
   ['0'] = { function()
     local col = vim.fn.col('.')
     local line = vim.fn.getline('.')
@@ -52,7 +54,6 @@ whichkey.register({
       vim.fn.feedkeys('g^')
     end
   end, "bol" },
-  ['^'] = { 'g0', "g0" },
 
   ["<c-d>"] = { "<C-d>zz", "down" },
   ['<c-b>'] = { '<c-b>zz', "backwards" },
@@ -80,6 +81,7 @@ whichkey.register({
   ["."] = { ".`[", "repeat + go to last change" },
   ["Y"] = { "y$", "y$" },
   ["v"] = { "<c-v>", "<c-v>" },
+  ["U"] = { "<c-r>", "<c-r>" },
   ["<cr>"] = { "<Nop>", "nop" },
 
   ["gh"] = {
