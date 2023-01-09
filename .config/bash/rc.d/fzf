@@ -1,6 +1,6 @@
 #!/bin/bash
 
-fzf_install_dir="$XDG_DATA_HOME/fzf"
+fzf_install_dir="$HOME/projects/junegunn/fzf"
 fzf_bin_dir="$fzf_install_dir/bin"
 
 install-fzf() {
@@ -23,11 +23,11 @@ install-fzf() {
   local file="${url##*/}"
   local _TMP=$(mktemp -d)
 
-  ( cd "$_TMP"
+  if cd "$_TMP"; then
     echo "Fetching release $latest_tag from $url"
     wget -qc "$url" -O "$file"
     tar zxvf "$file" -C ~/.local/bin
-  )
+  fi
 
   rm -fr "$_TMP"
   fzf --version
