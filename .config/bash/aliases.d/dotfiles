@@ -1,2 +1,16 @@
-alias dotfiles='cd ~/.config/dotfiles'
+#!/bin/bash
+
+dotfiles_directory="$XDG_CONFIG_HOME/dotfiles"
+
+dotfiles() {
+  if (( $# == 0 )); then
+    cd "$dotfiles_directory" && return
+  fi
+  local match=( "$dotfiles_directory"/.*/**/*"$*"* )
+  if (( ${#match[@]} == 0 )); then
+    cd "$(FZF_DEFAULT_COMMAND='fd -t d . .config/' fzf)" || return
+  else
+    cd "${match[@]}" || return
+  fi
+}
 alias .f='dotfiles'
