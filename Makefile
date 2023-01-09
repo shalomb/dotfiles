@@ -55,8 +55,16 @@ python-tools: ## Run python-tools installer
 go-tools: ## Run go-tools installer
 	.config/go-tools/INIT
 
+.PHONY: rustup
+rustup: ## Configure rustup
+	.config/rust-tools/rustup
+
+.PHONY: cargo
+cargo: ## Configure cargo
+	.config/rust-tools/cargo
+
 .PHONY: rust-tools
-rust-tools: ## Run rust-tools
+rust-tools: cargo ## Run rust-tools
 	.config/rust-tools/INIT
 
 .PHONY: nvim
