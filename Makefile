@@ -67,13 +67,13 @@ cargo: ## Configure cargo
 rust-tools: cargo ## Run rust-tools
 	.config/rust-tools/INIT
 
-.PHONY: nvim
-nvim:  ## Setup neovim
-	make -f .config/nvim/Makefile install
+.PHONY: neovim-deps
+neovim-deps:  ## Install neovim's dependencies
+	.config/nvim/INIT
 
-.PHONY: .config/vim/INIT
-.config/vim/INIT: ## Run vim installer
-	.config/vim/INIT
+.PHONY: nvim
+nvim:  neovim-deps ## Setup neovim
+	make -f .config/nvim/Makefile install
 
 .DEFAULT_GOAL := help
 help: ## Show make targets available

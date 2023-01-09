@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# neovim init
+
+set -eu -o pipefail
+
+vim_base=".config/vim"
+
+if [[ ! -d $vim_base ]]; then
+  { echo "No $vim_base directory found."
+    echo "  Are you in the root of the dotfiles directory?"
+  } >&2
+  exit 3
+fi
+
+pkgs_to_install=()
+type -P ack      &>/dev/null || pkgs_to_install+=( 'ack' )
+type -P ctags    &>/dev/null || pkgs_to_install+=( 'exuberant-ctags' )
+type -P git      &>/dev/null || pkgs_to_install+=( 'git' )
+type -P jq       &>/dev/null || pkgs_to_install+=( 'jq' )
+type -P par      &>/dev/null || pkgs_to_install+=( 'par' )
+type -P sudo     &>/dev/null || pkgs_to_install+=( 'sudo' )
+
+if (( ${#pkgs_to_install[@]} >= 1 )); then
+  echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
+  (set -xv; sudo apt install -yqq ${pkgs_to_install[@]})
+fi
+

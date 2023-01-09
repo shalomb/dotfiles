@@ -35,6 +35,11 @@ mkdir -p "$vim_base/bundle/"
 ln -svf "$vim_base/vimrc"      .vimrc
 ln -svf "$vim_base/vimrc.gvim" .gvimrc
 
+exit
+
+# TODO
+# here lie dragons - this part is no longer maintained as neovim rules now
+
 install-vimplugin() {
   local github_repo="$1"
   local github_repo_normalized="${github_repo//\//--}"
