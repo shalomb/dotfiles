@@ -1,13 +1,15 @@
 #!/bin/bash
 
-local tools=( $(awk '{print $1}' ~/.config/rust-tools/list) )
+set -xv
+
+mapfile -t tools < (awk '{print $1}' ~/.config/rust-tools/list)
 ( set -xv
   cargo install "${tools[@]}"
 )
-local cmds=( $(awk '{print $2}' ~/.config/rust-tools/list) )
+cmds=( $(awk '{print $2}' ~/.config/rust-tools/list) )
 for i in "${!cmds[@]}"; do
-  local cmd="${cmds[i]}"
-  local tool="${tools[i]}"
-  local path=$(type -P "$cmd")
+  cmd="${cmds[i]}"
+  tool="${tools[i]}"
+  path=$(type -P "$cmd")
   printf "%-12s provided by %s (%s)\n" "$tool" "$cmd" "$path"
 done

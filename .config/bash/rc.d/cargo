@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ -e $HOME/.cargo/bin ]]; then
+  export PATH="$PATH:$HOME/.cargo/bin"
+fi
+
+if [[ -r ~/.cargo/env ]]; then
+  source "$HOME/.cargo/env"
+fi

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+sudo apt-get install build-essential pkg-config libssl-dev
+# https://github.com/rust-lang/rustup/issues/297#issuecomment-444818896
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
