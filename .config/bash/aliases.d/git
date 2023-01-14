@@ -57,6 +57,9 @@ function _git_arg_wrapper {
 #| ga - git add
 function ga  { _git_arg_wrapper "add" "$@"; }
 
+#| gap - git add --patch
+function gap { ga --patch "$@"; }
+
 #| gb - git branch
 function gb  {
   if [[ $# == 0 ]]; then
