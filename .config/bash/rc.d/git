@@ -23,7 +23,7 @@ function __my_git_ps1 {
     git_ps1_text="${git_ps1_text:0:24}⋯"
   fi
 
-  gs=$(git status --ignore-submodules=all)
+  gs=$(git status --ignore-submodules=all 2>/dev/null)
 
   if grep -iq "Changes not staged" <<<"$gs"; then
     printf '\001%s\002%s\001%s\002' "$orange_166" "$git_ps1_text" "$reset"
