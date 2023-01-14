@@ -2,14 +2,7 @@
 
 set -xv
 
-mapfile -t tools < (awk '{print $1}' ~/.config/rust-tools/list)
+mapfile -t tools < <(awk '{print $1}' ~/.config/rust-tools/list)
 ( set -xv
   cargo install "${tools[@]}"
 )
-cmds=( $(awk '{print $2}' ~/.config/rust-tools/list) )
-for i in "${!cmds[@]}"; do
-  cmd="${cmds[i]}"
-  tool="${tools[i]}"
-  path=$(type -P "$cmd")
-  printf "%-12s provided by %s (%s)\n" "$tool" "$cmd" "$path"
-done
