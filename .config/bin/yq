@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+if [[ -t 0 ]]; then
+  # assume last arg is the yaml file
+  yaml-to-json "${@: -1}" | jq -S "${@:1:(($# - 1))}"
+else
+  # stdin is pipe
+  yaml-to-json | jq "$@"
+fi | json-to-yaml
