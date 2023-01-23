@@ -1,63 +1,161 @@
-# git submodules
-.config/vim/bundle/*
-.vim/bundle/*
+# Ansible
+## retry files
+*.retry
+*.tmp
+.ansible*
+meta/.galaxy_install_info
+
+# Artefacts
+*-build/
+.cache
+.coverage
+build/
+dist/
+release/
+
+# Backup files
+*.bak*
+*.bkp*
+*.svn
+*.tmp*
+*hist
+*~
+.*hist
+.\#*
+.tags
+\#*
 tags
-**/tags
 
-wikidata/
-.config/vim/bundle/cheat.sh-vim
+# chef
+.kitchen/
+.kitchen*.yml
+.kitchen*.yaml
 
-# Compiled source #
-###################
-*.com
+# Compiled source
+*.a
+*.app
+*.bin
 *.class
+*.com
+*.def
 *.dll
+*.dylib
+*.elf
 *.exe
+*.exe~
+*.exp
+*.gch
+*.hex
+*.i*86
+*.ko
+*.la
+*.lib
+*.lo
 *.o
+*.obj
+*.out
+*.pch
 *.so
+*.so.*
+*.x86*64
 
-# Packages #
-############
-# it's better to unpack these files and commit the raw source
-# git has its own built in compression methods
+# core dumps
+core
+crash.*
+
+# Databases
+*.db
+*.mdf
+
+# dotfiles
+.config/nvim/
+.config/submodules/
+.config/tmux/plugins/
+.config/vim/bundle/*
+.luarc.json
+.vim/bundle/
+plugin/*compiled*
+submodules/
+
+# ebooks
+*.epub
+*.mobi
+*.pdf
+
+# editor
+*tags
+*.sw*
+
+# git submodules
+.submodules/
+submodules/
+.bundle/
+
+# go
+vendor/
+go.work
+*.text
+
+# Logs
+*.debug
+*.log
+*debug*log*
+log/
+logs/
+
+# node
+node_modules/
+
+# OS generated files
+.DS_Store?
+._*
+Icon?
+Thumbs.db
+ehthumbs.db
+~$*
+
+# Packages
 *.7z
+*.bin
 *.dmg
 *.gz
+*.gzip
 *.iso
 *.jar
 *.rar
 *.tar
+*.tar.*
+*.tbz
+*.tgz
 *.zip
 
-# Logs and databases #
-######################
-*.log
-*.sql
-*.sqlite
+# Python
+*.egg-info
+*.pyc
+*py*cache*
+.eggs
+.tox
+__pycache__/
 
-# OS generated files #
-######################
-.DS_Store?
-ehthumbs.db
-Icon?
-Thumbs.db
+# Project
+*_cache
+*.lock
+*.lck
+*.pid
+pidfile
+.project
 
-
-# Additional ignores
-*~
-*.bak*
-*.bkp*
-.*hist
-*hist
-*.svn
-*.sw*
-tags
-.tags
-*.tmp*
+# Secrets
+*.pass
+*credentials*
+*password*
+.ENV
+.env
 
 # Terraform
 ## Local .terraform directories
-**/.terraform/*
+.terraform
+.terraform/*
 ## Terraform lock files
 **/.*terraform*lock.hcl
 ## .tfstate files
@@ -87,12 +185,9 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# Project
-.vim/bundle/**
-.config/vim/bundle/**
-.config/tmux/plugins/**
-submodules/**
-.config/submodules/**
+# vagrant and packer
+.vagrant
+*.box
+*pkrvars*
 
-plugin/**compiled*
-.luarc.json
+# This repository's ignores
