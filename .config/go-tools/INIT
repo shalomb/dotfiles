@@ -7,4 +7,5 @@ go install -v github.com/canthefason/go-watcher/cmd/watcher@latest
 go install -v github.com/fiatjaf/jiq/cmd/jiq@latest
 go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 go install -v github.com/mrtazz/checkmake/cmd/checkmake@latest
+go install -v github.com/muesli/duf@latest
 go install -v golang.org/x/lint/golint@latest
