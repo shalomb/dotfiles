@@ -300,6 +300,7 @@ tzdata                     install
 udev                       install
 unicode                    install
 unicode-data               install
+uniutils                   install
 unzip                      install
 usb.ids                    install
 usbutils                   install
