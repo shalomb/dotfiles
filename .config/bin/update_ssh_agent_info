@@ -14,6 +14,8 @@
 
 # TODO : set -e in the caller still breaks this somewhere
 [[ ${-//[!e]/} ]] && sete=1
+nullglob=0
+extglob=0
 shopt nullglob | grep -iq on && nullglob=1
 shopt extglob  | grep -iq on && extglob=1
 
