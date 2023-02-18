@@ -5,7 +5,9 @@ Track dotfiles as hardlinks to files tracked in a git repo
 ## Installation
 
 ```bash
-mkdir ~/.config/dotfiles/
+sudo apt install --no-install-{recommends,suggests} make git
+echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee "/etc/sudoers.d/$USER"
+mkdir -p ~/.config/dotfiles/
 cd !$
 git clone git://github.com/shalomb/dotfiles.git .
 make install
