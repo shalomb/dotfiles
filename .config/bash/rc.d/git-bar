@@ -340,6 +340,9 @@ function gP  {
 #| gPa - git push --all
 function gPa  { gP --all; }
 
+#| gPf - git push --force
+function gPf  { gP --force; }
+
 #| gPt - git push --tags
 function gPt  { gP --tags; }
 
