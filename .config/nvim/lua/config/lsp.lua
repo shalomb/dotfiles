@@ -33,16 +33,16 @@ lsz.set_preferences({
 -- language servers for mason-lspconfig
 local language_servers = {
   "ansiblels",
+  "awk_ls",
   "bashls",
   "cssls",
-  "awk_ls",
   "gopls",
   "html",
   "jsonls",
+  "lua_ls",
   "pyright",
   "rust_analyzer",
   "sqls",
-  "sumneko_lua",
   "terraformls",
   "tflint",
   "tsserver",
@@ -108,10 +108,17 @@ lsz.setup_nvim_cmp({
   },
 
   sources = {
-    { name = "path", keyword_length = 3 },
-    { name = "nvim_lsp", keyword_length = 3 },
-    { name = "buffer", keyword_length = 3 },
     { name = "luasnip", keyword_length = 2 },
+    { name = "nvim_lsp", keyword_length = 3 },
+    { name = "path", keyword_length = 3 },
+    { name = "buffer",
+      keyword_length = 3,
+      option = {
+        get_bufnrs = function()
+          return vim.api.nvim_list_bufs()
+        end
+      }
+    },
   },
 
   window = {
@@ -123,7 +130,7 @@ lsz.setup_nvim_cmp({
 cmp.setup({
   enabled = true,
   sources = {
-    {name = 'nvim_lsp'}
+    { name = 'nvim_lsp' }
   }
 })
 
@@ -248,7 +255,7 @@ lspconfig.pyright.setup({
 -- Lua Diagnostics.: Undefined global `vim`.
 -- luacheck reports 113 accessing undefined variable 'vim'
 -- that is fixed by a setting in ~/.luacheckrc
-lspconfig.sumneko_lua.setup({
+lspconfig.lua_ls.setup({
   on_attach = on_attach,
   flags = { debounce_text_changes = 150 },
   settings = {

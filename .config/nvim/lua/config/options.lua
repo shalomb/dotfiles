@@ -8,6 +8,7 @@ vim.opt.backup         = false
 vim.opt.cindent        = true
 vim.opt.clipboard      = 'unnamed'
 vim.opt.cmdheight      = 2
+vim.opt.complete       = ',w,b,u,t,i'
 vim.opt.cursorline     = true
 vim.opt.expandtab      = true
 vim.opt.foldlevel      = 16
