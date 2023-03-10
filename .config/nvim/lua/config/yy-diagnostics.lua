@@ -69,17 +69,19 @@ local autocmd = vim.api.nvim_create_autocmd
 -- disable diagnostics in insert mode
 -- https://www.reddit.com/r/neovim/comments/uf35lo/comment/i6s4ai9/
 
-autocmd('ModeChanged', {
-  group = augroup,
-  pattern = { 'n:i', 'n:v', 'i:v' },
-  callback = function() vim.diagnostic.disable() end,
-})
+-- autocmd('ModeChanged', {
+--   group = augroup,
+--   pattern = { 'n:i', 'n:v', 'i:v' },
+--   callback = function() vim.diagnostic.disable() end,
+-- })
 
-autocmd('ModeChanged', {
-  group = augroup,
-  pattern = 'i:n',
-  callback = function() vim.diagnostic.enable() end,
-})
+-- autocmd('ModeChanged', {
+--   group = augroup,
+--   pattern = 'i:n',
+--   callback = function()
+--     vim.diagnostic.enable()
+--   end,
+-- })
 
 -- autocmd({ 'CursorHold' }, {
 --   desc = 'Show box with diagnostics for current line',
