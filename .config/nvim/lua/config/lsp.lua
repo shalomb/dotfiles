@@ -81,7 +81,13 @@ cmp_mappings["<C-y>"] = nil
 cmp_mappings["<C-e>"] = nil
 
 lsz.setup_nvim_cmp({
-  enabled = true,
+  enabled = function()
+    buftype = vim.api.nvim_buf_get_option(0, "buftype")
+    if buftype == "prompt" then
+      return false
+    end
+    return true
+  end,
 
   formatting = {
     fields = { "menu", "abbr", "kind" },
@@ -108,8 +114,12 @@ lsz.setup_nvim_cmp({
   },
 
   sources = {
+    -- TODO - tmux, ctags, git commits
+    { name = "calc", keyword_length = 3 },
+    { name = "emoji", keyword_length = 3 },
     { name = "luasnip", keyword_length = 2 },
     { name = "nvim_lsp", keyword_length = 3 },
+    { name = "nvim_lua", keyword_length = 3 },
     { name = "path", keyword_length = 3 },
     { name = "buffer",
       keyword_length = 3,
@@ -125,13 +135,6 @@ lsz.setup_nvim_cmp({
     completion = cmp.config.window.bordered(),
     documentation = cmp.config.window.bordered(),
   },
-})
-
-cmp.setup({
-  enabled = true,
-  sources = {
-    { name = 'nvim_lsp' }
-  }
 })
 
 -- Set configuration for specific filetype.
