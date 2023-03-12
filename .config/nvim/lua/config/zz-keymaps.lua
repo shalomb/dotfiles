@@ -157,7 +157,33 @@ whichkey.register({
   ['"'] = { telescope.buffers, "Buffers" },
   ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
   [','] = { '<cmd>:e #<cr>', 'Edit alternate file' },
-  ['/'] = { telescope.live_grep, "live_grep" },
+  ['/'] = { function()
+    -- https://www.reddit.com/r/neovim/comments/wprod1/comment/ikicotz/
+    -- https://github.com/nvim-telescope/telescope.nvim/issues/2095#issuecomment-1193068381
+    local actions = require "telescope.actions"
+    local builtin = require("telescope.builtin")
+    local action_state = require('telescope.actions.state')
+
+    builtin.live_grep({
+      attach_mappings = function(prompt_bufnr, _)
+        -- modifying what happens on selection with <CR>
+        actions.select_default:replace(function()
+          local current_picker = action_state.get_current_picker(prompt_bufnr)
+          local prompt = current_picker:_get_prompt()
+
+          -- update the search register
+          if prompt then
+            vim.fn.setreg('/', prompt)
+          end
+
+          -- closing picker
+          actions.close(prompt_bufnr)
+        end)
+        -- keep default keybindings
+        return true
+      end,
+  })
+  end, "live_grep" },
   ['<leader>'] = { ":update<cr>:call ShowCrossHairs('20m')<cr>:lua vim.fn.updatemsg()<cr>", "update" },
 
   ['a'] = { ':edit #<cr>', "edit alt" },
