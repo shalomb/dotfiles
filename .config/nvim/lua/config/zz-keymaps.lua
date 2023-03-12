@@ -60,11 +60,7 @@ whichkey.register({
   ["<c-e>"] = { "5<c-e>", "5 up" },
   ['<c-f>'] = { '<c-f>zz', "forwards" },
   ['<c-p>'] = { function()
-    if vim.fnlocal.CurPath() ~= 'dotfiles' then
-      telescope.find_files({ hidden = true })
-    else
-      telescope.find_files()
-    end
+    telescope.find_files({ hidden = false })
   end, "find_files" },
   ["<c-u>"] = { "<c-u>zz", "up" },
   ["<c-w><c-w>"] = { "<C-W>p", "last window" },
@@ -121,51 +117,6 @@ whichkey.register({
 }, { mode = "v", prefix = "<leader>" })
 
 whichkey.register({
-  name = "quickies",
-  ['<leader>'] = { ":update<cr>:call ShowCrossHairs('20m')<cr>:lua vim.fn.updatemsg()<cr>", "update" },
-  ["q"] = { vim.cmd.quit, "quit" },
-  ['w'] = { vim.cmd.update, "update" },
-  ['/'] = { telescope.live_grep, "live_grep" },
-  ['ma'] = { [[:<c-u><c-r><c-r>='let @'. v:register .' = '. string(getreg(v:register))<cr><c-f><left>]], "edit macro?" },
-  ['ms'] = { '<cmd>messages<cr>', ":messages" },
-  ['mc'] = { '<cmd>messages clear<cr>', ":messages clear" },
-  ["gr"] = { function()
-    vim.cmd(string.format([[:grep %s]], vim.fnlocal.CurWord()))
-  end,
-    "grep selection" },
-}, { mode = "n", prefix = "<leader>" })
-
-whichkey.register({
-  name = "pasties",
-  p = {
-    ["a'"] = { [["_da'P]], '' },
-    ["i'"] = { [["_di'P]], '' },
-    ['a"'] = { '"_da"P', '' },
-    ['i"'] = { '"_di"P', '' },
-    ['a{'] = { '"_da{P', '' },
-    ['i{'] = { '"_di{P', '' },
-    ['a}'] = { '"_da}P', '' },
-    ['i}'] = { '"_di}P', '' },
-    ['a('] = { '"_da(P', '' },
-    ['i('] = { '"_di(P', '' },
-    ['a)'] = { '"_da]P', '' },
-    ['i)'] = { '"_di]P', '' },
-    ['a['] = { '"_da[P', '' },
-    ['i['] = { '"_di[P', '' },
-    ['a]'] = { '"_da]P', '' },
-    ['i]'] = { '"_di]P', '' },
-    ['al'] = { '"_dalP', '' },
-    ['il'] = { '"_dilP', '' },
-    ['ap'] = { '"_dapP', '' },
-    ['ip'] = { '"_dipP', '' },
-    ['aW'] = { '"_daWP', '' },
-    ['iW'] = { '"_diWP', '' },
-    ['aw'] = { '"_dawP', '' },
-    ['iw'] = { '"_diwP', '' },
-  },
-}, { mode = "n", prefix = "<leader>" })
-
-whichkey.register({
   name = "pasties",
   ['p'] = { [["_dP]], "Paste last yank over visual selection" },
 }, { mode = "x", prefix = "<leader>" })
@@ -205,9 +156,11 @@ whichkey.register({
 
   ['"'] = { telescope.buffers, "Buffers" },
   ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
+  [','] = { '<cmd>:e #<cr>', 'Edit alternate file' },
+  ['/'] = { telescope.live_grep, "live_grep" },
+  ['<leader>'] = { ":update<cr>:call ShowCrossHairs('20m')<cr>:lua vim.fn.updatemsg()<cr>", "update" },
 
   ['a'] = { ':edit #<cr>', "edit alt" },
-  ['ca'] = { vim.lsp.buf.code_action, "code action" },
   ['ls'] = { ':!less %<cr>', "less %" },
   ['on'] = { vim.cmd.only, "only" },
   ['rl'] = { ":source $MYVIMRC<cr>:lua vim.fn.OK(vim.fn.expand('$MYVIMRC') .. ' reloaded')<cr>", "reload" },
@@ -217,8 +170,15 @@ whichkey.register({
 
   c = {
     name = "cd",
-    ["d"] = { function() cd(vim.fn.expand('%:h')) end, 'lcd local' },
-    ["r"] = { function() cd(vim.fnlocal.CurGitRoot()) end, 'lcd root' },
+    a = { vim.lsp.buf.code_action, "code action" },
+    d = { function() cd(vim.fn.expand('%:h')) end, 'lcd local' },
+    r = { function() cd(vim.fnlocal.CurGitRoot()) end, 'lcd root' },
+  },
+
+  g = {
+    r = { function()
+      vim.cmd(string.format([[:grep %s]], vim.fnlocal.CurWord()))
+    end, "grep selection" },
   },
 
   i = {
@@ -227,6 +187,42 @@ whichkey.register({
     s = { function() invert('spell') end, 'invert spell' },
     x = { function() invert('cursorline'); invert('cursorcolumn') end, 'invert cursorline/column' },
   },
+
+  m = {
+    a = { [[:<c-u><c-r><c-r>='let @'. v:register .' = '. string(getreg(v:register))<cr><c-f><left>]], "edit macro?" },
+    s = { '<cmd>messages<cr>', ":messages" },
+    c = { '<cmd>messages clear<cr>', ":messages clear" },
+  },
+
+  p = {
+    name = "pasties",
+    ["a'"] = { [["_da'P]], '' },
+    ["i'"] = { [["_di'P]], '' },
+    ['a"'] = { '"_da"P', '' },
+    ['i"'] = { '"_di"P', '' },
+    ['a{'] = { '"_da{P', '' },
+    ['i{'] = { '"_di{P', '' },
+    ['a}'] = { '"_da}P', '' },
+    ['i}'] = { '"_di}P', '' },
+    ['a('] = { '"_da(P', '' },
+    ['i('] = { '"_di(P', '' },
+    ['a)'] = { '"_da]P', '' },
+    ['i)'] = { '"_di]P', '' },
+    ['a['] = { '"_da[P', '' },
+    ['i['] = { '"_di[P', '' },
+    ['a]'] = { '"_da]P', '' },
+    ['i]'] = { '"_di]P', '' },
+    ['al'] = { '"_dalP', '' },
+    ['il'] = { '"_dilP', '' },
+    ['ap'] = { '"_dapP', '' },
+    ['ip'] = { '"_dipP', '' },
+    ['aW'] = { '"_daWP', '' },
+    ['iW'] = { '"_diWP', '' },
+    ['aw'] = { '"_dawP', '' },
+    ['iw'] = { '"_diwP', '' },
+  },
+
+  q = { vim.cmd.quit, "quit" },
 
   t = {
     name = "two-step",
@@ -256,6 +252,15 @@ whichkey.register({
         end,
         "zebra from tanzania"
       }
+    },
+
+    w = {
+      name = 'worktree',
+      r = { vim.cmd.update, "update" },
+      w = { function()
+        telescope.load_extension("git_worktree")
+        telescope.extensions.git_worktree.git_worktrees()
+      end, 'select worktrees' },
     },
 
   }
