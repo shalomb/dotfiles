@@ -28,6 +28,59 @@ end
 local whichkey = require("which-key")
 local telescope = require("telescope.builtin")
 
+local get_visual_selection = function ()
+  local s_start = vim.fn.getpos("'<")
+  local s_end = vim.fn.getpos("'>")
+  local n_lines = math.abs(s_end[2] - s_start[2]) + 1
+  local lines = vim.api.nvim_buf_get_lines(0, s_start[2] - 1, s_end[2], false)
+  lines[1] = string.sub(lines[1], s_start[3], -1)
+  if n_lines == 1 then
+    lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3] - s_start[3] + 1)
+  else
+    lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3])
+  end
+  return table.concat(lines, '\n')
+end
+
+local my_live_grep = function(pat)
+  -- TODO - Telescope live_grep default_text=foo
+  -- https://www.reddit.com/r/neovim/comments/wprod1/comment/ikicotz/
+  -- https://github.com/nvim-telescope/telescope.nvim/issues/2095#issuecomment-1193068381
+  local actions = require "telescope.actions"
+  local builtin = require("telescope.builtin")
+  local action_state = require('telescope.actions.state')
+  local action_set = require('telescope.actions.set')
+
+  builtin.live_grep({
+    default_text = pat,
+    attach_mappings = function(prompt_bufnr, _)
+      -- modifying what happens on selection with <CR>
+      actions.select_default:replace(function()
+        local current_picker = action_state.get_current_picker(prompt_bufnr)
+        local prompt = current_picker:_get_prompt()
+
+        -- update the search register
+        if prompt then
+          vim.fn.setreg('/', prompt)
+        end
+
+        local entry = action_state.get_selected_entry()
+
+        local filename = entry['filename']
+        local lnum = entry['lnum']
+
+        -- closing picker
+        actions.close(prompt_bufnr)
+
+        vim.cmd(':edit +' .. lnum .. ' ' .. filename)
+      end)
+      -- keep default keybindings
+      return true
+    end,
+  })
+
+end
+
 whichkey.register({
   name = "chords",
 
@@ -114,6 +167,14 @@ whichkey.register({
 whichkey.register({
   name = "chords",
   ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
+  ['/'] = { function()
+    -- TODO there seems to be an issue with stale state and _G.GetVisualSelection
+    -- returns the previous selection, investigate this
+    -- for now we have to restart the visual selection manually
+    -- local pat = _G.GetVisualSelection()
+    vim.api.nvim_input('z/')
+    telescope.live_grep()
+  end, 'live_grep selected text' },
 }, { mode = "v", prefix = "<leader>" })
 
 whichkey.register({
@@ -158,31 +219,7 @@ whichkey.register({
   ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
   [','] = { '<cmd>:e #<cr>', 'Edit alternate file' },
   ['/'] = { function()
-    -- https://www.reddit.com/r/neovim/comments/wprod1/comment/ikicotz/
-    -- https://github.com/nvim-telescope/telescope.nvim/issues/2095#issuecomment-1193068381
-    local actions = require "telescope.actions"
-    local builtin = require("telescope.builtin")
-    local action_state = require('telescope.actions.state')
-
-    builtin.live_grep({
-      attach_mappings = function(prompt_bufnr, _)
-        -- modifying what happens on selection with <CR>
-        actions.select_default:replace(function()
-          local current_picker = action_state.get_current_picker(prompt_bufnr)
-          local prompt = current_picker:_get_prompt()
-
-          -- update the search register
-          if prompt then
-            vim.fn.setreg('/', prompt)
-          end
-
-          -- closing picker
-          actions.close(prompt_bufnr)
-        end)
-        -- keep default keybindings
-        return true
-      end,
-  })
+    my_live_grep()
   end, "live_grep" },
   ['<leader>'] = { ":update<cr>:call ShowCrossHairs('20m')<cr>:lua vim.fn.updatemsg()<cr>", "update" },
 
@@ -256,18 +293,18 @@ whichkey.register({
     b = { telescope.buffers, "buffers" },
     c = { telescope.commands, "commands" },
     f = { telescope.resume, "resume" },
-    g = { function()
+    h = { telescope.help_tags, "help_tags" },
+    k = { function()
       vim.cmd([[
         :GkeepLogin
         :lua require('telescope').load_extension('gkeep')
         :Telescope gkeep
       ]])
     end, "gkeep" },
-    h = { telescope.help_tags, "help_tags" },
     m = { telescope.marks, "marks" },
     -- s = { ':lua <Plug>NormalModeSendToTmux', "SendSelectionToTmux" },
     s = { '<Plug>SendSelectionToTmux', "SendSelectionToTmux" },
-    t = { '<cmd>TagbarToggle<cr>', "TagbarToggle" },
+    g = { '<cmd>TagbarToggle<cr>', "TagbarToggle" },
     v = { '<Plug>SetTmuxVars', "SetTmuxVars" },
 
     z = {
@@ -314,9 +351,9 @@ map("v", "K", ":m '<-2<CR>gv=gv")
 
 -- map("x", "<leader>p", [["_dP]], {desc = 'Paste last yank over visual selection'}) -- greatest remap ever
 
-map('v', '<leader>/', ':<c-u>lua vim.b.visual_selection=vim.fnlocal.GetVisualSelection()<cr>' ..
-  ':grep <c-r>=fnameescape(expand(b:visual_selection))<c-j>',
-  { desc = 'Search for term selected' })
+-- map('v', '<leader>/', ':<c-u>lua vim.b.visual_selection=vim.fnlocal.GetVisualSelection()<cr>' ..
+--   ':grep <c-r>=fnameescape(expand(b:visual_selection))<c-j>',
+--   { desc = 'Search for term selected' })
 map('i', '<Tab>', function()
   return vim.fn.pumvisible() == 1 and '<C-N>' or '<Tab>'
 end, { expr = true })

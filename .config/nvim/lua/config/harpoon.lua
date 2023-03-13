@@ -20,9 +20,10 @@ whichkey.register({
         harpoon_mark.add_file()
         local file = vim.fn.expand('%')
         vim.fn.OK(file .. ' harpooned.')
-      end, "harpoon file"
+      end, "harpoon mark"
     },
-    m = { function() vim.cmd([[:Telescope harpoon marks]]) end, "term 1" },
+    e = { harpoon_ui.toggle_quick_menu, "harpoon menu" },
+    h = { function() vim.cmd([[:Telescope harpoon marks]]) end, "harpoon marks" },
     t = { harpoon_tmux.gotoTerminal, "term 1" },
   },
 }, { mode = "n", prefix = "<leader>" })
