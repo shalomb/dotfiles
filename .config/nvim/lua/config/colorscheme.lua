@@ -32,16 +32,23 @@ vim.opt.fillchars:append({
     verthoriz = '╋',
 })
 
-local overrides = {
-  VertSplit  = {
-    fg = "#ffffff",
-    bg = "#ffffff",
-  },
-  StatusLine = { bg = "#ffffff" }
-}
-
 require'kanagawa'.setup({
-  overrides = overrides,
+  overrides = function(_)
+    return {
+      VertSplit  = {
+        fg = "#ffffff",
+        bg = "#ffffff",
+      },
+      StatusLine = { bg = "#ffffff" }
+    }
+  end,
+  theme = "wave",
+  background = {    -- map the value of 'background' option to a theme
+    dark = "dragon",  -- try "dragon" !
+    light = "lotus"
+  },
+  terminalColors = true,
+  compile = true,
   globalStatus = true,
   transparent = true,
   dimInactive = true,
@@ -51,7 +58,6 @@ vim.cmd([[
 let $NVIM_TUI_ENABLE_TRUE_COLOR=1
 let g:gruvbox_contrast_dark = 'light'
 let g:gruvbox_transparent_bg = 1
-set background=dark
 set termguicolors
 
 augroup MyColorScheme
