@@ -152,6 +152,7 @@ return packer.startup(function(use)
   use "tpope/vim-unimpaired"
   use "tpope/vim-vinegar"
   use "wellle/targets.vim" -- Add mode text objects
+  use 'ThePrimeagen/git-worktree.nvim'
 
   use { "stevearc/gkeep.nvim", run = ':UpdateRemotePlugins' }
 
