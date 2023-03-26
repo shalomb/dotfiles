@@ -2,7 +2,7 @@
 
 dotfiles_directory="$XDG_CONFIG_HOME/dotfiles"
 
-dotfiles() {
+function dotfiles {
   if (( $# == 0 )); then
     cd "$dotfiles_directory" && return
   fi
