@@ -69,7 +69,7 @@ function aws-sts-mfa-session {
   command aws "$@"
 }
 
-alias aws=aws-sts-mfa-session
+# alias aws=aws-sts-mfa-session
 
 # Given a JSON file output by `aws sts ...`, wire up the values to the
 # required environment variables for the aws(1) command to run correctly.
