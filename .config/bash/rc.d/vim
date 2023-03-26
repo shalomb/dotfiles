@@ -27,3 +27,7 @@ function clear-swapfiles {
     clear-swapfile "${file%/*}/${basename%.sw?}"
   done
 }
+
+function gvdiff {
+  vi -c ':Gvdiffsplit!' "$@"
+}
