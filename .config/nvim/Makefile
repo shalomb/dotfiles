@@ -24,7 +24,8 @@ test:
 .PHONY: deps
 deps:
 	sudo sudo apt build-dep -yyq neovim -t unstable
-	sudo apt install -yyq build-essential git libtool libtool-bin devscripts
+	sudo apt install -yyq build-essential git libtool libtool-bin devscripts \
+		python3-neovim python3-pynvim
 
 .PHONY: build-env
 build-env: deps
