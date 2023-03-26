@@ -67,6 +67,7 @@ g++                        install
 gawk                       install
 gcc                        install
 geoip-database             install
+gh                         install
 git                        install
 git-doc                    install
 git-extras                 install
@@ -75,6 +76,8 @@ gnupg                      install
 gnupg-l10n                 install
 gnupg-utils                install
 gnupg2                     install
+golang-1.19                install
+golang-1.19-go             install
 gpg                        install
 gpg-agent                  install
 gpg-wks-client             install
