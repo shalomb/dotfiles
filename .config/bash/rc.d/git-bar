@@ -219,13 +219,18 @@ function gco {
       set -- "$available"
     fi
   else
-    command git "$@"
+    command git checkout "$@"
     return
   fi
   old_branch=$(gbr);
   _git_arg_wrapper "checkout" "$@";
 }
 __git_complete gco _git_checkout
+
+#| gcob - git checkout --branch
+function gcob {
+  gco -b "$@"
+}
 
 #| gd - git diff
 function gd  { _git_arg_wrapper "diff" "$@"; }
@@ -429,6 +434,14 @@ function gup {
   command git pull --rebase --prune "$@"
   command git submodule update --init --recursive
 }
+
+#| gvdiff - vi -c ':Gvdiffsplit!' "$@"
+function gvdiff {
+  vi -c ':Gvdiffsplit!' "$@"
+}
+
+#! gvd - gvdiff "$@"
+function gvd { gvdiff "$@"; }
 
 #| gwip - ga .; gc WIP
 function gwip {
