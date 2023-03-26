@@ -68,7 +68,6 @@ crash.*
 *.mdf
 
 # dotfiles
-.config/nvim/
 .config/submodules/
 .config/tmux/plugins/
 .config/vim/bundle/*
