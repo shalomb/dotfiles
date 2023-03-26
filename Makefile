@@ -29,6 +29,9 @@ refresh:  ## refresh all dotfiles in $HOME with versions in repo
 	  \( -name ".git" -o -name "INIT" -o -name "*.sw?" -o -name "*~" \) -prune \
 	  -o -type f -exec ./dotfile_stash export {} +
 
+.PHONY: apt
+apt: .config/apt/INIT  ## Install apt packages
+
 .PHONY: .config/apt/INIT
 .config/apt/INIT: ## Install all apt packages
 	.config/apt/INIT
@@ -81,4 +84,4 @@ help: ## Show make targets available
 	@ grep -h -E '^[a-zA-Z_\\/.-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s - %s\n", $$1, $$2}'
 
-# vim: ts=2 sw=2 et
+# vim: ts=2 sw=2 noet
