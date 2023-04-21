@@ -42,7 +42,7 @@ local language_servers = {
   "lua_ls",
   "pyright",
   "rust_analyzer",
-  "sqls",
+  "sqlls",
   "terraformls",
   "tflint",
   "tsserver",
