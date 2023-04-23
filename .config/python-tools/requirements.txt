@@ -20,6 +20,7 @@ bracex
 brz-etckeeper
 certifi
 chardet
+checkov
 click
 colorama
 commonmark
@@ -73,9 +74,14 @@ pylint
 pynvim
 pyparsing
 pyrsistent
+pytablewriter
+pytablewriter-altrow-theme
 python-apt
+python-benedict
 python-debian
 python-debianbts
+python-decouple
+python-dotenv
 python-magic
 pytz
 pywinrm
@@ -91,6 +97,7 @@ rfc3987
 rich
 ruamel.yaml
 ruamel.yaml.clib
+saws
 selinux
 setuptools
 simplejson
@@ -116,4 +123,3 @@ xdg
 yamllint
 yq
 zipp
-checkov

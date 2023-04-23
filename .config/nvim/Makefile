@@ -13,7 +13,7 @@ install: nvim packer tools
 aux: ex vimdiff view rvim rview
 
 .PHONY: all
-all: install clean
+all: install aux test clean
 
 .PHONY: clean
 clean:
@@ -65,9 +65,13 @@ packer: ## configure packer
 			git clone https://github.com/wbthomason/packer.nvim . || true
 		fi
 	)
-	nvim -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
-	nvim -c ':checkhealth'
-	nvim -c ':version'
+	nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
+
+.SILENT: test
+.PHONY: test
+test:
+	nvim --headless -c ':checkhealth'
+	nvim --headless -c ':version'
 
 ex: ## install ex
 	echo 'command nvim -e "$@"' > ~/.local/bin/ex
