@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+if ! system-command "$0"; then
+  # Try redirecting the url open command the host (mac)
+  echo "$*" | base64 | ssh host 'open "$(base64 -d)"'
+fi
