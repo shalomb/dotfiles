@@ -50,6 +50,10 @@ submodules: .config/submodules/INIT .config/submodules/UPDATE
 .PHONY: tools
 tools: go-tools rust-tools workspace-tools ## Install CLI tools
 
+.PHONY: npm-tools
+npm-tools: ## Run npm-tools installer
+	.config/npm-tools/INIT
+
 .PHONY: python-tools
 python-tools: ## Run python-tools installer
 	.config/python-tools/INIT

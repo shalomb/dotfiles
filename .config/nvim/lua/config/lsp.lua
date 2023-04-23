@@ -236,6 +236,24 @@ end
 lsz.on_attach(on_attach)
 lsz.setup()
 
+-- Lua Diagnostics.: Undefined global `vim`.
+-- luacheck reports 113 accessing undefined variable 'vim'
+-- that is fixed by a setting in ~/.luacheckrc
+lspconfig.lua_ls.setup({
+  on_attach = on_attach,
+  flags = { debounce_text_changes = 150 },
+  settings = {
+    Lua = {
+      completion = {
+        callSnippet = "Replace"
+      },
+      diagnostics = {
+        globals = { "_", "_G", "vim", }
+      },
+    }
+  }
+})
+
 lspconfig.pyright.setup({
   on_attach = on_attach,
   flags = { debounce_text_changes = 150 },
@@ -255,23 +273,7 @@ lspconfig.pyright.setup({
   },
 })
 
--- Lua Diagnostics.: Undefined global `vim`.
--- luacheck reports 113 accessing undefined variable 'vim'
--- that is fixed by a setting in ~/.luacheckrc
-lspconfig.lua_ls.setup({
-  on_attach = on_attach,
-  flags = { debounce_text_changes = 150 },
-  settings = {
-    Lua = {
-      completion = {
-        callSnippet = "Replace"
-      },
-      diagnostics = {
-        globals = { "_", "_G", "vim", }
-      },
-    }
-  }
-})
+lspconfig.sqlls.setup({})
 
 -- debugging
 -- vim.lsp.set_log_level("debug")

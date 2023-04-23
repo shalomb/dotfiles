@@ -111,6 +111,7 @@ libc-bin                   install
 libc-dev-bin               install
 libc-l10n                  install
 libfile-which-perl         install
+libkrb5-dev                install
 libssl-dev                 install
 locales                    install
 login                      install

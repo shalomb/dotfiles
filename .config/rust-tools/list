@@ -1,8 +1,9 @@
-bat        bat       	 https://github.com/sharkdp/bat
-difftastic difft     	 https://github.com/Wilfred/difftastic
-du-dust    dust      	 https://github.com/bootandy/dust
-eva        eva       	 https://github.com/nerdypepper/eva
-exa        exa       	 https://github.com/ogham/exa
-hyperfine  hyperfine 	 https://github.com/sharkdp/hyperfine
-mdcat      mdcat     	 https://github.com/swsnr/mdcat
-pastel     pastel      https://github.com/sharkdp/pastel
+bat          bat              https://github.com/sharkdp/bat
+difftastic   difft            https://github.com/Wilfred/difftastic
+du-dust      dust             https://github.com/bootandy/dust
+eva          eva              https://github.com/nerdypepper/eva
+exa          exa              https://github.com/ogham/exa
+hyperfine    hyperfine        https://github.com/sharkdp/hyperfine
+mdcat        mdcat            https://github.com/swsnr/mdcat
+pastel       pastel           https://github.com/sharkdp/pastel
+tree-sitter  tree-sitter-cli  https://github.com/tree-sitter/tree-sitter

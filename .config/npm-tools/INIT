@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -eu
+
+sudo apt-get -yyq --no-install-recommends --no-install-suggests install nodejs npm
+
+sudo npm install \
+  @pnp/cli-microsoft365 \
+  neovim  \
+  pyright \
+  tree-sitter \
+  tree-sitter-cli
+
