@@ -2,31 +2,52 @@
 
 set -eu
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 cd "$SCRIPT_DIR"
 
 pkgs_to_install=()
 
-# Install packages providing our required commands
-if (( ${GUI:-0} == 1 )); then
-  type -P dmenu          &>/dev/null || pkgs_to_install+=( 'suckless-tools' )
-  type -P flock          &>/dev/null || pkgs_to_install+=( 'util-linux' )
-  type -P setxkbmap      &>/dev/null || pkgs_to_install+=( 'x11-xkb-utils ' )
-  type -P ssh            &>/dev/null || pkgs_to_install+=( 'openssh-client' )
-  type -P vim            &>/dev/null || pkgs_to_install+=( 'vim-gtk3' )
-  type -P xmodmap        &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
-  type -P xrandr         &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
-  type -P xset           &>/dev/null || pkgs_to_install+=( 'x11-xserver-utils' )
-  vi  --version | grep -iq x11       || pkgs_to_install+=( 'vim-gtk3' )
+# Install keys
+install-gpg-keyring() {
+  gpg_file="$1"
+  keyring_name="${2:-${1##*/}}"
+	wget -qc -O- "$gpg_file" |
+		gpg --dearmor |
+		sudo tee /usr/share/keyrings/"$keyring_name" &>/dev/null
 
-  # Install packages making up our GUI desktop
-  pkgs_to_install+=( $(awk '/^[a-z]/ {print $1}' dpkg--set-selections.gui) )
+  gpg --no-default-keyring \
+    --keyring /usr/share/keyrings/"$keyring_name" \
+    --fingerprint
+}
+
+# 798A EC65 4E5C 1542 8C8E  42EE AA16 FCBC A621 E701
+install-gpg-keyring 'https://apt.releases.hashicorp.com/gpg' 'hashicorp-archive-keyring.gpg'
+# 2C61 0620 1985 B60E 6C7A  C873 23F3 D4EA 7571 6059
+install-gpg-keyring 'https://cli.github.com/packages/githubcli-archive-keyring.gpg'
+
+# Install packages providing our required commands
+if ((${GUI:-0} == 1)); then
+	type -P dmenu &>/dev/null || pkgs_to_install+=('suckless-tools')
+	type -P flock &>/dev/null || pkgs_to_install+=('util-linux')
+	type -P setxkbmap &>/dev/null || pkgs_to_install+=('x11-xkb-utils ')
+	type -P ssh &>/dev/null || pkgs_to_install+=('openssh-client')
+	type -P vim &>/dev/null || pkgs_to_install+=('vim-gtk3')
+	type -P xmodmap &>/dev/null || pkgs_to_install+=('x11-xserver-utils')
+	type -P xrandr &>/dev/null || pkgs_to_install+=('x11-xserver-utils')
+	type -P xset &>/dev/null || pkgs_to_install+=('x11-xserver-utils')
+	vi --version | grep -iq x11 || pkgs_to_install+=('vim-gtk3')
+
+	# Install packages making up our GUI desktop
+	pkgs_to_install+=($(awk '/^[a-z]/ {print $1}' dpkg--set-selections.gui))
 fi
 
 # Install packages making up our workspace
-pkgs_to_install+=( $(awk '/^[a-z]/ {print $1}' dpkg--set-selections) )
+pkgs_to_install+=($(awk '/^[a-z]/ {print $1}' dpkg--set-selections))
 
-if (( ${#pkgs_to_install[@]} >= 1 )); then
-  echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
-  (set -xv; sudo apt install -yqq --no-install-recommends ${pkgs_to_install[@]})
+if ((${#pkgs_to_install[@]} >= 1)); then
+	echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
+	(
+		set -xv
+		sudo apt install -yqq --no-install-recommends ${pkgs_to_install[@]}
+	)
 fi
