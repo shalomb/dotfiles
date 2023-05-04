@@ -14,6 +14,7 @@ apache-libcloud
 argcomplete
 astroid
 attrs
+aws-shell
 bandit
 black
 bracex
@@ -42,6 +43,7 @@ gpsoauth
 greenlet
 httpie
 httplib2
+icecream
 idna
 importlib-metadata
 isort
@@ -104,6 +106,7 @@ simplejson
 six
 smmap
 sshuttle
+stackprinter
 stevedore
 subprocess-tee
 tenacity
