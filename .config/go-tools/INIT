@@ -2,6 +2,9 @@
 
 set -xv
 
+# tflint :/
+curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
 go install -v github.com/ankitpokhrel/jira-cli/cmd/jira@latest
 go install -v github.com/antonmedv/fx@latest
 go install -v github.com/aquasecurity/tfsec/cmd/tfsec@latest
