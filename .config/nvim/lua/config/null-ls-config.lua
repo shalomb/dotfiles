@@ -58,7 +58,7 @@ nullls.setup {
     code_actions.shellcheck,
 
     -- completions.luasnip,
-    completions.spell,
+    -- completions.spell,
     completions.tags,
 
     -- code_actions.gitsigns,
@@ -93,7 +93,7 @@ nullls.setup {
     -- diagnostics.misspell,
     -- diagnostics.opacheck,
     -- diagnostics.perlimports,
-    -- diagnostics.proselint, -- not found 
+    -- diagnostics.proselint, -- not found
     -- diagnostics.protoc_gen_lint,
     -- diagnostics.protolint,
     -- diagnostics.pycodestyle,
