@@ -10,4 +10,4 @@ if sys.stdin.isatty():
 else:
     data = sys.stdin.read()
 
-print(yaml.dump(json.loads(data), default_flow_style=False))
+print(yaml.dump(json.loads(data), default_flow_style=False), end='')
