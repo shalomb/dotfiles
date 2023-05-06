@@ -297,8 +297,8 @@ function gffl { command git flow feature list "$@"; }
 #| gffs - git flow feature start
 function gffs { command git flow feature start "$@"; }
 
-#| gh - show this help screen
-function gh {
+#| gH - show this help screen
+function gH {
   while read -r _ c _ r; do
     printf "  %-5s - %s\n" "$c" "$r"
   done < <( grep -iE '^#\|' "$git_bar_entry_point" | sort ) | column -s - | "$PAGER"
