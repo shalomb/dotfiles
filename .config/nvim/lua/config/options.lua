@@ -1,9 +1,9 @@
 -- options
 
-local vim = vim
+local vim              = vim
 
 -- TODO options.wildcharm="<C-Z>"
--- options.completeopt="longest,menuone,preview" -- set by lsp-zero
+-- options.completeopt = "longest,menuone,preview" -- set by lsp-zero
 vim.opt.backup         = false
 vim.opt.cindent        = true
 vim.opt.clipboard      = 'unnamed'
@@ -44,11 +44,8 @@ vim.opt.visualbell     = true
 vim.opt.wildmenu       = true
 vim.opt.wildmode       = "longest,list,full"
 
-vim.opt.wildignore = { '*/cache/*', '*/tmp/*' }
+vim.opt.wildignore     = { '*/cache/*', '*/tmp/*' }
 -- options.errorformat:append('%f|%l col %c|%m')
-vim.opt.listchars = { eol = '↲', tab = '▸ ', trail = '·' }
-
--- local autocmd = vim.api.nvim_create_autoload
--- autocmd('TextYankPost', {pattern = '*', command = 'source $MYVIMRC'})
+vim.opt.listchars      = { eol = '↲', tab = '▸ ', trail = '·' }
 
 -- https://github.com/nanotee/nvim-lua-guide

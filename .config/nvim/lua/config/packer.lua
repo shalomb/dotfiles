@@ -41,7 +41,7 @@ vim.cmd([[packadd packer.nvim]])
 return packer.startup(function(use)
   use "wbthomason/packer.nvim" -- Packer can manage itself
 
-  use { -- telescope fuzzy finder
+  use {                        -- telescope fuzzy finder
     "nvim-telescope/telescope.nvim", tag = "0.1.0",
     -- or                            , branch = '0.1.x',
     requires = { { "nvim-lua/plenary.nvim" } }
@@ -73,10 +73,10 @@ return packer.startup(function(use)
       { "hrsh7th/cmp-nvim-lua" },
       { "hrsh7th/cmp-path" },
       { "hrsh7th/nvim-cmp" },
-      { "saadparwaiz1/cmp_luasnip" },
 
       -- Snippets
       { "L3MON4D3/LuaSnip" },
+      { "saadparwaiz1/cmp_luasnip" },
       { "rafamadriz/friendly-snippets" },
     }
   }
@@ -137,7 +137,6 @@ return packer.startup(function(use)
   use "p00f/nvim-ts-rainbow"
   use "preservim/vim-markdown"
   use "romainl/vim-cool"
-  use "saadparwaiz1/cmp_luasnip"
   use "takac/vim-hardtime"
   use "tommcdo/vim-exchange"
   use "tpope/vim-abolish"
