@@ -23,7 +23,6 @@ vim.opt.numberwidth    = 3
 vim.opt.relativenumber = true
 vim.opt.scrolloff      = 8
 vim.opt.shiftwidth     = 2
-vim.opt.shortmess      = 'at'
 vim.opt.showmatch      = true
 vim.opt.sidescroll     = 16
 vim.opt.signcolumn     = "yes"
