@@ -56,12 +56,9 @@ local cmp_mappings = lsz.defaults.cmp_mappings({
   ["<C-Space>"] = cmp.mapping.complete(),
   ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
   ["<C-n>"] = cmp.mapping.select_next_item(cmp_select),
-
   ["<C-u>"] = cmp.mapping.scroll_docs(-4),
   ["<C-d>"] = cmp.mapping.scroll_docs(4),
-
   ["<C-j>"] = cmp.mapping.confirm({ select = true }),
-
   ["<C-k>"] = cmp.mapping(function(_, _)
     if luasnip.expand_or_jumpable() then
       luasnip.expand_or_jump()
@@ -88,7 +85,6 @@ lsz.setup_nvim_cmp({
     end
     return true
   end,
-
   formatting = {
     fields = { "menu", "abbr", "kind" },
     format = function(entry, item)
@@ -103,25 +99,23 @@ lsz.setup_nvim_cmp({
       return item
     end,
   },
-
   mapping = cmp_mappings,
   preselect = cmp.PreselectMode.None,
-
   snippet = {
     expand = function(args)
       luasnip.lsp_expand(args.body)
     end,
   },
-
   sources = {
     -- TODO - tmux, ctags, git commits
-    { name = "calc", keyword_length = 3 },
-    { name = "emoji", keyword_length = 3 },
-    { name = "luasnip", keyword_length = 2 },
+    { name = "calc",     keyword_length = 3 },
+    { name = "emoji",    keyword_length = 3 },
+    { name = "luasnip",  keyword_length = 2 },
     { name = "nvim_lsp", keyword_length = 3 },
     { name = "nvim_lua", keyword_length = 3 },
-    { name = "path", keyword_length = 3 },
-    { name = "buffer",
+    { name = "path",     keyword_length = 3 },
+    {
+      name = "buffer",
       keyword_length = 3,
       option = {
         get_bufnrs = function()
@@ -130,7 +124,6 @@ lsz.setup_nvim_cmp({
       }
     },
   },
-
   window = {
     completion = cmp.config.window.bordered(),
     documentation = cmp.config.window.bordered(),
@@ -265,7 +258,7 @@ lspconfig.pyright.setup({
     },
     python = {
       analysis = {
-        autoSearchPaths = true;
+        autoSearchPaths = true,
         useLibraryCodeForTypes = true,
         diagnosticMode = "openFilesOnly",
       },
