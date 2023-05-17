@@ -22,13 +22,13 @@ vim.fn.updatemsg = function()
       \ substitute(expand('%'), glob('~/'), '~/', '') .. ' ' ..
       \ substitute(getcwd(), glob('~'), '~', '')
     \ )
-]] )
+]])
 end
 
 local whichkey = require("which-key")
 local telescope = require("telescope.builtin")
 
-local get_visual_selection = function ()
+local get_visual_selection = function()
   local s_start = vim.fn.getpos("'<")
   local s_end = vim.fn.getpos("'>")
   local n_lines = math.abs(s_end[2] - s_start[2]) + 1
@@ -51,6 +51,8 @@ local my_live_grep = function(pat)
   local action_state = require('telescope.actions.state')
   local action_set = require('telescope.actions.set')
 
+  -- perform a live_grep
+  -- but preserve the search pattern so that n,N, etc work after
   builtin.live_grep({
     default_text = pat,
     attach_mappings = function(prompt_bufnr, _)
@@ -78,7 +80,6 @@ local my_live_grep = function(pat)
       return true
     end,
   })
-
 end
 
 whichkey.register({
@@ -156,7 +157,7 @@ whichkey.register({
 
 whichkey.register({
   name = "chords",
-  ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
+  ['#'] = { ":'<,'>Commentary<cr>", 'Commentary' },
   ['//'] = { 'y/<C-R>"<CR>gv', 'put selected text in the search buffer' },
   ['<'] = { '<gv', 'move cursor to beg. of visual block' },
   ['>'] = { '>gv', 'move cursor to end  of visual block' },
@@ -165,8 +166,8 @@ whichkey.register({
 }, { mode = "v", prefix = "" })
 
 whichkey.register({
-  name = "chords",
-  ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
+  name  = "chords",
+  ['#'] = { ":'<,'>Commentary<cr>", 'Commentary' },
   ['/'] = { function()
     -- TODO there seems to be an issue with stale state and _G.GetVisualSelection
     -- returns the previous selection, investigate this
@@ -175,6 +176,7 @@ whichkey.register({
     vim.api.nvim_input('z/')
     telescope.live_grep()
   end, 'live_grep selected text' },
+  ['t'] = { '<Plug>SendSelectionToTmux', "SendSelectionToTmux" },
 }, { mode = "v", prefix = "<leader>" })
 
 whichkey.register({
@@ -214,17 +216,38 @@ local cd = function(dir)
 end
 
 whichkey.register({
+  ['<leader>'] = { ":update<cr>:call ShowCrossHairs('20m')<cr>:lua vim.fn.updatemsg()<cr>", "update" },
 
   ['"'] = { telescope.buffers, "Buffers" },
   ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
+  ['$'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['%'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['&'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['('] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  [')'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['*'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
   [','] = { '<cmd>:e #<cr>', 'Edit alternate file' },
-  ['/'] = { function()
-    my_live_grep()
-  end, "live_grep" },
-  ['<leader>'] = { ":update<cr>:call ShowCrossHairs('20m')<cr>:lua vim.fn.updatemsg()<cr>", "update" },
+  ['.'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['/'] = { my_live_grep, "my_live_grep" },
+  [':'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['<'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['>'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['`'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['~'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['¬'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['?'] = { function()
+    require("telescope.builtin").live_grep({ search_dirs = { vim.fn.expand("%:p") } })
+  end,
+    "live_grep_current_buffer" },
+  ['@'] = { function()
+    require('telescope.builtin').live_grep({ grep_open_files = true })
+  end,
+    "live_grep_open_files" },
+  ['^'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  ['£'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
 
   ['a'] = { ':edit #<cr>', "edit alt" },
-  ['ls'] = { ':!less %<cr>', "less %" },
+  ['lS'] = { ':!less %<cr>', "less %" },
   ['on'] = { vim.cmd.only, "only" },
   ['rl'] = { ":source $MYVIMRC<cr>:lua vim.fn.OK(vim.fn.expand('$MYVIMRC') .. ' reloaded')<cr>", "reload" },
   ['so'] = { ":so<cr>:lua vim.fn.OK(vim.fn.expand('%') .. ' sourced')<cr>", "source" },
@@ -248,7 +271,14 @@ whichkey.register({
     name = "inversions",
     p = { function() invert('paste') end, 'invert paste' },
     s = { function() invert('spell') end, 'invert spell' },
-    x = { function() invert('cursorline'); invert('cursorcolumn') end, 'invert cursorline/column' },
+    x = { function()
+      invert('cursorline'); invert('cursorcolumn')
+    end, 'invert cursorline/column' },
+  },
+
+  l = {
+    name = "listers",
+    s = { telescope.buffers, "buffers" },
   },
 
   m = {
@@ -288,12 +318,13 @@ whichkey.register({
   q = { vim.cmd.quit, "quit" },
 
   t = {
-    name = "two-step",
+    name = "telescope two-step",
 
     b = { telescope.buffers, "buffers" },
     c = { telescope.commands, "commands" },
-    f = { telescope.resume, "resume" },
     h = { telescope.help_tags, "help_tags" },
+    g = { '<cmd>TagbarToggle<cr>', "TagbarToggle" },
+    j = { telescope.jumplist, "jumplist" },
     k = { function()
       vim.cmd([[
         :GkeepLogin
@@ -303,9 +334,19 @@ whichkey.register({
     end, "gkeep" },
     m = { telescope.marks, "marks" },
     -- s = { ':lua <Plug>NormalModeSendToTmux', "SendSelectionToTmux" },
-    s = { '<Plug>SendSelectionToTmux', "SendSelectionToTmux" },
-    g = { '<cmd>TagbarToggle<cr>', "TagbarToggle" },
+    q = { telescope.quickfix, "quickfix" },
+    r = { telescope.registers, "registers" },
+    t = { telescope.resume, "resume" },
     v = { '<Plug>SetTmuxVars', "SetTmuxVars" },
+
+    w = {
+      name = 'worktree',
+      r = { vim.cmd.update, "update" },
+      w = { function()
+        telescope.load_extension("git_worktree")
+        telescope.extensions.git_worktree.git_worktrees()
+      end, 'select worktrees' },
+    },
 
     z = {
       name = "zebra",
@@ -315,15 +356,6 @@ whichkey.register({
         end,
         "zebra from tanzania"
       }
-    },
-
-    w = {
-      name = 'worktree',
-      r = { vim.cmd.update, "update" },
-      w = { function()
-        telescope.load_extension("git_worktree")
-        telescope.extensions.git_worktree.git_worktrees()
-      end, 'select worktrees' },
     },
 
   }
@@ -342,10 +374,12 @@ whichkey.register({
 
 -- return M
 
--- map('n', '-', vim.cmd.Vex)
-
--- map("n", "S", [[:%s/\<<C-r>/\>/<C-r><C-w>/gI<Left><Left><Left>]])
+map("n", "S", [[:%s/\<<C-r>/\>/<C-r><C-w>/gI<Left><Left><Left>]])
+map("n", "<leader>;", ":")
+map("n", "<leader>!", ":!<C-P>")
+map("n", "<leader>:", ":<C-P>")
 -- map('n', '*', '*zz', {desc = 'Search and center screen'})
+
 map("v", "J", ":m '>+1<CR>gv=gv")
 map("v", "K", ":m '<-2<CR>gv=gv")
 
