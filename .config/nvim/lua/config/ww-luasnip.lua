@@ -71,6 +71,15 @@ ls.add_snippets(nil, {
     }),
 
     snip({
+      trig = "vim",
+      namr = "vim modeline",
+      dscr = "vim modeline",
+    }, {
+      text { "# vim: ts=2 sw=2 et" },
+      insert(-1)
+    }),
+
+    snip({
       trig = "pwd",
       namr = "PWD",
       dscr = "Path to current working directory",
@@ -86,15 +95,34 @@ ls.add_snippets(nil, {
       func(filename, {}),
     }),
   },
+
   sh = {
     snip("shebang", {
       text { "#!/bin/sh", "" },
       insert(0),
     }),
+
+    snip("bashebang", {
+      text {
+        "#!/bin/bash", "",
+        "# Name", "",
+        "# Description", "",
+        "set -o errexit -o nounset -o noclobber -o pipefail",
+        "shopt -s extglob nullglob globstar", "", "",
+        "[[ ${DEBUG-} ]] && set -xv", "",
+      },
+      insert(0),
+    }),
   },
+
   python = {
     snip("shebang", {
-      text { "#!/usr/bin/env python3", "" },
+      text {
+        "#!/usr/bin/env python3", "",
+        "# -*- coding: utf-8 -*-", "",
+        '"""', "", '"""',
+        "", "", ""
+      },
       insert(0),
     }),
 
@@ -106,8 +134,41 @@ ls.add_snippets(nil, {
       -- equivalent to "${1:cond} ? ${2:then} : ${3:else}"
       -- i(1, "cond"), t(" ? "), i(2, "then"), t(" : "), i(3, "else")
       i(1, "__"), i(2, "init"), i(3, "__(self, "), i(4, "foo"), i(5, "):"),
-      i(6, "\n"),
-    })
+      i(6, "\n\t"),
+    }),
 
+  },
+
+  terraform = {
+
+    snip("us-east-1", { text { "us-east-1"}, insert(0), }),
+    snip("us-west-1", { text { "us-west-1"}, insert(0), }),
+    snip("eu-central-1", { text { "eu-central-1"}, insert(0), }),
+    snip("ap-northeast-1", { text { "ap-northeast-1"}, insert(0), }),
+    snip("ap-southeast-1", { text { "ap-southeast-1"}, insert(0), }),
+
+    snip("ec2", {
+      text {
+        'module "ec2" {', "", "}",
+      },
+      insert(0),
+    }),
+
+    snip("shebang", {
+      text {
+        "#! terraform", "",
+      },
+      insert(0),
+    }),
+
+    s({
+      trig = "region",
+      namr = "var.region",
+      dscr = "region"
+    }, {
+      i(1, 'region = "'),
+      i(2, 'var.region'),
+      i(3, '"'),
+    }),
   },
 })
