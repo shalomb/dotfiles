@@ -279,16 +279,16 @@ EOHELP
         git show --color=always "${shasums[@]}"
       ;;
       v)
-        set -xv
         vim $(
           { git diff-tree --no-commit-id --name-status \
                 -r "${shasums[0]}"
           } | fzf --ansi --sort --reverse |
               awk '{ print $2 }'
         ) +"Gvdiff ${shasums[0]}~1"
-        set +xv
       ;;
     esac
 
   done
 }
+
+# vim: ts=2 sw=2 noet
