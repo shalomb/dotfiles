@@ -94,12 +94,34 @@ autocmd(
 
 -- auto format on save
 augroup('autoformat_on_save', { clear = true })
+
+local is_exempt_from_formatting = function(ft, client)
+  local excluded_filetypes = { 'sh', 'md', 'markdown', 'text' }
+  for _, v in ipairs(excluded_filetypes) do
+    if string.find(ft, v) then
+      return true
+    end
+  end
+  local excluded_clients = { 'bashls', 'tsserver' }
+  for _, v in ipairs(excluded_clients) do
+    if string.find(client.name, v) then
+      return true
+    end
+  end
+  return false
+end
+
 autocmd(
   { 'BufWritePre' }, {
     group    = 'autoformat_on_save',
     buffer   = 0,
     callback = function()
-      vim.lsp.buf.format()
+      vim.lsp.buf.format({
+        bufnr = 0,
+        filter = function(client)
+          return not is_exempt_from_formatting(vim.bo.filetype, client)
+        end
+      })
     end
   })
 
