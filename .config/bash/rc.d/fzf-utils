@@ -75,7 +75,7 @@ function cdp {
     echo "$dir not a directory?" >&2
     cd "${dir%/*}"
   elif [[ ! -d $dir ]]; then
-    dir="${query%/}"
+    # dir="${query%/}"
     file="${dir##*/}"
     dir="${dir%/*}"
     echo "Missing target, f() creates '$dir/$file'." >&2
