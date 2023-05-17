@@ -96,9 +96,10 @@ autocmd(
 augroup('autoformat_on_save', { clear = true })
 autocmd(
   { 'BufWritePre' }, {
-    group = 'autoformat_on_save',
+    group    = 'autoformat_on_save',
+    buffer   = 0,
     callback = function()
-      vim.cmd([[autocmd BufWritePre <buffer> lua vim.lsp.buf.format()]])
+      vim.lsp.buf.format()
     end
   })
 
