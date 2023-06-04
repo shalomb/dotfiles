@@ -37,15 +37,14 @@ nullls.setup {
   sources = {
     with_diagnostics_code(diagnostics.shellcheck),
     formatting.shfmt,
-    -- formatting.fixjson,
-    formatting.black.with { extra_args = { "--fast" } },
-    -- formatting.autopep8,
-    -- formatting.isort,
     -- formatting.autoflake,
+    -- formatting.autopep8,
     -- formatting.beautysh,
-    formatting.black,
-    with_root_file(formatting.stylua, "stylua.toml"),
+    formatting.black.with { extra_args = { "--fast" } },
+    -- formatting.fixjson,
     formatting.gofumpt,
+    -- formatting.isort,
+    with_root_file(formatting.stylua, "stylua.toml"),
     -- formatting.prettier.with {
     --   extra_filetypes = { "toml", "solidity" },
     --   extra_args = { "--no-semi", "--single-quote", "--jsx-single-quote" },
@@ -91,6 +90,7 @@ nullls.setup {
     },
     -- diagnostics.markdownlint,
     -- diagnostics.misspell,
+    diagnostics.mypy,
     -- diagnostics.opacheck,
     -- diagnostics.perlimports,
     -- diagnostics.proselint, -- not found
@@ -103,7 +103,7 @@ nullls.setup {
     -- diagnostics.pyproject_flake8,
     diagnostics.revive,
     -- diagnostics.rstcheck,
-    -- diagnostics.ruff,
+    diagnostics.ruff,
     -- diagnostics.semgrep,
     diagnostics.shellcheck,
     -- nullls.builtins.diagnostics.sqlfluff.with({
