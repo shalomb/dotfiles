@@ -40,7 +40,6 @@ mti.setup {
     'gomodifytags',
     'gopls',
     'gotests',
-    -- 'helm-ls',
     'html-lsp',
     'impl',
     'isort',
@@ -51,6 +50,8 @@ mti.setup {
     'lua-language-server',
     'luacheck',
     'misspell',
+    'mypy',
+    'ruff',
     'perlnavigator',
     'powershell-editor-services',
     'prettier',
@@ -74,6 +75,7 @@ mti.setup {
     'yaml-language-server',
     'yamlfmt',
     'yamllint',
+    -- 'helm-ls',
     { 'bash-language-server', auto_update = true },  -- you can turn off/on auto_update per tool
     { 'golangci-lint',        version = 'v1.47.0' }, -- you can pin a tool to a particular version
   },
