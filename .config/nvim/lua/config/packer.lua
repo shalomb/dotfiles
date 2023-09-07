@@ -174,7 +174,7 @@ return packer.startup(function(use)
   use "wellle/targets.vim" -- Add mode text objects
   use 'ThePrimeagen/git-worktree.nvim'
 
-  use { "stevearc/gkeep.nvim", run = ':UpdateRemotePlugins' }
+  -- use { "stevearc/gkeep.nvim", run = ':UpdateRemotePlugins' }
 
   if packer_bootstrap then
     -- basically used to "pause" and remind me it'll quit
