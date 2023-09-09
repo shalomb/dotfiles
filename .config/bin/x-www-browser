@@ -2,7 +2,21 @@
 
 set -eu -o pipefail
 
-if ! system-command "$0"; then
-  # Try redirecting the url open command the host (mac)
-  echo "$*" | base64 | ssh host 'open "$(base64 -d)"'
+cmd="${0##*/}"
+
+if ! system-command "$cmd" &>/dev/null; then
+  if [[ -t 0 ]]; then
+    # stdin is interactive, terminal
+    if [[ $cmd == @(pbpaste) ]]; then
+      ssh host ''"$cmd"''
+    else
+      # Try redirecting the url open command the host (mac)
+      echo "$*" | base64 | ssh host 'open $(base64 -d)'
+    fi
+  else
+    # stdin is piped
+    ssh host '"'"$cmd"'" -'
+  fi
+else
+  "$0" "$@"
 fi
