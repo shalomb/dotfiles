@@ -22,13 +22,13 @@ clean:
 test:
 
 .PHONY: deps
-deps:
+deps: ## install the OS dependencies
 	sudo sudo apt build-dep -yyq neovim -t unstable
 	sudo apt install -yyq build-essential git libtool libtool-bin devscripts \
 		python3-neovim python3-pynvim
 
 .PHONY: build-env
-build-env: deps
+build-env: deps  ## setup the build dependencies
 	mkdir -p ~/build/neovim/
 	cd ~/build/neovim
 	if ! git rev-parse --is-inside-work-tree; then
@@ -69,7 +69,7 @@ packer: ## configure packer
 
 .SILENT: test
 .PHONY: test
-test:
+test:  ## test the nvim installtion
 	nvim --headless -c ':checkhealth'
 	nvim --headless -c ':version'
 
@@ -98,14 +98,21 @@ rview: ## install rview
 	chmod +x ~/.local/bin/rview
 	hash -r
 
+.PHONY: update
+update:  ## update neovim components
+	nvim --headless -c ':TSUpdate'     # TreeSitter update
+	nvim --headless -c ':TSUpdateSync' # TreeSitter update
+	nvim --headless -c ':MasonUpdate'  # TreeSitter update
+	nvim --headless -c ':PackerUpdate' # TreeSitter update
+
 .PHONY: tools
-tools:
+tools:  ## install tools / prereqs
 	sudo apt install -yqq shellcheck shfmt ansible-lint pylint
 	cd ~/.config/dotfiles && make go-tools
 	hash -r
 
 .PHONY: clean
-clean:
+clean:  ## clean the neovim build cache
 	cd ~/build/neovim/
 	make clean
 
