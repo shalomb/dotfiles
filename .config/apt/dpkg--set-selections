@@ -139,6 +139,7 @@ p7zip                      install
 pandoc                     install
 pandoc-data                install
 par                        install
+pass                       install
 passwd                     install
 patch                      install
 pbzip2                     install
@@ -260,6 +261,7 @@ python3-xdg                install
 python3-xmltodict          install
 python3-yaml               install
 python3-zipp               install
+qrencode                   install
 rake                       install
 ranger                     install
 readline-common            install
