@@ -49,7 +49,7 @@ nullls.setup {
     --   extra_filetypes = { "toml", "solidity" },
     --   extra_args = { "--no-semi", "--single-quote", "--jsx-single-quote" },
     -- },
-    formatting.yamlfmt,
+    -- formatting.yamlfmt,
 
     code_actions.gitrebase,
     -- code_actions.refactoring, -- module not found
