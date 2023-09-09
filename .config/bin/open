@@ -10,9 +10,17 @@ open() {
   local entry=$(tildeexpand "$1"); shift;
 
   case "$entry" in
+    # entry is an option
+    -*)
+      x-www-browser "$entry" "$@"
+    ;;
     # entry is a url
     *://*)
-      gio open "$entry"
+      if type -P gio &>/dev/null; then
+        gio open "$entry"
+      else
+        x-www-browser "$entry"
+      fi
     ;;
     *)
       # entry is a regular file
@@ -30,7 +38,7 @@ open() {
 
       # entry is another type of file (block/character device, etc)
       elif [[ -e $entry ]]; then
-        echo >&2 "Refusing to open: $@"
+        echo >&2 "Refusing to open: $*"
 
       # entry looks like a domain name (or a URL)
       elif [[ $entry = *.* ]]; then
