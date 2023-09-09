@@ -1,7 +1,9 @@
 #!/bin/bash
 
+TF_CONFIG_DIR="$HOME/.terraform.d"
+
 export TF_PLUGIN_CACHE_DIR="$HOME/.cache/terraform.d/plugin-cache"
 
 [[ ! -d "$TF_PLUGIN_CACHE_DIR" ]] && mkdir -p "$TF_PLUGIN_CACHE_DIR"
 
-export TF_CLI_CONFIG_FILE="$TF_PLUGIN_CACHE_DIR/terraform.rc"
+export TF_CLI_CONFIG_FILE="$TF_CONFIG_DIR/terraform.rc"

@@ -1,26 +1,27 @@
 # https://developer.hashicorp.com/terraform/cli/config/config-file
 
-plugin_cache_dir   = "$HOME/.cache/terraform.d/plugin-cache"
-disable_checkpoint = false
+# plugin_cache_dir   = "$HOME/.cache/terraform.d/plugin-cache"
+# disable_checkpoint = false
 
-provider_installation {
-
-  # Use /home/developer/tmp/terraform-null as an overridden package directory
-  # for the hashicorp/null provider. This disables the version and checksum
-  # verifications for this provider and forces Terraform to look for the
-  # null provider plugin in the given directory.
-  dev_overrides {
-    "hashicorp/null" = "$HOME/.cache/terraform-providers/terraform-null"
-  }
-
-  filesystem_mirror {
-    path    = "$HOME/.cache/terraform.d/providers"
-    include = ["example.com/*/*"]
-  }
-
-  direct {
-    exclude = ["example.com/*/*"]
-  }
-}
-
-# vim:ft=terraform
+#provider_installation {
+#
+#  # Use /home/developer/tmp/terraform-null as an overridden package directory
+#  # for the hashicorp/null provider. This disables the version and checksum
+#  # verifications for this provider and forces Terraform to look for the
+#  # null provider plugin in the given directory.
+#  dev_overrides {
+#    "registry.terraform.io/oneTakeda/nlb" = "/home/unop/.cache/terraform.d/providers/github.com/oneTakeda/nlb/1.0.1/linux_arm64"
+#  }
+#
+#  //filesystem_mirror {
+#  //  path    = "$HOME/.cache/terraform.d/providers"
+#  //  include = ["github.com/*/*"]
+#  //}
+#
+#  // direct {}
+#  //direct {
+#  //  exclude = ["example.com/*/*"]
+#  //}
+#}
+#
+## vim:ft=terraform
