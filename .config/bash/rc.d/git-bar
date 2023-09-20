@@ -346,7 +346,7 @@ function gP  {
 }
 
 #| gPa - git push --all
-function gPa  { gP --all; }
+function gPa  { gP --all; gP --tags; }
 
 #| gPf - git push --force
 function gPf  { gP --force; }
