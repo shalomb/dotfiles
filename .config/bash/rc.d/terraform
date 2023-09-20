@@ -6,4 +6,5 @@ export TF_PLUGIN_CACHE_DIR="$HOME/.cache/terraform.d/plugin-cache"
 
 [[ ! -d "$TF_PLUGIN_CACHE_DIR" ]] && mkdir -p "$TF_PLUGIN_CACHE_DIR"
 
-export TF_CLI_CONFIG_FILE="$TF_CONFIG_DIR/terraform.rc"
+unset TF_CLI_CONFIG_FILE
+# export TF_CLI_CONFIG_FILE="$TF_CONFIG_DIR/terraform.rc"
