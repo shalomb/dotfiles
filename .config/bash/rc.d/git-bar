@@ -397,6 +397,19 @@ function gsync {
 #| gt - git tag
 function gt { command git tag "$@"; }
 
+#| gtu - git tag update
+function gtu {
+  gfa;  # git fetch --all
+  local old_tag=$(command git describe --tags --abbrev=0)
+  local new_tag=$(awk -F . '{OFS="."; $NF+=1; print}' <<<"$old_tag")
+  echo "old tag: $old_tag"
+  echo "new tag: $new_tag"
+  if [[ $new_tag != $old_tag ]]; then
+    git tag "$new_tag"
+    git show "$new_tag" --oneline --no-patch | cat -
+  fi
+}
+
 #| gtv - git tag <v+>
 function gtv {
   local BOLD=$(tput bold)
