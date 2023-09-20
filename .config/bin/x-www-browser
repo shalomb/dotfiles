@@ -5,7 +5,7 @@ set -eu -o pipefail
 cmd="${0##*/}"
 
 if ! system-command "$cmd" &>/dev/null; then
-  if [[ -t 0 ]]; then
+  if [[ -t 0 ]] || (( $# >= 1 )); then
     # stdin is interactive, terminal
     if [[ $cmd == @(pbpaste) ]]; then
       ssh host ''"$cmd"''
@@ -14,7 +14,7 @@ if ! system-command "$cmd" &>/dev/null; then
       echo "$*" | base64 | ssh host 'open $(base64 -d)'
     fi
   else
-    # stdin is piped
+    # stdin is a pipe
     ssh host '"'"$cmd"'" -'
   fi
 else
