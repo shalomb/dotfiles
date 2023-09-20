@@ -8,7 +8,7 @@ $include /etc/inputrc
 # bind -f  ~/.inputrc
 "\C-x\C-r":   re-read-init-file
 
-set  bell-style                      visible
+set  bell-style                      none
 set  blink-matching-paren            on
 set  colored-completion-prefix       on
 set  colored-stats                   on
