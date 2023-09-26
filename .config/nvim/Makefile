@@ -44,7 +44,8 @@ nvim: build-env ## Run all package installers
 	git checkout .
 	git checkout master
 	git fetch --all
-	tag=$$(git describe --tags --abbrev=0)
+	tag=$$(git describe --tags --abbrev=0)  # last tag e.g. nightly
+	tag=$$(git describe --tags $$(git rev-list --tags --max-count=1) --match 'v0.9.[0-9]*')  # Last annotated tag on the v0.9.* series
 	echo ----------------------------
 	echo "Checking out tag: $$tag"
 	echo ----------------------------
