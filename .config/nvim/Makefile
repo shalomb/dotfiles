@@ -101,10 +101,12 @@ rview: ## install rview
 
 .PHONY: update
 update:  ## update neovim components
-	nvim --headless -c ':TSUpdate'     # TreeSitter update
-	nvim --headless -c ':TSUpdateSync' # TreeSitter update
-	nvim --headless -c ':MasonUpdate'  # TreeSitter update
-	nvim --headless -c ':PackerUpdate' # TreeSitter update
+	@:
+	set -x
+	nvim --headless -c ':PackerUpdate' -c ':q'
+	nvim --headless -c ':TSUpdate'     -c ':q'
+	nvim --headless -c ':TSUpdateSync' -c ':q'
+	nvim --headless -c ':MasonUpdate'  -c ':q'
 
 .PHONY: tools
 tools:  ## install tools / prereqs
