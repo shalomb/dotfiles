@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+terraform-docs markdown --config .terraform-docs.yml --output-mode replace --output-file README.md --output-template \
+'<!-- BEGIN_TF_DOCS -->
+{{ .Content }}
+<!-- END_TF_DOCS -->' .
