@@ -372,6 +372,13 @@ function grs { gr show "$@"; }
 #| gra - gr add
 function gra { gr add "$@"; }
 
+#! grc - git release create
+function grc {
+  local current_tag=$(git describe --tags --exact-match --match "v*.*.*")
+  git push origin "$current_tag"
+  gh release create "$current_tag" --generate-notes --verify-tag --target $(gbr)
+}
+
 #! grv - git remote -v
 function grv { gr -v; }
 
