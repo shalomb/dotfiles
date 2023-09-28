@@ -71,7 +71,7 @@ cargo: ## Configure cargo
 	.config/rust-tools/cargo
 
 .PHONY: rust-tools
-rust-tools: cargo ## Run rust-tools
+rust-tools: rustup cargo ## Run rust-tools
 	.config/rust-tools/INIT
 
 .PHONY: neovim-deps
@@ -81,6 +81,15 @@ neovim-deps:  ## Install neovim's dependencies
 .PHONY: nvim
 nvim:  neovim-deps ## Setup neovim
 	make -f .config/nvim/Makefile install
+
+.PHONY: update
+update:  ## Update all components
+	make apt
+	make submodules
+	make nvim
+	make tools
+	make npm-tools
+	make python-tools
 
 .DEFAULT_GOAL := help
 help: ## Show make targets available
