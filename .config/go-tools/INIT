@@ -16,4 +16,5 @@ go install -v github.com/mrtazz/checkmake/cmd/checkmake@latest
 go install -v github.com/muesli/duf@latest
 go install -v github.com/synfinatic/aws-sso-cli/cmd/aws-sso@latest
 go install -v github.com/terraform-docs/terraform-docs@v0.16.0
+go install -v github.com/warrensbox/terraform-switcher@latest
 go install -v golang.org/x/lint/golint@latest
