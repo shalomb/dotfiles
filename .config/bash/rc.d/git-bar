@@ -195,6 +195,9 @@ function gco {
   # TODO
   # Manage a branch stack - gbpush/gbpop
   local pathspec="$1"
+  if [[ $pathspec == "https"* ]]; then
+    pathspec="${pathspec##*/}"
+  fi
   if [[ -e $pathspec ]]; then
     command git checkout "$@"
     return
