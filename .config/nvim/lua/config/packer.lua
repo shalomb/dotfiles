@@ -108,6 +108,7 @@ return packer.startup(function(use)
 
   -- plugins
 
+  use "IndianBoy42/tree-sitter-just"
   use "L3MON4D3/LuaSnip"
   use "RRethy/nvim-treesitter-textsubjects"
   use "ThePrimeagen/harpoon" -- Manage quickly accessed files
