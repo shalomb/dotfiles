@@ -5,16 +5,20 @@ set -xv
 # tflint :/
 curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
 
-go install -v github.com/ankitpokhrel/jira-cli/cmd/jira@latest
-go install -v github.com/antonmedv/fx@latest
-go install -v github.com/aquasecurity/tfsec/cmd/tfsec@latest
-go install -v github.com/canthefason/go-watcher/cmd/watcher@latest
-go install -v github.com/fiatjaf/jiq/cmd/jiq@latest
-go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-go install -v github.com/google/yamlfmt/cmd/yamlfmt@latest
-go install -v github.com/mrtazz/checkmake/cmd/checkmake@latest
-go install -v github.com/muesli/duf@latest
-go install -v github.com/synfinatic/aws-sso-cli/cmd/aws-sso@latest
-go install -v github.com/terraform-docs/terraform-docs@v0.16.0
-go install -v github.com/warrensbox/terraform-switcher@latest
-go install -v golang.org/x/lint/golint@latest
+function go-install() {
+  go install -v "$@";
+}
+
+go-install github.com/ankitpokhrel/jira-cli/cmd/jira@latest
+go-install github.com/antonmedv/fx@latest
+go-install github.com/aquasecurity/tfsec/cmd/tfsec@latest
+go-install github.com/canthefason/go-watcher/cmd/watcher@latest
+go-install github.com/fiatjaf/jiq/cmd/jiq@latest
+go-install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go-install github.com/google/yamlfmt/cmd/yamlfmt@latest
+go-install github.com/mrtazz/checkmake/cmd/checkmake@latest
+go-install github.com/muesli/duf@latest
+go-install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@latest
+go-install github.com/terraform-docs/terraform-docs@v0.16.0
+go-install github.com/warrensbox/terraform-switcher@latest
+go-install golang.org/x/lint/golint@latest
