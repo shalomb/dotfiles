@@ -366,8 +366,11 @@ function gPA  { gPt; gPa; }
 #| gpom - git push origin master
 function gPo { gP origin "$@"; }
 
-#| gpr - gp --rebase
-function gpr { gp "$@" --rebase; }
+#| gpr - gh pr create
+function gpr { gP; gh pr create --fill; }
+
+#| gprm - gh pr merge -s
+function gprm { gP; gh pr merge --squash; }
 
 #| gr - git remote
 function gr { command git remote "$@"; }
