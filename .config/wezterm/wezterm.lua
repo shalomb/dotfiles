@@ -1,14 +1,20 @@
 -- wezterm ls-fonts --list-system 
 local wezterm = require 'wezterm'
+
+wezterm.on('bell', function(window, pane)
+  wezterm.log_info('the bell was rung in pane ' .. pane:pane_id() .. '!')
+end)
+
 return {
   scrollback_lines = 16384,
   window_background_opacity = 0.97,
   hide_tab_bar_if_only_one_tab = true,
-  color_scheme = 'Batman',
-  colors = {
-    foreground = '#bcbcbc',
-    cursor_bg = '#ff6000',
-  },
+  color_scheme = 'Afterglow',
+  audible_bell = 'Disabled',
+  -- colors = {
+  --   foreground = '#bcbcbc',
+  --   cursor_bg = '#ff6000',
+  -- },
   font = wezterm.font_with_fallback {
     { family="BitStream Vera Sans Mono",
       weight="Bold", stretch="Normal", style="Normal"
