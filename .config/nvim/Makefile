@@ -100,7 +100,7 @@ rview: ## install rview
 	hash -r
 
 .PHONY: update
-update:  ## update neovim components
+update: packer  ## update neovim components
 	@:
 	set -x
 	nvim --headless -c ':PackerUpdate' -c ':q'
