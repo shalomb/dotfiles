@@ -142,6 +142,9 @@ function gbd {
 #| gbl - git blame
 function gbl { _git_arg_wrapper blame "$@"; }
 
+#! ghb - gh browse
+function ghb { gh browse -b $(gbr) "${*:-.}"; }
+
 #| git-default-branch - show default/HEAD branches on remotes
 function git-default-branch {
   local origins=( $(grs) )
