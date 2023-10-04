@@ -265,6 +265,16 @@ whichkey.register({
     r = { function()
       vim.cmd(string.format([[:grep %s]], vim.fnlocal.CurWord()))
     end, "grep selection" },
+    o = {
+      function()
+        local linenum, _ = unpack(vim.api.nvim_win_get_cursor(0))
+        local basename = string.gsub(vim.api.nvim_buf_get_name(0), vim.loop.cwd() .. '/', '')
+        -- local cwd = string.gsub(vim.fn.system({"git", "rev-parse", "--show-prefix"}), '\n', '')
+        local branch = string.gsub(vim.fn.system({"git", "branch", "--show-current"}), '\n', '')
+        local filenum = vim.fn.resolve(basename) .. ':' .. linenum
+        vim.fn.system({"gh", "browse", "--branch", branch, filenum})
+      end, "gh browse"
+    },
   },
 
   i = {
