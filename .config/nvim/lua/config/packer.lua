@@ -132,6 +132,7 @@ return packer.startup(function(use)
   use "kana/vim-textobj-indent"
   use "kana/vim-textobj-line"
   use "kana/vim-textobj-user"
+  use "lukas-reineke/indent-blankline.nvim"
   use "majutsushi/tagbar"
   use "mbbill/undotree"
   use "nvim-lualine/lualine.nvim" -- configure Neovim statusline
