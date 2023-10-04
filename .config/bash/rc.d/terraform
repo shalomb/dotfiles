@@ -8,3 +8,11 @@ export TF_PLUGIN_CACHE_DIR="$HOME/.cache/terraform.d/plugin-cache"
 
 unset TF_CLI_CONFIG_FILE
 # export TF_CLI_CONFIG_FILE="$TF_CONFIG_DIR/terraform.rc"
+
+#| tfplan - terraform plan
+tfplan() {
+  mktf-docs;
+  terraform fmt -recursive &&
+  terraform validate &&
+  terraform plan -refresh=true
+}
