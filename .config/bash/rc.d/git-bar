@@ -416,6 +416,7 @@ function gt { command git tag "$@"; }
 #| gtc - git tag create
 function gtc {
   gfa;  # git fetch --all
+  git fetch --tags;
   local old_tag=$(command git describe --tags --abbrev=0)
   local new_tag=$(awk -F . '{OFS="."; $NF+=1; print}' <<<"$old_tag")
   echo "old tag: $old_tag"
