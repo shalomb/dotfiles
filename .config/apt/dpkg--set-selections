@@ -282,6 +282,7 @@ sysvinit-utils             install
 tar                        install
 tasksel                    install
 tcpdump                    install
+tidy                       install
 tig                        install
 tlp                        install
 tlp-rdw                    install
