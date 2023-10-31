@@ -19,7 +19,7 @@ autocmd(
     end,
   })
 
--- lestore position
+-- restore position
 augroup('restore_last_position', { clear = true })
 autocmd('BufReadPost', {
   group    = 'restore_last_position',

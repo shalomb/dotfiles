@@ -4,6 +4,8 @@
 
 local vim = vim
 
+local map = vim.keymap.set
+
 local harpoon_ui = require('harpoon.ui')
 local harpoon_tmux = require('harpoon.tmux')
 local harpoon_mark = require('harpoon.mark')
@@ -39,6 +41,16 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "harpoon",
   group = group,
   callback = function()
+    vim.keymap.set("n", "<C-N>", 'j')
+    vim.keymap.set("n", "<C-P>", 'k')
+    vim.keymap.set("n", "<C-J>", '<CR><CR>', { remap = true })
+
+    vim.keymap.set("n", "<C-S>", function()
+      local harpooned = vim.api.nvim_get_current_line()
+      local pwd = vim.fn.getcwd() .. "/"
+      vim.cmd("split | edit " .. pwd .. harpooned)
+    end, { buffer = true, noremap = true, silent = true })
+
     vim.keymap.set("n", "<C-V>", function()
       local harpooned = vim.api.nvim_get_current_line()
       local pwd = vim.fn.getcwd() .. "/"
