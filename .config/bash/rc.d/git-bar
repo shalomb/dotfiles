@@ -475,12 +475,8 @@ function gvd { gvdiff "$@"; }
 
 #| gwip - ga .; gc WIP
 function gwip {
-  if [[ $# == 0 ]]; then
-    local msg='WIP'
-  else
-    local msg="$@"
-  fi
-  ga . && gc "$msg on $(gbr): $(git log --format=%B -n 1 HEAD)"
+  local msg="WIP on $(gbr): ${@:-$(date +%s)}"
+  ga . && gc "$msg"
 }
 
 #| gwipe - gwipe; git reset --hard HEAD~1
