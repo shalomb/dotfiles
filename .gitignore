@@ -135,6 +135,8 @@ ehthumbs.db
 .eggs
 .tox
 __pycache__/
+venv
+.venv
 
 # Project
 *_cache
