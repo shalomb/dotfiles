@@ -107,6 +107,7 @@ update: packer  ## update neovim components
 	nvim --headless -c ':TSUpdate'     -c ':q'
 	nvim --headless -c ':TSUpdateSync' -c ':q'
 	nvim --headless -c ':MasonUpdate'  -c ':q'
+	nvim --headless -c ':MasonToolsUpdate'  -c ':q'
 
 .PHONY: tools
 tools:  ## install tools / prereqs
