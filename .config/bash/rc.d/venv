@@ -2,6 +2,7 @@
 
 function mkvenv() {
   python3 -m venv "${1:-venv}"
+  touch requirements.txt
 }
 
 function activate() {
