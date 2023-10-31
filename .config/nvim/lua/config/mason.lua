@@ -80,7 +80,7 @@ mti.setup {
     'yamllint',
     -- 'helm-ls',
     { 'bash-language-server', auto_update = true },  -- you can turn off/on auto_update per tool
-    { 'golangci-lint',        version = 'v1.47.0' }, -- you can pin a tool to a particular version
+    { 'golangci-lint' },  -- version = 'v1.47.0' -- you can pin a tool to a particular version
   },
 
   -- if set to true this will check each tool for updates. If updates
