@@ -39,11 +39,10 @@ vim.cmd([[packadd packer.nvim]])
 -- })
 
 return packer.startup(function(use)
-  use "wbthomason/packer.nvim" -- Packer can manage itself
+  use "wbthomason/packer.nvim"       -- Packer can manage itself
 
-  use {                        -- telescope fuzzy finder
-    "nvim-telescope/telescope.nvim", tag = "0.1.0",
-    -- or                            , branch = '0.1.x',
+  use {                              -- telescope fuzzy finder
+    "nvim-telescope/telescope.nvim", -- tag = "0.1.0", or branch = '0.1.x',
     requires = { { "nvim-lua/plenary.nvim" } }
     -- :checkhealth telescope
   }
