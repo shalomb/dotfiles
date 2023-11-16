@@ -41,9 +41,9 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "harpoon",
   group = group,
   callback = function()
-    vim.keymap.set("n", "<C-N>", 'j')
-    vim.keymap.set("n", "<C-P>", 'k')
-    vim.keymap.set("n", "<C-J>", '<CR><CR>', { remap = true })
+    vim.keymap.set("n", "<C-N>", 'j', { buffer = true, silent = true })
+    vim.keymap.set("n", "<C-P>", 'k', { buffer = true, silent = true })
+    vim.keymap.set("n", "<C-J>", '<CR><CR>', { buffer = true, remap = true })
 
     vim.keymap.set("n", "<C-S>", function()
       local harpooned = vim.api.nvim_get_current_line()
