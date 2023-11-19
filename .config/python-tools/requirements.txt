@@ -67,6 +67,7 @@ packaging
 pbr
 pip
 platformdirs
+poetry
 pycodestyle
 pycryptodomex
 pycurl
