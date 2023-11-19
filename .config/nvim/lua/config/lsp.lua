@@ -243,6 +243,9 @@ lspconfig.lua_ls.setup({
       diagnostics = {
         globals = { "_", "_G", "vim", }
       },
+      workspace = {
+        checkThirdParty = false,
+      },
     }
   }
 })
