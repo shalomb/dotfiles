@@ -116,6 +116,7 @@ return packer.startup(function(use)
   use "ellisonleao/glow.nvim"
   use "folke/neodev.nvim"
   use "folke/which-key.nvim" -- which-key displays popups of possible keybindings
+  use "ggandor/flit.nvim"
   use "ggandor/leap.nvim"
   use "godlygeek/tabular"
   use "haya14busa/vim-asterisk"

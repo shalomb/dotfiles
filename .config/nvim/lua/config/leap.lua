@@ -54,3 +54,15 @@ vim.api.nvim_set_hl(0, 'LeapLabelSecondary', {
 })
 -- Try it without this setting first, you might find you don't even miss it.
 require('leap').opts.highlight_unlabeled_phase_one_targets = true
+
+
+-- flit.nvim --
+require('flit').setup {
+  keys = { f = 'f', F = 'F', t = 't', T = 'T' },
+  -- A string like "nv", "nvo", "o", etc.
+  labeled_modes = "v",
+  multiline = true,
+  -- Like `leap`s similar argument (call-specific overrides).
+  -- E.g.: opts = { equivalence_classes = {} }
+  opts = {}
+}
