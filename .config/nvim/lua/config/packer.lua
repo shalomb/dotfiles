@@ -138,6 +138,7 @@ return packer.startup(function(use)
   use "p00f/nvim-ts-rainbow"
   use "preservim/vim-markdown"
   use "romainl/vim-cool"
+  use "stevearc/oil.nvim"
   use "takac/vim-hardtime"
   use "tommcdo/vim-exchange"
   use "tpope/vim-abolish"
@@ -150,7 +151,6 @@ return packer.startup(function(use)
   use "tpope/vim-speeddating"
   use "tpope/vim-surround"
   use "tpope/vim-unimpaired"
-  use "tpope/vim-vinegar"
   use "wellle/targets.vim" -- Add mode text objects
   use 'ThePrimeagen/git-worktree.nvim'
 
