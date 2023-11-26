@@ -10,6 +10,10 @@ treesitter_config.setup {
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,
 
+  ignore_install = {
+    "help",
+  },
+
   -- A list of parser names, or "all"
   ensure_installed = {
     "bash",
@@ -26,7 +30,6 @@ treesitter_config.setup {
     "gomod",
     "graphql",
     "hcl",
-    "help",
     "html",
     "http",
     "javascript",
@@ -62,6 +65,10 @@ treesitter_config.setup {
     additional_vim_regex_highlighting = false,
   },
 
+  indent = {
+    enable = true
+  },
+
   rainbow = {
     enable = true,
     -- disable = { "jsx", "cpp" }, list of languages you want to disable the plugin for
@@ -82,3 +89,5 @@ treesitter_config.setup {
   },
 
 }
+
+require('nvim-treesitter.install').update({ with_sync = true })
