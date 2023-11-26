@@ -7,7 +7,7 @@ MAKEFILE := $(realpath $(lastword $(MAKEFILE_LIST)))
 
 .SILENT: install
 .PHONY: install
-install: nvim packer tools
+install: nvim tools
 
 .PHONY: aux
 aux: ex vimdiff view rvim rview
@@ -56,18 +56,6 @@ nvim: build-env ## Run all package installers
 	make install
 	nvim -c ':version'
 
-.PHONY: packer
-packer: ## configure packer
-	packer_dir="$$HOME/.local/share/nvim/site/pack/packer/start/packer.nvim"
-	mkdir -p "$$packer_dir"
-	( set -xv &&
-		cd "$$packer_dir" &&
-		if ! git rev-parse --is-inside-work-tree; then
-			git clone https://github.com/wbthomason/packer.nvim . || true
-		fi
-	)
-	nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
-
 .SILENT: test
 .PHONY: test
 test:  ## test the nvim installtion
@@ -100,7 +88,7 @@ rview: ## install rview
 	hash -r
 
 .PHONY: update
-update: packer  ## update neovim components
+update: ## update neovim components
 	@:
 	set -x
 	nvim --headless -c ':PackerUpdate' -c ':q'
