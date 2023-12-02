@@ -2,6 +2,12 @@
 
 require("oil").setup({
   default_file_explorer = true,
+  columns = {
+    "icon",
+    "size",
+    -- "mtime",
+    -- "permissions",
+  },
   keymaps = {
     ["g?"] = "actions.show_help",
     ["<CR>"] = "actions.select",
@@ -25,7 +31,7 @@ require("oil").setup({
   use_default_keymaps = true,
 })
 
-vim.keymap.set("n", "-", "<CMD>Oil .<CR>", { remap = true, desc = "Open parent directory" })
+vim.keymap.set("n", "-", "<CMD>Oil<CR>", { remap = true, desc = "Open parent directory" })
 
 -- https://github.com/stevearc/oil.nvim/blob/master/doc/oil.txt#L347
 vim.api.nvim_create_autocmd("FileType", {
