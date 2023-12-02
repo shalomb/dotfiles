@@ -1,8 +1,5 @@
 local vim = vim
 
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "
-
 vim.g.shell  = vim.fn.expand("$SHELL")
 vim.g.vimdir = vim.fn.expand("$VIM")
 vim.g.vimrc  = vim.fn.expand("$MYVIMRC")
