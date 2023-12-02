@@ -157,7 +157,10 @@ whichkey.register({
 
 whichkey.register({
   name = "chords",
-  ['#'] = { ":'<,'>Commentary<cr>", 'Commentary' },
+  ['#'] = { function()
+    local api = require('Comment.api')
+    api.toggle.linewise(vim.fn.visualmode())
+  end, 'Commentary' },
   ['//'] = { 'y/<C-R>"<CR>gv', 'put selected text in the search buffer' },
   ['<'] = { '<gv', 'move cursor to beg. of visual block' },
   ['>'] = { '>gv', 'move cursor to end  of visual block' },
@@ -167,7 +170,10 @@ whichkey.register({
 
 whichkey.register({
   name  = "chords",
-  ['#'] = { ":'<,'>Commentary<cr>", 'Commentary' },
+  ['#'] = { function()
+    local api = require('Comment.api')
+    api.toggle.linewise(vim.fn.visualmode())
+  end, 'Commentary' },
   ['/'] = { function()
     -- TODO there seems to be an issue with stale state and _G.GetVisualSelection
     -- returns the previous selection, investigate this
@@ -219,7 +225,9 @@ whichkey.register({
   ['<leader>'] = { ":update<cr>:call ShowCrossHairs('20m')<cr>:lua vim.fn.updatemsg()<cr>", "update" },
 
   ['"'] = { telescope.buffers, "Buffers" },
-  ['#'] = { '<cmd>Commentary<cr>', 'Commentary' },
+  ['#'] = { function()
+    require('Comment.api').toggle.linewise.current()
+  end, 'Commentary' },
   ['$'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
   ['%'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
   ['&'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
