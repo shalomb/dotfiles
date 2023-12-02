@@ -1,0 +1,13 @@
+#!/bin/bash
+
+aws-console() {
+  local account
+  local profile
+  account="${1?Missing account}"
+  profile="$(aws-sso list | awk -v account="$account" '$0 ~ account{ print $7 }')"
+  if [[ -z $profile ]]; then
+    warn "Missing profile for account: $account"
+  else
+    aws-sso console -p "$profile"
+  fi
+}
