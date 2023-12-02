@@ -31,7 +31,7 @@ function select_session_by_name() {
   (( ${#sessions[@]} == 0 )) && return 0
 
   local c=0
-  while read name rest; do
+  while read -r name rest; do
     if [[ -f $name ]]; then
       printf "%s: %-16s %s\n" "$((c++))" "${name##*/}"  "$name" >&2
     else
@@ -39,7 +39,7 @@ function select_session_by_name() {
     fi
   done < <( printf "%s\n" "${sessions[@]}")
 
-  read -p 'Which one? ' reply
+  read -r -p 'Which one? ' reply
 
   if [[ -z $reply ]]; then
     return 0;
@@ -55,32 +55,92 @@ function select_session_by_name() {
   echo "$session_name"; return 0;
 }
 
-if (( $# >= 1 )); then
+in-tmux() {
+  if [[ -n ${TMUX-} ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+tmux() {
+  exec tmux -u -l -2 "$@"
+}
+
+tmux-attach() {
+  local session="$1"
+  if in-tmux; then
+    tmux switch-client -t "$session"
+  else
+    tmux attach-client -t "$session"
+  fi
+}
+
+sessionize() {
+  local session="$1"
+  local dir="${session%[ 	]*}"
+  set -xv
+  dir=$(tildeexpand "$dir")
+  name=${dir##*/}
+  if command tmux has-session -t "$name"; then
+    tmux switch-client -t "$name"
+  else
+    tmux new-session -d -s "$name" -c "$dir" \; \
+      switch-client -t "$name"
+  fi
+}
+
+if [[ ${1-} == "-l" ]]; then
+  session=$(tmux ls | fzf)
+  session=${session%%:*}
+  echo "$session"
+  tmux-attach "$session"
+  exit $?
+
+elif [[ ${1-} == "-s" ]]; then
+  shift;
+  (( $# > 1 )) && set -- -q "$@"
+  session=$(projects-list | fzf "$@")
+  sessionize "$session"
+  exit $?
+
+elif (( $# >= 1 )); then
   session_name="$1"
+
 elif test -t 0; then
   session_name="$(select_session_by_name)"
+
 else
   exit 1
 fi
 
 echo "session_name: $session_name"
-echo -ne "\033]0;$session_name+${USER}@${HOSTNAME}:..${PWD: -24}\007"
+# echo -ne "\033]0;$session_name+${USER}@${HOSTNAME}:..${PWD: -24}\007"
+
+set -xv
 
 if  [[ -f $session_name ]]; then
   echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}"
   exec "$session_name"  # is a file representing a prepared session
-elif [[ -n $session_name ]] && tmux -u -l -2 ls 2>/dev/null | awk 'BEGIN{e_c=1}$1 ~ /'"$session_name"'/{e_c=0}END{exit e_c}'; then
-  echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}"
-  exec tmux -u -l -2 attach -t "$session_name" # attach to an existing session
+
+elif command tmux has-session -t "$session_name"; then
+  # echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}" || true
+  if [[ -n ${TMUX-} ]]; then
+    tmux switch-client -t "$session_name"
+  else
+    tmux attach -t "$session_name"
+  fi
+
 elif [[ -n $session_name ]]; then
   if [[ -f ~/.config/tmuxie/sessions/$session_name ]]; then
     echo "launching prepared session ~/.config/tmuxie/sessions/$session_name"
-    ~/.config/tmuxie/sessions/$session_name
+    ~/.config/tmuxie/sessions/"$session_name"
     exit $?
   fi
+
 elif [[ -z $session_name ]] && test -t 0; then
   # We have no session name and we are interactive
-  read -p 'Enter session name or RETURN to abort. ' session_name
+  read -r -p 'Enter session name or RETURN to abort. ' session_name
   if [[ -z $session_name ]]; then
     exit 3
   fi
