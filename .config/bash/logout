@@ -27,5 +27,5 @@ if [[ $linecount ]] && (($linecount > $max_lines)); then
 
   head -$prune_lines "$HISTFILE" >> "$HISTFILE".archive && \
     sed -e "1,${prune_lines}d"  "$HISTFILE" > "$HISTFILE.tmp$$" && \
-    mv "$HISTFILE.tmp$$" "$HISTFILE"
+    \mv -v "$HISTFILE.tmp$$" "$HISTFILE"
 fi
