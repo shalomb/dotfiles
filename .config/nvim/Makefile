@@ -87,6 +87,12 @@ rview: ## install rview
 	chmod +x ~/.local/bin/rview
 	hash -r
 
+.PHONY: profile
+profile: ## profile neovim startup
+	@:
+	set -x
+	nvim --startuptime $$TMP/neovim.startuptime /etc/services +qa; nvim $$TMP/neovim.startuptime; rm -v $$TMP/neovim.startuptime;
+
 .PHONY: update
 update: ## update neovim components
 	@:
