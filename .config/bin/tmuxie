@@ -79,7 +79,6 @@ tmux-attach() {
 sessionize() {
   local session="$1"
   local dir="${session%[ 	]*}"
-  set -xv
   dir=$(tildeexpand "$dir")
   name=${dir##*/}
   if command tmux has-session -t "$name"; then
@@ -116,8 +115,6 @@ fi
 
 echo "session_name: $session_name"
 # echo -ne "\033]0;$session_name+${USER}@${HOSTNAME}:..${PWD: -24}\007"
-
-set -xv
 
 if  [[ -f $session_name ]]; then
   echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}"
