@@ -98,8 +98,8 @@ mti.setup {
     'yamlls',
     -- 'luacheck',
     -- 'sqlls',
-    { 'bash-language-server', auto_update = true },  -- you can turn off/on auto_update per tool
-    { 'golangci-lint' },  -- version = 'v1.47.0' -- you can pin a tool to a particular version
+    { 'bash-language-server', auto_update = true }, -- you can turn off/on auto_update per tool
+    { 'golangci-lint' },                            -- version = 'v1.47.0' -- you can pin a tool to a particular version
   },
 
   -- if set to true this will check each tool for updates. If updates
@@ -226,7 +226,7 @@ cmp.setup {
     ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
     ['<C-n>'] = cmp.mapping.select_next_item(cmp_select),
     ['<C-u>'] = cmp.mapping.scroll_docs(-4), -- Up
-    ['<C-d>'] = cmp.mapping.scroll_docs(4), -- Down
+    ['<C-d>'] = cmp.mapping.scroll_docs(4),  -- Down
 
     ["<C-j>"] = cmp.mapping.confirm({ select = true }),
     ["<C-k>"] = cmp.mapping(function(_, _)
@@ -300,7 +300,7 @@ local on_attach = function(args)
   vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
   vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
   vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
-  vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
+  -- vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
   vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, opts)
   vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, opts)
   vim.keymap.set('n', '<space>wl', function()
