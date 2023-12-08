@@ -119,6 +119,7 @@ logrotate                  install
 lsb-base                   install
 lsb-release                install
 lsof                       install
+luarocks                   install
 lynx                       install
 make                       install
 man-db                     install
