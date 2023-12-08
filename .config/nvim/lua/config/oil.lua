@@ -1,5 +1,8 @@
 -- config for stevearc/oil.nvim
 
+
+local oil = require('oil')
+
 require("oil").setup({
   default_file_explorer = true,
   columns = {
@@ -31,15 +34,31 @@ require("oil").setup({
   use_default_keymaps = true,
 })
 
+local function relative_path(path, ref)
+  return path:gsub(ref .. "/", "", 1)
+end
+
+local function cmd_with_path(cmd, path)
+  local escaped =
+      vim.api.nvim_replace_termcodes(cmd .. " " .. vim.fn.fnameescape(path), true, false, true)
+  vim.api.nvim_feedkeys(escaped, "n", false)
+end
+
+
 vim.keymap.set("n", "-", "<CMD>Oil<CR>", { remap = true, desc = "Open parent directory" })
 
 -- https://github.com/stevearc/oil.nvim/blob/master/doc/oil.txt#L347
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "oil",
-  group = group,
+  -- group = group,
   callback = function()
     vim.keymap.set("n", "~", "<CMD>Oil ~<CR>",
       { buffer = true, remap = true, desc = "Open home directory" })
+
+    vim.keymap.set("n", "%", function()
+        cmd_with_path(":vsp", relative_path(oil.get_current_dir(), vim.fn.getcwd()))
+      end,
+      { buffer = true, remap = true, desc = "Close oil and restore buffer" })
 
     vim.keymap.set("n", "<space>q", function()
       require("oil.actions").close.callback()
