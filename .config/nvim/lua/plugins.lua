@@ -66,6 +66,11 @@ return {
     opts = { use_default_keymaps = false, max_join_length = 150 },
   },
 
+  {
+    'windwp/nvim-autopairs',
+    event = "InsertEnter",
+  },
+
   -- colorschemes
   { "rebelot/kanagawa.nvim",               lazy = true },
 
@@ -126,6 +131,6 @@ return {
   { "kana/vim-textobj-function",      lazy = true,  event = "InsertEnter", },
   { "kana/vim-textobj-indent",        lazy = true,  event = "InsertEnter", },
   { "kana/vim-textobj-line",          lazy = true,  event = "InsertEnter", },
-  { "wellle/targets.vim",             lazy = true,  event = "InsertEnter", },        -- Add mode text objects
+  { "wellle/targets.vim",             lazy = true,  event = "InsertEnter", }, -- Add mode text objects
 
 }
