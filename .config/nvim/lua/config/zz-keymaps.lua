@@ -410,6 +410,12 @@ map('i', '<Tab>', function()
   return vim.fn.pumvisible() == 1 and '<C-N>' or '<Tab>'
 end, { expr = true })
 
+-- Disable mouse/scollpad-induced keymaps
+vim.keymap.set("", "<up>", "<nop>", { noremap = true })
+vim.keymap.set("", "<down>", "<nop>", { noremap = true })
+vim.keymap.set("i", "<up>", "<nop>", { noremap = true })
+vim.keymap.set("i", "<down>", "<nop>", { noremap = true })
+
 -- vim:nowrap
 
 -- References
