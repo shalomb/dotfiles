@@ -59,16 +59,14 @@ return {
   },
 
   {
-    "Wansmer/treesj",
-    keys = {
-      { "J", "<cmd>TSJToggle<cr>", desc = "Join Toggle" },
-    },
-    opts = { use_default_keymaps = false, max_join_length = 150 },
+    'windwp/nvim-autopairs',
+    event = "InsertEnter",
   },
 
   {
-    'windwp/nvim-autopairs',
+    'Wansmer/treesj',
     event = "InsertEnter",
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
   },
 
   -- colorschemes
