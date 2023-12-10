@@ -1,3 +1,4 @@
+local whichkey = require("which-key")
 local tsj = require('treesj')
 
 local langs = { --[[ configuration for languages ]] }
@@ -6,8 +7,6 @@ tsj.setup({
   use_default_keymaps = false,
   max_join_length = 150,
 })
-
-local whichkey = require("which-key")
 
 whichkey.register({
   name = "chords",
