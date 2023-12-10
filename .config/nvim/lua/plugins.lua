@@ -69,6 +69,13 @@ return {
     dependencies = { 'nvim-treesitter/nvim-treesitter' },
   },
 
+  {
+    "danymat/neogen",
+    event = "InsertEnter",
+    dependencies = "nvim-treesitter/nvim-treesitter",
+    config = true,
+  },
+
   -- colorschemes
   { "rebelot/kanagawa.nvim",               lazy = true },
 
