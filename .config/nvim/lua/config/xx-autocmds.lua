@@ -143,7 +143,7 @@ autocmd(
     pattern = { '*.py' },
     callback = function()
       vim.cmd([[
-      set et ts=4 sts=4 sw=4 sw=78 ai cin ff=unix enc=utf-8 fenc=utf-8
+      set et ts=4 sts=4 sw=4 tw=78 ai cin ff=unix enc=utf-8 fenc=utf-8
     ]])
     end
   })
