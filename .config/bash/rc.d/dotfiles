@@ -4,30 +4,32 @@ dotfiles_directory="$XDG_CONFIG_HOME/dotfiles"
 
 function dotfiles {
   if (($# == 0)); then
-    cd "$dotfiles_directory" && return
-  else
-    local arg="$1"
-    if [[ $arg == '.' ]]; then
-      cd "$dotfiles_directory/${PWD##$HOME/}" || return
-      return
-    else
-      local selection
-      selection=$(FZF_DEFAULT_COMMAND="cd '$dotfiles_directory' && find . -name .git -prune -o -print" fzf -q "$@")
-      if [[ -n $selection ]]; then
-        local path="$dotfiles_directory/$selection"
-        if [[ -f $path ]]; then
-          (
-            cd "${path%/*}"
-            "${EDITOR:-}" "$path"
-          ) || return
-        else
-          cd "$path" || return
-        fi
-      fi
-
-    fi
+    #shellcheck disable=SC2164
+    cd "$dotfiles_directory"
+    return
   fi
 
+  local arg="$1"
+  if [[ $arg == '.' ]]; then
+    #shellcheck disable=SC2164
+    cd "$dotfiles_directory/${PWD##"$HOME"/}"
+    return
+  fi
+
+  local selection
+  selection=$(
+    FZF_DEFAULT_COMMAND="
+      cd '$dotfiles_directory' && find . -name .git -prune -o -print
+    " fzf -q "$@"
+  )
+  local path="$dotfiles_directory/$selection"
+  if [[ -f $path ]]; then
+    ( cd "${path%/*}"
+      "${EDITOR:-vim}" "$path"
+    ) || return
+  else
+    cd "$path" || return
+  fi
 }
 
 alias .f='dotfiles .'
