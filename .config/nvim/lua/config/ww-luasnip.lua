@@ -9,7 +9,6 @@ local func = ls.function_node
 local choice = ls.choice_node
 local dynamicn = ls.dynamic_node
 
-local ls = require("luasnip")
 local s = ls.snippet
 local sn = ls.snippet_node
 local isn = ls.indent_snippet_node
@@ -115,6 +114,38 @@ ls.add_snippets(nil, {
     }),
   },
 
+  go = {
+    snip(
+      "iferr",
+      {
+        text {
+          "if err != nil {",
+          "\t"
+        },
+        insert(1),
+        text {
+          "return nil, err",
+          "}"
+        },
+        insert(2),
+      }
+    ),
+
+    snip(
+      "ic",
+      {
+        text {
+          'log.Printf("%+v", ',
+        },
+        insert(1),
+        text {
+          ')'
+        },
+        insert(2),
+      }
+    )
+  },
+
   python = {
     snip("shebang", {
       text {
@@ -141,11 +172,11 @@ ls.add_snippets(nil, {
 
   terraform = {
 
-    snip("us-east-1", { text { "us-east-1"}, insert(0), }),
-    snip("us-west-1", { text { "us-west-1"}, insert(0), }),
-    snip("eu-central-1", { text { "eu-central-1"}, insert(0), }),
-    snip("ap-northeast-1", { text { "ap-northeast-1"}, insert(0), }),
-    snip("ap-southeast-1", { text { "ap-southeast-1"}, insert(0), }),
+    snip("us-east-1", { text { "us-east-1" }, insert(0), }),
+    snip("us-west-1", { text { "us-west-1" }, insert(0), }),
+    snip("eu-central-1", { text { "eu-central-1" }, insert(0), }),
+    snip("ap-northeast-1", { text { "ap-northeast-1" }, insert(0), }),
+    snip("ap-southeast-1", { text { "ap-southeast-1" }, insert(0), }),
 
     snip("ec2", {
       text {
