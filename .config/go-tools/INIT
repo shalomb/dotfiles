@@ -20,6 +20,7 @@ go-install github.com/google/yamlfmt/cmd/yamlfmt@latest
 go-install github.com/mrtazz/checkmake/cmd/checkmake@latest
 go-install github.com/muesli/duf@latest
 go-install github.com/nektos/act@latest
+go-install github.com/spf13/cobra-cli@latest
 go-install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@latest
 go-install github.com/terraform-docs/terraform-docs@v0.16.0
 go-install github.com/warrensbox/terraform-switcher@latest
