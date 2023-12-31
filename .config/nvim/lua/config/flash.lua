@@ -57,6 +57,14 @@ whichkey.register({
   name = "chords",
 
   ["s"] = {
+
+    ["R"] = {
+      function()
+        flash.treesitter_search()
+      end,
+      'Search treesitter',
+    },
+
     ["l"] = {
       function()
         flash.jump({
