@@ -2,10 +2,15 @@
 
 # emit pwd(1) and also copy $PWD to the clipboard
 function pwd() {
-  builtin pwd
-  echo "$PWD" |
-    tee ~/.cache/dir-selected |
-    if [[ -n $DISPLAY ]]; then
-      command -v xclip && xclip -in
-    fi &>/dev/null
+	builtin pwd |
+		tee /dev/stderr |
+		tee ~/.cache/dir-selected |
+		{
+			if command -v pbcopy &>/dev/null; then
+				pbcopy
+			fi
+			if command -v xclip &>/dev/null; then
+				xclip -in
+			fi
+		}
 }
