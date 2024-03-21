@@ -24,6 +24,7 @@ bzip2                      install
 ca-certificates            install
 cabextract                 install
 catdoc                     install
+clang                      install
 coreutils                  install
 cpanminus                  install
 cpio                       install
@@ -299,6 +300,7 @@ unzip                      install
 usb.ids                    install
 usbutils                   install
 util-linux                 install
+valgrind                   install
 vim                        install
 vim-common                 install
 vim-nox                    install
