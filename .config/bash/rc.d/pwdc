@@ -1,5 +1,0 @@
-#!/bin/bash
-
-if type -P pbcopy; then
-  pwd | pbcopy
-fi &>/dev/null
