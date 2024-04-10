@@ -148,6 +148,19 @@ autocmd(
     end
   })
 
+-- set terraform preferences
+augroup('terraform_settings', { clear = true })
+autocmd(
+  { 'BufNewFile', 'BufRead' }, {
+    group = 'terraform_settings',
+    pattern = { '*.tf' },
+    callback = function()
+      vim.cmd([[
+      set et ts=4 sts=4 sw=4 tw=78 ai cin ff=unix enc=utf-8 fenc=utf-8 ft=terraform
+    ]])
+    end
+  })
+
 -- quickfix
 augroup('quickfix_settings', { clear = true })
 autocmd(

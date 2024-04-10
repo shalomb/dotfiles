@@ -24,7 +24,22 @@ return {
   },
 
   {
+    "L3MON4D3/LuaSnip",
+    -- follow latest release.
+    version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
+    -- install jsregexp (optional!).
+    build = "make install_jsregexp",
+    -- lazy = true,
+    -- event = "InsertEnter",
+    dependencies = {
+      "rafamadriz/friendly-snippets",
+      "cstrap/python-snippets"
+    }
+  },
+
+  {
     "hrsh7th/nvim-cmp",
+    lazy = true,
     -- load cmp on InsertEnter
     event = "InsertEnter",
     -- these dependencies will only be loaded when cmp loads
@@ -43,7 +58,7 @@ return {
       "williamboman/mason.nvim",
 
       -- Snippets
-      "L3MON4D3/LuaSnip",
+      -- "L3MON4D3/LuaSnip",
       "saadparwaiz1/cmp_luasnip",
       "rafamadriz/friendly-snippets",
     },
@@ -84,14 +99,14 @@ return {
   { "ThePrimeagen/harpoon",                lazy = false }, -- Manage quickly accessed files
   { "airblade/vim-gitgutter",              lazy = false },
   { "christoomey/vim-tmux-navigator",      lazy = false },
-  { "ellisonleao/glow.nvim",               cmd = "Glow",   ft = "markdown" },
-  { "folke/flash.nvim",                    event = "VeryLazy" },
+  { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
+  -- { "folke/flash.nvim",                    event = "VeryLazy" },
   { "folke/neodev.nvim",                   lazy = false },
   { "folke/which-key.nvim",                lazy = false },
   { "ggandor/flit.nvim",                   lazy = false },
   { "ggandor/leap.nvim",                   lazy = false },
-  { "godlygeek/tabular",                   lazy = true,    event = "CmdWinEnter" },
-  { "jgdavey/tslime.vim",                  lazy = true,    event = "CmdWinEnter" },
+  { "godlygeek/tabular",                   lazy = true,       event = "CmdWinEnter" },
+  { "jgdavey/tslime.vim",                  lazy = true,       event = "CmdWinEnter" },
   { "jghauser/follow-md-links.nvim",       ft = "markdown" },
   { "lukas-reineke/indent-blankline.nvim", lazy = false },
   { "majutsushi/tagbar",                   lazy = false },

@@ -128,19 +128,19 @@ mti.setup {
 ---- lspconfig ----
 
 local lspconfig = require('lspconfig')
-local lsp_capabilities = require('cmp_nvim_lsp').default_capabilities()
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 require('mason-lspconfig').setup_handlers({
   function(server_name)
     lspconfig[server_name].setup({
-      capabilities = lsp_capabilities,
+      capabilities = capabilities,
     })
   end,
 })
 
 lspconfig.lua_ls.setup({
   -- on_attach = lsp.default_keymaps({buffer = bufnr}),
-  capabilities = lsp_capabilities,
+  capabilities = capabilities,
   flags = { debounce_text_changes = 150 },
   settings = {
     Lua = {
@@ -159,7 +159,7 @@ lspconfig.lua_ls.setup({
 
 lspconfig.pyright.setup({
   -- on_attach = on_attach,
-  capabilities = lsp_capabilities,
+  capabilities = capabilities,
   flags = { debounce_text_changes = 150 },
   root_dir = util.root_pattern(".venv", "venv", "pyrightconfig.json"),
   settings = {
@@ -179,7 +179,7 @@ lspconfig.pyright.setup({
 
 lspconfig.rust_analyzer.setup {
   -- Server-specific settings. See `:help lspconfig-setup`
-  capabilities = lsp_capabilities,
+  capabilities = capabilities,
   settings = {
     ['rust-analyzer'] = {},
   },

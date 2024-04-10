@@ -35,7 +35,7 @@ nullls.setup {
   root_dir = require("null-ls.utils").root_pattern(".git"),
   save_after_format = false,
   sources = {
-    with_diagnostics_code(diagnostics.shellcheck),
+    -- with_diagnostics_code(diagnostics.shellcheck),
     formatting.shfmt,
     -- formatting.autoflake,
     -- formatting.autopep8,
@@ -53,8 +53,7 @@ nullls.setup {
 
     code_actions.gitrebase,
     -- code_actions.refactoring, -- module not found
-    code_actions.shellcheck,
-    code_actions.shellcheck,
+    -- code_actions.shellcheck,
 
     -- completions.luasnip,
     -- completions.spell,
@@ -72,22 +71,22 @@ nullls.setup {
     -- diagnostics.djlint, -- html linter/formatter
     -- diagnostics.dotenv_linter,
     -- diagnostics.editorconfig_checker, -- missing executable ec
-    diagnostics.flake8,
+    -- diagnostics.flake8,
     -- diagnostics.gitlint,
     diagnostics.golangci_lint,
     -- diagnostics.hadolint,
     -- diagnostics.jshint,
     -- diagnostics.jsonlint,
     -- diagnostics.ltrs, -- not found
-    diagnostics.luacheck.with {
-      settings = {
-        Lua = {
-          diagnostics = {
-            globals = { "vim" }
-          }
-        }
-      }
-    },
+    -- diagnostics.luacheck.with {
+    --   settings = {
+    --     Lua = {
+    --       diagnostics = {
+    --         globals = { "vim" }
+    --       }
+    --     }
+    --   }
+    -- },
     -- diagnostics.markdownlint,
     -- diagnostics.misspell,
     diagnostics.mypy,
@@ -103,9 +102,9 @@ nullls.setup {
     -- diagnostics.pyproject_flake8,
     diagnostics.revive,
     -- diagnostics.rstcheck,
-    diagnostics.ruff,
+    -- diagnostics.ruff,
     -- diagnostics.semgrep,
-    diagnostics.shellcheck,
+    -- diagnostics.shellcheck,
     -- nullls.builtins.diagnostics.sqlfluff.with({
     --   extra_args = { "--dialect", "postgres" }, -- change to your dialect
     -- }),
