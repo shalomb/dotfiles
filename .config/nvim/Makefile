@@ -24,8 +24,8 @@ test:
 .PHONY: deps
 deps: ## install the OS dependencies
 	sudo sudo apt build-dep -yyq neovim -t unstable
-	sudo apt install -yyq build-essential git libtool libtool-bin devscripts \
-		python3-neovim python3-pynvim
+	sudo apt install -yyq build-essential git libuv1-dev libnsl-dev libtool libtool-bin \
+		devscripts python3-neovim python3-pynvim ninja-build gettext cmake unzip curl build-essential
 
 .PHONY: build-env
 build-env: deps  ## setup the build dependencies
@@ -46,6 +46,7 @@ nvim: build-env ## Run all package installers
 	git fetch --all
 	tag=$$(git describe --tags --abbrev=0)  # last tag e.g. nightly
 	tag=$$(git describe --tags $$(git rev-list --tags --max-count=1) --match 'v0.9.[0-9]*')  # Last annotated tag on the v0.9.* series
+	tag='v0.9.5'
 	echo ----------------------------
 	echo "Checking out tag: $$tag"
 	echo ----------------------------
@@ -55,6 +56,11 @@ nvim: build-env ## Run all package installers
 				CMAKE_EXTRA_FLAGS="-DCMAKE_INSTALL_PREFIX=$$HOME/.local"
 	make install
 	nvim -c ':version'
+
+.SILENT: nvim
+.PHONY: nvim
+build: nvim  ## build nvim
+	@:
 
 .SILENT: test
 .PHONY: test
@@ -102,6 +108,9 @@ update: ## update neovim components
 	nvim --headless -c ':TSUpdateSync' -c ':q'
 	nvim --headless -c ':MasonUpdate'  -c ':q'
 	nvim --headless -c ':MasonToolsUpdate'  -c ':q'
+	# These following commands do not seem to be invocable from CLI
+	nvim --headless -c ':Lazy update'  -c ':q'
+	nvim --headless -c ':Lazy profile'  -c ':q'
 
 .PHONY: tools
 tools:  ## install tools / prereqs
