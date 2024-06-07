@@ -99,5 +99,9 @@ function aws-whoami {
         $1 . q[X] x 32/ex;
       /^AWS/ and print
     ' | sort | grep -P '.*='
+  if [[ -n $AWS_SSO_ACCOUNT_ID ]]; then
+    echo
+    aws-sso list -P AccountId="$AWS_SSO_ACCOUNT_ID"
+  fi
   command aws sts get-caller-identity --output json | jq -S .
 }
