@@ -100,7 +100,6 @@ return {
   { "airblade/vim-gitgutter",              lazy = false },
   { "christoomey/vim-tmux-navigator",      lazy = false },
   { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
-  -- { "folke/flash.nvim",                    event = "VeryLazy" },
   { "folke/neodev.nvim",                   lazy = false },
   { "folke/which-key.nvim",                lazy = false },
   { "ggandor/flit.nvim",                   lazy = false },
