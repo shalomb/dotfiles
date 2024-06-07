@@ -1,0 +1,17 @@
+SSOConfig:
+  tec:
+    SSORegion: us-east-1
+    StartUrl: https://d-90677b2a7e.awsapps.com/start
+    DefaultRegion: eu-central-1
+DefaultRegion: eu-central-1
+ConsoleDuration: 720
+CacheRefresh: 168
+AutoConfigCheck: true
+UrlAction: exec
+ConfigProfilesUrlAction: exec
+UrlExecCommand:
+  - x-www-browser # bin/open
+  - "%s"
+LogLevel: info #debug
+HistoryLimit: 1024
+HistoryMinutes: 1440
