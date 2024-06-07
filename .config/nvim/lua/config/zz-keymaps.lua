@@ -338,6 +338,9 @@ whichkey.register({
   t = {
     name = "telescope two-step",
 
+    ['?'] = { function()
+      vim.cmd([[:Telescope]])
+    end, "live_grep_current_buffer" },
     b = { telescope.buffers, "buffers" },
     c = { telescope.commands, "commands" },
     h = { telescope.help_tags, "help_tags" },
