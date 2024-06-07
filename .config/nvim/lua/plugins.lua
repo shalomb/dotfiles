@@ -93,19 +93,39 @@ return {
 
   -- colorschemes
   { "rebelot/kanagawa.nvim",               lazy = true },
+  {
+    "kdheepak/lazygit.nvim",
+    lazy = true,
+    cmd = {
+      "LazyGit",
+      "LazyGitConfig",
+      "LazyGitCurrentFile",
+      "LazyGitFilter",
+      "LazyGitFilterCurrentFile",
+    },
+    -- optional for floating window border decoration
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+    },
+    -- setting the keybinding for LazyGit with 'keys' is recommended in
+    -- order to load the plugin when the command is run for the first time
+    keys = {
+      { "<leader>lg", "<cmd>LazyGit<cr>", desc = "LazyGit" }
+    }
+  },
 
   { "IndianBoy42/tree-sitter-just",        ft = "justfile" },
   { "ThePrimeagen/git-worktree.nvim",      lazy = false },
   { "ThePrimeagen/harpoon",                lazy = false }, -- Manage quickly accessed files
   { "lewis6991/gitsigns.nvim",             lazy = true },  -- Gitgutter replacement
   { "christoomey/vim-tmux-navigator",      lazy = false },
-  { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
+  { "ellisonleao/glow.nvim",               cmd = "Glow",   ft = "markdown" },
   { "folke/neodev.nvim",                   lazy = false },
   { "folke/which-key.nvim",                lazy = false },
   { "ggandor/flit.nvim",                   lazy = false },
   { "ggandor/leap.nvim",                   lazy = false },
-  { "godlygeek/tabular",                   lazy = true,       event = "CmdWinEnter" },
-  { "jgdavey/tslime.vim",                  lazy = true,       event = "CmdWinEnter" },
+  { "godlygeek/tabular",                   lazy = true,    event = "CmdWinEnter" },
+  { "jgdavey/tslime.vim",                  lazy = true,    event = "CmdWinEnter" },
   { "jghauser/follow-md-links.nvim",       ft = "markdown" },
   { "lukas-reineke/indent-blankline.nvim", lazy = false },
   { "majutsushi/tagbar",                   lazy = false },
