@@ -1,13 +1,47 @@
 #!/bin/bash
 
-aws-console() {
-  local account
+AWS_SSO_CACHE="$XDG_CACHE_HOME/aws-sso-profile"
+
+aws-sso-profile() {
+  local account="$1"
   local profile
-  account="${1?Missing account}"
-  profile="$(aws-sso list | awk -v account="$account" '$0 ~ account{ print $7 }')"
-  if [[ -z $profile ]]; then
-    warn "Missing profile for account: $account"
-  else
-    aws-sso console -p "$profile"
+  if [[ -z $account ]]; then
+    if account=$(git rev-parse --show-toplevel); then
+      account="${account##*/}"
+      account="${account##*tec-}"
+      account="${account%-*}"
+      account="tec-$account-${PWD##*/}"
+    else
+      account=$(
+        source "$AWS_SSO_CACHE"
+        echo "$AWS_SSO_PROFILE"
+      )
+    fi
   fi
+
+  profile=$(aws-sso list | awk -v account="$account" '$0 ~ account{ print $7 }')
+
+  if (($(wc -l <<<"$profile") > 1)); then
+    echo >&2 "WARNING: Multiple profiles found for '$account'"
+    echo >&2 "$profile"
+    profile=$(
+      for p in TEC Administrator admin TestProd; do
+        grep -Ei "$p" <<<"$profile"
+
+      done | grep -Ei -v "ViewOnly|Depl" | head -n 1
+    )
+    echo -e "\nSelecting '$profile'\n" >&2
+  fi
+
+  echo "$profile"
+}
+
+aws-login() {
+  aws-sso eval -p "$(aws-sso-profile "$@")" >"$AWS_SSO_CACHE"
+  source "$AWS_SSO_CACHE"
+  aws-whoami
+}
+
+aws-console() {
+  aws-sso console -p "${AWS_SSO_PROFILE:-$(aws-sso-profile "$@")}"
 }
