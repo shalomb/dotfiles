@@ -97,7 +97,7 @@ return {
   { "IndianBoy42/tree-sitter-just",        ft = "justfile" },
   { "ThePrimeagen/git-worktree.nvim",      lazy = false },
   { "ThePrimeagen/harpoon",                lazy = false }, -- Manage quickly accessed files
-  { "airblade/vim-gitgutter",              lazy = false },
+  { "lewis6991/gitsigns.nvim",             lazy = true },  -- Gitgutter replacement
   { "christoomey/vim-tmux-navigator",      lazy = false },
   { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
   { "folke/neodev.nvim",                   lazy = false },
