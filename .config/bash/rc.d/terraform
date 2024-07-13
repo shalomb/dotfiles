@@ -11,8 +11,80 @@ unset TF_CLI_CONFIG_FILE
 
 #| tfplan - terraform plan
 tfplan() {
-  mktf-docs;
+  mktf-docs
   terraform fmt -recursive &&
-  terraform validate &&
-  terraform plan -refresh=true
+    terraform validate &&
+    terraform plan -refresh=true
+}
+
+install-terraform() {
+  local TMPDIR="${TMP:-${TMPDIR:-/tmp}}"
+  local version="${1:-latest}"
+  local arch="$(uname -m)"
+  case "$arch" in
+  aarch64) arch='arm64' ;;
+  x86_64) arch='amd64' ;;
+  *)
+    echo >&2 "Unknown architecture: $arch"
+    ;;
+  esac
+  releases_url='https://releases.hashicorp.com/terraform/'
+  releases_cache=$(mktemp -p "$TMPDIR")
+  curl -fsSL "$releases_url" >"$releases_cache"
+  os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  versions=($(
+    htmlq a --attribute href <"$releases_cache" |
+      awk -F/ '$0=$3' |
+      sort -r -t. -k 1,1rn -k 2,2rn -k 3,3rn
+  ))
+  echo "Listing versions from $releases_url: ${#versions[@]} available"
+  if [[ $version == @(prompt|confirm|ask|p|c|a) ]]; then
+    target_version=$(printf '%q\n' "${versions[@]}" | fzf)
+  elif [[ $version == @(current|latest|release|l|r) ]]; then
+    target_version=${versions[0]}
+  else
+    target_version=$(
+      printf '%q\n' "${versions[@]}" |
+        awk '$0 == "'"$version"'"'
+    )
+  fi
+  if [[ $target_version == "" ]]; then
+    echo >&2 "Target version missing or not available to install: $version"
+    printf ' Potential match: %q\n' "${versions[@]}" | grep -i "$version"
+    return
+  fi
+  XDG_BIN_DIR="${XDG_DATA_HOME%/*}/bin"
+  (
+    cd "$TMPDIR" || exit
+    release_url="https://releases.hashicorp.com/terraform/${target_version}/terraform_${target_version}_${os}_${arch}.zip"
+    echo "target_version: $target_version from $release_url"
+    wget -q -c "$release_url"
+    unzip -q -o "${release_url##*/}"
+    target="$XDG_BIN_DIR/terraform-${target_version}"
+    install -m0755 ./terraform "$target"
+    hash -r
+    command -v "${target##*/}"
+    "${target##*/}" version
+    command -v terraform
+  )
+}
+
+switch-terraform() {
+  local version=${1-}
+  XDG_BIN_DIR="${XDG_DATA_HOME%/*}/bin"
+  (
+    if [[ $version ]]; then
+      version=terraform-${version}
+    else
+      version="terraform-[0-9]*"
+    fi
+    target=$(find "$XDG_BIN_DIR" -maxdepth 1 -iname "$version" -print | sort | fzf -1 -0)
+    if [[ $target ]]; then
+      ln -svf "$target" "$XDG_BIN_DIR/terraform"
+      hash -r
+      terraform version
+    else
+      echo >&2 "No target version found: $version"
+    fi
+  )
 }
