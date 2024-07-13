@@ -21,11 +21,13 @@ clean:
 .PHONY: test
 test:
 
+# https://tracker.debian.org/pkg/neovim
 .PHONY: deps
 deps: ## install the OS dependencies
 	sudo sudo apt build-dep -yyq neovim -t unstable
 	sudo apt install -yyq build-essential git libuv1-dev libnsl-dev libtool libtool-bin \
-		devscripts python3-neovim python3-pynvim ninja-build gettext cmake unzip curl build-essential
+		devscripts python3-neovim python3-pynvim ninja-build gettext cmake unzip curl build-essential \
+		libvterm-dev build-essential fakeroot devscripts
 
 .PHONY: build-env
 build-env: deps  ## setup the build dependencies
@@ -45,7 +47,7 @@ nvim: build-env ## Run all package installers
 	git checkout master
 	git fetch --all
 	tag=$$(git describe --tags --abbrev=0)  # last tag e.g. nightly
-	tag=$$(git describe --tags $$(git rev-list --tags --max-count=1) --match 'v0.9.[0-9]*')  # Last annotated tag on the v0.9.* series
+	tag=$$(git describe --tags $$(git rev-list --tags --max-count=1) --match 'v0.1[0-9]*.[0-9]*')  # Last annotated tags
 	tag='v0.9.5'
 	echo ----------------------------
 	echo "Checking out tag: $$tag"
