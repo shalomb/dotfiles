@@ -114,6 +114,7 @@ libc-l10n                  install
 libfile-which-perl         install
 libkrb5-dev                install
 libssl-dev                 install
+libxcb-xfixes0-dev         install
 locales                    install
 login                      install
 logrotate                  install
