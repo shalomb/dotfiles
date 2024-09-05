@@ -117,6 +117,7 @@
   pom     = push origin master
   pum     = pull origin master
   review  = !vi -p $(git files) +\"tabdo Gvdiff $(git base)\" +\"let g:gitgutter_diff_base = '$(git base)'\"
+  rm-merged = !git branch --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" { print $1 }' | xargs -r git branch -D
   s       = status --porcelain
   stat    = !git diff --stat $(git merge-base HEAD \"$(git base)\")
   st      = status --short
