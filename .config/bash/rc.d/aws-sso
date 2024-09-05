@@ -9,7 +9,8 @@ aws-sso-profile() {
     if account=$(git rev-parse --show-toplevel); then
       account="${account##*/}"
       account="${account##*tec-}"
-      account="${account%-*}"
+      remainder="${account#*-*-}"
+      account="${account%-"$remainder"}"
       account="tec-$account-${PWD##*/}"
     else
       account=$(
@@ -37,9 +38,14 @@ aws-sso-profile() {
 }
 
 aws-login() {
+  if [[ $1 == @(-c|console) ]]; then
+    shift;
+    console=1
+  fi
   aws-sso eval -p "$(aws-sso-profile "$@")" >"$AWS_SSO_CACHE"
   source "$AWS_SSO_CACHE"
   aws-whoami
+  [[ $console ]] && aws-console "$@"
 }
 
 aws-console() {
