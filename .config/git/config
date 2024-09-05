@@ -64,8 +64,9 @@
   defaultBranch = main
 
 [merge]
-  tool = vimdiff
+  autoStash = true
   conflictstyle = diff3
+  tool = vimdiff
 
 [mergetool]
   prompt = false
@@ -80,6 +81,9 @@
 [push]
   default = simple
   autoSetupRemote = true
+
+[rebase]
+  autoStash = true
 
 [tag]
   sort = version:refname
