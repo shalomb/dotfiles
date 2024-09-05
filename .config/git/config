@@ -57,6 +57,9 @@
 [gpg]
   program = /usr/bin/gpg2
 
+[help]
+  autocorrect = prompt
+
 [init]
   defaultBranch = main
 
