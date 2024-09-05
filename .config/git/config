@@ -1,37 +1,3 @@
-[alias]
-  ammend  = commit --amend -C HEAD
-  base    = !echo ${BASE:-$(git rev-parse --abbrev-ref HEAD)}
-  br      = branch
-  caa     = commit -a --amend -C HEAD
-  ce      = config --global -e
-  ci      = commit
-  co      = checkout
-  dc      = diff --cached
-  df      = diff
-  ec      = config -e
-  exec    = "!exec "
-  files   = !git diff --name-only $(git merge-base HEAD \"$(git base)\")
-  ign     = ls-files -o -i --exclude-standard
-  k       = !gitk
-  lg      = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
-  lgp     = log -p
-  lola    = log --graph --decorate --pretty=oneline --abbrev-commit --all
-  lol     = log --graph --decorate --pretty=oneline --abbrev-commit
-  ls      = ls-files
-  n       = !git --no-pager
-  pom     = push origin master
-  pum     = pull origin master
-  review  = !vi -p $(git files) +\"tabdo Gvdiff $(git base)\" +\"let g:gitgutter_diff_base = '$(git base)'\"
-  s       = status --porcelain
-  stat    = !git diff --stat $(git merge-base HEAD \"$(git base)\")
-  st      = status --short
-  today   = log --since "yesterday"
-  tree    = log --graph --oneline --decorate
-  undo    = reset HEAD~1 --mixed
-  up      = !git pull --rebase --prune $@ && git submodule update --init --recursive
-  vimdiff = difftool -y -t vimdiff
-  wow     = log --graph --decorate --pretty=oneline --abbrev-commit --name-status
-
 [branch]
   autosetupmerge  = always
   autosetuprebase = always
@@ -118,5 +84,39 @@
   name = Shalom Bhooshi
   email = s.bhooshi@gmail.com
   signingkey = 6E58CBDB4D4FFAF09114729738495CCA2D2EF563
+
+[alias]
+  ammend  = commit --amend -C HEAD
+  base    = !echo ${BASE:-$(git rev-parse --abbrev-ref HEAD)}
+  br      = branch
+  caa     = commit -a --amend -C HEAD
+  ce      = config --global -e
+  ci      = commit
+  co      = checkout
+  dc      = diff --cached
+  df      = diff
+  ec      = config -e
+  exec    = "!exec "
+  files   = !git diff --name-only $(git merge-base HEAD \"$(git base)\")
+  ign     = ls-files -o -i --exclude-standard
+  k       = !gitk
+  lg      = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+  lgp     = log -p
+  lola    = log --graph --decorate --pretty=oneline --abbrev-commit --all
+  lol     = log --graph --decorate --pretty=oneline --abbrev-commit
+  ls      = ls-files
+  n       = !git --no-pager
+  pom     = push origin master
+  pum     = pull origin master
+  review  = !vi -p $(git files) +\"tabdo Gvdiff $(git base)\" +\"let g:gitgutter_diff_base = '$(git base)'\"
+  s       = status --porcelain
+  stat    = !git diff --stat $(git merge-base HEAD \"$(git base)\")
+  st      = status --short
+  today   = log --since "yesterday"
+  tree    = log --graph --oneline --decorate
+  undo    = reset HEAD~1 --mixed
+  up      = !git pull --rebase --prune $@ && git submodule update --init --recursive
+  vimdiff = difftool -y -t vimdiff
+  wow     = log --graph --decorate --pretty=oneline --abbrev-commit --name-status
 
 # vi:filetype=gitconfig ts=2 sw=2 et
