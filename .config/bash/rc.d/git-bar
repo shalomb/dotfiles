@@ -354,8 +354,8 @@ function gP  {
 #| gPa - git push --all
 function gPa  { gP --all; gP --tags; }
 
-#| gPf - git push --force
-function gPf  { gP --force; }
+#| gPf - git push --force-with-lease
+function gPf  { gP --force-with-lease; }
 
 #| gPt - git push --tags
 function gPt  { gP --tags; }
