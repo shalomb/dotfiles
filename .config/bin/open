@@ -7,48 +7,51 @@ shopt -s extglob
 [[ ${DEBUG-} ]] && set -xv
 
 open() {
-  local entry=$(tildeexpand "$1"); shift;
+  local entry=$(tildeexpand "$1")
+  shift
 
   case "$entry" in
-    # entry is an option
-    -*)
-      x-www-browser "$entry" "$@"
+  # entry is an option
+  -*)
+    x-www-browser "$entry" "$@"
     ;;
-    # entry is a url
-    *://*)
-      if type -P gio &>/dev/null; then
-        gio open "$entry"
-      else
-        x-www-browser "$entry"
-      fi
+  # entry is a url
+  *://*)
+    if type -P xdg-open &>/dev/null; then
+      xdg-open "$entry"
+    elif type -P gio &>/dev/null; then
+      gio open "$entry"
+    elif type -P x-www-browser &>/dev/null; then
+      x-www-browser "$entry"
+    fi
     ;;
-    *)
-      # entry is a regular file
-      if [[ -f $entry && ! -x $entry ]]; then
-        "${EDITOR:-vi}" "$entry"
+  *)
+    # entry is a regular file
+    if [[ -f $entry && ! -x $entry ]]; then
+      "${EDITOR:-vi}" "$entry"
 
-      # entry is a directory
-      elif [[ -d $entry ]]; then
-        exec -a "${entry##*/}" \
-          bash -c "cd '$entry' && exec -a '${entry##*/}' bash"
+    # entry is a directory
+    elif [[ -d $entry ]]; then
+      exec -a "${entry##*/}" \
+        bash -c "cd '$entry' && exec -a '${entry##*/}' bash"
 
-      # entry is an available command
-      elif type -a "$entry" &>/dev/null; then
-        exec -a "$entry" "$entry" "$@" &
+    # entry is an available command
+    elif type -a "$entry" &>/dev/null; then
+      exec -a "$entry" "$entry" "$@" &
 
-      # entry is another type of file (block/character device, etc)
-      elif [[ -e $entry ]]; then
-        echo >&2 "Refusing to open: $*"
+    # entry is another type of file (block/character device, etc)
+    elif [[ -e $entry ]]; then
+      echo >&2 "Refusing to open: $*"
 
-      # entry looks like a domain name (or a URL)
-      elif [[ $entry = *.* ]]; then
-        x-www-browser "$entry"
+    # entry looks like a domain name (or a URL)
+    elif [[ $entry = *.* ]]; then
+      xdg-open "$entry"
 
-      # entry is unidentified
-      else
-        x-www-browser "https://www.google.com/search?gws_rd=ssl&q=$*"
+    # entry is unidentified
+    else
+      xdg-open "https://www.google.com/search?gws_rd=ssl&q=$*"
 
-      fi
+    fi
     ;;
   esac
 }
