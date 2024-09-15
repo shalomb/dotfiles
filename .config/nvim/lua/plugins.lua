@@ -116,17 +116,17 @@ return {
 
   { "IndianBoy42/tree-sitter-just",        ft = "justfile" },
   { "ThePrimeagen/git-worktree.nvim",      lazy = false },
-  { "ThePrimeagen/harpoon",                lazy = false }, -- Manage quickly accessed files
-  { "lewis6991/gitsigns.nvim",             lazy = true },  -- Gitgutter replacement
+  { "ThePrimeagen/harpoon",                lazy = false },                             -- Manage quickly accessed files
+  { "lewis6991/gitsigns.nvim",             lazy = true,       event = "BufWinEnter" }, -- Gitgutter replacement
   { "christoomey/vim-tmux-navigator",      lazy = false },
-  { "ellisonleao/glow.nvim",               cmd = "Glow",   ft = "markdown" },
+  { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
   { "folke/flash.nvim",                    event = "VeryLazy" },
   { "folke/neodev.nvim",                   lazy = false },
   { "folke/which-key.nvim",                lazy = false },
   { "ggandor/flit.nvim",                   lazy = false },
-  { "ggandor/leap.nvim",                   lazy = false },
-  { "godlygeek/tabular",                   lazy = true,    event = "CmdWinEnter" },
-  { "jgdavey/tslime.vim",                  lazy = true,    event = "CmdWinEnter" },
+  -- { "ggandor/leap.nvim",                   lazy = false },
+  { "godlygeek/tabular",                   lazy = false,      event = "BufWinEnter" },
+  { "jgdavey/tslime.vim",                  lazy = false,      event = "BufWinEnter" },
   { "jghauser/follow-md-links.nvim",       ft = "markdown" },
   { "lukas-reineke/indent-blankline.nvim", lazy = false },
   { "majutsushi/tagbar",                   lazy = false },
@@ -142,7 +142,7 @@ return {
   },
   { "takac/vim-hardtime",    lazy = true, event = "BufWinEnter" },
   { "tommcdo/vim-exchange",  lazy = true, event = "BufWinEnter" },
-  { "tpope/vim-abolish",     lazy = true, event = "CmdWinEnter" },
+  { "tpope/vim-abolish",     lazy = true, event = "BufWinEnter" },
   { "tpope/vim-endwise",     lazy = false },
   { "tpope/vim-fugitive",    lazy = false },
   { "tpope/vim-ragtag",      lazy = false },
