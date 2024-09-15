@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Support for nektos/act
+# https://nektosact.com/missing_functionality/docker_context.html
+
+export DOCKER_HOST=$(docker context inspect --format '{{.Endpoints.docker.Host}}')
+export DOCKER_CERT_PATH=$(docker context inspect --format '{{.Storage.TLSPath}}')/docker
+
