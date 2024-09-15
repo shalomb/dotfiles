@@ -20,3 +20,8 @@ function install-awscli {
     fi
   )
 }
+
+# https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html#envvars-list-aws_cli_auto_prompt
+export AWS_CLI_AUTO_PROMPT='on-partial'
+export AWS_DEFAULT_OUTPUT='json'
+# export AWS_DEFAULT_REGION='eu-central-1'

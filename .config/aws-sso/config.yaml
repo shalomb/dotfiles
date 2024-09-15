@@ -2,8 +2,8 @@ SSOConfig:
   tec:
     SSORegion: us-east-1
     StartUrl: https://d-90677b2a7e.awsapps.com/start
-    DefaultRegion: eu-central-1
-DefaultRegion: eu-central-1
+    DefaultRegion: us-east-1
+DefaultRegion: us-east-1
 ConsoleDuration: 720
 CacheRefresh: 168
 AutoConfigCheck: true
