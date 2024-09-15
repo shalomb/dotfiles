@@ -73,12 +73,13 @@ switch-terraform() {
   local version=${1-}
   XDG_BIN_DIR="${XDG_DATA_HOME%/*}/bin"
   (
+    version="${version#v}"
     if [[ $version ]]; then
       version=terraform-${version}
     else
       version="terraform-[0-9]*"
     fi
-    target=$(find "$XDG_BIN_DIR" -maxdepth 1 -iname "$version" -print | sort | fzf -1 -0)
+    target=$(find "$XDG_BIN_DIR" -maxdepth 1 -iname $version -print | sort | fzf -1 -0)
     if [[ $target ]]; then
       ln -svf "$target" "$XDG_BIN_DIR/terraform"
       hash -r
