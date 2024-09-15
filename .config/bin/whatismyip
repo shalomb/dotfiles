@@ -4,7 +4,7 @@ function assert_is_installed {
   if ! type -P "$1" &>/dev/null; then
     echo "'$1' is not installed/available and is required.(PATH=$PATH)" >&2
     shift
-    if [[ $@ ]]; then 
+    if [[ $@ ]]; then
       echo "$@" >&2
     fi
     exit 3
@@ -44,13 +44,13 @@ function get_host_addresses {
 function get_default_gateways {
   local proto="$1"
   [[ $proto = *6 ]] && { ip -6 route list match ::/0  | awk '{print $3}'; }
-  [[ $proto = *4 ]] && { ip -4 route list match  0/0  | awk '{print $3}'; } 
+  [[ $proto = *4 ]] && { ip -4 route list match  0/0  | awk '{print $3}'; }
 }
 
 function get_default_interfaces {
   local proto="$1"
   [[ $proto = *6 ]] && { ip -6 route list match ::/0  | awk '{print $5}'; }
-  [[ $proto = *4 ]] && { ip -4 route list match  0/0  | awk '{print $5}'; } 
+  [[ $proto = *4 ]] && { ip -4 route list match  0/0  | awk '{print $5}'; }
 }
 
 function extract_v4_address {
@@ -100,7 +100,7 @@ function get_dhcp_client_lease {
                       sort -n | awk 'END{print $2}')
   if [[ $lease_file ]]; then
     { echo -e "file\t$lease_file"
-      sed -e '/}/d' -e 's/^lease.*/\n/g' "$lease_file" | awk 'BEGIN{RS="\n\n"} END{print}' ; 
+      sed -e '/}/d' -e 's/^lease.*/\n/g' "$lease_file" | awk 'BEGIN{RS="\n\n"} END{print}' ;
     } | \
       sed -e 's/option\ \+/@@/g' | column -t | \
       sed -r -e 's/@@/  /g' -e 's/;//g' -e 's/ ([0-9])\ +/ \1 /g' -e 's/^/  /g' -e 's/"//g'
@@ -118,10 +118,10 @@ function get_geoip_info {
   if [[ -e $html_file ]]; then
     grep '<tr>' "$html_file" | \
     perl -ne '
-      chomp; s/^[\ \t]+//g; 
-      @_=grep $_, split /:?<[^>]+>/; 
+      chomp; s/^[\ \t]+//g;
+      @_=grep $_, split /:?<[^>]+>/;
       printf "%-14s : %s\n", $_[0], (splice @_, 1)
-    ' 
+    '
   fi
 }
 
@@ -143,7 +143,7 @@ function get_geoip_info2 {
   fi
   if [[ -e $json_file ]]; then
     perl -nle '
-      use JSON; $g = from_json($_); 
+      use JSON; $g = from_json($_);
       @keys=qw[ip latitude longitude city zipcode areacode metro_code region_name region_code country_name country_code];
       for (@keys) { printf "%-16s : %s\n", $_, $g->{$_} }
     ' < "$json_file"
