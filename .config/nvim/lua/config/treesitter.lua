@@ -8,7 +8,7 @@ treesitter_config.setup {
   auto_install = true,
 
   -- Install parsers synchronously (only applied to `ensure_installed`)
-  sync_install = false,
+  sync_install = true,
 
   ignore_install = {
     "help",
@@ -39,7 +39,6 @@ treesitter_config.setup {
     "jsonnet",
     "lua",
     "make",
-    "markdown",
     "markdown_inline",
     "mermaid",
     "perl",
@@ -76,6 +75,10 @@ treesitter_config.setup {
     extended_mode = true, -- Also highlight non-bracket delimiters like html tags, boolean or table: lang -> boolean
     max_file_lines = nil, -- Do not enable for files with more than n lines, int
     -- colors = {}, -- table of hex strings
+    -- table of hex strings
+    colors = {
+      "#FF79C6", "#A4FFFF", "#50fa7b", "#FFFFA5", "#FF92DF", "#5e81ac", "#b48ead",
+    }
     -- termcolors = {} -- table of colour name strings
   },
 
