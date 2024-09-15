@@ -21,6 +21,7 @@ click
 colorama
 commonmark
 cryptography
+dateparser
 devscripts
 dill
 distlib
@@ -65,6 +66,7 @@ poetry
 pycodestyle
 pycurl
 pyflakes
+pygohcl
 pylint
 pynvim
 pytablewriter
@@ -113,3 +115,4 @@ xdg
 yamllint
 yq
 zipp
+rich
