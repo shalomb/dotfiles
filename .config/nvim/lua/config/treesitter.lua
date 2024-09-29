@@ -36,6 +36,7 @@ treesitter_config.setup {
     "jq",
     "json",
     "json5",
+    "jsonc",
     "jsonnet",
     "lua",
     "make",

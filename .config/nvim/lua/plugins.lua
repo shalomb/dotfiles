@@ -11,7 +11,8 @@ return {
       "nvim-treesitter/nvim-treesitter-context",
       "nvim-treesitter/playground",
       "RRethy/nvim-treesitter-textsubjects",
-    }
+    },
+    opts = { ensure_installed = { "terraform", "hcl" } },
     -- cargo install tree-sitter-cli   # tree-sitter 0.20.7
   },
 
@@ -58,7 +59,7 @@ return {
       "williamboman/mason.nvim",
 
       -- Snippets
-      -- "L3MON4D3/LuaSnip",
+      "L3MON4D3/LuaSnip",
       "saadparwaiz1/cmp_luasnip",
       "rafamadriz/friendly-snippets",
     },
@@ -114,12 +115,28 @@ return {
     }
   },
 
+  {
+    "OXY2DEV/markview.nvim",
+    lazy = false, -- Recommended
+    -- ft = "markdown" -- If you decide to lazy-load anyway
+
+    dependencies = {
+      -- You will not need this if you installed the
+      -- parsers manually
+      -- Or if the parsers are in your $RUNTIMEPATH
+      "nvim-treesitter/nvim-treesitter",
+
+      "nvim-tree/nvim-web-devicons",
+      "echasnovski/mini.icons",
+    }
+  },
+
   { "IndianBoy42/tree-sitter-just",        ft = "justfile" },
   { "ThePrimeagen/git-worktree.nvim",      lazy = false },
   { "ThePrimeagen/harpoon",                lazy = false },                             -- Manage quickly accessed files
   { "lewis6991/gitsigns.nvim",             lazy = true,       event = "BufWinEnter" }, -- Gitgutter replacement
   { "christoomey/vim-tmux-navigator",      lazy = false },
-  { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
+  -- { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
   { "folke/flash.nvim",                    event = "VeryLazy" },
   { "folke/neodev.nvim",                   lazy = false },
   { "folke/which-key.nvim",                lazy = false },
@@ -133,7 +150,7 @@ return {
   { "mbbill/undotree",                     lazy = false },
   { "nvim-lualine/lualine.nvim",           lazy = false }, -- configure Neovim statusline
   { "p00f/nvim-ts-rainbow",                lazy = false },
-  { "preservim/vim-markdown",              ft = "markdown" },
+  -- { "preservim/vim-markdown",              ft = "markdown" },
   { "romainl/vim-cool",                    lazy = false },
   {
     "stevearc/oil.nvim",

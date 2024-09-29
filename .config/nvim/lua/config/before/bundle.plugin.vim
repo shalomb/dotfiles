@@ -16,7 +16,7 @@ command! -bang -nargs=? -complete=dir Bundle
 
 command! -bang -nargs=? -complete=dir Readme
     \ call fzf#vim#files(
-    \    g:packer_package_root,
+    \    '~/.config/nvim',
     \    fzf#vim#with_preview(
     \      { 'source': 'find */ \( -iname ".*" \) -prune -o -iname "*readme*" -print',
     \        'options': FZFPreviewOptions('--query='. <q-args>),
