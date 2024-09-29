@@ -115,6 +115,7 @@ libfile-which-perl         install
 libkrb5-dev                install
 libssl-dev                 install
 libxcb-xfixes0-dev         install
+localepurge                install
 locales                    install
 login                      install
 logrotate                  install
@@ -135,7 +136,10 @@ mount                      install
 ncurses-base               install
 ncurses-bin                install
 net-tools                  install
+neovim                     install
 netbase                    install
+openjdk-24-jdk-headless    install
+openjdk-24-jre-headless    install
 openssl                    install
 os-prober                  install
 p7zip                      install

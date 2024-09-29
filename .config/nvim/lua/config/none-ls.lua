@@ -43,17 +43,17 @@ nullls.setup {
     formatting.black.with { extra_args = { "--fast" } },
     -- formatting.fixjson,
     formatting.gofumpt,
-    -- formatting.isort,
+    formatting.isort,
     with_root_file(formatting.stylua, "stylua.toml"),
     -- formatting.prettier.with {
     --   extra_filetypes = { "toml", "solidity" },
     --   extra_args = { "--no-semi", "--single-quote", "--jsx-single-quote" },
     -- },
-    -- formatting.yamlfmt,
+    formatting.yamlfmt,
 
     code_actions.gitrebase,
     -- code_actions.refactoring, -- module not found
-    -- code_actions.shellcheck,
+    code_actions.shellcheck,
 
     -- completions.luasnip,
     -- completions.spell,

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+# https://docs.makedeb.org/installing/shell-script/
+# Set the makedeb release you want.
+export MAKEDEB_RELEASE='makedeb'
+
+# Run the install script. Note that it's `bash -c` and not `bash -ci` now.
+bash -c "$(wget -qO - 'https://shlink.makedeb.org/install')"
+
+wget -qO - 'https://proget.makedeb.org/debian-feeds/prebuilt-mpr.pub' | gpg --dearmor | sudo tee /usr/share/keyrings/prebuilt-mpr-archive-keyring.gpg 1> /dev/null
+
+echo "deb [arch=all,$(dpkg --print-architecture) signed-by=/usr/share/keyrings/prebuilt-mpr-archive-keyring.gpg] https://proget.makedeb.org prebuilt-mpr bookworm" | sudo tee /etc/apt/sources.list.d/M04-makedeb-prebuilt-mpr.list
+
+echo "deb [signed-by=/usr/share/keyrings/makedeb-archive-keyring.gpg arch=all] https://proget.makedeb.org makedeb main" | sudo tee /etc/apt/sources.list.d/M05-makedeb.list
+
+sudo apt update
+
+apt-cache policy neovim

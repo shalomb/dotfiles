@@ -111,19 +111,70 @@ local is_exempt_from_formatting = function(ft, client)
   return false
 end
 
-autocmd(
-  { 'BufWritePre' }, {
-    group    = 'autoformat_on_save',
-    buffer   = 0,
-    callback = function()
-      vim.lsp.buf.format({
-        bufnr = 0,
-        filter = function(client)
-          return not is_exempt_from_formatting(vim.bo.filetype, client)
-        end
+vim.api.nvim_create_autocmd('LspAttach', {
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if client == nil then
+      return {}
+    end
+    --if client.supports_method('textDocument/implementation') then
+    --  -- Create a keymap for vim.lsp.buf.implementation
+    --end
+    --if client.supports_method('textDocument/completion') then
+    --  -- Enable auto-completion
+    --  vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
+    --end
+    if client.supports_method('textDocument/formatting') then
+      -- Format the current buffer on save
+      vim.api.nvim_create_autocmd('BufWritePre', {
+        buffer = args.buf,
+        callback = function()
+          vim.lsp.buf.format({
+            bufnr = args.buf,
+            id = client.id,
+            async = false
+          })
+          -- print(
+          --   "autoformat_on_save : " ..
+          --   args.buf .. " -> " .. vim.inspect(client.supports_method('textDocument/formatting'))
+          -- )
+        end,
       })
     end
-  })
+  end
+})
+
+---- https://neovim.io/doc/user/lsp.html#lsp-config
+--autocmd(
+--  { 'LspAttach' }, {
+--    callback = function(args)
+--      local client = vim.lsp.get_client_by_id(args.data.client_id)
+--      local buffer = args.buf
+--      --if client.supports_method('textDocument/completion') then
+--      --  -- Enable auto-completion
+--      --  vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
+--      --end
+--      if client.supports_method('textDocument/formatting') then
+--        autocmd('BufWritePre', {
+--        buffer   = buffer,
+--          callback = function()
+--            vim.lsp.buf.format({
+--              id     = client.id,
+--              async  = false,
+--              -- id = args.id,
+--              filter = function()
+--                print(
+--                  "autoformat_on_save : " ..
+--                  args.buf .. " -> " .. vim.inspect(client.supports_method('textDocument/formatting'))
+--                )
+--                return not is_exempt_from_formatting(vim.bo.filetype, client)
+--              end
+--            })
+--          end
+--        })
+--      end
+--    end
+--  })
 
 -- rebalance size of windows on vim window resize
 augroup('window_resize', { clear = true })

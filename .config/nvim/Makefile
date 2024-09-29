@@ -39,16 +39,16 @@ build-env: deps  ## setup the build dependencies
 
 # https://github.com/neovim/neovim/wiki/Installing-Neovim#install-from-source
 # https://gist.github.com/shalomb/c20478247be553c45ed94b90583b5c41
-.SILENT: nvim
-.PHONY: nvim
-nvim: build-env ## Run all package installers
+.SILENT: nvim-from-source
+.PHONY: nvim-from-source
+nvim-from-source: build-env ## Run all package installers
 	cd ~/build/neovim
 	git checkout .
 	git checkout master
 	git fetch --all
 	tag=$$(git describe --tags --abbrev=0)  # last tag e.g. nightly
 	tag=$$(git describe --tags $$(git rev-list --tags --max-count=1) --match 'v0.1[0-9]*.[0-9]*')  # Last annotated tags
-	tag='v0.9.5'
+	tag='v0.10.1' # 'v0.9.5'
 	echo ----------------------------
 	echo "Checking out tag: $$tag"
 	echo ----------------------------
@@ -59,10 +59,17 @@ nvim: build-env ## Run all package installers
 	make install
 	nvim -c ':version'
 
+.SILENT: nvim-from-source
+.PHONY: nvim-from-source
+build: nvim-from-source  ## build nvim
+	@:
+
 .SILENT: nvim
 .PHONY: nvim
-build: nvim  ## build nvim
+nvim: ## Install prebuilt nvim
 	@:
+	apt-cache policy neovim
+	sudo apt install neovim -t prebuilt-mpr
 
 .SILENT: test
 .PHONY: test
@@ -113,6 +120,7 @@ update: ## update neovim components
 	# These following commands do not seem to be invocable from CLI
 	nvim --headless -c ':Lazy update'  -c ':q'
 	nvim --headless -c ':Lazy profile'  -c ':q'
+	nvim --headless -c ':version' -c ':q'
 
 .PHONY: tools
 tools:  ## install tools / prereqs
