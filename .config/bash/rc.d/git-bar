@@ -303,6 +303,17 @@ function gffl { command git flow feature list "$@"; }
 #| gffs - git flow feature start
 function gffs { command git flow feature start "$@"; }
 
+#! gfx - git commit --fixup="$1"
+function gfx {
+  local commit
+  if (( $# == 0 )); then
+    response=$(gl --color=always | fzf --ansi)
+    commit=$(awk '{ print $2 }' <<<"$response")
+  fi
+  git commit --fixup="$commit";
+  grb "$commit"
+}
+
 #| gH - show this help screen
 function gH {
   while read -r _ c _ r; do
@@ -380,6 +391,24 @@ function grs { gr show "$@"; }
 
 #| gra - gr add
 function gra { gr add "$@"; }
+
+#| grb - git rebase -i HEAD~"$1"
+function grb {
+  local ncommits="${1:-2}"; shift;
+  local target
+  if (( ${#ncommits} > 4 )); then
+    target="${ncommits}~"
+    set -- --autosquash
+  else
+    target="HEAD~$ncommits"
+  fi
+  git rebase -i "$target" "$@"
+}
+
+#| grbm - git rebase origin/main
+function grbm {
+  gup; git rebase origin/main
+}
 
 #! grc - git release create
 function grc {
