@@ -1,4 +1,5 @@
 bat          bat              https://github.com/sharkdp/bat
+cargo-cache  cargo-cache      https://github.com/matthiaskrgr/cargo-cache
 difftastic   difft            https://github.com/Wilfred/difftastic
 du-dust      dust             https://github.com/bootandy/dust
 eva          eva              https://github.com/nerdypepper/eva
