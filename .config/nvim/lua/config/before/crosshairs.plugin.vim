@@ -33,4 +33,4 @@ function! ShowCrossHairs(...)
   call SetHlValue(l:hl_cc)
 endfunction
 
-nnoremap qq  :call ShowCrossHairs('50m')<CR>
+nnoremap qq  :call ShowCrossHairs('500m')<CR>
