@@ -222,7 +222,7 @@ local cd = function(dir)
 end
 
 whichkey.register({
-  ['<leader>'] = { ":update<cr>:call ShowCrossHairs('20m')<cr>:lua vim.fn.updatemsg()<cr>", "update" },
+  ['<leader>'] = { ":update<cr>:lua vim.fn.updatemsg()<cr>", "update" },
 
   ['"'] = { telescope.buffers, "Buffers" },
   ['#'] = { function()
