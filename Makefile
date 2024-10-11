@@ -79,6 +79,10 @@ npm-cleanup: ## Cleanup the npm cache
 python-tools: ## Run python-tools installer
 	.config/python-tools/INIT
 
+.PHONY: workspace-tools workspace-cleanup
+workspace-tools: ## Run workspace-tools installer
+	.config/installers/INIT
+
 python-cleanup: ## Cleanup the pip cache
 	pip cache dir
 	pip cache info
@@ -118,7 +122,8 @@ neovim-deps:  ## Install neovim's dependencies
 
 .PHONY: nvim nvim-cleanup
 nvim:  neovim-deps ## Setup neovim
-	make -f .config/nvim/Makefile install
+	# make -f .config/nvim/Makefile install
+	./dotfile_stash export .config/nvim/
 
 nvim-cleanup: ## Cleanup the nvim caches
 	make -f .config/nvim/Makefile clean
