@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Name
+
+# Description
+
+set -o errexit -o nounset -o pipefail
+shopt -s extglob nullglob globstar
+
+[[ ${DEBUG-} ]] && set -xv
+
+: ${XDG_DATA_BIN=$(realpath "${XDG_DATA_HOME}/../bin")}
+
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+function log() {
+  logger -s -p alert -t "${0##*/}" "$*"
+}
+
+function install_gh_standalone_script() {
+  local url="$1"
+  local tool="${2:-${1##*/}}"
+  (
+    cd "$XDG_DATA_BIN" || exit
+    log "Installing $tool"
+    wget --user-agent="github-script-installer" -qc "$url" -O "$tool"
+    chmod +x "$tool"
+    hash -r
+    type -a "$tool"
+    echo
+  )
+}
+
+(
+  cd "${TMP:-/tmp}" || exit
+
+  for installer in "$SCRIPT_DIR"/!(INIT); do
+    log "Launching $installer"
+    if ! source "$installer"; then
+      echo "$PWD/$installer failed $?"
+    fi
+  done
+)

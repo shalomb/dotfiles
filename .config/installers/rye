@@ -1,0 +1,4 @@
+#!/bin/bash
+
+RYE_HOME
+curl -sSf https://rye.astral.sh/get | bash

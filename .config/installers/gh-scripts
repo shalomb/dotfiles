@@ -1,0 +1,9 @@
+#!/bin/bash
+
+for script in \
+	"https://raw.githubusercontent.com/shalomb/fetch-me/refs/heads/main/fetch-me" \
+	"https://raw.githubusercontent.com/ahmetb/kubectx/refs/heads/master/kubectx" \
+	"https://raw.githubusercontent.com/ahmetb/kubectx/refs/heads/master/kubens" \
+	"https://raw.githubusercontent.com/kdabir/has/refs/heads/master/has"; do
+	install_gh_standalone_script "$script"
+done
