@@ -39,7 +39,7 @@ aws-sso-profile() {
 
 aws-login() {
   if [[ $1 == @(-c|console) ]]; then
-    shift;
+    shift
     console=1
   fi
   aws-sso eval -p "$(aws-sso-profile "$@")" >"$AWS_SSO_CACHE"
@@ -49,5 +49,9 @@ aws-login() {
 }
 
 aws-console() {
-  aws-sso console -p "${AWS_SSO_PROFILE:-$(aws-sso-profile "$@")}"
+  if (($# > 0)); then
+    x-www-browser "https://${AWS_REGION:-$AWS_DEFAULT_REGION}.console.aws.amazon.com/$1"
+  else
+    aws-sso console -p "${AWS_SSO_PROFILE:-$(aws-sso-profile "$@")}"
+  fi
 }
