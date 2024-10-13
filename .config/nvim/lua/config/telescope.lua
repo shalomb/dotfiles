@@ -1,6 +1,6 @@
 -- config for telescope
 
-local vim = vim
+local vim     = vim
 
 local actions = require("telescope.actions")
 local builtin = require("telescope.builtin")
@@ -36,25 +36,3 @@ local arr = {}
 for k, _ in pairs(builtin) do
   table.insert(arr, k)
 end
-
-local function show_telescope_commands(results)
-  pickers.new(_, {
-    prompt_title = "Telescope Command Finder",
-    finder = finders.new_table(results),
-    sorter = sorters.fuzzy_with_index_bias(),
-    attach_mappings = function(prompt_bufnr, _)
-      actions.select_default:replace(function()
-        actions.close(prompt_bufnr)
-        local selection = state.get_selected_entry()
-        local cmd = 'require("telescope.builtin").' .. selection[1]
-        vim.cmd(":lua " .. cmd .. "()")
-        -- print(vim.inspect(selection[0]))
-      end)
-      return true
-    end,
-  }):find()
-end
-
-vim.keymap.set("n", "<leader>fn", function()
-  show_telescope_commands(arr)
-end)

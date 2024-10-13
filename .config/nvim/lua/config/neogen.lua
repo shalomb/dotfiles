@@ -1,27 +1,27 @@
 local neogen = require("neogen")
 local whichkey = require("which-key")
 
-whichkey.register({
-  name = "chords",
-
-  ["n"] = {
-    ["c"] = {
-      function()
-        neogen.generate()
-      end,
-      'Neogen generate annotation',
-    },
-    ["p"] = {
-      function()
-        neogen.jump_prev()
-      end,
-      'Neogen jump prev',
-    },
-    ["n"] = {
-      function()
-        neogen.jump_next()
-      end,
-      'Neogen jump next',
-    }
+whichkey.add({
+  { "<leader>n", group = "neogen", mode = { "n" } },
+  {
+    "<leader>nc",
+    function()
+      neogen.generate()
+    end,
+    desc = 'Neogen generate annotation',
+  },
+  {
+    "<leader>np",
+    function()
+      neogen.jump_prev()
+    end,
+    desc = 'Neogen jump prev',
+  },
+  {
+    "<leader>nn",
+    function()
+      neogen.jump_next()
+    end,
+    desc = 'Neogen jump next',
   }
-}, { mode = "n", prefix = "<leader>" })
+})

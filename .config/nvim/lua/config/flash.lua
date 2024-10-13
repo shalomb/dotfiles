@@ -128,67 +128,69 @@ local function format(opts)
   }
 end
 
-whichkey.register({
-  name = "chords",
+whichkey.add({
+  { "<leader>s", group = "flash", },
 
-  ["s"] = {
+  {
+    "<leader>sS",
+    function()
+      flash.treesitter()
+    end,
+    desc = 'Jump',
+  },
 
-    ["S"] = {
-      function()
-        flash.treesitter()
-      end,
-      'Jump',
-    },
+  {
+    "<leader>ss",
+    function()
+      flash.jump()
+    end,
+    desc = 'Jump',
+  },
 
-    ["s"] = {
-      function()
-        flash.jump()
-      end,
-      'Jump',
-    },
+  {
+    "<leader>sR",
+    function()
+      flash.treesitter_search()
+    end,
+    desc = 'Search treesitter',
+  },
 
-    ["R"] = {
-      function()
-        flash.treesitter_search()
-      end,
-      'Search treesitter',
-    },
+  {
+    "<leader>sl",
+    function()
+      flash.jump({
+        search = { mode = "search", max_length = 0 },
+        label = { before = false, after = { 0, 0 }, uppercase = false },
+        pattern = "^"
+      })
+    end,
+    desc = 'Search line',
+  },
 
-    ["l"] = {
-      function()
-        flash.jump({
-          search = { mode = "search", max_length = 0 },
-          label = { before = false, after = { 0, 0 }, uppercase = false },
-          pattern = "^"
-        })
-      end,
-      'Search line',
-    },
-
-    ["w"] = {
-      function()
-        flash.jump({
-          search = { mode = "search" },
-          pattern = vim.fn.expand("<cword>"),
-          label = { after = { 0, 0 }, uppercase = false },
-          jump = {
-            -- save location in the jumplist
-            jumplist = true,
-            -- jump position
-            pos = "start", ---@type "start" | "end" | "range"
-            -- add pattern to search history
-            history = true,
-            -- add pattern to search register
-            register = true,
-            -- clear highlight after jump
-            nohlsearch = true,
-            -- automatically jump when there is only one match
-            autojump = true,
-          },
-        })
-      end,
-      'Search word',
-    }
-
+  {
+    "<leader>sw",
+    function()
+      flash.jump({
+        search = { mode = "search" },
+        pattern = vim.fn.expand("<cword>"),
+        label = { after = { 0, 0 }, uppercase = false },
+        jump = {
+          -- save location in the jumplist
+          jumplist = true,
+          -- jump position
+          pos = "start", ---@type "start" | "end" | "range"
+          -- add pattern to search history
+          history = true,
+          -- add pattern to search register
+          register = true,
+          -- clear highlight after jump
+          nohlsearch = true,
+          -- automatically jump when there is only one match
+          autojump = true,
+        },
+      })
+    end,
+    desc = 'flash search word',
   }
-}, { mode = "n", prefix = "<leader>" })
+
+})

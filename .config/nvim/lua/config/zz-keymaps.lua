@@ -1,4 +1,4 @@
--- keymaps
+-- local api = require('Comment.api')
 
 local vim = vim
 
@@ -28,18 +28,18 @@ end
 local whichkey = require("which-key")
 local telescope = require("telescope.builtin")
 
-local get_visual_selection = function()
-  local s_start = vim.fn.getpos("'<")
-  local s_end = vim.fn.getpos("'>")
-  local n_lines = math.abs(s_end[2] - s_start[2]) + 1
-  local lines = vim.api.nvim_buf_get_lines(0, s_start[2] - 1, s_end[2], false)
-  lines[1] = string.sub(lines[1], s_start[3], -1)
-  if n_lines == 1 then
-    lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3] - s_start[3] + 1)
+local invert = function(opt)
+  vim.opt_local[opt] = not (vim.opt_local[opt]:get())
+  vim.fn.OK((vim.opt_local[opt]:get() and '' or 'no') .. opt)
+end
+
+vim.fn.cd = function(dir)
+  if vim.fn.isdirectory(dir) then
+    vim.fn.chdir(dir)
+    vim.fn.OK(string.format('cd %s', vim.fn.resolve(dir)))
   else
-    lines[n_lines] = string.sub(lines[n_lines], 1, s_end[3])
+    vim.fn.NOK(string.format('Not a directory %s', dir))
   end
-  return table.concat(lines, '\n')
 end
 
 local my_live_grep = function(pat)
@@ -75,6 +75,7 @@ local my_live_grep = function(pat)
         actions.close(prompt_bufnr)
 
         vim.cmd(':edit +' .. lnum .. ' ' .. filename)
+        vim.api.nvim_input('n')
       end)
       -- keep default keybindings
       return true
@@ -82,126 +83,203 @@ local my_live_grep = function(pat)
   })
 end
 
-whichkey.register({
-  name = "chords",
+whichkey.add({
+  { "<leader>", name = "chords", },
 
-  ["#"] = { "#``", "*``" },
-  ["'"] = { "`", "`" },
-  ["*"] = { "*``", "*``" },
-  ["`"] = { "'", "'" },
-  ['$'] = { 'g_', "eol" },
-  ['^'] = { 'g0', "g0" },
+  {
+    "<leader>#",
+    function()
+      require('Comment.api').toggle.linewise.current()
+    end,
+    desc = 'Commentary',
+    mode = { "n" }
+  },
+  {
+    "<leader>#",
+    function()
+      local api = require('Comment.api')
+      api.toggle.linewise(vim.fn.visualmode())
+    end,
+    desc = 'Commentary',
+    mode = { "v" }
+  },
+  {
+    "<leader>a",
+    '<cmd>:e #<cr>',
+    desc = 'Edit alternate file'
+  },
+  {
+    "<leader>q",
+    vim.cmd.quit,
+    desc = "quit"
+  },
+  {
+    "<leader><leader>",
+    function()
+      vim.cmd.update()
+      vim.fn.updatemsg()
+    end,
+    desc = "update"
+  },
 
-  ['0'] = { function()
-    local col = vim.fn.col('.')
-    local line = vim.fn.getline('.')
-    local lead = string.sub(line, 0, col - 1)
-    local match = string.find(lead, '[^%s]')
-    if match == nil then
-      local beg = string.find(line, '[^%s]')
-      if beg ~= nil and beg ~= col then
-        vim.fn.cursor('.', beg)
+  { "$",        'g_',            desc = "eol" },
+  { "^",        'g0',            desc = "g0" },
+  {
+    "0",
+    function()
+      local col = vim.fn.col('.')
+      local line = vim.fn.getline('.')
+      local lead = string.sub(line, 0, col - 1)
+      local match = string.find(lead, '[^%s]')
+      if match == nil then
+        local beg = string.find(line, '[^%s]')
+        if beg ~= nil and beg ~= col then
+          vim.fn.cursor('.', beg)
+        else
+          vim.fn.feedkeys('g_')
+        end
       else
-        vim.fn.feedkeys('g_')
+        vim.fn.feedkeys('g^')
       end
-    else
-      vim.fn.feedkeys('g^')
-    end
-  end, "bol" },
-
-  ["<c-d>"] = { "<C-d>zz", "down" },
-  ['<c-b>'] = { '<c-b>zz', "backwards" },
-  ["<c-e>"] = { "5<c-e>", "5 up" },
-  ['<c-f>'] = { '<c-f>zz', "forwards" },
-  ['<c-p>'] = { function()
-    telescope.find_files({ hidden = false })
-  end, "find_files" },
-  ["<c-u>"] = { "<c-u>zz", "up" },
-  ["<c-w><c-w>"] = { "<C-W>p", "last window" },
-  ["<c-y>"] = { "5<c-y>", "5 down" },
-
-  ['g;'] = { 'g;zvzz', 'go to older change' },
-  ["g,"] = { 'g,zvzz', "to to newer change" },
-  ["gV"] = { _G.VisualSelectLastChange, "reselect last paste" },
-  ['j'] = { 'gj', "gj" },
-  ["J"] = { "mzJ`z", "join lines but stay put" },
-  ['k'] = { 'gk', "gk" },
-  ["n"] = { "nzzzv", "next match" },
-  ["N"] = { "Nzzzv", "prev match" },
-  ["."] = { ".`[", "repeat + go to last change" },
-  ["Y"] = { "y$", "y$" },
-  ["v"] = { "<c-v>", "<c-v>" },
-  ["U"] = { "<c-r>", "<c-r>" },
-  ["<cr>"] = { "<Nop>", "nop" },
-
-  ["gh"] = {
-    function()
-      vim.fn.chdir(vim.fn.expand('%:h'))
-      vim.fn.OK(vim.fn.getcwd())
-    end, "go home to git root"
+    end,
+    desc = "bol/eol"
   },
-  ["gH"] = {
+
+  { "<c-d>", "<C-d>zz", desc = "down" },
+  { "<c-b>", '<c-b>zz', desc = "backwards" },
+  { "<c-e>", "5<c-e>",  desc = "5 up" },
+  { "<c-f>", '<c-f>zz', desc = "forwards" },
+
+  {
+    "<c-p>",
     function()
-      vim.fn.chdir(vim.fnlocal.CurGitRoot())
-      vim.fn.OK(vim.fn.getcwd())
-    end, "go home to git root"
+      telescope.find_files({ hidden = false })
+    end,
+    desc = "find_files"
   },
-  ["_"] = { function()
-    local pwd = vim.fn.getcwd()
-    vim.fn.chdir(vim.fnlocal.CurGitRoot())
-    vim.api.nvim_input("-") -- call to vinegar
-    vim.fn.chdir(pwd)
-  end, "launch vinegar in git root" },
+  { "<c-u>",      "<c-u>zz", desc = "up" },
+  { "<c-w><c-w>", "<C-W>p",  desc = "last window" },
+  { "<c-y>",      "5<c-y>",  desc = "5 down" },
 
-}, { mode = "n", prefix = "" })
+  { "g;",         'g;zvzz',  desc = 'go to older change' },
+  { "g,",         'g,zvzz',  desc = "to to newer change" },
 
-whichkey.register({
-  name = "chords",
-  ['#'] = { function()
-    local api = require('Comment.api')
-    api.toggle.linewise(vim.fn.visualmode())
-  end, 'Commentary' },
-  ['//'] = { 'y/<C-R>"<CR>gv', 'put selected text in the search buffer' },
-  ['<'] = { '<gv', 'move cursor to beg. of visual block' },
-  ['>'] = { '>gv', 'move cursor to end  of visual block' },
-  ['x'] = { 'x', 'x' }, -- to stop leap from claiming this
-  ['z/'] = { 'y/<C-R>"<CR>gv', 'put selected text in the search buffer' },
-}, { mode = "v", prefix = "" })
+  {
+    "gV",
+    function() _G.VisualSelectLastChange() end,
+    desc = "reselect last paste"
+  },
+  { 'gv',   [[<cmd>normal! gv<cr>]], desc = "reselect paste" },
 
-whichkey.register({
-  name  = "chords",
-  ['#'] = { function()
-    local api = require('Comment.api')
-    api.toggle.linewise(vim.fn.visualmode())
-  end, 'Commentary' },
-  ['/'] = { function()
-    -- TODO there seems to be an issue with stale state and _G.GetVisualSelection
-    -- returns the previous selection, investigate this
-    -- for now we have to restart the visual selection manually
-    -- local pat = _G.GetVisualSelection()
-    vim.api.nvim_input('z/')
-    telescope.live_grep()
-  end, 'live_grep selected text' },
-  ['t'] = { '<Plug>SendSelectionToTmux', "SendSelectionToTmux" },
-}, { mode = "v", prefix = "<leader>" })
+  { "j",    'gj',                    desc = "gj" },
+  { "J",    "mzJ`z",                 desc = "join lines but stay put" },
+  { "k",    'gk',                    desc = "gk" },
+  { "n",    "nzzzv",                 desc = "next match" },
+  { "N",    "Nzzzv",                 desc = "prev match" },
 
-whichkey.register({
-  name = "pasties",
-  ['p'] = { [["_dP]], "Paste last yank over visual selection" },
-}, { mode = "x", prefix = "<leader>" })
+  { "Y",    "y$",                    desc = "y$" },
 
-whichkey.register({
-  name = "quickies",
-  ['gv'] = { [[<cmd>normal! gv<cr>]], "" },
-}, { mode = "o", prefix = "" })
+  { "v",    "<c-v>",                 desc = "<c-v>" },
+  { "U",    "<c-r>",                 desc = "<c-r>" },
+  { "<cr>", "<Nop>",                 desc = "nop" },
 
-whichkey.register({
-  name = "quickies",
-  ['%%'] = { "<C-R>=fnameescape(expand('%:h:p')).'/'<space><cr>", "expand dir of curfile" },
-  ['w!!'] = { [[%!SUDO_ASKPASS=$(which ssh-askpass) sudo -A tee % > /dev/null]], "write file out as root" },
-  ['!!'] = { function()
-  end, '' }
-}, { mode = "c", prefix = "" })
+  {
+    "<leader>gh",
+    function()
+      vim.fn.cd(vim.fn.expand('%:h'))
+    end,
+    desc = "chdir('%:h')"
+  },
+  {
+    "<leader>gH",
+    function()
+      vim.fn.cd(vim.fnlocal.CurGitRoot())
+    end,
+    desc = "chdir(<git root>)"
+  },
+  {
+    "<leader>-",
+    function()
+      local gitroot = vim.fnlocal.CurGitRoot()
+      vim.cmd(':Oil ' .. gitroot)
+    end,
+    desc = "launch vinegar in git root"
+  },
+
+})
+
+whichkey.add({
+  { "<leader>", name = "chords",  mode = { "v" } },
+  { "z/",       'y/<C-R>"<CR>gv', mode = { "v" }, desc = 'put selected text in the search buffer' },
+  { "<",        '<gv',            mode = { "v" }, desc = 'move visual block' },
+  { ">",        '>gv',            mode = { "v" }, desc = 'move visual block' },
+})
+
+-- whichkey.add({
+--   name = "chords",
+--   {
+--     '/',
+--     function()
+--       -- TODO there seems to be an issue with stale state and _G.GetVisualSelection
+--       -- returns the previous selection, investigate this
+--       -- for now we have to restart the visual selection manually
+--       -- local pat = _G.GetVisualSelection()
+--       vim.api.nvim_input('z/')
+--       telescope.live_grep()
+--     end,
+--     desc = 'live_grep selected text'
+--   },
+--   { '<leader>tm', '<Plug>SendSelectionToTmux', desc = "SendSelectionToTmux" },
+-- })
+
+whichkey.add({
+  { "<leader>p",   group = "pasties", mode = { "n" } },
+  { "<leader>p",   [["_dP]],          mode = { "v" }, desc = "Paste last yank over visual selection" },
+  { "<leader>pa'", [["_da'P]],        mode = { "n" }, desc = 'Paste last yank' },
+  { "<leader>pi'", [["_di'P]],        mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pa"', '"_da"P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pi"', '"_di"P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pa{', '"_da{P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pi{', '"_di{P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pa}', '"_da}P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pi}', '"_di}P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pa(', '"_da(P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pi(', '"_di(P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pa)', '"_da]P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pi)', '"_di]P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pa[', '"_da[P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pi[', '"_di[P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pa]', '"_da]P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pi]', '"_di]P',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pal', '"_dalP',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pil', '"_dilP',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pap', '"_dapP',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>pip', '"_dipP',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>paW', '"_daWP',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>piW', '"_diWP',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>paw', '"_dawP',          mode = { "n" }, desc = 'Paste last yank' },
+  { '<leader>piw', '"_diwP',          mode = { "n" }, desc = 'Paste last yank' },
+})
+
+-- whichkey.add({
+--   { "", name = "cmdies", group = "cmdies", mode = { "c" } },
+--   {
+--     '%%',
+--     "<C-R>=fnameescape(expand('%:h:p')).'/'<space><cr>",
+--     desc = "expand dir of curfile"
+--   },
+--   {
+--     'w!!',
+--     [[%!SUDO_ASKPASS=$(which ssh-askpass) sudo -A tee % > /dev/null]],
+--     desc = "write file out as root"
+--   },
+--   {
+--     '!!',
+--     function()
+--     end,
+--     desc = ''
+--   }
+-- })
 
 -- cnoremap <expr> <c-n> wildmenumode() ? "\<c-n>" : "\<down>"
 -- cnoremap <expr> <c-p> wildmenumode() ? "\<c-p>" : "\<up>"
@@ -209,179 +287,238 @@ map('i', '<c-w>', '<c-g>u<c-w>', { expr = false, desc = "" })
 map('c', '<c-n>', '<down>', { expr = false })
 map('c', '<c-p>', '<up>', { expr = false })
 
-local invert = function(opt)
-  vim.opt_local[opt] = not (vim.opt_local[opt]:get())
-  vim.fn.OK((vim.opt_local[opt]:get() and '' or 'no') .. opt)
-end
+whichkey.add({
+  { '',          group = "single-step",                         mode = { "n" } },
 
-local cd = function(dir)
-  if vim.fn.isdirectory(dir) then
-    vim.fn.chdir(dir)
-    vim.fn.OK(string.format('cd %s', dir))
-  end
-end
+  { '<leader>"', telescope.buffers,                             desc = "Buffers" },
 
-whichkey.register({
-  ['<leader>'] = { ":update<cr>:lua vim.fn.updatemsg()<cr>", "update" },
+  { '<leader>$', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>%', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>&', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>(', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>)', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>*', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>.', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>:', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader><', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>>', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>`', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>~', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>¬', function() vim.cmd('echomsg("Unmapped")') end, desc = 'Run file' },
+  { '<leader>^', '<cmd>:echomsg("TODO: Run file")<cr>',         desc = 'Run file' },
+  { '<leader>£', '<cmd>:echomsg("TODO: Run file")<cr>',         desc = 'Run file' },
 
-  ['"'] = { telescope.buffers, "Buffers" },
-  ['#'] = { function()
-    require('Comment.api').toggle.linewise.current()
-  end, 'Commentary' },
-  ['$'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['%'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['&'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['('] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  [')'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['*'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  [','] = { '<cmd>:e #<cr>', 'Edit alternate file' },
-  ['.'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['/'] = { my_live_grep, "my_live_grep" },
-  [':'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['<'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['>'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['`'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['~'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['¬'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['?'] = { function()
-    require("telescope.builtin").live_grep({ search_dirs = { vim.fn.expand("%:p") } })
-  end,
-    "live_grep_current_buffer" },
-  ['@'] = { function()
-    require('telescope.builtin').live_grep({ grep_open_files = true })
-  end,
-    "live_grep_open_files" },
-  ['^'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
-  ['£'] = { '<cmd>:echomsg("TODO: Run file")<cr>', 'Run file' },
+  {
+    '<leader>a',
+    ':edit #<cr>',
+    desc = "edit alt",
+  },
+  {
+    '<leader>lS',
+    ':!less %<cr>',
+    desc = "less %"
+  },
+  {
+    '<leader>on',
+    vim.cmd.only,
+    desc = "only"
+  },
+  {
+    '<leader>rl',
+    ":source $MYVIMRC<cr>:lua vim.fn.OK(vim.fn.expand('$MYVIMRC') .. ' reloaded')<cr>",
+    desc = "reload",
+  },
+  {
+    '<leader>so',
+    ":so<cr>:lua vim.fn.OK(vim.fn.expand('%') .. ' sourced')<cr>",
+    desc = "source",
+  },
+  {
+    '<leader>u',
+    vim.cmd.UndotreeToggle,
+    desc = "UndotreeToggle",
+  },
+  {
+    '<leader>w',
+    vim.cmd.update,
+    desc = "update",
+  },
+})
 
-  ['a'] = { ':edit #<cr>', "edit alt" },
-  ['lS'] = { ':!less %<cr>', "less %" },
-  ['on'] = { vim.cmd.only, "only" },
-  ['rl'] = { ":source $MYVIMRC<cr>:lua vim.fn.OK(vim.fn.expand('$MYVIMRC') .. ' reloaded')<cr>", "reload" },
-  ['so'] = { ":so<cr>:lua vim.fn.OK(vim.fn.expand('%') .. ' sourced')<cr>", "source" },
-  ['u'] = { vim.cmd.UndotreeToggle, "UndotreeToggle" },
-  ['w'] = { vim.cmd.update, "update" },
+whichkey.add({
+  { '<leader>', group = "greps", name = "greps", mode = { "n" } },
+  --
+  {
+    '<leader>/',
+    function()
+      local last_search = vim.fn.getreg('/')
+      -- This is a hack to put the last search item into the telescope search
+      -- This could have timing implications
+      my_live_grep()
+      vim.api.nvim_input(last_search)
+    end,
+    desc = "my_live_grep"
+  },
+  -- { '/',         "/<CR>/<C-e>",                                 desc = "resume search" },
+  {
+    '<leader>?',
+    function()
+      require("telescope.builtin").live_grep({ search_dirs = { vim.fn.expand("%:p") } })
+    end,
+    desc = "live_grep_current_buffer"
+  },
+  {
+    '<leader>@',
+    function()
+      require('telescope.builtin').live_grep({ grep_open_files = true })
+    end,
+    desc = "live_grep_open_files"
+  },
+})
 
-  c = {
-    name = "cd",
-    a = { vim.lsp.buf.code_action, "code action" },
-    d = { function() cd(vim.fn.expand('%:h')) end, 'lcd local' },
-    r = { function() cd(vim.fnlocal.CurGitRoot()) end, 'lcd root' },
+whichkey.add({
+
+  { group = "inversions", mode = { "n" } },
+  { "<leader>ip",         function() invert('paste') end, desc = 'invert paste' },
+  { "<leader>is",         function() invert('spell') end, desc = 'invert spell' },
+  {
+    "<leader>ix",
+    function()
+      invert('cursorline'); invert('cursorcolumn')
+    end,
+    desc = 'invert cursorline/column'
   },
 
-  g = {
-    r = { function()
-      vim.cmd(string.format([[:grep %s]], vim.fnlocal.CurWord()))
-    end, "grep selection" },
-    o = {
+})
+
+whichkey.add({
+  { group = "cd", mode = { "n" } },
+  {
+    "<leader>ca",
+    vim.lsp.buf.code_action,
+    desc = "code action"
+  },
+  {
+    "<leader>cd",
+    function() vim.fn.cd(vim.fn.expand('%:h')) end,
+    desc = 'lcd local'
+  },
+  {
+    "<leader>cp",
+    function() vim.fn.cd(vim.fn.resolve(vim.fn.expand('%:h') .. '/..')) end,
+    desc = 'lcd parent'
+  },
+  {
+    "<leader>cr",
+    function() vim.fn.cd(vim.fnlocal.CurGitRoot()) end,
+    desc = 'lcd root'
+  },
+
+  { "<leader>g",
+    {
+      "<leader>gr",
+      function()
+        vim.cmd(string.format([[:grep %s]], vim.fnlocal.CurWord()))
+      end,
+      desc = "grep selection"
+    },
+    {
+      "<leader>go",
       function()
         local linenum, _ = unpack(vim.api.nvim_win_get_cursor(0))
-        local basename = string.gsub(vim.api.nvim_buf_get_name(0), vim.loop.cwd() .. '/', '')
-        -- local cwd = string.gsub(vim.fn.system({"oit", "rev-parse", "--show-prefix"}), '\n', '')
-        local branch = string.gsub(vim.fn.system({ "git", "branch", "--show-current" }), '\n', '')
-        local filenum = vim.fn.resolve(basename) .. ':' .. linenum
+        local basename = vim.api.nvim_buf_get_name(0)
+        basename = string.gsub(basename, "(.*/)(.*)", "%2")
+        local branch = vim.fnlocal.CurGitBranch()
+        local filenum = string.format("%s:%s", basename, linenum)
         vim.fn.system({ "gh", "browse", "--branch", branch, filenum })
-      end, "gh browse"
+      end,
+      desc = "gh browse"
     },
   },
+})
 
-  i = {
-    name = "inversions",
-    p = { function() invert('paste') end, 'invert paste' },
-    s = { function() invert('spell') end, 'invert spell' },
-    x = { function()
-      invert('cursorline'); invert('cursorcolumn')
-    end, 'invert cursorline/column' },
+whichkey.add({
+
+  { "<leader>l", group = "listers", },
+  {
+    "<leader>ls",
+    telescope.buffers,
+    desc = "buffers"
   },
+})
 
-  l = {
-    name = "listers",
-    s = { telescope.buffers, "buffers" },
-  },
+whichkey.add({
 
-  m = {
-    a = { [[:<c-u><c-r><c-r>='let @'. v:register .' = '. string(getreg(v:register))<cr><c-f><left>]], "edit macro?" },
-    s = { '<cmd>messages<cr>', ":messages" },
-    c = { '<cmd>messages clear<cr>', ":messages clear" },
-  },
+  { "<leader>m",  group = "messages",                                                                         mode = { "n" } },
+  { "<leader>ma", [[:<c-u><c-r><c-r>='let @'. v:register .' = '. string(getreg(v:register))<cr><c-f><left>]], desc = "edit macro?" },
+  { "<leader>ms", '<cmd>messages<cr>',                                                                        desc = ":messages" },
+  { "<leader>mc", '<cmd>messages clear<cr>',                                                                  desc = ":messages clear" },
 
-  p = {
-    name = "pasties",
-    ["a'"] = { [["_da'P]], '' },
-    ["i'"] = { [["_di'P]], '' },
-    ['a"'] = { '"_da"P', '' },
-    ['i"'] = { '"_di"P', '' },
-    ['a{'] = { '"_da{P', '' },
-    ['i{'] = { '"_di{P', '' },
-    ['a}'] = { '"_da}P', '' },
-    ['i}'] = { '"_di}P', '' },
-    ['a('] = { '"_da(P', '' },
-    ['i('] = { '"_di(P', '' },
-    ['a)'] = { '"_da]P', '' },
-    ['i)'] = { '"_di]P', '' },
-    ['a['] = { '"_da[P', '' },
-    ['i['] = { '"_di[P', '' },
-    ['a]'] = { '"_da]P', '' },
-    ['i]'] = { '"_di]P', '' },
-    ['al'] = { '"_dalP', '' },
-    ['il'] = { '"_dilP', '' },
-    ['ap'] = { '"_dapP', '' },
-    ['ip'] = { '"_dipP', '' },
-    ['aW'] = { '"_daWP', '' },
-    ['iW'] = { '"_diWP', '' },
-    ['aw'] = { '"_dawP', '' },
-    ['iw'] = { '"_diwP', '' },
-  },
+})
 
-  q = { vim.cmd.quit, "quit" },
-
-  t = {
-    name = "telescope two-step",
-
-    ['?'] = { function()
+whichkey.add({
+  -- t --
+  { "<leader>t",  group = "telescope two-step", mode = { "n" } },
+  {
+    '<leader>t?',
+    function()
       vim.cmd([[:Telescope]])
-    end, "live_grep_current_buffer" },
-    b = { telescope.buffers, "buffers" },
-    c = { telescope.commands, "commands" },
-    h = { telescope.help_tags, "help_tags" },
-    g = { '<cmd>TagbarToggle<cr>', "TagbarToggle" },
-    j = { telescope.jumplist, "jumplist" },
-    k = { function()
+    end,
+    desc = "live_grep_current_buffer"
+  },
+  { "<leader>tb", telescope.buffers,            desc = "buffers" },
+  { "<leader>tc", telescope.commands,           desc = "commands" },
+  { "<leader>th", telescope.help_tags,          desc = "help_tags" },
+  { "<leader>tg", '<cmd>TagbarToggle<cr>',      desc = "TagbarToggle" },
+  { "<leader>tj", telescope.jumplist,           desc = "jumplist" },
+  {
+    "<leader>tk",
+    function()
       vim.cmd([[
         :GkeepLogin
         :lua require('telescope').load_extension('gkeep')
         :Telescope gkeep
       ]])
-    end, "gkeep" },
-    m = { telescope.marks, "marks" },
-    -- s = { ':lua <Plug>NormalModeSendToTmux', "SendSelectionToTmux" },
-    q = { telescope.quickfix, "quickfix" },
-    r = { telescope.registers, "registers" },
-    t = { telescope.resume, "resume" },
-    v = { '<Plug>SetTmuxVars', "SetTmuxVars" },
+    end,
+    desc = "gkeep"
+  },
+  { "<leader>tm", telescope.marks,     desc = "marks" },
+  -- s = { ':lua <Plug>NormalModeSendToTmux', "SendSelectionToTmux" },
+  { "<leader>tq", telescope.quickfix,  desc = "quickfix" },
+  { "<leader>tr", telescope.registers, desc = "registers" },
+  { "<leader>tt", telescope.resume,    desc = "resume" },
+  { "<leader>tv", '<Plug>SetTmuxVars', desc = "SetTmuxVars" },
 
-    w = {
-      name = 'worktree',
-      r = { vim.cmd.update, "update" },
-      w = { function()
-        telescope.load_extension("git_worktree")
-        telescope.extensions.git_worktree.git_worktrees()
-      end, 'select worktrees' },
-    },
+  -- w --
+  { "<leader>w",  group = 'worktree',  mode = { "n" } },
+  {
+    "<leader>wr",
+    vim.cmd.update,
+    desc = "update"
+  },
+  {
+    "<leader>ww",
+    function()
+      telescope.load_extension("git_worktree")
+      telescope.extensions.git_worktree.git_worktrees()
+    end,
+    desc = 'select worktrees'
+  },
 
-    z = {
-      name = "zebra",
-      n = {
-        function()
-          print('zebra from tanzania')
-        end,
-        "zebra from tanzania"
-      }
-    },
-
+  -- z --
+  {
+    "<leader>z",
+    name = "zebra",
+  },
+  {
+    "<leader>nz",
+    function()
+      print('zebra from tanzania')
+    end,
+    desc = "zebra from tanzania"
   }
 
-}, { mode = "n", prefix = "<leader>" })
+})
 
 -- local M = {}
 

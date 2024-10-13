@@ -70,15 +70,17 @@ function M.qf_todo()
 end
 
 local whichkey = require("which-key")
-whichkey.register({
-  t = {
-    name = "todo",
-    d = { function()
+whichkey.add({
+  { "<leader>t", group = "todo", mode = { "n" } },
+  {
+    "<leader>td",
+    function()
       M.qf_todo()
       vim.cmd([[:copen]])
-    end, "copen todos" },
+    end,
+    desc = "copen todos"
   }
-}, { mode = "n", prefix = "<leader>" })
+})
 
 return M
 -- vim.cmd.copen()
