@@ -191,6 +191,15 @@ return {
   { "wellle/targets.vim",             lazy = true,  event = "InsertEnter", }, -- Add mode text objects
 
   {
+    "rcarriga/nvim-dap-ui",
+    dependencies = {
+      "mfussenegger/nvim-dap",
+      "nvim-neotest/nvim-nio",
+      "mfussenegger/nvim-dap-python"
+    },
+  },
+
+  {
     "kevinhwang91/nvim-ufo",
     event = "BufRead",
     dependencies = {
