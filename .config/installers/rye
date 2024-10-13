@@ -1,4 +1,3 @@
 #!/bin/bash
 
-RYE_HOME
-curl -sSf https://rye.astral.sh/get | bash
+curl -sSf https://rye.astral.sh/get | RYE_HOME="$HOME/.local/share/rye" bash
