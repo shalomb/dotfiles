@@ -107,6 +107,7 @@ unidiff
 uritemplate
 urllib3
 validictory
+vint
 virtualenv
 wcmatch
 webcolors
@@ -115,4 +116,3 @@ xdg
 yamllint
 yq
 zipp
-rich
