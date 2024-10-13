@@ -192,3 +192,7 @@ terraform.rc
 *pkrvars*
 
 # This repository's ignores
+package*lock*
+package.json
+*.log
+.mypy*
