@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# https://rye.astral.sh/guide/installation/#add-shims-to-path
+
+export RYE_HOME="$HOME/.local/share/rye"
+export RYE_NO_AUTO_INSTALL=1
+
+mkdir -p "$HOME/.local/share/bash-completion/completions"
+source "$RYE_HOME/env"
+hash -r
+rye self completion >"$HOME/.local/share/bash-completion/completions/rye.bash"
+
+source "$HOME/.local/share/bash-completion/completions/rye.bash"
