@@ -20,7 +20,7 @@ function! ShowCrossHairs(...)
   let l:period = a:0 == 1 ? a:1 : '50m'
   let l:hl_cl = GetHlValue('CursorLine')
   let l:hl_cc = GetHlValue('CursorColumn')
-  let l:colour = 74
+  let l:colour = 117
   execute('highlight CursorLine   ctermbg=' . l:colour)
   execute('highlight CursorColumn ctermbg=' . l:colour)
   call execute('norm [ox')

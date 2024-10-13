@@ -53,7 +53,7 @@ nullls.setup {
 
     code_actions.gitrebase,
     -- code_actions.refactoring, -- module not found
-    code_actions.shellcheck,
+    -- code_actions.shellcheck,
 
     -- completions.luasnip,
     -- completions.spell,

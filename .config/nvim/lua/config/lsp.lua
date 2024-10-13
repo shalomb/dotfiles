@@ -11,266 +11,242 @@ local luasnip = require("luasnip")
 local util = require("lspconfig").util
 local whichkey = require("which-key")
 
--- lsz.preset("recommended")
 
--- lsz.set_preferences({
---   call_servers = "local",
---   cmp_capabilities = true,
---   configure_diagnostics = true,
---   manage_nvim_cmp = true,
---   set_lsp_keymaps = false,
---   setup_servers_on_start = true,
---   sign_icons = {
---     error = "✘",
---     warn = "▲",
---     hint = "⚑",
---     info = ""
---   },
---   suggest_lsp_servers = true,
--- })
+---- lspconfig ----
 
--- -- language servers for mason-lspconfig
--- local language_servers = {
---   "ansiblels",
---   "awk_ls",
---   "bashls",
---   "cssls",
---   "gopls",
---   "html",
---   "jsonls",
---   "lua_ls",
---   "pyright",
---   "rust_analyzer",
---   "sqlls",
---   "terraformls",
---   "tflint",
---   "tsserver",
---   "vimls",
---   "yamlls",
--- }
+local lspconfig = require('lspconfig')
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
--- -- lsz.ensure_installed(language_servers)
+require('mason-lspconfig').setup_handlers({
+  function(server_name)
+    lspconfig[server_name].setup({
+      capabilities = capabilities,
+    })
+  end,
+})
 
--- local cmp_select = { behavior = cmp.SelectBehavior.Select }
--- local cmp_mappings = lsz.defaults.cmp_mappings({
---   ["<C-Space>"] = cmp.mapping.complete(),
---   ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
---   ["<C-n>"] = cmp.mapping.select_next_item(cmp_select),
---   ["<C-u>"] = cmp.mapping.scroll_docs(-4),
---   ["<C-d>"] = cmp.mapping.scroll_docs(4),
---   ["<C-j>"] = cmp.mapping.confirm({ select = true }),
---   ["<C-k>"] = cmp.mapping(function(_, _)
---     if luasnip.expand_or_jumpable() then
---       luasnip.expand_or_jump()
---     else
---       cmp.mapping.confirm({ select = true })
---     end
---   end, { "i", "s" }),
--- })
+lspconfig.lua_ls.setup({
+  -- on_attach = lsp.default_keymaps({buffer = bufnr}),
+  capabilities = capabilities,
+  flags = { debounce_text_changes = 150 },
+  settings = {
+    Lua = {
+      completion = {
+        callSnippet = "Replace"
+      },
+      diagnostics = {
+        globals = { "_", "_G", "vim", }
+      },
+      workspace = {
+        checkThirdParty = false,
+      },
+    }
+  }
+})
 
--- -- disable completion with tab
--- -- this helps with copilot setup
--- -- case matters
--- cmp_mappings["<Tab>"] = nil
--- cmp_mappings["<S-Tab>"] = nil
--- cmp_mappings["<CR>"] = nil
--- cmp_mappings["<C-y>"] = nil
--- cmp_mappings["<C-e>"] = nil
+lspconfig.pyright.setup({
+  -- on_attach = on_attach,
+  capabilities = capabilities,
+  flags = { debounce_text_changes = 150 },
+  root_dir = util.root_pattern(".venv", "venv", "pyrightconfig.json"),
+  settings = {
+    pyright = {
+      disableLanguageServices = false,
+      disableOrganizeImports = true
+    },
+    python = {
+      analysis = {
+        autoSearchPaths = true,
+        useLibraryCodeForTypes = true,
+        diagnosticMode = "openFilesOnly",
+      },
+    },
+  },
+})
 
--- -- lsz.setup_nvim_cmp({
--- --   enabled = function()
--- --     buftype = vim.api.nvim_buf_get_option(0, "buftype")
--- --     if buftype == "prompt" then
--- --       return false
--- --     end
--- --     return true
--- --   end,
--- --   formatting = {
--- --     fields = { "menu", "abbr", "kind" },
--- --     format = function(entry, item)
--- --       local menu_icon = {
--- --         buffer = "Ω",
--- --         luasnip = "⋗",
--- --         nvim_lsp = "λ",
--- --         nvim_lua = "[lua]",
--- --         path = "",
--- --       }
--- --       item.menu = menu_icon[entry.source.name]
--- --       return item
--- --     end,
--- --   },
--- --   mapping = cmp_mappings,
--- --   preselect = cmp.PreselectMode.None,
--- --   snippet = {
--- --     expand = function(args)
--- --       luasnip.lsp_expand(args.body)
--- --     end,
--- --   },
--- --   sources = {
--- --     -- TODO - tmux, ctags, git commits
--- --     { name = "calc",     keyword_length = 3 },
--- --     { name = "emoji",    keyword_length = 3 },
--- --     { name = "luasnip",  keyword_length = 2 },
--- --     { name = "nvim_lsp", keyword_length = 3 },
--- --     { name = "nvim_lua", keyword_length = 3 },
--- --     { name = "path",     keyword_length = 3 },
--- --     {
--- --       name = "buffer",
--- --       keyword_length = 3,
--- --       option = {
--- --         get_bufnrs = function()
--- --           return vim.api.nvim_list_bufs()
--- --         end
--- --       }
--- --     },
--- --   },
--- --   window = {
--- --     completion = cmp.config.window.bordered(),
--- --     documentation = cmp.config.window.bordered(),
--- --   },
--- -- })
+lspconfig.rust_analyzer.setup {
+  -- Server-specific settings. See `:help lspconfig-setup`
+  capabilities = capabilities,
+  settings = {
+    ['rust-analyzer'] = {},
+  },
+}
 
--- -- Set configuration for specific filetype.
--- cmp.setup.filetype("gitcommit", {
---   sources = cmp.config.sources({
---     { name = "cmp_git" }, -- You can specify the `cmp_git` source if you were installed it.
---   }, {
---     { name = "buffer" },
---   })
--- })
+-- lspconfig.gopls.setup({})
 
--- -- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
--- cmp.setup.cmdline({ "/", "?" }, {
---   sources = {
---     { name = "buffer" }
---   }
--- })
+-- Global mappings.
+-- See `:help vim.diagnostic.*` for documentation on any of the below functions
 
--- -- -- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
--- -- cmp.setup.cmdline(':', {
--- --   sources = cmp.config.sources({
--- --     { name = 'path' }
--- --   }, {
--- --     { name = 'cmdline' }
--- --   })
--- -- })
+vim.api.nvim_buf_set_option(0, "omnifunc", "v:lua.vim.lsp.omnifunc")
 
--- -- -- setup cmdline completion to keep order reversed
--- -- cmp.setup.cmdline({ ':', '/', '?' }, {
--- --   mapping = cmp.mapping.preset.cmdline(),
--- --   view = {
--- --     entries = {name = 'custom', selection_order = 'near_cursor' }
--- --   },
--- -- })
+-- luasnip setup
+local luasnip = require 'luasnip'
 
--- lsz.set_preferences({
---   suggest_lsp_servers = true,
---   setup_servers_on_start = true,
---   set_lsp_keymaps = false,
---   configure_diagnostics = true,
---   cmp_capabilities = true,
---   manage_nvim_cmp = true,
---   call_servers = "local",
---   sign_icons = {
---     error = "✘",
---     warn = "▲",
---     hint = "⚑",
---     info = ""
---   }
--- })
---
--- local on_attach = function(client, bufnr)
---   -- Enable completion triggered by <c-x><c-o>
---   vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
---
---   if client.name == "eslint" then
---     vim.cmd.LspStop("eslint")
---     return
---   end
---
---   whichkey.register({
---     ["]d"] = { vim.diagnostic.goto_next, "diag goto next" },
---     ["[d"] = { vim.diagnostic.goto_prev, "diag goto prev" },
---   }, { mode = "n", prefix = "" })
---
---   whichkey.register({
---     d = {
---       name = "diagnostics",
---       ["f"] = { vim.diagnostic.open_float, "diag float" },
---       ["l"] = { vim.diagnostic.setloclist, "diags in loclist" },
---       ["n"] = { vim.diagnostic.goto_next, "]d" },
---       ["p"] = { vim.diagnostic.goto_prev, "[d" },
---       ["q"] = { vim.diagnostic.setqflist, "diags in loclist" },
---     }
---   }, { mode = "n", prefix = "<leader>" })
---
---   whichkey.register({
---     ["="] = { function() vim.lsp.buf.format { async = true } end, "format buffer" },
---     l = {
---       name = "lsp actions",
---       ["="] = { function() vim.lsp.buf.format { async = true } end, "format buffer" },
---       ["a"] = { vim.lsp.buf.code_action, "code action" },
---       ["D"] = { vim.lsp.buf.declaration, "declaration" },
---       ["d"] = { vim.lsp.buf.definition, "definition" },
---       ["h"] = { vim.lsp.buf.signature_help, "help" },
---       ["k"] = { vim.lsp.buf.hover, "hover" },
---       ["l"] = { function()
---         print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
---       end, "list wksp folders" },
---       ["r"] = { vim.lsp.buf.references, "references" },
---       ["R"] = { vim.lsp.buf.rename, "rename symbol" },
---       ["S"] = { vim.lsp.buf.workspace_symbol, "workspace symbol" },
---       ["wa"] = { vim.lsp.buf.add_workspace_folder, "wksp add folder" },
---       ["wr"] = { vim.lsp.buf.remove_workspace_folder, "wksp remove folder" },
---     },
---   }, { mode = "n", prefix = "<leader>" })
--- end
---
--- lsz.on_attach(on_attach)
--- lsz.setup()
+local cmp_select = { behavior = cmp.SelectBehavior.Select }
 
--- -- Lua Diagnostics.: Undefined global `vim`.
--- -- luacheck reports 113 accessing undefined variable 'vim'
--- -- that is fixed by a setting in ~/.luacheckrc
+cmp.setup {
+  enabled = function()
+    local buftype = vim.api.nvim_buf_get_option(0, "buftype")
+    if buftype == "prompt" then
+      return false
+    end
+    return true
+  end,
 
--- lspconfig.lua_ls.setup({
---   on_attach = on_attach,
---   flags = { debounce_text_changes = 150 },
---   settings = {
---     Lua = {
---       completion = {
---         callSnippet = "Replace"
---       },
---       diagnostics = {
---         globals = { "_", "_G", "vim", }
---       },
---       workspace = {
---         checkThirdParty = false,
---       },
---     }
---   }
--- })
+  formatting = {
+    fields = { "menu", "abbr", "kind" },
+    format = function(entry, item)
+      local menu_icon = {
+        buffer = "Ω",
+        luasnip = "⋗",
+        nvim_lsp = "λ",
+        nvim_lua = "[lua]",
+        path = "",
+      }
+      item.menu = menu_icon[entry.source.name]
+      return item
+    end,
+  },
 
--- lspconfig.pyright.setup({
---   on_attach = on_attach,
---   flags = { debounce_text_changes = 150 },
---   root_dir = util.root_pattern(".venv", "venv", "pyrightconfig.json"),
---   settings = {
---     pyright = {
---       disableLanguageServices = false,
---       disableOrganizeImports = true
---     },
---     python = {
---       analysis = {
---         autoSearchPaths = true,
---         useLibraryCodeForTypes = true,
---         diagnosticMode = "openFilesOnly",
---       },
---     },
---   },
--- })
+  mapping = cmp.mapping.preset.insert({
+    ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
+    ['<C-n>'] = cmp.mapping.select_next_item(cmp_select),
+    ['<C-u>'] = cmp.mapping.scroll_docs(-4), -- Up
+    ['<C-d>'] = cmp.mapping.scroll_docs(4),  -- Down
 
--- lspconfig.sqlls.setup({})
+    ["<C-j>"] = cmp.mapping.confirm({ select = true }),
+    ["<C-k>"] = cmp.mapping(function(_, _)
+      if luasnip.expand_or_jumpable() then
+        luasnip.expand_or_jump()
+      else
+        cmp.mapping.confirm({ select = true })
+      end
+    end, { "i", "s" }),
+
+    -- C-b (back) C-f (forward) for snippet placeholder navigation.
+    ['<C-Space>'] = cmp.mapping.complete(),
+
+    ['<Tab>'] = nil,
+    ['<S-Tab>'] = nil,
+    ['<CR>'] = nil,
+    ['<C-y>'] = nil,
+    ['<C-e>'] = nil,
+
+  }),
+
+  preselect = cmp.PreselectMode.None,
+
+  snippet = {
+    expand = function(args)
+      luasnip.lsp_expand(args.body)
+    end,
+  },
+
+  sources = {
+    -- TODO - tmux, ctags, git commits
+    { name = "calc",     keyword_length = 3 },
+    { name = "emoji",    keyword_length = 3 },
+    { name = "luasnip",  keyword_length = 2 },
+    { name = "nvim_lsp", keyword_length = 3 },
+    { name = "nvim_lua", keyword_length = 3 },
+    { name = "path",     keyword_length = 3 },
+    {
+      name = "buffer",
+      keyword_length = 3,
+      option = {
+        get_bufnrs = function()
+          return vim.api.nvim_list_bufs()
+        end
+      }
+    },
+  },
+
+  window = {
+    completion = cmp.config.window.bordered(),
+    documentation = cmp.config.window.bordered(),
+  },
+}
+
+local on_attach = function(args)
+  local bufnr = args.buf
+  local client = vim.lsp.get_client_by_id(args.data.client_id)
+
+  -- Enable completion triggered by <c-x><c-o>
+  vim.api.nvim_buf_set_option(bufnr, "omnifunc", "v:lua.vim.lsp.omnifunc")
+
+  if client.name == "eslint" then
+    vim.cmd.LspStop("eslint")
+    return
+  end
+
+  -- Buffer local mappings.
+  -- See `:help vim.lsp.*` for documentation on any of the below functions
+
+  whichkey.add({
+    { "<leader>d",  group = "diagnostics",     mode = { "n" }, },
+    { "<leader>df", vim.diagnostic.open_float, desc = "diag float" },
+    { "<leader>dl", vim.diagnostic.setloclist, desc = "diags in loclist" },
+    { "<leader>dq", vim.diagnostic.setqflist,  desc = "diags in loclist" },
+    { "]d",         vim.diagnostic.goto_next,  desc = "diag goto next" },
+    { "[d",         vim.diagnostic.goto_prev,  desc = "diag goto prev" },
+  })
+
+  whichkey.add({
+    { "<leader>", group = "lsp buffer actions", mode = { "n" }, },
+    {
+      "<leader>=",
+      function() vim.lsp.buf.format { async = true } end,
+      desc = "format buffer"
+    },
+    { "gD",       vim.lsp.buf.declaration,      desc = "declaration" },
+    { "gd",       vim.lsp.buf.definition,       desc = "definition" },
+    { "gd",       vim.lsp.buf.code_action,      desc = "code_action" },
+    { "gt",       vim.lsp.buf.type_definition,  desc = "type definition" },
+    { "gh",       vim.lsp.buf.signature_help,   desc = "help" },
+    { "gi",       vim.lsp.buf.implementation,   desc = "implementation" },
+    { "K",        vim.lsp.buf.hover,            desc = "hover" },
+    { "gr",       vim.lsp.buf.references,       desc = "references" },
+    { "<leader>", group = "lsp actions",        mode = { "n" }, },
+    {
+      "<leader>lspwf",
+      function()
+        print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+      end,
+      desc = "list wksp folders"
+    },
+    { "<leader>lspR", vim.lsp.buf.rename,           desc = "rename symbol" },
+    { "<leader>lspS", vim.lsp.buf.workspace_symbol, desc = "workspace symbol" },
+    {
+      "<leader>lspwl",
+      function()
+        print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
+      end,
+      desc = "wksp add folder"
+    },
+    { "<leader>lspwa", vim.lsp.buf.add_workspace_folder,    desc = "wksp add folder" },
+    { "<leader>lspwr", vim.lsp.buf.remove_workspace_folder, desc = "wksp remove folder" },
+  })
+end
+
+-- Use LspAttach autocommand to only map the following keys
+-- after the language server attaches to the current buffer
+vim.api.nvim_create_autocmd('LspAttach', {
+  desc = 'LSP actions',
+  group = vim.api.nvim_create_augroup('UserLspConfig', {}),
+  callback = on_attach
+})
+
+-- Configure `ruff-lsp`.
+-- See: https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#ruff_lsp
+-- For the default config, along with instructions on how to customize the settings
+require('lspconfig').ruff_lsp.setup {
+  init_options = {
+    settings = {
+      -- Any extra CLI arguments for `ruff` go here.
+      args = {},
+    }
+  }
+}
 
 -- -- debugging
 -- -- vim.lsp.set_log_level("debug")

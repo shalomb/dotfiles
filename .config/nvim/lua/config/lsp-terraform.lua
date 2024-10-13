@@ -19,6 +19,7 @@ local language_servers = {
   "jsonls",
   -- "lua_ls",
   "pyright",
+  "ruff",
   -- "rust_analyzer",
   -- "sqlls",
   "terraformls",
@@ -30,13 +31,15 @@ local language_servers = {
 
 local cmp_select = { behavior = cmp.SelectBehavior.Select }
 
--- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
-cmp.setup.cmdline({ '/', '?' }, {
-  mapping = cmp.mapping.preset.cmdline(),
-  sources = {
-    { name = 'buffer' }
-  }
-})
+----- cmdline completion is broken if we enable this ----
+
+-- -- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
+-- cmp.setup.cmdline({ '/', '?' }, {
+--   mapping = cmp.mapping.preset.cmdline(),
+--   sources = {
+--     { name = 'buffer' }
+--   }
+-- })
 
 -- -- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
 -- cmp.setup.cmdline(':', {
@@ -48,7 +51,7 @@ cmp.setup.cmdline({ '/', '?' }, {
 --   }),
 --   matching = { disallow_symbol_nonprefix_matching = false }
 -- })
---
+
 cmp.setup({
   snippet = {
     -- REQUIRED - you must specify a snippet engine

@@ -84,50 +84,49 @@ end
 
 local fnlocal = {
 
-  ['CurArch']            = os_exec('uname -m'),
-  ['CurDateC']           = partial(vim.fn.strftime, '%c'),
-  ['CurDate']            = partial(vim.fn.strftime, '%FT%T'),
-  ['CurDateRfc3389']     = partial(vim.fn.strftime, '%FT%T%z'),
-  ['CurDateZ']           = partial(vim.fn.strftime, '%F %T%z'),
-  ['CurExpr']            = partial(vim.fn.expand, '<cexpr>'),
-  ['CurFileDirectory']   = partial(vim.fn.expand, '%:p:h'),
-  ['CurFile']            = partial(vim.fn.expand, '%:t'),
-  ['CurFQDN']            = os_exec('hostname -f'),
-  ['CurGitBranch']       = os_exec('git rev-parse --abbrev-ref HEAD'),
-  ['CurGitCommitMessage']   = os_exec('git log -1 --oneline --pretty=%B'),
-  ['CurGitCommitSHA']       = os_exec('git rev-parse HEAD'),
-  ['CurGitCommitSHAShort']  = os_exec('git rev-parse --short HEAD'),
-  ['CurGitRepo']         = os_exec("git remote -v | awk '$3 ~ /fetch/{print $2}'"),
-  ['CurGitRepoFriendly']    = function()
+  ['CurArch']                = os_exec('uname -m'),
+  ['CurDateC']               = partial(vim.fn.strftime, '%c'),
+  ['CurDate']                = partial(vim.fn.strftime, '%FT%T'),
+  ['CurDateRfc3389']         = partial(vim.fn.strftime, '%FT%T%z'),
+  ['CurDateZ']               = partial(vim.fn.strftime, '%F %T%z'),
+  ['CurExpr']                = partial(vim.fn.expand, '<cexpr>'),
+  ['CurFileDirectory']       = partial(vim.fn.expand, '%:p:h'),
+  ['CurFile']                = partial(vim.fn.expand, '%:t'),
+  ['CurFQDN']                = os_exec('hostname -f'),
+  ['CurGitBranch']           = os_exec('git rev-parse --abbrev-ref HEAD'),
+  ['CurGitCommitMessage']    = os_exec('git log -1 --oneline --pretty=%B'),
+  ['CurGitCommitSHA']        = os_exec('git rev-parse HEAD'),
+  ['CurGitCommitSHAShort']   = os_exec('git rev-parse --short HEAD'),
+  ['CurGitRepo']             = os_exec("git remote -v | awk '$3 ~ /fetch/{print $2}'"),
+  ['CurGitRepoFriendly']     = function()
     local ret = string.gsub(vim.fnlocal.CurGitRepo(), 'https://github.com/', '')
     return string.gsub(ret, '.git$', '')
   end,
-  ['CurGitRoot']         = os_exec('git rev-parse --show-toplevel'),
-  ['CurHostname']        = os_exec('hostname -s'),
-  ['CurHostId']          = os_exec('hostid'),
-  ['CurKernel']          = os_exec('uname -r'),
-  ['CurLine']            = partial(vim.fn.getline, '.'),
-  ['CurLuaVersion']      = function()
+  ['CurGitRoot']             = os_exec('git rev-parse --show-toplevel'),
+  ['CurHostname']            = os_exec('hostname -s'),
+  ['CurHostId']              = os_exec('hostid'),
+  ['CurKernel']              = os_exec('uname -r'),
+  ['CurLine']                = partial(vim.fn.getline, '.'),
+  ['CurLuaVersion']          = function()
     return string.gsub(_VERSION, '^Lua ', '') + 0.0
   end,
-  ['CurMachineId']       = os_exec('cat /etc/machine-id'),
-  ['CurNeovimVersion']   = vim.version,
-  ['CurNeovimVersionMajor']   = function() return vim.version().major end,
-  ['CurNeovimVersionMinor']   = function() return vim.version().minor end,
-  ['CurPath']            = partial(vim.fn.expand, '%:p'),
-  ['CurPublicIPAddress'] = os_exec('curl -fsSL "http://checkip.amazonaws.com/"'),
-  ['CurUser']            = os_exec('id -un'),
-  ['CurWord']            = partial(vim.fn.expand, '<cword>'),
-  ['cwd']                = partial(vim.fn.getcwd),
-  ['defined']            = function(arg)
-    return not(arg == nil or arg == '')
+  ['CurMachineId']           = os_exec('cat /etc/machine-id'),
+  ['CurNeovimVersion']       = vim.version,
+  ['CurNeovimVersionMajor']  = function() return vim.version().major end,
+  ['CurNeovimVersionMinor']  = function() return vim.version().minor end,
+  ['CurPath']                = partial(vim.fn.expand, '%:p'),
+  ['CurPublicIPAddress']     = os_exec('curl -fsSL "http://checkip.amazonaws.com/"'),
+  ['CurUser']                = os_exec('id -un'),
+  ['CurWord']                = partial(vim.fn.expand, '<cword>'),
+  ['cwd']                    = partial(vim.fn.getcwd),
+  ['defined']                = function(arg)
+    return not (arg == nil or arg == '')
   end,
-  ['GetVisualSelection'] = partial(_G.GetVisualSelection),
+  ['GetVisualSelection']     = partial(_G.GetVisualSelection),
   ['VisualSelectLastChange'] = partial(_G.VisualSelectLastChange),
-  ['pwd']                = partial(vim.fn.getcwd),
+  ['pwd']                    = partial(vim.fn.getcwd),
 }
 
 for k, v in pairs(fnlocal) do
   vim.fnlocal[k] = v
 end
-

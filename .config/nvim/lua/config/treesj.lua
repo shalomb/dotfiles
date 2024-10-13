@@ -5,18 +5,20 @@ local langs = { --[[ configuration for languages ]] }
 
 tsj.setup({
   use_default_keymaps = false,
-  max_join_length = 150,
+  max_join_length = 300,
 })
 
-whichkey.register({
-  name = "chords",
+whichkey.add({
+  {
+    "<leader>ts",
+    group = "TreeSJ",
+    name = "TreeSJ",
+    mode = { "n" },
+  },
 
-  ["s"] = {
-    ["j"] = {
-      function()
-        vim.cmd('TSJToggle')
-      end,
-      'TSJToggle',
-    }
+  {
+    "<leader>tsj",
+    function() vim.cmd('TSJToggle') end,
+    desc = 'treesj TSJToggle',
   }
-}, { mode = "n", prefix = "<leader>" })
+})

@@ -13,22 +13,30 @@ local harpoon_mark = require('harpoon.mark')
 require("telescope").load_extension('harpoon')
 
 local whichkey = require("which-key")
-whichkey.register({
-  ["'"] = { require("harpoon.ui").toggle_quick_menu, "harpoon menu" },
-  h = {
-    name = "harpoon",
-    a = {
-      function()
-        harpoon_mark.add_file()
-        local file = vim.fn.expand('%')
-        vim.fn.OK(file .. ' harpooned.')
-      end, "harpoon mark"
-    },
-    e = { harpoon_ui.toggle_quick_menu, "harpoon menu" },
-    h = { function() vim.cmd([[:Telescope harpoon marks]]) end, "harpoon marks" },
-    t = { harpoon_tmux.gotoTerminal, "term 1" },
+
+whichkey.add({
+  { "<leader>h", group = "harpoon" },
+  { "<leader>'", require("harpoon.ui").toggle_quick_menu, desc = "h'poon menu" },
+  {
+    "<leader>ha",
+    function()
+      harpoon_mark.add_file()
+      local file = vim.fn.expand('%')
+      vim.fn.OK(file .. ' harpooned.')
+    end,
+    desc = "h'poon mark"
   },
-}, { mode = "n", prefix = "<leader>" })
+  { "<leader>he", harpoon_ui.toggle_quick_menu,                         desc = "h'poon menu" },
+  { "<leader>hh", function() vim.cmd([[:Telescope harpoon marks]]) end, desc = "h'poon marks" },
+  { "<leader>ht", harpoon_tmux.gotoTerminal,                            desc = "term 1" },
+  {
+    "<leader>b",
+    group = "buffers",
+    expand = function()
+      return require("which-key.extras").expand.buf()
+    end
+  },
+})
 
 for i = 1, 9 do
   vim.keymap.set("n", "<leader>" .. i, function()
