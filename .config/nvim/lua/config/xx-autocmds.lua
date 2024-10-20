@@ -96,12 +96,17 @@ autocmd(
 augroup('autoformat_on_save', { clear = true })
 
 local is_exempt_from_formatting = function(ft, client)
-  local excluded_filetypes = { 'sh', 'md', 'markdown', 'text' }
+  local excluded_filetypes = {
+    'sh', 'md', 'markdown', 'text',
+    -- 'yaml' -- yamlfmt is aggressive about extraneous newlines, start of doc separators, etc
+  }
   for _, v in ipairs(excluded_filetypes) do
     if string.find(ft, v) then
+      _G.is_exempt_from_formatting = true
       return true
     end
   end
+
   local excluded_clients = { 'bashls', 'tsserver' }
   for _, v in ipairs(excluded_clients) do
     if string.find(client.name, v) then
@@ -111,29 +116,45 @@ local is_exempt_from_formatting = function(ft, client)
   return false
 end
 
+local lsp_fmt_augroup = vim.api.nvim_create_augroup("LspFormatting", { clear = false })
+-- TODO autocmd('BufReadPost', {
 vim.api.nvim_create_autocmd('LspAttach', {
   callback = function(args)
     local client = vim.lsp.get_client_by_id(args.data.client_id)
     if client == nil then
       return {}
     end
+
     --if client.supports_method('textDocument/implementation') then
     --  -- Create a keymap for vim.lsp.buf.implementation
     --end
+
     --if client.supports_method('textDocument/completion') then
     --  -- Enable auto-completion
     --  vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
     --end
+    local is_exempt = is_exempt_from_formatting(vim.bo.filetype, client)
     if client.supports_method('textDocument/formatting') then
       -- Format the current buffer on save
+      -- TODO autocmd('BufReadPost', {
       vim.api.nvim_create_autocmd('BufWritePre', {
+        -- https://github.com/neovim/neovim/issues/21098#issuecomment-1320001372is_exempt_from_formatting
+        vim.api.nvim_clear_autocmds({
+          group = lsp_fmt_augroup,
+          -- TODO augroup('restore_last_position', { clear = true })
+          buffer = args.buf
+        }),
+        group = lsp_fmt_augroup,
         buffer = args.buf,
         callback = function()
-          vim.lsp.buf.format({
-            bufnr = args.buf,
-            id = client.id,
-            async = false
-          })
+          if not is_exempt then
+            vim.lsp.buf.format({
+              bufnr = args.buf,
+              id = client.id,
+              async = false
+            })
+          end
+
           -- print(
           --   "autoformat_on_save : " ..
           --   args.buf .. " -> " .. vim.inspect(client.supports_method('textDocument/formatting'))

@@ -36,7 +36,7 @@ nullls.setup {
   save_after_format = false,
   sources = {
     -- with_diagnostics_code(diagnostics.shellcheck),
-    formatting.shfmt,
+    formatting.shfmt, -- bash, shell, etc
     -- formatting.autoflake,
     -- formatting.autopep8,
     -- formatting.beautysh,
@@ -49,7 +49,10 @@ nullls.setup {
     --   extra_filetypes = { "toml", "solidity" },
     --   extra_args = { "--no-semi", "--single-quote", "--jsx-single-quote" },
     -- },
-    formatting.yamlfmt,
+    formatting.yamlfmt.with { extra_args = {
+      "-formatter",
+      "include_document_start=true,retain_line_breaks=true,retain_line_breaks_single=true,max_line_length=120,scan_folded_as_literal=true,pad_line_comments=2",
+    } },
 
     code_actions.gitrebase,
     -- code_actions.refactoring, -- module not found

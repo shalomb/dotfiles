@@ -195,7 +195,11 @@ local on_attach = function(args)
     { "<leader>", group = "lsp buffer actions", mode = { "n" }, },
     {
       "<leader>=",
-      function() vim.lsp.buf.format { async = true } end,
+      function()
+        if not _G.is_exempt_from_formatting then
+          vim.lsp.buf.format { async = true }
+        end
+      end,
       desc = "format buffer"
     },
     { "gD",       vim.lsp.buf.declaration,      desc = "declaration" },
