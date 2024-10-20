@@ -36,11 +36,22 @@ nullls.setup {
   save_after_format = false,
   sources = {
     -- with_diagnostics_code(diagnostics.shellcheck),
-    formatting.shfmt, -- bash, shell, etc
+    -- TODO lazy.nvim has moved to using conform.nvim for formatting
+    -- see https://www.lazyvim.org/plugins/formatting
+    formatting.shfmt.with { extra_args = {
+      "--apply-ignore", -- always apply EditorConfig ignore rules
+      "-ln", "auto",    -- automatic language detection
+      "-i", "2",        -- indent of 2 spaces
+      "-bn",            -- binary-next-line
+      "-ci",            -- case-indent
+      "-kp"             -- keep-padding
+    } },
     -- formatting.autoflake,
     -- formatting.autopep8,
     -- formatting.beautysh,
-    formatting.black.with { extra_args = { "--fast" } },
+    formatting.black.with { extra_args = {
+      "--fast"
+    } },
     -- formatting.fixjson,
     formatting.gofumpt,
     formatting.isort,
@@ -55,7 +66,7 @@ nullls.setup {
     } },
 
     code_actions.gitrebase,
-    -- code_actions.refactoring, -- module not found
+    code_actions.refactoring, -- module not found
     -- code_actions.shellcheck,
 
     -- completions.luasnip,
@@ -69,13 +80,13 @@ nullls.setup {
     -- diagnostics.cfn_lint,
     diagnostics.checkmake,
     diagnostics.codespell,
-    -- diagnostics.commitlint,
+    diagnostics.commitlint,
     -- diagnostics.curlylint, -- jinja, django, nunjucks templates
     -- diagnostics.djlint, -- html linter/formatter
     -- diagnostics.dotenv_linter,
-    -- diagnostics.editorconfig_checker, -- missing executable ec
+    diagnostics.editorconfig_checker, -- missing executable ec
     -- diagnostics.flake8,
-    -- diagnostics.gitlint,
+    diagnostics.gitlint,
     diagnostics.golangci_lint,
     -- diagnostics.hadolint,
     -- diagnostics.jshint,
@@ -90,7 +101,7 @@ nullls.setup {
     --     }
     --   }
     -- },
-    -- diagnostics.markdownlint,
+    diagnostics.markdownlint,
     -- diagnostics.misspell,
     diagnostics.mypy,
     -- diagnostics.opacheck,
@@ -105,7 +116,7 @@ nullls.setup {
     -- diagnostics.pyproject_flake8,
     diagnostics.revive,
     -- diagnostics.rstcheck,
-    -- diagnostics.ruff,
+    diagnostics.ruff,
     -- diagnostics.semgrep,
     -- diagnostics.shellcheck,
     -- nullls.builtins.diagnostics.sqlfluff.with({
@@ -119,7 +130,7 @@ nullls.setup {
     diagnostics.trail_space,
     diagnostics.vint,
     -- diagnostics.vulture,
-    -- diagnostics.write_good, -- plugin missing
+    diagnostics.write_good, -- plugin missing
     diagnostics.yamllint,
 
     hover.dictionary,
