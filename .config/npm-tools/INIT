@@ -8,7 +8,9 @@ sudo npm install \
   @devcontainers/cli \
   @pnp/cli-microsoft365 \
   @vscode/codicons \
+  markdownlint-cli2 \
   neovim \
   pyright \
+  textlint \
   tree-sitter \
   tree-sitter-cli
