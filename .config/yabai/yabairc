@@ -1,0 +1,146 @@
+#!/usr/bin/env sh
+
+set -eu -o pipefail
+
+# https://github.com/koekeishiya/yabai/wiki/Commands#window-commands
+# https://github.com/koekeishiya/yabai/blob/master/doc/yabai.asciidoc
+# https://github.com/koekeishiya/dotfiles/blob/master/skhd/skhdrc
+
+yabai -m space --layout float
+
+yabai -m config top_padding    0
+yabai -m config bottom_padding 0
+yabai -m config left_padding   0
+yabai -m config right_padding  0
+yabai -m config window_gap     0
+
+yabai -m config window_placement second_child
+yabai -m config window_topmost   off
+
+yabai -m config window_shadow on
+yabai -m config auto_balance off
+yabai -m config split_ratio 0.5
+
+yabai -m config window_border on
+yabai -m config window_border_width 1
+yabai -m config active_window_border_color 0xafff781f  # orange
+yabai -m config normal_window_border_color 0x01ff781f
+
+yabai -m space --gap abs:0
+yabai -m space --padding abs:0:0:0:0
+
+yabai -m rule --add app="^choose$" manage=off layer=above
+yabai -m rule --add app="^Google Keep$" manage=off
+yabai -m rule --add app="^Spotify$" manage=off
+yabai -m rule --add app="^System Preferences$" manage=off sticky=on layer=above
+yabai -m rule --add app="^System Settings$"    manage=off sticky=on layer=above
+yabai -m rule --add title='Preferences$'       manage=off sticky=on layer=above
+yabai -m rule --add title='Settings$'          manage=off sticky=on layer=above
+yabai -m rule --add app="^Finder$" title='Applications'          manage=off sticky=on layer=above
+yabai -m rule --add app="^Microsoft Outlook$" title="Calendar"          manage=off sticky=on layer=above
+yabai -m rule --add app="^Finder$" manage=off sticky=on layer=above
+yabai -m rule --add app="^Finder$" manage=off sticky=on layer=above
+yabai -m rule --add app="^Keybase$" title='Keybase' manage=off sticky=on layer=above
+yabai -m rule --add app="^Activity Monitor$" manage=off sticky=on layer=above
+yabai -m rule --add app="^Okta Verify$" manage=off sticky=on layer=above
+yabai -m rule --add title="^Okta Verify$" manage=off sticky=on layer=above
+
+exit
+
+# Disable animations when opening and closing windows.
+defaults write NSGlobalDomain NSAutomaticWindowAnimationsEnabled -bool false
+#
+# # Accelerated playback when adjusting the window size.
+defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
+
+# window animations in OS X Findepple.finder DisableAllAnimations u-bool truer
+defaults write com.apple.finder DisableAllAnimations -bool true
+
+# Disable the Rubber Band effect in Mac OS X
+defaults write -g NSScrollViewRubberbanding -int 0
+
+# set dark mode
+# osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to dark mode'
+
+# Drag by clicking anywhere on window
+defaults write -g NSWindowShouldDragOnGesture -bool true
+
+# Only show active apps in the dock
+defaults write com.apple.dock static-only -bool true
+
+# opening and closing windows and popovers
+defaults write -g NSAutomaticWindowAnimationsEnabled -bool false
+
+# smooth scrolling
+defaults write -g NSScrollAnimationEnabled -bool false
+
+# showing and hiding sheets, resizing preference windows, zooming windows
+# float 0 doesn't work
+defaults write -g NSWindowResizeTime -float 0.001
+
+# opening and closing Quick Look windows
+defaults write -g QLPanelAnimationDuration -float 0
+
+# rubberband scrolling (doesn't affect web views)
+defaults write -g NSScrollViewRubberbanding -bool false
+
+# resizing windows before and after showing the version browser
+# also disabled by NSWindowResizeTime -float 0.001
+defaults write -g NSDocumentRevisionsWindowTransformAnimation -bool false
+
+# showing a toolbar or menu bar in full screen
+defaults write -g NSToolbarFullScreenAnimationDuration -float 0
+
+# scrolling column views
+defaults write -g NSBrowserColumnAnimationSpeedMultiplier -float 0
+
+# showing the Dock
+defaults write com.apple.dock autohide-time-modifier -float 0
+defaults write com.apple.dock autohide-delay -float 0
+
+# showing and hiding Mission Control, command+numbers
+defaults write com.apple.dock expose-animation-duration -float 0
+
+# showing and hiding Launchpad
+defaults write com.apple.dock springboard-show-duration -float 0
+defaults write com.apple.dock springboard-hide-duration -float 0
+
+# changing pages in Launchpad
+defaults write com.apple.dock springboard-page-duration -float 0
+
+# at least AnimateInfoPanes
+defaults write com.apple.finder DisableAllAnimations -bool true
+
+# sending messages and opening windows for replies
+defaults write com.apple.Mail DisableSendAnimations -bool true
+defaults write com.apple.Mail DisableReplyAnimations -bool true
+
+# Always show the path at the bottom of the finder window
+defaults write com.apple.finder _FXShowPosixPathInTitle -bool true; 
+
+# Disable the menu option: ‘Empty trash’ and ‘Secure Empty trash’ in the Mac OS X Finder menubar
+defaults write com.apple.finder ProhibitEmptyTrash -bool false
+
+# Warn on emptying trash
+defaults write com.apple.finder WarnOnEmptyTrash -bool false
+
+# Restart the dock for any settings to take hold
+killall Dock
+# Similarly restart finder
+killall Finder
+
+echo "Yabai settings loaded."
+exit 0
+
+# Add spacer to dock
+defaults write com.apple.dock persistent-apps -array-add '{"tile-type"="spacer-tile";}'; killall Dock
+
+$ brew leaves --installed-on-request
+choose-gui
+gnupg
+jakehilborn/jakehilborn/displayplacer
+jq
+koekeishiya/formulae/skhd
+koekeishiya/formulae/yabai
+rustup-init
+tmux

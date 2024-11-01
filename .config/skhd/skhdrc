@@ -1,0 +1,263 @@
+#!/usr/bin/env sh
+
+# https://github.com/koekeishiya/skhd/blob/master/examples/skhdrc
+# https://eastmanreference.com/complete-list-of-applescript-key-codes
+
+# Mac Shortcuts
+# ctrl + down
+
+# default mode
+:: default  : yabai -m config active_window_border_color 0xffff781f
+
+alt + cmd - o : ~/.bin/toggle_app Outlook Calendar
+alt + cmd - m : ~/.bin/toggle_app Outlook Inbox
+alt + cmd - t : ~/.bin/toggle_app "Microsoft Teams"
+# osascript ~/applescripts/raise_previous_app.scpt   # Apostrophe
+alt + cmd - 0x27 :  skhd -k 'cmd - 0x0A' # cmd - apostrophe -> cmd - backtick
+cmd - 0x27 :        skhd -k 'cmd - 0x30' # apostrophe -> tab
+
+ctrl + cmd - b : yabai -m space --layout bsp
+ctrl + cmd - f : yabai -m space --layout float
+# ctrl + alt + cmd - r : yabai --restart-service
+ctrl + cmd - d : ~/.bin/display-waker down && \
+                sleep 1 && \
+                ~/.bin/display-waker up
+ctrl + cmd - e : yabai -m space --balance
+ctrl + cmd - i : launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"  # reload yabai
+
+alt + cmd - h : yabai -m window --focus west   || \
+                yabai -m display --focus prev || yabai -m display --focus last
+alt + cmd - j : yabai -m window --focus south  || \
+                yabai -m space --mirror x-axis || yabai -m space --mirror y-axis
+alt + cmd - k : yabai -m window --focus north  || \
+                yabai -m space --mirror y-axis || yabai -m space --mirror x-axis
+alt + cmd - l : yabai -m window --focus east   || \
+                yabai -m display --focus prev || yabai -m display --focus last
+
+ctrl + cmd - h : yabai -m window --swap west || \
+                { winid=$(yabai -m query --windows --window | jq '.id') && \
+                    yabai -m window --display recent && \
+                    yabai -m window --focus "$winid"; }
+ctrl + cmd - j : yabai -m window --swap south
+ctrl + cmd - k : yabai -m window --swap north
+ctrl + cmd - l : yabai -m window --swap east || \
+                { winid=$(yabai -m query --windows --window | jq '.id') && \
+                  yabai -m window --display recent && \
+                  yabai -m window --focus "$winid"; }
+
+ctrl + alt - a : ~/.bin/unmarked summon a
+ctrl + alt - b : ~/.bin/unmarked summon b
+ctrl + alt - c : ~/.bin/unmarked summon c
+ctrl + alt - d : ~/.bin/unmarked summon d
+ctrl + alt - e : ~/.bin/unmarked summon e
+ctrl + alt - f : ~/.bin/unmarked summon f
+ctrl + alt - g : ~/.bin/unmarked summon g
+ctrl + alt - h : ~/.bin/unmarked summon h
+ctrl + alt - i : ~/.bin/unmarked summon i
+ctrl + alt - j : ~/.bin/unmarked summon j
+ctrl + alt - k : ~/.bin/unmarked summon k
+ctrl + alt - l : ~/.bin/unmarked summon l
+ctrl + alt - m : ~/.bin/unmarked summon m
+ctrl + alt - n : ~/.bin/unmarked summon n
+ctrl + alt - o : ~/.bin/unmarked summon o
+ctrl + alt - p : ~/.bin/unmarked summon p
+ctrl + alt - q : ~/.bin/unmarked summon q
+ctrl + alt - r : ~/.bin/unmarked summon r
+ctrl + alt - s : ~/.bin/unmarked summon s
+ctrl + alt - t : ~/.bin/unmarked summon t
+ctrl + alt - u : ~/.bin/unmarked summon u
+ctrl + alt - v : ~/.bin/unmarked summon v
+ctrl + alt - w : ~/.bin/unmarked summon w
+ctrl + alt - x : ~/.bin/unmarked summon x
+ctrl + alt - y : ~/.bin/unmarked summon y
+ctrl + alt - z : ~/.bin/unmarked summon z
+ctrl + alt - 0 : ~/.bin/unmarked summon 0
+ctrl + alt - 1 : ~/.bin/unmarked summon 1
+ctrl + alt - 2 : ~/.bin/unmarked summon 2
+ctrl + alt - 3 : ~/.bin/unmarked summon 3
+ctrl + alt - 4 : ~/.bin/unmarked summon 4
+ctrl + alt - 5 : ~/.bin/unmarked summon 5
+ctrl + alt - 6 : ~/.bin/unmarked summon 6
+ctrl + alt - 7 : ~/.bin/unmarked summon 7
+ctrl + alt - 8 : ~/.bin/unmarked summon 8
+ctrl + alt - 9 : ~/.bin/unmarked summon 9
+ctrl + alt - return : ~/.bin/unmarked summon @
+
+ctrl + alt + cmd - a : ~/.bin/unmarked mark a
+ctrl + alt + cmd - b : ~/.bin/unmarked mark b
+ctrl + alt + cmd - c : ~/.bin/unmarked mark c
+ctrl + alt + cmd - d : ~/.bin/unmarked mark d
+ctrl + alt + cmd - e : ~/.bin/unmarked mark e
+ctrl + alt + cmd - f : ~/.bin/unmarked mark f
+ctrl + alt + cmd - g : ~/.bin/unmarked mark g
+ctrl + alt + cmd - h : ~/.bin/unmarked mark h
+ctrl + alt + cmd - i : ~/.bin/unmarked mark i
+ctrl + alt + cmd - j : ~/.bin/unmarked mark j
+ctrl + alt + cmd - k : ~/.bin/unmarked mark k
+ctrl + alt + cmd - l : ~/.bin/unmarked mark l
+ctrl + alt + cmd - m : ~/.bin/unmarked mark m
+ctrl + alt + cmd - n : ~/.bin/unmarked mark n
+ctrl + alt + cmd - o : ~/.bin/unmarked mark o
+ctrl + alt + cmd - p : ~/.bin/unmarked mark p
+ctrl + alt + cmd - q : ~/.bin/unmarked mark q
+ctrl + alt + cmd - r : ~/.bin/unmarked mark r
+ctrl + alt + cmd - s : ~/.bin/unmarked mark s
+ctrl + alt + cmd - t : ~/.bin/unmarked mark t
+ctrl + alt + cmd - u : ~/.bin/unmarked mark u
+ctrl + alt + cmd - v : ~/.bin/unmarked mark v
+ctrl + alt + cmd - w : ~/.bin/unmarked mark w
+ctrl + alt + cmd - x : ~/.bin/unmarked mark x
+ctrl + alt + cmd - y : ~/.bin/unmarked mark y
+ctrl + alt + cmd - z : ~/.bin/unmarked mark z
+ctrl + alt + cmd - 0 : ~/.bin/unmarked mark 0
+ctrl + alt + cmd - 1 : ~/.bin/unmarked mark 1
+ctrl + alt + cmd - 2 : ~/.bin/unmarked mark 2
+ctrl + alt + cmd - 3 : ~/.bin/unmarked mark 3
+ctrl + alt + cmd - 4 : ~/.bin/unmarked mark 4
+ctrl + alt + cmd - 5 : ~/.bin/unmarked mark 5
+ctrl + alt + cmd - 6 : ~/.bin/unmarked mark 6
+ctrl + alt + cmd - 7 : ~/.bin/unmarked mark 7
+ctrl + alt + cmd - 8 : ~/.bin/unmarked mark 8
+ctrl + alt + cmd - 9 : ~/.bin/unmarked mark 9
+ctrl + alt + cmd - return : ~/.bin/unmarked mark @
+
+# ctrl + alt + cmd - l : yabai -m window --resize left:-10:0
+# ctrl + alt + cmd - h : yabai -m window --resize right:-10:0
+
+ctrl + cmd - m : yabai -m window --minimize
+ctrl + cmd - r : yabai -m space --rotate 90
+alt + cmd  - r : yabai -m space --rotate 90
+ctrl + cmd - s : yabai -m window --toggle split
+# Toggle float and center the window - r/c
+ctrl + cmd - t : yabai -m window --toggle float --grid 4:4:1:1:2:2 && \
+                  yabai -m window --toggle border # mnemonic tiled
+ctrl + cmd - x : yabai -m window --toggle sticky
+ctrl + cmd - y : yabai -m window --toggle border
+
+# ctrl - return : skhd -k 'cmd - space'
+cmd - return : skhd -k 'alt + cmd - space'
+ctrl + cmd - return : ~/.bin/yabai-launcher
+alt + cmd - return : ~/.bin/yabai-launcher
+
+ctrl + cmd - 0x27 : yabai -m window --focus recent  || \
+      yabai -m display --focus recent # apostrophe
+ctrl + cmd - n : yabai -m space --layout "$( \
+      yabai -m query --spaces --space | \
+      jq -r 'if .type == "bsp" then "stack" else "bsp" end' )"
+
+# TODO: These don't appear to be functional
+# cmd - 0x78 : skhd -k 'ctrl - 0x78' # f2 -> Apple menu
+# cmd - 0x63 : skhd -k 'ctrl - 0x63' # f3 -> Dock
+
+cmd - 0x6E : open -a 'Launchpad'
+
+cmd - 0x69 : open ~/
+ctrl + shift - escape : open -a 'Activity Monitor'
+
+alt + rctrl - a : open /Applications
+alt + rctrl - d : open ~/Downloads
+alt + rctrl - e : open ~/
+alt + rctrl - p : open ~/projects/
+alt + rctrl - f : open -a Firefox
+alt + rctrl - g : skhd -k "cmd - c" && sleep 0.2 && \
+                  open 'https://www.google.com/search?q='$(pbpaste | tr ' ' +)
+alt + rctrl - h : open ~/
+alt + rctrl - k : open -a "Google Keep"
+alt + rctrl - o : open -a "Microsoft Outlook"
+alt + rctrl - s : open -a Spotify
+alt + rctrl - y : ~/.bin/copy-url-markdown-link | pbcopy -
+alt + rctrl - z : yabai -m window --toggle zoom-parent
+
+cmd - 0x2C : open -a WezTerm # slash
+
+ctrl - 0x2C [
+  "Finder"              : skhd -k "cmd - f"
+]
+
+ctrl - p [
+  "Finder"              : skhd -k "up"
+]
+
+ctrl - n [
+  "Finder"              : skhd -k "down"
+]
+
+ctrl - i [
+  "Finder"              : skhd -k "cmd - 0x1E"
+]
+
+ctrl - o [
+  "Finder"              : skhd -k "cmd - 0x21"
+]
+
+ctrl - l [
+  "Finder"              : skhd -k "cmd + shift - g"
+]
+
+ctrl - c [
+  "firefox"              : skhd -k "cmd - c"
+  "google chrome"        : skhd -k "cmd - c"
+  "microsoft excel"      : skhd -k "cmd - c"
+  "microsoft outlook"    : skhd -k "cmd - c"
+  "microsoft powerpoint" : skhd -k "cmd - c"
+  "microsoft teams"      : skhd -k "cmd - c"
+  "microsoft word"       : skhd -k "cmd - c"
+]
+
+# Control+V - if outlook, paste and match style, if other office, paste special
+ctrl - v [
+  "firefox"              : skhd -k "cmd - v"
+  "google chrome"        : skhd -k "cmd - v"
+  "microsoft excel"      : skhd -k "cmd + ctrl - v"
+  "microsoft outlook"    : skhd -k "alt + cmd + shift - v"
+  "microsoft powerpoint" : skhd -k "cmd + ctrl - v"
+  "microsoft teams"      : skhd -k "alt + cmd + shift - v"
+  "microsoft word"       : skhd -k "cmd + ctrl - v"
+]
+
+ctrl - l [
+  "firefox"       : skhd -k "cmd - l"
+  "google chrome" : skhd -k "cmd - l"
+]
+
+ctrl - x [
+  "firefox"              : skhd -k "cmd - x"
+  "google chrome"        : skhd -k "cmd - x"
+  "microsoft excel"      : skhd -k "cmd - x"
+  "microsoft outlook"    : skhd -k "cmd - x"
+  "microsoft powerpoint" : skhd -k "cmd - x"
+  "microsoft teams"      : skhd -k "cmd - x"
+  "microsoft word"       : skhd -k "cmd - x"
+]
+
+# mark mode
+:: mark @ : yabai -m config active_window_border_color 0xFFFAC863
+
+alt + cmd - 0x2B    ; mark # Comma
+mark < escape ; default
+
+mark < o : open /tmp/
+mark < q : yabai -m window --close
+
+# mark  < escape        ; default
+
+# Fullscreen?
+# sleep 1 && yabai -m window --grid 1:1:0:0:1:1
+
+# right
+# sleep 1 && yabai -m window --grid 1:3:2:0:1:1 # rows/cols/x/y/w/h
+# left
+# sleep 1 && yabai -m window --grid 1:3:0:0:1:1
+
+# query current window
+# yabai -m query --windows --window
+
+# Restarting
+# pkill skhd
+# skhd --start-service
+
+# debugging
+#  skhd -V
+
+# vim:ts=2 sw=2 et
+
