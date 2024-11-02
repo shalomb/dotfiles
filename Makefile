@@ -126,13 +126,15 @@ nvim:  neovim-deps ## Setup neovim
 	./dotfile_stash export .config/nvim/
 
 nvim-cleanup: ## Cleanup the nvim caches
-	make -f .config/nvim/Makefile clean
+	sh -c '> ~/.local/state/nvim/lsp.log'
+	sh -c '> ~/.local/state/nvim/log'
 	find ~/.cache/nvim/undo* -type f -mtime +60 -delete
 	find ~/.local/state/nvim/ -type f -atime +60 -delete
 	find ~/.local/state/nvim/swap/ -type f -delete
 	find ~/.local/share/nvim/mason/packages/lua-language-server/libexec/log/ -iname "*.lock" -delete
 	find ~/.local/share/nvim/mason/ -ipath "*mason*.lock" -delete
-	sh -c '> ~/.local/state/nvim/lsp.log'
+	make -f .config/nvim/Makefile clean
+	find ~/.cache/terraform.d/plugin-cache/ -mtime +30 -print -delete
 
 .PHONY: update
 update:  ## Update all components
@@ -143,7 +145,8 @@ update:  ## Update all components
 	make npm-tools
 	make python-tools
 
-clean: cargo-cleanup go-cleanup neovim-cleanup npm-cleanup python-cleanup apt-cleanup
+.PHONY: clean
+clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup python-cleanup apt-clean
 
 .DEFAULT_GOAL := help
 help: ## Show make targets available
