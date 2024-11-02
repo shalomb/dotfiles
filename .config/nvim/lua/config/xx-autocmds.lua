@@ -207,6 +207,19 @@ autocmd(
     end
   })
 
+-- set go preferences
+augroup('go_settings', { clear = true })
+autocmd(
+  { 'BufNewFile', 'BufRead' }, {
+    group = 'go_settings',
+    pattern = { '*.go' },
+    callback = function()
+      vim.cmd([[
+      set et ts=4 sts=4 sw=4 tw=99 ai cin ff=unix enc=utf-8 fenc=utf-8
+    ]])
+    end
+  })
+
 -- set python preferences
 augroup('python_settings', { clear = true })
 autocmd(
