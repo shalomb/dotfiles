@@ -82,6 +82,7 @@ ctrl + alt - 7 : ~/.bin/unmarked summon 7
 ctrl + alt - 8 : ~/.bin/unmarked summon 8
 ctrl + alt - 9 : ~/.bin/unmarked summon 9
 ctrl + alt - return : ~/.bin/unmarked summon @
+ctrl + alt - 0x2C : ~/.bin/unmarked choose # slash
 
 ctrl + alt + cmd - a : ~/.bin/unmarked mark a
 ctrl + alt + cmd - b : ~/.bin/unmarked mark b
@@ -170,6 +171,18 @@ alt + rctrl - z : yabai -m window --toggle zoom-parent
 
 cmd - 0x2C : open -a WezTerm # slash
 
+# tilde opens home dir
+# undeclared identifier?
+# 0x2A [
+#   "Finder"              : skhd -k "cmd + shift - h"
+# ]
+
+# # dash
+# 0x1B [
+#   "Finder"              : skhd -k "cmd - up"
+# ]
+
+# c-slash starts a search
 ctrl - 0x2C [
   "Finder"              : skhd -k "cmd - f"
 ]
@@ -182,14 +195,17 @@ ctrl - n [
   "Finder"              : skhd -k "down"
 ]
 
+# back jumplist
 ctrl - i [
   "Finder"              : skhd -k "cmd - 0x1E"
 ]
 
+# forward jumplist
 ctrl - o [
   "Finder"              : skhd -k "cmd - 0x21"
 ]
 
+# open path
 ctrl - l [
   "Finder"              : skhd -k "cmd + shift - g"
 ]
