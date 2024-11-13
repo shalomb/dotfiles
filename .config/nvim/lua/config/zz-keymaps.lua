@@ -169,19 +169,30 @@ whichkey.add({
     function() _G.VisualSelectLastChange() end,
     desc = "reselect last paste"
   },
-  { 'gv',   [[<cmd>normal! gv<cr>]], desc = "reselect paste" },
+  { 'gv', [[<cmd>normal! gv<cr>]], desc = "reselect paste" },
 
-  { "j",    'gj',                    desc = "gj" },
-  { "J",    "mzJ`z",                 desc = "join lines but stay put" },
-  { "k",    'gk',                    desc = "gk" },
-  { "n",    "nzzzv",                 desc = "next match" },
-  { "N",    "Nzzzv",                 desc = "prev match" },
+  { "j",  'gj',                    desc = "gj" },
+  { "J",  "mzJ`z",                 desc = "join lines but stay put" },
+  { "k",  'gk',                    desc = "gk" },
+  { "n",  "nzzzv",                 desc = "next match" },
+  { "N",  "Nzzzv",                 desc = "prev match" },
 
-  { "Y",    "y$",                    desc = "y$" },
+  {
+    "p",
+    function()
+      -- https://www.reddit.com/r/neovim/comments/1giqgdx/comment/lv7c2sm/
+      local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+      vim.cmd('put')
+      vim.api.nvim_win_set_cursor(0, { row + 1, col })
+    end,
+    desc = "paste and preserve position"
+  },
 
-  { "v",    "<c-v>",                 desc = "<c-v>" },
-  { "U",    "<c-r>",                 desc = "<c-r>" },
-  { "<cr>", "<Nop>",                 desc = "nop" },
+  { "Y",    "y$",    desc = "y$" },
+
+  { "v",    "<c-v>", desc = "<c-v>" },
+  { "U",    "<c-r>", desc = "<c-r>" },
+  { "<cr>", "<Nop>", desc = "nop" },
 
   {
     "<leader>gh",
