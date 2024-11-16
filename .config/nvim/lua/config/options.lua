@@ -1,23 +1,28 @@
 -- options
 
-local vim           = vim
+local vim              = vim
 
 -- TODO options.wildcharm="<C-Z>"
 
 -- options.errorformat:append('%f|%l col %c|%m')
 
-vim.opt.autoindent  = true
-vim.opt.backup      = false
-vim.opt.cindent     = true
-vim.opt.clipboard   = 'unnamedplus'
-vim.opt.cmdheight   = 2
-vim.opt.complete    = ',w,b,u,t,i'
-vim.opt.completeopt = "longest,menu,menuone,preview,noinsert,noselect" -- set by lsp-zero
-vim.opt.cursorline  = true
-vim.opt.encoding    = "UTF-8"
-vim.opt.expandtab   = true
-vim.opt.foldlevel   = 16
-vim.opt.foldmethod  = 'indent'
+vim.opt.autoindent     = true
+vim.opt.backup         = false
+vim.opt.cindent        = true
+vim.opt.clipboard      = 'unnamedplus'
+vim.opt.cmdheight      = 2
+vim.opt.complete       = ',w,b,u,t,i'
+vim.opt.completeopt    = "longest,menu,menuone,preview,noinsert,noselect" -- set by lsp-zero
+vim.opt.cursorline     = true
+vim.opt.encoding       = "UTF-8"
+vim.opt.expandtab      = true
+-- vim.opt.foldmethod     = 'indent'
+vim.opt.foldcolumn     = '1' -- '0' is not bad
+vim.opt.foldenable     = true
+vim.opt.foldexpr       = 'nvim_treesitter#foldexpr()'
+vim.opt.foldlevel      = 4
+vim.opt.foldlevelstart = 4
+vim.opt.foldmethod     = 'expr'
 vim.opt.formatoptions:append('1') -- don't break lines after one-letter words
 vim.opt.formatoptions:append('c') -- auto-wrap comments on textwith
 vim.opt.formatoptions:append('j') -- remove comment leader when joining lines
