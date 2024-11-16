@@ -49,6 +49,4 @@ function __my_git_ps1 {
 
 }
 
-export GIT_PAGER="less"
-
 # vim:fenc=utf8

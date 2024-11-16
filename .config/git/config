@@ -1,3 +1,7 @@
+; gitconfig
+
+; git config --local --edit
+
 [branch]
   autosetupmerge  = always
   autosetuprebase = always
@@ -35,24 +39,79 @@
 [core]
   editor = vi
   pager = less
+  pager = delta ; less -FRXK
 
 [credential]
   helper = store --file ~/.config/git-credentials
   helper = cache --timeout 86400
 
+; https://dandavison.github.io/delta/installation.html
+[delta]
+  navigate = true    # use n and N to move between diff sections
+
+  ; true-color = always
+  dark = true
+  ; light = true
+  side-by-side = true
+  ; line-numbers-left-format = ""
+  ; line-numbers-right-format = "│ "
+
+  features = side-by-side line-numbers decorations zebra-dark
+  ; syntax-theme = Dracula
+  syntax-theme = Monokai Extended
+  plus-style = syntax "#003800"
+  minus-style = syntax "#3f0001"
+
+  map-styles = bold purple => syntax magenta, bold cyan => syntax blue
+
+  hyperlinks = true
+  hyperlinks-file-link-format = "vscode://file/{path}:{line}"
+  hyperlinks-file-link-format = "my-file-line-protocol://{path}:{line}"
+
+[delta "decorations"]
+  commit-decoration-style = bold green box ul
+  file-style = bold yellow ul
+  file-decoration-style = none
+  hunk-header-decoration-style = darkgray box ul
+
+[delta "line-numbers"]
+  ; line-numbers-left-style =  darkgray bold
+  ; line-numbers-right-style = darkgray bold
+  line-numbers-minus-style = 124
+  line-numbers-plus-style = 28
+
+[delta "zebra-dark"]
+    minus-style = syntax "#330f0f"
+    minus-emph-style = syntax "#4f1917"
+    plus-style = syntax "#0e2f19"
+    plus-emph-style = syntax "#174525"
+    map-styles = \
+       bold purple => syntax "#330f29", \
+       bold blue => syntax "#271344", \
+       bold cyan => syntax "#0d3531", \
+       bold yellow => syntax "#222f14"
+    zero-style = syntax
+  whitespace-error-style = "#aaaaaa"
+
 [diff]
   ignoreSubmodules = dirty
-  tool = vimdiff
+  tool = delta
+  colorMoved = default
+  pager = delta
+  ; external = delta
 
 [difftool]
   prompt = false
+
+[difftool "difftastic"]
+    # See `man git-difftool` for a description of MERGED, LOCAL and REMOTE.
+    cmd = difft "$MERGED" "$LOCAL" "abcdef1" "100644" "$REMOTE" "abcdef2" "100644"
 
 [fetch]
   prune = true
 
 [github]
   user  = shalomb
-  token = 822bb43c9861d41e965eb83b72d4736d
 
 [gpg]
   program = /usr/bin/gpg2
@@ -63,9 +122,12 @@
 [init]
   defaultBranch = main
 
+[interactive]
+  diffFilter = delta --color-only
+
 [merge]
   autoStash = true
-  conflictstyle = diff3
+  conflictstyle = zdiff3
   tool = vimdiff
 
 [mergetool]
@@ -73,6 +135,7 @@
 
 [pager]
   diff = true
+  difftool = true
   show = true
 
 [pull]
@@ -84,6 +147,11 @@
 
 [rebase]
   autoStash = true
+
+[show]
+  ; pager = delta
+  difftool = true
+  diff = true
 
 [tag]
   sort = version:refname
