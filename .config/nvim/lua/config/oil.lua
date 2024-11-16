@@ -19,7 +19,7 @@ require("oil").setup({
     ["<C-t>"] = "actions.select_tab",
     ["<C-p>"] = "actions.preview",
     ["<C-c>"] = "actions.close",
-    ["<C-l>"] = "actions.refresh",
+    ["<C-r>"] = "actions.refresh",
     ["-"] = "actions.parent",
     ["_"] = "actions.open_cwd",
     ["`"] = "actions.cd",
@@ -31,7 +31,7 @@ require("oil").setup({
     ["y."] = "actions.copy_entry_path", -- a la vinegar.vim
     ["."] = "actions.open_cmdline",     -- a la vinegar.vim
   },
-  use_default_keymaps = true,
+  use_default_keymaps = false,
 })
 
 local function relative_path(path, ref)
