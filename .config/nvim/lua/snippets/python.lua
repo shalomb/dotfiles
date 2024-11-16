@@ -1,3 +1,5 @@
+--- lua
+
 local ls = require("luasnip")
 
 -- some shorthands...

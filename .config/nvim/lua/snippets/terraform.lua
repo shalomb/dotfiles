@@ -16,6 +16,16 @@ ls.config.set_config({
   enable_autosnippets = true,
 })
 
+-- Make sure to not pass an invalid command, as io.popen() may write over nvim-text.
+local function bash(_, _, command)
+  local file = io.popen(command, "r")
+  local res = {}
+  for line in file:lines() do
+    table.insert(res, line)
+  end
+  return res
+end
+
 ls.add_snippets(nil, {
   terraform = {
 
@@ -39,15 +49,23 @@ ls.add_snippets(nil, {
       insert(0),
     }),
 
+    snip({
+      trig = "example",
+      name = "example",
+      dscr = "Grab an example",
+    }, {
+      func(bash, {}, { user_args = { "cat ~/oneTakeda/terraform-aws-TakedaEC2/examples/main.tf" } }),
+    }),
+
     s(
       {
-      trig = "region",
-      name = "var.region",
-      dscr = "region"
-    }, {
-      i(1, 'region = "'),
-      i(2, 'var.region'),
-      i(3, '"'),
-    }),
+        trig = "region",
+        name = "var.region",
+        dscr = "region"
+      }, {
+        i(1, 'region = "'),
+        i(2, 'var.region'),
+        i(3, '"'),
+      }),
   },
 })
