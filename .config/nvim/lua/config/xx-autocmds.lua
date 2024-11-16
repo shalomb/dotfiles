@@ -19,6 +19,22 @@ autocmd(
     end,
   })
 
+-- set the filetype if not already set
+-- i.e. with extention-less files, the filetype is only known after the shebang is written
+-- This allows us to write the shebang and write out for automatic filetype setting
+-- https://www.reddit.com/r/neovim/comments/1girx8g/comment/lvbbuqm/
+augroup("filetype_detect", { clear = true })
+autocmd(
+  { "BufWritePost", "FileWritePost" }, {
+    group = 'filetype_detect',
+    pattern = { '*' },
+    callback = function()
+      if vim.bo.filetype == "" then
+        vim.cmd("filetype detect")
+      end
+    end,
+  })
+
 -- restore position
 augroup('restore_last_position', { clear = true })
 autocmd('BufReadPost', {
