@@ -32,6 +32,18 @@ require("oil").setup({
     ["."] = "actions.open_cmdline",     -- a la vinegar.vim
   },
   use_default_keymaps = false,
+  view_options = {
+    show_hidden = true,
+    is_hidden_file = function(name, bufnr)
+      local m = name:match("^%.")
+      return m ~= nil
+    end,
+    is_always_hidden = function(name, bufnr)
+      local m = name:match("^%.git$")
+      return m ~= nil
+    end,
+    case_insensitive = true
+  }
 })
 
 local function relative_path(path, ref)
