@@ -236,6 +236,19 @@ autocmd(
     end
   })
 
+-- set lua preferences
+augroup('lua_settings', { clear = true })
+autocmd(
+  { 'BufNewFile', 'BufRead' }, {
+    group = 'lua_settings',
+    pattern = { '*.py' },
+    callback = function()
+      vim.cmd([[
+      set et ts=2 sts=2 sw=2 tw=78 ai cin ff=unix enc=utf-8 fenc=utf-8
+    ]])
+    end
+  })
+
 -- set python preferences
 augroup('python_settings', { clear = true })
 autocmd(
