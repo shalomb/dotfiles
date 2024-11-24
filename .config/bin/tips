@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# vi: filetype=sh:sw=2:tw=2:et:ai
-
 # NAME
 #   tips - invoke tip files on demand
 
@@ -11,33 +9,44 @@
 
 # DESCRIPTION
 
-shopt -s extglob nocaseglob nocasematch
+set -o errexit -o nounset -o pipefail
+shopt -s extglob nullglob globstar
 
-if [[ -e ~/.config/tips/config ]]; then
-  source ~/.config/tips/config
+[[ -n ${DEBUG-} && ${DEBUG-} != 0 ]] && set -xv
+
+mode='tips'
+if [[ ${0##*/} == @(obsidian|ob) ]]; then
+  mode='obsidian'
 fi
 
-tipsdir="${tipsdir:-~/tips}"
+if [[ -e ~/.config/$mode/config ]]; then
+  source ~/.config/$mode/config
+fi
+
+tipsdir="${tipsdir:-~/$mode}"
 
 if [[ ! -d "$tipsdir" ]]; then
-  echo "No such directory '$tipsdir', $!"
+  echo "No such directory '$tipsdir', $?"
   exit 2
 fi
 
 function list_tips() {
-  local pattern="$1"
-  find * \( -name ".[!.]?*" \) \
+  local pattern="${1:-.}"
+  find ./* \( -name ".[!.]?*" \) \
     -prune -o -iregex ".*$pattern.*" -print0 | sort -z
 }
 
 oldpwd="$PWD"
-cd "$tipsdir"
+cd "$tipsdir" || exit
+
 if (( $# == 0 )) || [[ $1 = @(-l|--ls|--list) ]]; then
   list_tips | perl -lpe 'BEGIN{$/="\0"}' | column | less
   exit $?
+
 elif (( $# == 0 )) || [[ $1 = @(-s|--st|--status) ]]; then
   git status --short --porcelain
   exit $?
+
 elif (( $# == 0 )) || [[ $1 = @(--SYNC) ]]; then
   if                                                             \
     ( git diff-index HEAD -- | grep -q '.')  ||                  \
@@ -48,30 +57,22 @@ elif (( $# == 0 )) || [[ $1 = @(--SYNC) ]]; then
   fi
   git pull && git push
   exit $?
+
 elif [[ $1 = "/" ]]; then
   shift;
   cmd="$1"; shift;
-  ( set -x; "$cmd" "$@"; set +x; ) 2>&1 | less
+  ( set -x; "$cmd" "$@"; ) 2>&1 | less
   exit $?;
+
 fi
 
-search_terms=()
-
 for glob in "$@"; do
-
-  if [[ ${glob:0:1} = "/" ]]; then
-    search_term="$glob"
-    search_term="${search_term##/}"
-    search_term="${search_term%%/}"
-    search_terms+=( "$search_term" )
-  else
-    while read -d $'' file; do
-      files+=( "$file" )
-    done < <( list_tips "$glob" )
-  fi
+  while read -r -d $'' file; do
+    files+=( "$file" )
+  done < <( list_tips "$glob" )
 done
 
-if (( ${#files[@]} == 0 && ${#search_terms[@]} == 0 )); then
+if (( ${#files[@]} == 0 )); then
   if (( $# == 0 )); then
     files=( . )
   else
@@ -84,13 +85,9 @@ files=( "${files[@]//\*/}"    )
 
 for f in "${files[@]}"; do
   dir="${f%%/*}";
-  if [[ $dir != $f ]] && [[ ! -d $dir ]]; then
+  if [[ $dir != "$f" ]] && [[ ! -d $dir ]]; then
     mkdir -vp "$dir"
   fi
 done
 
-search_term="${search_terms[@]}"
-"${EDITOR:-vi}" -c "silent! /${search_term// /\\|}/e" -c 'norm ggnzv' "${files[@]:-.}"
-
-cd "$oldpwd"
-
+nvim -c 'set conceallevel=2' "${files[0]:-.}"

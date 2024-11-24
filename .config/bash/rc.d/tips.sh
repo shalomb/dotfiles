@@ -22,7 +22,7 @@ _tips() {
 
     while read f; do
       COMPREPLY+=( "$f" );
-    done < <( find * \( -name ".hg" -type d -o -name ".*" \) -prune -o -type f -ipath "*$current_word*" -printf '%p\n' )
+    done < <( find . \( -name ".hg" -type d -o -name ".*" \) -prune -o -type f -ipath "*$current_word*" -printf '%p\n' )
 
     builtin cd "$oldpwd";
   fi
