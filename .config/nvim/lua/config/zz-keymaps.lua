@@ -433,6 +433,7 @@ whichkey.add({
       end,
       desc = "grep selection"
     },
+
     {
       "<leader>go",
       function()
@@ -445,6 +446,17 @@ whichkey.add({
       end,
       desc = "gh browse"
     },
+
+    {
+      "<leader>gt",
+      function()
+        require("telescope.builtin").find_files({
+          cwd = "~/workspace/",
+          find_command = { "fd", "--color", "never", "-d", "2" }
+        })
+      end,
+      desc = "browse ~/workspace/"
+    }
   },
 })
 
