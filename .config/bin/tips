@@ -66,6 +66,7 @@ elif [[ $1 = "/" ]]; then
 
 fi
 
+files=()
 for glob in "$@"; do
   while read -r -d $'' file; do
     files+=( "$file" )
