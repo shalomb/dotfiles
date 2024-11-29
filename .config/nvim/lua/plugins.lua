@@ -39,6 +39,12 @@ return {
   },
 
   {
+    'echasnovski/mini.indentscope',
+    version = '*',
+    lazy = true,
+  },
+
+  {
     "hrsh7th/nvim-cmp",
     lazy = true,
     -- load cmp on InsertEnter
