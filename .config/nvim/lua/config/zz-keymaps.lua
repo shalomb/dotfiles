@@ -426,13 +426,6 @@ whichkey.add({
   },
 
   { "<leader>g",
-    {
-      "<leader>gr",
-      function()
-        vim.cmd(string.format([[:grep %s]], vim.fnlocal.CurWord()))
-      end,
-      desc = "grep selection"
-    },
 
     {
       "<leader>go",
@@ -448,6 +441,25 @@ whichkey.add({
     },
 
     {
+      "<leader>gp",
+      function()
+        require("telescope.builtin").find_files({
+          cwd = "~/projects/",
+          find_command = { "fd", "--color", "never", "-d", "2" }
+        })
+      end,
+      desc = "browse ~/projects/"
+    },
+
+    {
+      "<leader>gr",
+      function()
+        vim.cmd(string.format([[:grep %s]], vim.fnlocal.CurWord()))
+      end,
+      desc = "grep selection"
+    },
+
+    {
       "<leader>gt",
       function()
         require("telescope.builtin").find_files({
@@ -457,6 +469,7 @@ whichkey.add({
       end,
       desc = "browse ~/workspace/"
     }
+
   },
 })
 
