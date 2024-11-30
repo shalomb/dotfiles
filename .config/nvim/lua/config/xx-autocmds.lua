@@ -3,6 +3,29 @@
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
+-- autoupdate
+augroup("autoupdate", { clear = true })
+autocmd(
+  {
+    "BufLeave", "BufWinLeave", "CmdlineLeave", "FocusLost",
+    "InsertLeave", "TabLeave", "Textchanged", "VimLeavePre", "WinLeave"
+  }, {
+    group = 'autoupdate',
+    pattern = { '*' },
+    callback = function()
+      local buf = vim.api.nvim_win_get_buf(0)
+      if not vim.api.nvim_buf_get_option(buf, 'readonly') and
+          vim.api.nvim_buf_get_option(buf, 'modified') and
+          vim.api.nvim_buf_get_option(buf, 'buftype') == "" and
+          vim.fn.expand("%") ~= ""
+      then
+        vim.cmd([[silent update]])
+        vim.fn.updatemsg()
+      end
+    end,
+  }
+)
+
 -- autoload config files as soon as they are written to
 augroup("config_reload", { clear = true })
 autocmd(
@@ -13,11 +36,10 @@ autocmd(
       local curfile = vim.fn.expand('%:p')
       if not (string.match(curfile, '^fugitive:')) then
         vim.cmd(string.format(':source %s', curfile))
-        print('\n')
-        vim.fn.OK(curfile .. ' sourced')
       end
     end,
-  })
+  }
+)
 
 -- set the filetype if not already set
 -- i.e. with extention-less files, the filetype is only known after the shebang is written
@@ -33,7 +55,8 @@ autocmd(
         vim.cmd("filetype detect")
       end
     end,
-  })
+  }
+)
 
 -- restore position
 augroup('restore_last_position', { clear = true })
@@ -50,7 +73,8 @@ autocmd('BufReadPost', {
       vim.fn.setpos('.', vim.fn.getpos("'\""))
     end
   end
-})
+}
+)
 
 autocmd(
   { 'VimEnter' }, {
@@ -61,23 +85,26 @@ autocmd(
         vim.fn.feedkeys('')
       end
     end
-  })
+  }
+)
 
 -- disable relativenumber in inactive buffers
 augroup('inactive_buffer_settings', { clear = true })
 autocmd(
-  { 'BufEnter', 'InsertLeave', 'CmdWinLeave', 'CmdlineLeave' }, {
+  { 'BufEnter', 'InsertLeave', 'CmdWinLeave', 'CmdlineLeave', 'ExitPre' }, {
     group   = 'inactive_buffer_settings',
     pattern = '*',
     command = 'set nu rnu cursorline'
-  })
+  }
+)
 
 autocmd(
   { 'BufLeave', 'InsertEnter', 'CmdWinEnter', 'CmdlineEnter' }, {
     group   = 'inactive_buffer_settings',
     pattern = '*',
     command = 'set nu nornu nocursorline'
-  })
+  }
+)
 
 -- strip extraneous whitespace
 augroup('extraneous_whitespace', { clear = true })
@@ -90,7 +117,8 @@ autocmd(
     callback = function()
       vim.fn.matchadd('extraneous_whitespace', '/\\v(\\S\zs\\s+$| +\\zs\\t|\\t\\ze +)/')
     end
-  })
+  }
+)
 
 autocmd(
   { 'InsertEnter' }, {
@@ -106,7 +134,8 @@ autocmd(
     callback = function()
       vim.cmd([[:silent! %s/\v\s+$//ge]])
     end
-  })
+  }
+)
 
 -- auto format on save
 augroup('autoformat_on_save', { clear = true })
@@ -179,7 +208,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
       })
     end
   end
-})
+}
+)
 
 ---- https://neovim.io/doc/user/lsp.html#lsp-config
 --autocmd(
@@ -221,7 +251,8 @@ autocmd(
     callback = function()
       vim.cmd([[:wincmd =]])
     end
-  })
+  }
+)
 
 -- set go preferences
 augroup('go_settings', { clear = true })
@@ -234,7 +265,8 @@ autocmd(
       set et ts=4 sts=4 sw=4 tw=99 ai cin ff=unix enc=utf-8 fenc=utf-8
     ]])
     end
-  })
+  }
+)
 
 -- set lua preferences
 augroup('lua_settings', { clear = true })
@@ -247,7 +279,8 @@ autocmd(
       set et ts=2 sts=2 sw=2 tw=78 ai cin ff=unix enc=utf-8 fenc=utf-8
     ]])
     end
-  })
+  }
+)
 
 -- set python preferences
 augroup('python_settings', { clear = true })
@@ -260,7 +293,8 @@ autocmd(
       set et ts=4 sts=4 sw=4 tw=78 ai cin ff=unix enc=utf-8 fenc=utf-8
     ]])
     end
-  })
+  }
+)
 
 -- set terraform preferences
 augroup('terraform_settings', { clear = true })
@@ -273,7 +307,8 @@ autocmd(
       set et ts=4 sts=4 sw=4 tw=78 ai cin ff=unix enc=utf-8 fenc=utf-8 ft=terraform
     ]])
     end
-  })
+  }
+)
 
 -- quickfix
 augroup('quickfix_settings', { clear = true })
@@ -284,7 +319,8 @@ autocmd(
     callback = function()
       vim.keymap.set("n", "<cr>", "<cr>", { noremap = true })
     end
-  })
+  }
+)
 
 -- cmdwin
 augroup('cmdwin_settings', { clear = true })
@@ -295,7 +331,8 @@ autocmd(
     callback = function()
       vim.keymap.set("n", "<cr>", "<cr>", { noremap = true })
     end
-  })
+  }
+)
 
 -- gitcommit
 augroup('gitcommit_settings', { clear = true })
@@ -304,4 +341,5 @@ autocmd(
     group = 'gitcommit_settings',
     pattern = { 'gitcommit' },
     command = '1 | setlocal spell tw=72 colorcolumn+=51 colorcolumn+=73'
-  })
+  }
+)

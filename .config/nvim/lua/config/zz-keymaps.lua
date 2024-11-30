@@ -5,6 +5,12 @@ local vim = vim
 local map = vim.keymap.set
 -- local opt = { noremap = true, silent = true }
 
+local function clear_cmdarea()
+  vim.defer_fn(function()
+    vim.api.nvim_echo({}, false, {})
+  end, 2000)
+end
+
 vim.cmd([[
 augroup keymaps_reload
   autocmd!
@@ -13,16 +19,17 @@ augroup end
 ]])
 
 vim.fn.updatemsg = function()
-  vim.cmd([[
-    echohl DiagnosticHint
-    echon "OK: "
-    echohl None
-    echon(
-      \ strftime('%T') .. ': ' ..
-      \ substitute(expand('%'), glob('~/'), '~/', '') .. ' ' ..
-      \ substitute(getcwd(), glob('~'), '~', '')
-    \ )
-]])
+  local time = os.date "%T"
+  vim.api.nvim_echo({ { "󰄳 ", "LazyProgressDone" }, {
+    -- "  -->  " .. time .. ": file autosaved "
+    string.format(
+      ' %s: %s %s',
+      time,
+      vim.fn.expand('%:f'),
+      vim.loop.cwd()
+    )
+  } }, false, {})
+  clear_cmdarea()
 end
 
 local whichkey = require("which-key")
