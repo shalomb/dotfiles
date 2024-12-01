@@ -289,3 +289,4 @@ alias todo='t '
 
 alias env_init='source ~/.bin/env_init'
 alias so='source '
+alias vsp='vi '
