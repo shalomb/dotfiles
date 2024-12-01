@@ -18,16 +18,18 @@ augroup keymaps_reload
 augroup end
 ]])
 
-vim.fn.updatemsg = function()
+vim.fn.updatemsg = function(msg)
   local time = os.date "%T"
-  vim.api.nvim_echo({ { "󰄳 ", "LazyProgressDone" }, {
-    -- "  -->  " .. time .. ": file autosaved "
-    string.format(
+  if (msg == nil or msg == "") then
+    msg = string.format(
       ' %s: %s %s',
       time,
       vim.fn.expand('%:f'),
       vim.loop.cwd()
     )
+  end
+  vim.api.nvim_echo({ { "󰄳 ", "LazyProgressDone" }, {
+    msg
   } }, false, {})
   clear_cmdarea()
 end

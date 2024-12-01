@@ -33,6 +33,7 @@ vim.opt.formatoptions:append('r') -- insert comment leader after <CR>
 vim.opt.formatoptions:remove('a') -- auto format paragraphs
 vim.opt.formatoptions:remove('n') -- recognize numbered lists
 vim.opt.formatoptions:remove('t') -- remove autoindent on textwidth
+vim.opt.formatprg      = 'par -jw79'
 vim.opt.hidden         = true
 vim.opt.hlsearch       = true
 vim.opt.inccommand     = "split"

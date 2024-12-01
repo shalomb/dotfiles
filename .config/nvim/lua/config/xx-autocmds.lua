@@ -26,6 +26,35 @@ autocmd(
   }
 )
 
+-- set formatprg on load and when textwidth is changed
+vim.fn.update_format_prg = function()
+  local buf = vim.api.nvim_win_get_buf(0)
+  local textwidth = vim.bo.textwidth or 79
+  if vim.api.nvim_buf_get_option(buf, 'buftype') == "" then
+    vim.bo.formatprg = string.gsub(vim.bo.formatprg or vim.o.formatprg, '%d+', textwidth)
+  end
+end
+
+augroup("formatprg_set", { clear = true })
+autocmd(
+  { "VimEnter", "BufEnter" }, {
+    group = 'formatprg_set',
+    pattern = { '*' },
+    callback = function()
+      vim.fn.update_format_prg()
+    end,
+  }
+)
+autocmd(
+  { "OptionSet" }, {
+    group = 'formatprg_set',
+    pattern = { 'textwidth' },
+    callback = function()
+      vim.fn.update_format_prg()
+    end,
+  }
+)
+
 -- autoload config files as soon as they are written to
 augroup("config_reload", { clear = true })
 autocmd(
