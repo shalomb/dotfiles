@@ -133,8 +133,10 @@ nvim-cleanup: ## Cleanup the nvim caches
 	find ~/.local/state/nvim/swap/ -type f -delete
 	find ~/.local/share/nvim/mason/packages/lua-language-server/libexec/log/ -iname "*.lock" -delete
 	find ~/.local/share/nvim/mason/ -ipath "*mason*.lock" -delete
-	make -f .config/nvim/Makefile clean
 	find ~/.cache/terraform.d/plugin-cache/ -mtime +30 -print -delete
+
+nvim-clear-locks: ## Cleanup nvim lock files
+	find ~/.local/share/nvim/mason/ -iname "*.lock*" -delete
 
 .PHONY: update
 update:  ## Update all components

@@ -89,6 +89,7 @@ rfc3987
 rich
 ruamel.yaml
 ruamel.yaml.clib
+ruff
 selinux
 setuptools
 simplejson

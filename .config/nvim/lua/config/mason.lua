@@ -25,14 +25,14 @@ mti.setup {
   -- a list of all tools you want to ensure are installed upon
   -- start; they should be the names Mason uses for each tool
   ensure_installed = {
-    'ansible-language-server',
-    'ansible-lint',
-    'ansiblels',
+    -- 'ansible-language-server',
+    -- 'ansible-lint',
+    -- 'ansiblels',
     'awk_ls',
     'bash-language-server',
     'bashls',
     'beautysh',
-    'cfn-lint',
+    -- 'cfn-lint',
     'codelldb',
     'commitlint',
     'css-lsp',

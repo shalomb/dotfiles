@@ -116,7 +116,7 @@ nullls.setup {
     -- diagnostics.pyproject_flake8,
     diagnostics.revive,
     -- diagnostics.rstcheck,
-    diagnostics.ruff,
+    -- diagnostics.ruff,
     -- diagnostics.semgrep,
     -- diagnostics.shellcheck,
     -- nullls.builtins.diagnostics.sqlfluff.with({

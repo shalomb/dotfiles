@@ -112,9 +112,10 @@ profile: ## profile neovim startup
 update: ## update neovim components
 	@:
 	set -x
-	nvim --headless -c ':PackerUpdate' -c ':q'
+	# nvim --headless -c ':PackerUpdate' -c ':q'
 	nvim --headless -c ':TSUpdate'     -c ':q'
 	nvim --headless -c ':TSUpdateSync' -c ':q'
+	# See ~/.local/state/nvim/mason.log
 	nvim --headless -c ':MasonUpdate'  -c ':q'
 	nvim --headless -c ':MasonToolsUpdate'  -c ':q'
 	# These following commands do not seem to be invocable from CLI
