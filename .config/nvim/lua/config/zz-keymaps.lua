@@ -125,6 +125,16 @@ whichkey.add({
   {
     "<leader><leader>",
     function()
+      local bufnr = vim.api.nvim_buf_get_number(0)
+      local current_tick = vim.api.nvim_buf_get_changedtick(bufnr)
+      local last_format_tick = vim.b.format_tick or 0
+      if current_tick >= last_format_tick then
+        vim.lsp.buf.format({
+          bufnr = bufnr,
+          async = false
+        })
+        vim.b.format_tick = current_tick
+      end
       vim.cmd.update()
       vim.fn.updatemsg()
     end,
