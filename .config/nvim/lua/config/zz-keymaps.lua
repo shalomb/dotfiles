@@ -439,13 +439,17 @@ whichkey.add({
       "<leader>go",
       function()
         local linenum, _ = unpack(vim.api.nvim_win_get_cursor(0))
-        local basename = vim.api.nvim_buf_get_name(0)
-        basename = string.gsub(basename, "(.*/)(.*)", "%2")
+        local Path = require "plenary.path"
+        local filename = vim.api.nvim_buf_get_name(0)
+        local relpath = Path:new(filename):make_relative(vim.fnlocal.CurGitRoot())
         local branch = vim.fnlocal.CurGitBranch()
-        local filenum = string.format("%s:%s", basename, linenum)
-        vim.fn.system({ "gh", "browse", "--branch", branch, filenum })
+        local filenum = string.format("%s:%s", relpath, linenum)
+        vim.system(
+          { "gh", "browse", "--branch", branch, filenum },
+          { cwd = vim.fnlocal.CurGitRoot() }
+        )
       end,
-      desc = "gh browse"
+      desc = "gh browse line"
     },
 
     {
