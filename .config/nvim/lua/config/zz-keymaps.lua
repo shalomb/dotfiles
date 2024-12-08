@@ -436,6 +436,14 @@ whichkey.add({
   { "<leader>g",
 
     {
+      "<leader>gg",
+      function()
+        vim.cmd([[:G]])
+      end,
+      desc = "fugitive"
+    },
+
+    {
       "<leader>go",
       function()
         local linenum, _ = unpack(vim.api.nvim_win_get_cursor(0))
@@ -460,7 +468,7 @@ whichkey.add({
           find_command = { "fd", "--color", "never", "-d", "2" }
         })
       end,
-      desc = "browse ~/projects/"
+      desc = "browse ~/projects/" -- NOTE: have gum select this
     },
 
     {
