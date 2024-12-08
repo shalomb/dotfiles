@@ -4,7 +4,7 @@ local whichkey = require("which-key")
 local flash = require("flash")
 
 require('flash').setup({
-  labels = "asdfghjklqwertyuiopzxcvbnmASDFGHJKLQWERTYUIOPZXCVBNM01234567890",
+  labels = "jkluinmhopybgtrdkfdrcexwzsaqJKLUINMHOPYBGTRDKFDRCEXWZSAQ8976034512",
   search = {
     -- search/jump in all windows
     multi_window = true,
@@ -48,7 +48,7 @@ require('flash').setup({
       jump_labels = true
     },
     search = {
-      enabled = true,
+      enabled = false,
       highlight = { backdrop = true },
       jump = { history = true, register = true, nohlsearch = true },
       search = {
@@ -136,7 +136,7 @@ whichkey.add({
     function()
       flash.treesitter()
     end,
-    desc = 'Jump',
+    desc = 'Flash TreeSitter',
   },
 
   {
@@ -144,7 +144,7 @@ whichkey.add({
     function()
       flash.jump()
     end,
-    desc = 'Jump',
+    desc = 'Flash Jump',
   },
 
   {
@@ -191,6 +191,18 @@ whichkey.add({
       })
     end,
     desc = 'flash search word',
-  }
+  },
 
+  {
+    mode = "c",
+    {
+      -- https://github.com/jwhitley/neovim-config/commit/0260925
+      -- Disable Flash search with / by default, activate with <C-s>
+      "<c-s>",
+      function()
+        flash.toggle()
+      end,
+      desc = "Flash toggle"
+    }
+  }
 })
