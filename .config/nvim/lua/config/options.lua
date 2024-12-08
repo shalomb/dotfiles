@@ -20,8 +20,8 @@ vim.opt.expandtab      = true
 vim.opt.foldcolumn     = '1' -- '0' is not bad
 vim.opt.foldenable     = true
 vim.opt.foldexpr       = 'nvim_treesitter#foldexpr()'
-vim.opt.foldlevel      = 4
-vim.opt.foldlevelstart = 4
+vim.opt.foldlevel      = 20
+vim.opt.foldlevelstart = 20
 vim.opt.foldmethod     = 'expr'
 vim.opt.formatoptions:append('1') -- don't break lines after one-letter words
 vim.opt.formatoptions:append('c') -- auto-wrap comments on textwith
