@@ -169,14 +169,15 @@ autocmd(
 -- auto format on save
 augroup('autoformat_on_save', { clear = true })
 
-local is_exempt_from_formatting = function(ft, client)
+vim.fnlocal.is_exempt_from_formatting = function(ft, client)
   local excluded_filetypes = {
     'sh', 'md', 'markdown', 'text',
     -- 'yaml' -- yamlfmt is aggressive about extraneous newlines, start of doc separators, etc
   }
   for _, v in ipairs(excluded_filetypes) do
     if string.find(ft, v) then
-      _G.is_exempt_from_formatting = true
+      -- TODO: Make this a buffer local option
+      vim.b.is_exempt_from_formatting = true
       return true
     end
   end
@@ -190,6 +191,15 @@ local is_exempt_from_formatting = function(ft, client)
   return false
 end
 
+--if client.supports_method('textDocument/implementation') then
+--  -- Create a keymap for vim.lsp.buf.implementation
+--end
+
+--if client.supports_method('textDocument/completion') then
+--  -- Enable auto-completion
+--  vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
+--end
+
 local lsp_fmt_augroup = vim.api.nvim_create_augroup("LspFormatting", { clear = false })
 -- TODO autocmd('BufReadPost', {
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -199,18 +209,10 @@ vim.api.nvim_create_autocmd('LspAttach', {
       return {}
     end
 
-    --if client.supports_method('textDocument/implementation') then
-    --  -- Create a keymap for vim.lsp.buf.implementation
-    --end
+    ---- https://neovim.io/doc/user/lsp.html#lsp-config
+    local is_exempt = vim.fnlocal.is_exempt_from_formatting(vim.bo.filetype, client)
 
-    --if client.supports_method('textDocument/completion') then
-    --  -- Enable auto-completion
-    --  vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
-    --end
-    local is_exempt = is_exempt_from_formatting(vim.bo.filetype, client)
     if client.supports_method('textDocument/formatting') then
-      -- Format the current buffer on save
-      -- TODO autocmd('BufReadPost', {
       vim.api.nvim_create_autocmd('BufWritePre', {
         -- https://github.com/neovim/neovim/issues/21098#issuecomment-1320001372is_exempt_from_formatting
         vim.api.nvim_clear_autocmds({
@@ -228,49 +230,12 @@ vim.api.nvim_create_autocmd('LspAttach', {
               async = false
             })
           end
-
-          -- print(
-          --   "autoformat_on_save : " ..
-          --   args.buf .. " -> " .. vim.inspect(client.supports_method('textDocument/formatting'))
-          -- )
         end,
       })
     end
   end
 }
 )
-
----- https://neovim.io/doc/user/lsp.html#lsp-config
---autocmd(
---  { 'LspAttach' }, {
---    callback = function(args)
---      local client = vim.lsp.get_client_by_id(args.data.client_id)
---      local buffer = args.buf
---      --if client.supports_method('textDocument/completion') then
---      --  -- Enable auto-completion
---      --  vim.lsp.completion.enable(true, client.id, args.buf, { autotrigger = true })
---      --end
---      if client.supports_method('textDocument/formatting') then
---        autocmd('BufWritePre', {
---        buffer   = buffer,
---          callback = function()
---            vim.lsp.buf.format({
---              id     = client.id,
---              async  = false,
---              -- id = args.id,
---              filter = function()
---                print(
---                  "autoformat_on_save : " ..
---                  args.buf .. " -> " .. vim.inspect(client.supports_method('textDocument/formatting'))
---                )
---                return not is_exempt_from_formatting(vim.bo.filetype, client)
---              end
---            })
---          end
---        })
---      end
---    end
---  })
 
 -- rebalance size of windows on vim window resize
 augroup('window_resize', { clear = true })

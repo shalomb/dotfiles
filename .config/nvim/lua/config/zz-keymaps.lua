@@ -5,18 +5,18 @@ local vim = vim
 local map = vim.keymap.set
 -- local opt = { noremap = true, silent = true }
 
-local function clear_cmdarea()
-  vim.defer_fn(function()
-    vim.api.nvim_echo({}, false, {})
-  end, 2000)
-end
-
 vim.cmd([[
 augroup keymaps_reload
   autocmd!
   autocmd BufWritePost zz_keymaps.lua :so
 augroup end
 ]])
+
+local function clear_cmdarea()
+  vim.defer_fn(function()
+    vim.api.nvim_echo({}, false, {})
+  end, 5000)
+end
 
 vim.fn.updatemsg = function(msg)
   local time = os.date "%T"
@@ -128,17 +128,23 @@ whichkey.add({
       local bufnr = vim.api.nvim_buf_get_number(0)
       local current_tick = vim.api.nvim_buf_get_changedtick(bufnr)
       local last_format_tick = vim.b.format_tick or 0
-      if current_tick >= last_format_tick then
-        vim.lsp.buf.format({
-          bufnr = bufnr,
-          async = false
-        })
+      print(string.format('cur:%s last:%s', current_tick, last_format_tick))
+
+      if current_tick > last_format_tick then
+        -- TODO: We're having to use vim.cmd.write() here as the appropriate events to trigger the
+        -- none-ls addons are not being fired off. So we've essentially reinvented :update.
+        vim.cmd.write()
+        vim.cmd.diffupdate() -- update diff hilights and folds
+        -- vim.cmd.mode()       -- clear and redraw screen
+        vim.cmd.redraw()     -- clear and redraw screen
         vim.b.format_tick = current_tick
+      else
+        vim.cmd.update()
       end
-      vim.cmd.update()
+
       vim.fn.updatemsg()
     end,
-    desc = "update"
+    desc = "update buffer"
   },
 
   { "$",        'g_',            desc = "eol" },
