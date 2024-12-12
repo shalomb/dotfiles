@@ -22,8 +22,31 @@ config.color_scheme = "Gruvbox dark"
 config.color_scheme = 'AdventureTime'
 config.color_scheme = "Builtin Solarized Dark"
 config.color_scheme = "Builtin Solarized Light"
-config.color_scheme = 'Afterglow'
 config.color_scheme = 'Tokyo Night'
+config.color_scheme = 'Batman'
+config.color_scheme = 'Andromeda'
+config.color_scheme = 'AlienBlood'
+config.color_scheme = 'AtelierSulphurpool'
+config.color_scheme = 'Atom'
+config.color_scheme = 'Batman'
+config.color_scheme = 'BlulocoDark'
+config.color_scheme = 'Broadcast'
+config.color_scheme = 'Calamity'
+config.color_scheme = 'Chester'
+config.color_scheme = 'Chalk'
+config.color_scheme = 'Afterglow'
+config.color_scheme = 'Darkside'
+config.color_scheme = 'DotGov'
+config.color_scheme = 'ChallengerDeep'
+config.color_scheme = 'Dracula'
+config.color_scheme = 'Elemental'
+config.color_scheme = 'Espresso'
+config.color_scheme = 'Fideloper'
+config.color_scheme = 'DimmedMonokai'
+config.color_scheme = 'Firewatch'
+config.color_scheme = 'Operator Mono Dark'
+config.color_scheme = 'Pnevma'
+config.color_scheme = 'FirefoxDev'
 
 config.cursor_blink_ease_in = 'Constant'
 config.cursor_blink_ease_out = 'Constant'
@@ -51,11 +74,32 @@ config.window_decorations = "TITLE | RESIZE"
 config.colors = {
   foreground = '#acacac',
   cursor_bg = '#ff6000',
-  cursor_fg = '#0f6000',
+  cursor_fg = 'black',
+  compose_cursor = 'orange',
+  ansi = {
+    'black',
+    'maroon',
+    'green',
+    'olive',
+    'navy',
+    'purple',
+    'teal',
+    'silver',
+  },
+  brights = {
+    'grey',
+    'red',
+    'lime',
+    'yellow',
+    'blue',
+    'fuchsia',
+    'aqua',
+    'white',
+  },
 }
 
 config.line_height = 1.0
-config.font_size = 12.5
+config.font_size = 12
 
 -- wezterm ls-fonts --list-system
 config.font = wezterm.font_with_fallback {
@@ -83,7 +127,7 @@ config.font = wezterm.font_with_fallback {
     family = 'Fira Code',
     weight = "Regular",
     stretch = 'Normal',
-    style = Normal
+    style = 'Normal'
   },
 }
 
@@ -162,7 +206,6 @@ end)
 
 wezterm.on('update-right-status', function(window, pane)
   local date = wezterm.strftime '%Y-%m-%d %H:%M'
-
   -- Make it italic and underlined
   window:set_right_status(wezterm.format {
     { Attribute = { Underline = 'None' } },
