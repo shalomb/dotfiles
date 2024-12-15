@@ -34,7 +34,6 @@ config.color_scheme = 'Broadcast'
 config.color_scheme = 'Calamity'
 config.color_scheme = 'Chester'
 config.color_scheme = 'Chalk'
-config.color_scheme = 'Afterglow'
 config.color_scheme = 'Darkside'
 config.color_scheme = 'DotGov'
 config.color_scheme = 'ChallengerDeep'
@@ -44,9 +43,41 @@ config.color_scheme = 'Espresso'
 config.color_scheme = 'Fideloper'
 config.color_scheme = 'DimmedMonokai'
 config.color_scheme = 'Firewatch'
-config.color_scheme = 'Operator Mono Dark'
 config.color_scheme = 'Pnevma'
+config.color_scheme = 'Operator Mono Dark'
+config.color_scheme = 'Afterglow'
 config.color_scheme = 'FirefoxDev'
+
+config.colors = {
+  foreground = '#acacac',
+  cursor_bg = '#ff6000',
+  cursor_fg = 'black',
+  compose_cursor = 'orange',
+  -- Arbitrary colors of the palette in the range from 16 to 255
+  indexed = { [136] = '#af8700' },
+  -- Color names are SVG/CSS3 names
+  -- https://docs.rs/palette/0.4.1/palette/named/index.html#constants
+  -- ansi = {
+  --   'black',          -- black 30
+  --   'maroon',         -- red 31
+  --   'darkolivegreen', -- green 32
+  --   'olive',          -- yellow 33
+  --   'navy',           -- blue 34
+  --   'purple',         -- magenta 45
+  --   'teal',           -- cyan 36
+  --   'silver',         -- white 37
+  -- },
+  -- brights = {
+  --   'grey',
+  --   'red',
+  --   'lime',
+  --   'yellow',
+  --   'teal', -- blue
+  --   'fuchsia',
+  --   'aqua',
+  --   'white',
+  -- },
+}
 
 config.cursor_blink_ease_in = 'Constant'
 config.cursor_blink_ease_out = 'Constant'
@@ -70,33 +101,6 @@ config.window_background_opacity = 0.925
 config.window_background_opacity = 0.97
 config.window_decorations = "RESIZE"
 config.window_decorations = "TITLE | RESIZE"
-
-config.colors = {
-  foreground = '#acacac',
-  cursor_bg = '#ff6000',
-  cursor_fg = 'black',
-  compose_cursor = 'orange',
-  ansi = {
-    'black',
-    'maroon',
-    'green',
-    'olive',
-    'navy',
-    'purple',
-    'teal',
-    'silver',
-  },
-  brights = {
-    'grey',
-    'red',
-    'lime',
-    'yellow',
-    'blue',
-    'fuchsia',
-    'aqua',
-    'white',
-  },
-}
 
 config.line_height = 1.0
 config.font_size = 12
