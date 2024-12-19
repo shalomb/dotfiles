@@ -2,5 +2,5 @@
 
 local vim = vim
 
-vim.opt.grepprg='rg --vimgrep --no-heading --smart-case'
-vim.opt.grepformat='%f:%l:%c:%m,%f:%l:%m'
+vim.o.grepprg = "rg --smart-case --vimgrep --no-heading --follow --multiline-dotall --hidden --pcre2 --regexp"
+vim.opt.grepformat = '%f:%l:%c:%m,%f:%l:%m'

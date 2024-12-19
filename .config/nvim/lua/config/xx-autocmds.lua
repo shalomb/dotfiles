@@ -70,6 +70,35 @@ autocmd(
   }
 )
 
+augroup("auto_open_qf", { clear = true })
+autocmd(
+  { "QuickFixCmdPost", }, {
+    group = "auto_open_qf",
+    pattern = { "[^l]*" },
+    command = "cwindow"
+  }
+)
+autocmd(
+  { "QuickFixCmdPost", }, {
+    group = "auto_open_qf",
+    pattern = { "l*" },
+    command = "lwindow"
+  }
+)
+autocmd(
+  { "BufReadPost", }, {
+    group = "auto_open_qf",
+    pattern = "qf",
+
+    callback = function()
+      vim.cmd([[setlocal nobuflisted]])
+      vim.cmd([[wincmd J]])
+    end,
+  }
+)
+
+
+
 -- set the filetype if not already set
 -- i.e. with extention-less files, the filetype is only known after the shebang is written
 -- This allows us to write the shebang and write out for automatic filetype setting
