@@ -156,4 +156,4 @@ help: ## Show make targets available
 	@ grep -h -E '^[a-zA-Z_\\/.-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s - %s\n", $$1, $$2}'
 
-# vim: ts=2 sw=2 noet
+# vim: ts=2 sts=2 sw=2 noet
