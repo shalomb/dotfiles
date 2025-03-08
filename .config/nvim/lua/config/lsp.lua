@@ -204,7 +204,7 @@ local on_attach = function(args)
     },
     { "gD",       vim.lsp.buf.declaration,      desc = "declaration" },
     { "gd",       vim.lsp.buf.definition,       desc = "definition" },
-    { "gd",       vim.lsp.buf.code_action,      desc = "code_action" },
+    { "gC",       vim.lsp.buf.code_action,      desc = "code_action" },
     { "gt",       vim.lsp.buf.type_definition,  desc = "type definition" },
     { "gh",       vim.lsp.buf.signature_help,   desc = "help" },
     { "gi",       vim.lsp.buf.implementation,   desc = "implementation" },
