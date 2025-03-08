@@ -90,7 +90,7 @@ python-cleanup: ## Cleanup the pip cache
 	pip cache purge
 	pip cache remove '*'
 	pip cache info
-	find ~/.cache/pypoetry/ -atime +30 -delete
+	find ~/.cache/pypoetry/ -atime +30 -delete || true
 
 .PHONY: go-tools
 go-tools: ## Run go-tools installer
@@ -99,6 +99,7 @@ go-tools: ## Run go-tools installer
 go-cleanup: ## Cleanup the gomod cache
 	go clean -modcache # ~/.local/share/go
 	go clean -fuzzcache
+	find ~/.cache/go-*/ -atime +30 -delete || true
 
 .PHONY: rustup
 rustup: ## Configure rustup
@@ -133,7 +134,7 @@ nvim-cleanup: ## Cleanup the nvim caches
 	find ~/.local/state/nvim/swap/ -type f -delete
 	find ~/.local/share/nvim/mason/packages/lua-language-server/libexec/log/ -iname "*.lock" -delete
 	find ~/.local/share/nvim/mason/ -ipath "*mason*.lock" -delete
-	find ~/.cache/terraform.d/plugin-cache/ -mtime +30 -print -delete
+	find ~/.cache/terraform.d/plugin-cache/ -depth -type f -mtime +30 -print -delete
 
 nvim-clear-locks: ## Cleanup nvim lock files
 	find ~/.local/share/nvim/mason/ -iname "*.lock*" -delete
@@ -148,7 +149,7 @@ update:  ## Update all components
 	make python-tools
 
 .PHONY: clean
-clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup python-cleanup apt-clean
+clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup apt-clean python-cleanup
 
 .DEFAULT_GOAL := help
 help: ## Show make targets available
