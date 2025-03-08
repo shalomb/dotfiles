@@ -71,5 +71,34 @@ ls.add_snippets(nil, {
       t(')'),
     })),
 
+    s("testing", sn(1, {
+      t({
+        'import(',
+        '    "testing"',
+        '    log "github.com/sirupsen/logrus"',
+        '    assert "github.com/stretchr/testify/assert"',
+        '    // "os"',
+        '    // "regexp"',
+        ')',
+        '',
+        '// '
+      }),
+      i(1, 'Foo'),
+      t({ '', 'func Test' }),
+      i(1, 'Foo'),
+      t({
+        '(t *testing.T) {',
+        '    // Arrange',
+        '    log.Printf("actual: %v", "actual")',
+        '',
+        '    // Act',
+        '    log.Printf("expected: %v", "expected")',
+        '',
+        '    // Assert',
+        '    assert.Equal(t, "expected", "actual", "foo must be equal to bar")',
+        '}',
+      }),
+    })
+    )
   },
 })
