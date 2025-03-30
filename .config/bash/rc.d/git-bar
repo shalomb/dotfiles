@@ -412,7 +412,7 @@ function grbm {
 
 #! grc - git release create
 function grc {
-  local current_tag=$(git describe --tags --exact-match --match "v*.*.*")
+  local current_tag="${1:-$(git describe --tags --exact-match --match 'v*.*.*')}"
   git push origin "$current_tag"
   gh release create "$current_tag" --generate-notes --verify-tag --target $(gbr)
 }
