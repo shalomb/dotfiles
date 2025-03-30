@@ -110,13 +110,9 @@ done
 
 # Right, we're ready to hand over control to the user now!
 # Print some informational trivia.
-echo -e "$USER@$HOSTNAME/$TTY $BASH ($$|$PPID) ${BASH_VERSION} $MACHTYPE ${TMUX+"$(tmux -V) ($TMUX_PANE)"}"
+echo -e "$USER@$HOSTNAME/$TTY $BASH ($$|$PPID) $BASH_VERSION $MACHTYPE ${TMUX+"$(tmux -V) ($TMUX_PANE)"}"
 uname -a
 
-echo ''
-echo -n "last login "
-lastlog -u "${USER}" | tail -n 1 | sed -r -e 's/  +/ /g'
 uptime
-echo ''
 
 type -P fortune &>/dev/null && fortune 2>&1 && echo ""
