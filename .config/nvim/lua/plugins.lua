@@ -152,8 +152,8 @@ return {
 
   { "IndianBoy42/tree-sitter-just",        ft = "justfile" },
   { "ThePrimeagen/git-worktree.nvim",      lazy = false },
-  { "ThePrimeagen/harpoon",                lazy = false },                             -- Manage quickly accessed files
-  { "lewis6991/gitsigns.nvim",             lazy = true,       event = "BufWinEnter" }, -- Gitgutter replacement
+  { "ThePrimeagen/harpoon",                lazy = false },                              -- Manage quickly accessed files
+  { "lewis6991/gitsigns.nvim",             lazy = true,       event = "BufWinEnter" },  -- Gitgutter replacement
   { "christoomey/vim-tmux-navigator",      lazy = false },
   -- { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
   { "folke/flash.nvim",                    event = "VeryLazy" },
