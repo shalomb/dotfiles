@@ -35,7 +35,7 @@ while :; do
   fi
 
   (( quiet == 1 )) || \
-    printf "%s  %s %s #%04.1f : " "$(date --rfc-3339=seconds | tr ' ' T)" "${0##*/}" "$*" "$retry_interval"
+    printf "%s  %s %s #%04.1f : " "$(date '+%FT%T')" "${0##*/}" "$*" "$retry_interval"
 
   set +e
   ssh "$@" 2> >( tee "$stderr" )
