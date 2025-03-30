@@ -18,7 +18,6 @@ config.audible_bell = 'Disabled'
 
 config.default_workspace = "home"
 
-config.color_scheme = "Gruvbox dark"
 config.color_scheme = 'AdventureTime'
 config.color_scheme = "Builtin Solarized Dark"
 config.color_scheme = "Builtin Solarized Light"
@@ -41,43 +40,45 @@ config.color_scheme = 'Dracula'
 config.color_scheme = 'Elemental'
 config.color_scheme = 'Espresso'
 config.color_scheme = 'Fideloper'
-config.color_scheme = 'DimmedMonokai'
 config.color_scheme = 'Firewatch'
+
+config.color_scheme = 'FirefoxDev'
+config.color_scheme = "Gruvbox dark"
+config.color_scheme = 'DimmedMonokai'
 config.color_scheme = 'Pnevma'
 config.color_scheme = 'Operator Mono Dark'
 config.color_scheme = 'Afterglow'
-config.color_scheme = 'FirefoxDev'
 
-config.colors = {
-  foreground = '#acacac',
-  cursor_bg = '#ff6000',
-  cursor_fg = 'black',
-  compose_cursor = 'orange',
-  -- Arbitrary colors of the palette in the range from 16 to 255
-  indexed = { [136] = '#af8700' },
-  -- Color names are SVG/CSS3 names
-  -- https://docs.rs/palette/0.4.1/palette/named/index.html#constants
-  -- ansi = {
-  --   'black',          -- black 30
-  --   'maroon',         -- red 31
-  --   'darkolivegreen', -- green 32
-  --   'olive',          -- yellow 33
-  --   'navy',           -- blue 34
-  --   'purple',         -- magenta 45
-  --   'teal',           -- cyan 36
-  --   'silver',         -- white 37
-  -- },
-  -- brights = {
-  --   'grey',
-  --   'red',
-  --   'lime',
-  --   'yellow',
-  --   'teal', -- blue
-  --   'fuchsia',
-  --   'aqua',
-  --   'white',
-  -- },
-}
+-- config.colors = {
+--   foreground = '#acacac',
+--   cursor_bg = '#ff6000',
+--   cursor_fg = 'black',
+--   compose_cursor = 'orange',
+--   -- Arbitrary colors of the palette in the range from 16 to 255
+--   indexed = { [136] = '#af8700' },
+--   -- Color names are SVG/CSS3 names
+--   -- https://docs.rs/palette/0.4.1/palette/named/index.html#constants
+--   -- ansi = {
+--   --   'black',          -- black 30
+--   --   'maroon',         -- red 31
+--   --   'darkolivegreen', -- green 32
+--   --   'olive',          -- yellow 33
+--   --   'navy',           -- blue 34
+--   --   'purple',         -- magenta 45
+--   --   'teal',           -- cyan 36
+--   --   'silver',         -- white 37
+--   -- },
+--   -- brights = {
+--   --   'grey',
+--   --   'red',
+--   --   'lime',
+--   --   'yellow',
+--   --   'teal', -- blue
+--   --   'fuchsia',
+--   --   'aqua',
+--   --   'white',
+--   -- },
+-- }
 
 config.cursor_blink_ease_in = 'Constant'
 config.cursor_blink_ease_out = 'Constant'
@@ -107,6 +108,16 @@ config.font_size = 12
 
 -- wezterm ls-fonts --list-system
 config.font = wezterm.font_with_fallback {
+  { family = "JetBrains Mono",
+    weight = "Bold",
+    stretch = "Normal",
+    style = "Normal"
+  }, -- <built-in>, BuiltIn
+
+  { family = "DejaVu Sans Mono",
+    weight = "Bold",
+    -- weight = "Normal",
+  },
 
   { family = "BitStream Vera Sans Mono",
     weight = "Bold",
@@ -114,18 +125,7 @@ config.font = wezterm.font_with_fallback {
     style = "Normal"
   },
 
-  { family = "DejaVu Sans Mono",
-    weight = "Bold",
-    -- weight = "Normal",
-  },
-
   { family = "Operator Mono SSm Lig", weight = 325, italic = true },
-
-  { family = "JetBrains Mono",
-    weight = "Bold",
-    stretch = "Normal",
-    style = "Normal"
-  }, -- <built-in>, BuiltIn
 
   {
     family = 'Fira Code',
