@@ -90,7 +90,7 @@ python-cleanup: ## Cleanup the pip cache
 	pip cache purge
 	pip cache remove '*'
 	pip cache info
-	find ~/.cache/pypoetry/ -atime +30 -delete || true
+	find ~/.cache/pip/ ~/.cache/pypoetry/ -atime +30 -delete || true
 
 .PHONY: go-tools
 go-tools: ## Run go-tools installer
