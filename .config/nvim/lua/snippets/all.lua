@@ -42,20 +42,28 @@ ls.add_snippets("all", {
     t({
       "#!/bin/bash",
       "",
-      "# Name",
-      "",
       "# Description",
-      "",
-      "# Usage",
       "",
       "",
       "set -o errexit -o nounset -o pipefail",
+      "set -o errtrace         # Ensure the error trap handler is inherited",
       "shopt -s extglob nullglob globstar",
       "",
-      "[[ ${DEBUG-} != 0 ]] && set -xv",
+      "[[ -n ${DEBUG-} && ${DEBUG-} != 0 ]] && set -o xtrace verbose",
       "",
       "",
     }),
+    i(1, ''),
+    t({
+      "",
+      "",
+      "# vim: syntax=sh cc=80 tw=79 ts=2 sw=2 sts=2 et sr"
+    }),
+    -- TODO
+    -- Colors via tput
+    -- Cleanup
+    -- Usage
+    -- main
     i(2, "")
   })),
 
