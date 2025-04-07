@@ -113,9 +113,6 @@
 [github]
   user  = shalomb
 
-[gpg]
-  program = /usr/bin/gpg2
-
 [help]
   autocorrect = prompt
 
