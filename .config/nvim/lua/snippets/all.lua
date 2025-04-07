@@ -26,14 +26,18 @@ ls.add_snippets("all", {
     t({
       "#!/usr/bin/env python3",
       "",
-      "# -*- coding: utf-8 -*-",
-      "",
       '""" """                ',
       "",
-      "import icecream",
+      "from icecream import ic",
+      "import sys",
+      "",
+      "",
+      "def main() -> int:",
+      "    return 0",
+      "",
       "",
       'if __name__ == "__main__":',
-      '    main()'
+      '    sys.exit(main())'
     }),
     i(2, "")
   })),
