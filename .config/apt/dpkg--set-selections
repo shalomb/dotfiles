@@ -1,3 +1,4 @@
+7zip                       install
 ack                        install
 adduser                    install
 apparmor                   install
@@ -51,9 +52,12 @@ e2fsprogs                  install
 entr                       install
 etckeeper                  install
 ethtool                    install
+exiftool                   install
 exuberant-ctags            install
 fakeroot                   install
+fd-find                    install
 fdisk                      install
+ffmpeg                     install
 file                       install
 findutils                  install
 fontconfig                 install
@@ -93,6 +97,7 @@ gzip                       install
 highlight                  install
 hostname                   install
 ifupdown                   install
+imagemagick                install
 init                       install
 init-system-helpers        install
 iproute2                   install
@@ -135,8 +140,8 @@ mlocate                    install
 mount                      install
 ncurses-base               install
 ncurses-bin                install
-net-tools                  install
 neovim                     install
+net-tools                  install
 netbase                    install
 openjdk-24-jdk-headless    install
 openjdk-24-jre-headless    install
@@ -158,6 +163,7 @@ pinentry-curses            install
 pkg-config                 install
 pm-utils                   install
 pmount                     install
+poppler-utils              install
 powertop                   install
 preload                    install
 procps                     install
@@ -273,6 +279,7 @@ rake                       install
 ranger                     install
 readline-common            install
 rename                     install
+ripgrep                    install
 rsync                      install
 rsyslog                    install
 sed                        install
@@ -325,3 +332,4 @@ xz-utils                   install
 yamllint                   install
 zip                        install
 zlib1g                     install
+zoxide                     install
