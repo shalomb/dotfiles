@@ -143,7 +143,22 @@ function gbd {
 function gbl { _git_arg_wrapper blame "$@"; }
 
 #! ghb - gh browse
-function ghb { gh browse -b $(gbr) "${*:-.}"; }
+function ghb {
+  (( $# < 1 )) && set -- -b $(gbr);
+  if [[ $1 == '-i' ]]; then
+    shift;
+    [[ $1 == '-a' && $# == 1 ]] && set -- '-a' '@me'
+    gh issue list --web "$@";
+    return
+  fi
+  gh browse "${@:-.}";
+}
+
+#! ghi - gh browse issue/pr
+function ghi { gh browse "${*:-.}"; }
+
+#! ghr - gh browse -r
+function ghr { gh browse -r "${*:-.}"; }
 
 #| git-default-branch - show default/HEAD branches on remotes
 function git-default-branch {
