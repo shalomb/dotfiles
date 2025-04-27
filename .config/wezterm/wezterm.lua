@@ -104,32 +104,13 @@ config.window_decorations = "RESIZE"
 config.window_decorations = "TITLE | RESIZE"
 
 config.line_height = 1.0
-config.font_size = 12
+config.font_size = 13
 
 -- wezterm ls-fonts --list-system
 config.font = wezterm.font_with_fallback {
-  { family = "JetBrains Mono",
-    weight = "Bold",
-    stretch = "Normal",
-    style = "Normal"
-  }, -- <built-in>, BuiltIn
-
-  { family = "DejaVu Sans Mono",
-    weight = "Bold",
-    -- weight = "Normal",
-  },
-
-  { family = "BitStream Vera Sans Mono",
-    weight = "Bold",
-    stretch = "Normal",
-    style = "Normal"
-  },
-
-  { family = "Operator Mono SSm Lig", weight = 325, italic = true },
-
   {
-    family = 'Fira Code',
-    weight = "Regular",
+    family = 'JetBrains Mono',
+    weight = "Bold",
     stretch = 'Normal',
     style = 'Normal'
   },
@@ -141,7 +122,7 @@ config.font_rules = {
     intensity = 'Normal',
     italic = true,
     font = wezterm.font_with_fallback {
-      italic = true, -- disable the severe italic slant
+      italic = false, -- disable the severe italic slant
       weight = 'Light'
     }
   }
