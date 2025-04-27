@@ -145,7 +145,7 @@ config.hyperlink_rules = {
   -- linkify email addresses
   -- Compiled-in default. Used if you don't specify any hyperlink_rules.
   {
-    regex = [[\b\w+@[\w-]+(\.[\w-]+)+\b]],
+    regex = [[\b[\.\-\w]+@[\w-]+(\.[\w-]+)+\b]],
     format = 'mailto:$0',
   },
 
