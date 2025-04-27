@@ -144,14 +144,55 @@ function gbl { _git_arg_wrapper blame "$@"; }
 
 #! ghb - gh browse
 function ghb {
-  (( $# < 1 )) && set -- -b $(gbr);
-  if [[ $1 == '-i' ]]; then
+  (($# < 1)) && set -- -b $(gbr)
+  local repo_url=$(grv | awk '/(fetch)/{print $2}')
+  local repo_url="${repo_url%.git}"
+  # Root
+  case "$1" in
+  -R) # Repo root
+    x-www-browser "$repo_url"
+    ;;
+  -a) # Actions
+    x-www-browser "$repo_url/actions"
+    ;;
+  -b) # Branches
+    x-www-browser "$repo_url/branches/all"
+    ;;
+  -C) # Compare
+    x-www-browser "$repo_url/compare/$(gbr)..main"
+    ;;
+  -c) # Commits
+    x-www-browser "$repo_url/commits"
+    ;;
+  -h) # Help
+    type -a ghb
+    ;;
+  -i) # Issues
+    shift
+    if [[ $1 == '-a' ]]; then
+      if [[ $# == 1 ]]; then
+        set -- '-a' '@me'
+      else
+        set -- "$@"
+      fi
+    fi
+    gh issue list --web "$@"
+    ;;
+  -p) # Pulls
+    x-www-browser "$repo_url/pulls"
+    ;;
+  -t) # Tags
+    x-www-browser "$repo_url/tags"
+    ;;
+  -T) # Tree
     shift;
-    [[ $1 == '-a' && $# == 1 ]] && set -- '-a' '@me'
-    gh issue list --web "$@";
-    return
-  fi
-  gh browse "${@:-.}";
+    [[ $# < 1 ]] && set -- $(git rev-parse --verify HEAD --short)
+    x-www-browser "$repo_url/tree/$*"
+    ;;
+  *)
+    gh browse "${@:-.}"
+    ;;
+  esac
 }
 
 #! ghi - gh browse issue/pr
