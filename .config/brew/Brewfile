@@ -47,6 +47,8 @@ cask "drawio"
 # Excalidraw client
 cask "excalidrawz"
 # Web browser
+cask "firefox"
+# Web browser
 cask "firefox@developer-edition"
 # Screenshot software
 cask "flameshot"
