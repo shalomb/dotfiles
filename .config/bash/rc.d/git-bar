@@ -146,7 +146,6 @@ function gbl { _git_arg_wrapper blame "$@"; }
 
 #! ghb - gh browse
 function ghb {
-  (($# < 1)) && set -- -b $(gbr)
   local repo_url=$(grv | awk '/(fetch)/{print $2}')
   local repo_url="${repo_url%.git}"
   # Root
@@ -192,7 +191,10 @@ function ghb {
       x-www-browser "$repo_url/tree/$*"
       ;;
     *)
-      gh browse "${@:-.}"
+      if (( $# < 1 )) || [[ $1 == "." ]]; then
+        set -- -b "$(gbr)" '.'
+      fi
+      ( set -xv; gh browse "${@:-.}"; )
       ;;
   esac
 }
