@@ -39,6 +39,7 @@ apt-clean:
 	sudo apt autoclean
 	sudo apt autopurge
 	sudo apt autoremove
+	uv cache clean
 	find ~/.cache/ -type f -atime +182 -delete
 	find ~/.config/ -iname ".mypy_cache" -exec rm -fr {} +
 	find ~/.cache/act/ -atime +30 -delete
@@ -84,12 +85,6 @@ workspace-tools: ## Run workspace-tools installer
 	.config/installers/INIT
 
 python-cleanup: ## Cleanup the pip cache
-	pip cache dir
-	pip cache info
-	pip cache list
-	pip cache purge
-	pip cache remove '*'
-	pip cache info
 	find ~/.cache/pip/ ~/.cache/pypoetry/ -atime +30 -delete || true
 	command -v uv || uv cache clean
 

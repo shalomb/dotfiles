@@ -2,10 +2,7 @@
 
 set -eu -o pipefail
 
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+cd "$HOME"
 
-cd "$SCRIPT_DIR"
-
-pip3 install --break-system-packages --upgrade --user pip
-
-pip3 install --break-system-packages --upgrade --user $(sed -r 's/\ +/==/' requirements.txt)
+uv init --python 3.12 --no-package --vcs none --no-readme --no-workspace
+rm -v main.py
