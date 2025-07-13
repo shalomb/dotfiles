@@ -537,9 +537,7 @@ whichkey.add({
     "<leader>tk",
     function()
       vim.cmd([[
-        :GkeepLogin
-        :lua require('telescope').load_extension('gkeep')
-        :Telescope gkeep
+        :echo "NOTE: gkeep has been uninstalled!!"
       ]])
     end,
     desc = "gkeep"
