@@ -79,7 +79,7 @@ nullls.setup {
     -- diagnostics.buf, -- protocol buffers
     -- diagnostics.cfn_lint,
     diagnostics.checkmake,
-    diagnostics.codespell,
+    -- diagnostics.codespell,
     -- diagnostics.commitlint,
     -- diagnostics.curlylint, -- jinja, django, nunjucks templates
     -- diagnostics.djlint, -- html linter/formatter

@@ -1,3 +1,7 @@
+-- https://github.com/nvim-treesitter/nvim-treesitter
+--
+-- :TSInstall <ls_to_install>
+
 local treesitter_config = require('nvim-treesitter.configs')
 
 treesitter_config.setup {
@@ -56,18 +60,19 @@ treesitter_config.setup {
   },
 
   highlight = {
-    -- `false` will disable the whole extension
-    enable = true,
+    -- We disable it to get around the end_col out of range issue when hitting `J` to join lines
+    enable = false,
 
     -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
     -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
     -- Using this option may slow down your editor, and you may see some duplicate highlights.
     -- Instead of true it can also be a list of languages
-    additional_vim_regex_highlighting = false,
+    additional_vim_regex_highlighting = true,
   },
 
+  -- disabled to prevent Out of bounds issue with 'J'
   indent = {
-    enable = true
+    enable = false
   },
 
   rainbow = {
@@ -93,6 +98,21 @@ treesitter_config.setup {
     },
   },
 
+  -- https://github.com/nvim-treesitter/nvim-treesitter?tab=readme-ov-file#incremental-selection
+  incremental_selection = {
+    enable = true,
+    keymaps = {
+      -- '.' to extend selection
+      init_selection = "gIn", -- set to `false` to disable one of the mappings
+
+      node_incremental = "gIrn",
+      scope_incremental = "gIrc",
+      node_decremental = "gIrm",
+    },
+  },
+
 }
 
 require('nvim-treesitter.install').update({ with_sync = true })
+
+-- vim:ts=2 sw=2

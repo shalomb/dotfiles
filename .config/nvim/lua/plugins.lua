@@ -12,7 +12,6 @@ return {
       "nvim-treesitter/playground",
       "RRethy/nvim-treesitter-textsubjects",
     },
-    opts = { ensure_installed = { "terraform", "hcl" } },
     -- cargo install tree-sitter-cli   # tree-sitter 0.20.7
   },
 
@@ -45,6 +44,14 @@ return {
   },
 
   {
+    "mason-org/mason-lspconfig.nvim",
+    dependencies = {
+      { "mason-org/mason.nvim" },
+      "neovim/nvim-lspconfig",
+    },
+  },
+
+  {
     "hrsh7th/nvim-cmp",
     lazy = true,
     -- load cmp on InsertEnter
@@ -61,8 +68,7 @@ return {
       -- LSP Support
       "neovim/nvim-lspconfig",
       "WhoIsSethDaniel/mason-tool-installer.nvim",
-      "williamboman/mason-lspconfig.nvim",
-      "williamboman/mason.nvim",
+      "mason-org/mason-lspconfig.nvim",
 
       -- Snippets
       "L3MON4D3/LuaSnip",
@@ -152,8 +158,8 @@ return {
 
   { "IndianBoy42/tree-sitter-just",        ft = "justfile" },
   { "ThePrimeagen/git-worktree.nvim",      lazy = false },
-  { "ThePrimeagen/harpoon",                lazy = false },                              -- Manage quickly accessed files
-  { "lewis6991/gitsigns.nvim",             lazy = true,       event = "BufWinEnter" },  -- Gitgutter replacement
+  { "ThePrimeagen/harpoon",                lazy = false },                             -- Manage quickly accessed files
+  { "lewis6991/gitsigns.nvim",             lazy = true,       event = "BufWinEnter" }, -- Gitgutter replacement
   { "christoomey/vim-tmux-navigator",      lazy = false },
   -- { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
   { "folke/flash.nvim",                    event = "VeryLazy" },

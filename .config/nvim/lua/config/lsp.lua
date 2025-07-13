@@ -4,7 +4,6 @@
 local vim = vim
 
 local cmp = require("cmp")
-local lspconfig = require("lspconfig")
 
 -- local lsz = require("lsp-zero")
 local luasnip = require("luasnip")
@@ -16,14 +15,6 @@ local whichkey = require("which-key")
 
 local lspconfig = require('lspconfig')
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
-
-require('mason-lspconfig').setup_handlers({
-  function(server_name)
-    lspconfig[server_name].setup({
-      capabilities = capabilities,
-    })
-  end,
-})
 
 lspconfig.lua_ls.setup({
   -- on_attach = lsp.default_keymaps({buffer = bufnr}),
@@ -111,8 +102,8 @@ cmp.setup {
   mapping = cmp.mapping.preset.insert({
     ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
     ['<C-n>'] = cmp.mapping.select_next_item(cmp_select),
-    ['<C-u>'] = cmp.mapping.scroll_docs(-4), -- Up
-    ['<C-d>'] = cmp.mapping.scroll_docs(4),  -- Down
+    ['<C-u>'] = cmp.mapping.scroll_docs(-4),     -- Up
+    ['<C-d>'] = cmp.mapping.scroll_docs(4),      -- Down
 
     ["<C-j>"] = cmp.mapping.confirm({ select = true }),
     ["<C-k>"] = cmp.mapping(function(_, _)
@@ -257,3 +248,4 @@ require('lspconfig').ruff.setup {
 -- -- :LspLog
 -- -- :LsPInfo -- diags
 -- -- :LspInstall -- Choose a LS for the current FT
+-- vim:ts=2 sw=2

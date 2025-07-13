@@ -4,21 +4,26 @@ local vim = vim
 
 vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect" }
 
-local util = require("lspconfig").util
-local whichkey = require("which-key")
 local mason = require('mason')
-
---- Mason ---
+local util = require("lspconfig").util
+-- local whichkey = require("which-key")
 
 mason.setup({
+  ui = {
+    icons = {
+      package_installed = "✓",
+      package_pending = "➜",
+      package_uninstalled = "✗"
+    },
+    border = 'rounded'
+  },
   log_level = vim.log.levels.INFO,
   max_concurrent_installers = 8,
-  ui = {
-    border = 'rounded'
-  }
 })
 
+local mason_lspconfig = require('mason-lspconfig')
 local mti = require('mason-tool-installer')
+
 
 mti.setup {
 
@@ -29,7 +34,7 @@ mti.setup {
     -- 'ansible-lint',
     -- 'ansiblels',
     'awk_ls',
-    'bash-language-server',
+    -- 'bash-language-server',
     'bashls',
     'beautysh',
     -- 'cfn-lint',
@@ -93,8 +98,8 @@ mti.setup {
     'yamlls',
     -- 'luacheck',
     -- 'sqlls',
-    { 'bash-language-server', auto_update = true }, -- you can turn off/on auto_update per tool
-    { 'golangci-lint' },                            -- version = 'v1.47.0' -- you can pin a tool to a particular version
+    -- { 'bash-language-server', auto_update = true }, -- you can turn off/on auto_update per tool
+    { 'golangci-lint' }, -- version = 'v1.47.0' -- you can pin a tool to a particular version
   },
 
   -- if set to true this will check each tool for updates. If updates
