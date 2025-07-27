@@ -5,3 +5,87 @@
 install-gh() {
   curl -sS https://webi.sh/gh | sh
 }
+
+install-gh-via-apt-repos() {
+  (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) &&
+    sudo mkdir -p -m 755 /etc/apt/keyrings &&
+    out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg &&
+    cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null &&
+    sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg &&
+    sudo mkdir -p -m 755 /etc/apt/sources.list.d &&
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null &&
+    sudo apt update &&
+    sudo apt install gh -y
+}
+
+install-gh-extensions() {
+  gh extension install github/gh-copilot
+  gh copilot alias -- bash
+}
+
+copilot-handler() {
+  local mode="$1"
+  local prompt_char=$(tput setaf 4; tput bold; echo -n "? "; tput sgr0)
+  shift
+  while :; do
+    if (($# < 1)); then
+      read -p "$prompt_char" query
+      set -- "$query"
+    else
+      query="$*"
+      set --
+    fi
+
+    echo "query:$query"
+    case "$query" in
+      q|quit|bye) break
+        ;;
+      h)
+      echo "
+        mode       - show current mode
+        explain    - set mode ($mode) to 'explain'
+        suggest    - set mode ($mode) to 'suggest'
+        help       - show this screen
+        q|quit     - quit
+      "
+      ;;
+      ide|web)
+        x-www-browser "https://github.com/settings/copilot/features"
+        break
+        ;;
+      chat)
+        x-www-browser "https://github.com/copilot?ref_cta=Copilot+free"
+        break
+        ;;
+      mode)
+        echo "$mode"
+        continue 1
+      ;;
+      "")
+        echo "Empty";
+        continue 1
+      ;;
+      *)
+      set --
+      ;;
+    esac
+    echo "esca?"
+
+    case "$mode" in
+      suggest)
+        (set -xv; ghcs "$query")
+        ;;
+      explain)
+        (set -xv; ghce "$query")
+        ;;
+      *)
+        echo default
+        ;;
+    esac
+  done
+}
+
+suggest() { copilot-handler 'suggest' "$@"; }
+explain() { copilot-handler 'explain' "$@"; }
+
+eval "$(gh copilot alias -- bash)"
