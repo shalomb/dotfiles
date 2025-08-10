@@ -28,7 +28,7 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = vim.g.mapleader
 
 -- load lazy plugins
-require("lazy").setup("plugins")
+require("lazy").setup("plugins") -- ./lua/plugins.lua
 
 -- Load config
 require("config")
