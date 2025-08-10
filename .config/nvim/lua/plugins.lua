@@ -1,9 +1,29 @@
 return {
 
   {
+    "OXY2DEV/markview.nvim",
+    lazy = false, -- Recommended
+    -- ft = "markdown" -- If you decide to lazy-load anyway
+
+    dependencies = {
+      -- You will not need this if you installed the
+      -- parsers manually
+      -- Or if the parsers are in your $RUNTIMEPATH
+      "nvim-treesitter/nvim-treesitter",
+
+      "nvim-tree/nvim-web-devicons",
+      "echasnovski/mini.icons",
+    }
+  },
+
+  {
     "folke/neoconf.nvim",
     cmd = "Neoconf"
   },
+
+  -- colorschemes
+  { "rebelot/kanagawa.nvim",    lazy = true },
+  { "ellisonleao/gruvbox.nvim", priority = 1000, config = true },
 
   { -- treesitter
     "nvim-treesitter/nvim-treesitter",
@@ -104,8 +124,6 @@ return {
     config = true,
   },
 
-  -- colorschemes
-  { "rebelot/kanagawa.nvim",               lazy = true },
   {
     "kdheepak/lazygit.nvim",
     lazy = true,
@@ -124,22 +142,6 @@ return {
     -- order to load the plugin when the command is run for the first time
     keys = {
       { "<leader>lg", "<cmd>LazyGit<cr>", desc = "LazyGit" }
-    }
-  },
-
-  {
-    "OXY2DEV/markview.nvim",
-    lazy = false, -- Recommended
-    -- ft = "markdown" -- If you decide to lazy-load anyway
-
-    dependencies = {
-      -- You will not need this if you installed the
-      -- parsers manually
-      -- Or if the parsers are in your $RUNTIMEPATH
-      "nvim-treesitter/nvim-treesitter",
-
-      "nvim-tree/nvim-web-devicons",
-      "echasnovski/mini.icons",
     }
   },
 
@@ -163,7 +165,7 @@ return {
   { "christoomey/vim-tmux-navigator",      lazy = false },
   -- { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
   { "folke/flash.nvim",                    event = "VeryLazy" },
-  { "folke/neodev.nvim",                   lazy = false },
+  { "folke/lazydev.nvim",                  lazy = false },
   { "folke/which-key.nvim",                lazy = false },
   { "ggandor/flit.nvim",                   lazy = false },
   -- { "ggandor/leap.nvim",                   lazy = false },
@@ -174,7 +176,7 @@ return {
   { "majutsushi/tagbar",                   lazy = false },
   { "mbbill/undotree",                     lazy = false },
   { "nvim-lualine/lualine.nvim",           lazy = false }, -- configure Neovim statusline
-  { "p00f/nvim-ts-rainbow",                lazy = false },
+  -- { "p00f/nvim-ts-rainbow",                lazy = false },
   -- { "preservim/vim-markdown",              ft = "markdown" },
   { "romainl/vim-cool",                    lazy = false },
   {
@@ -243,27 +245,21 @@ return {
   },
 
   {
-    "kevinhwang91/nvim-ufo",
-    event = "BufRead",
+    "ravitemer/mcphub.nvim",
     dependencies = {
-      { "kevinhwang91/promise-async" },
-      {
-        "luukvbaal/statuscol.nvim",
-        config = function()
-          local builtin = require("statuscol.builtin")
-          require("statuscol").setup({
-            -- foldfunc = "builtin",
-            -- setopt = true,
-            relculright = true,
-            segments = {
-              { text = { builtin.foldfunc },      click = "v:lua.ScFa" },
-              { text = { "%s" },                  click = "v:lua.ScSa" },
-              { text = { builtin.lnumfunc, " " }, click = "v:lua.ScLa" },
-            },
-          })
-        end,
-      },
+      "nvim-lua/plenary.nvim",
     },
-  }
+    build = "npm install -g mcp-hub@latest", -- Installs `mcp-hub` node binary globally
+  },
 
+  {
+    "olimorris/codecompanion.nvim",
+    opts = {},
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      "ravitemer/mcphub.nvim",
+      "github/copilot.vim"
+    },
+  },
 }

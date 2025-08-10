@@ -85,7 +85,7 @@ ins_left {
   function()
     return ' '
   end,
-  color = { fg = colors.blue }, -- Sets highlighting of component
+  color = { fg = colors.blue },      -- Sets highlighting of component
   padding = { left = 0, right = 1 }, -- We don't need space before this
 }
 
@@ -183,7 +183,7 @@ ins_left {
   function()
     local msg = 'No Active Lsp'
     local buf_ft = vim.api.nvim_buf_get_option(0, 'filetype')
-    local clients = vim.lsp.get_active_clients()
+    local clients = vim.lsp.get_clients()
     if next(clients) == nil then
       return msg
     end
@@ -204,7 +204,7 @@ ins_left { 'filetype' }
 
 -- Add components to right sections
 ins_right {
-  'o:encoding', -- option component same as &encoding in viml
+  'o:encoding',       -- option component same as &encoding in viml
   fmt = string.lower, -- I'm not sure why it's upper case either ;)
   cond = conditions.hide_in_width,
   color = { fg = colors.green, gui = 'bold' },

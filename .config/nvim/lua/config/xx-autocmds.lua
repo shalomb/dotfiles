@@ -241,7 +241,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     ---- https://neovim.io/doc/user/lsp.html#lsp-config
     local is_exempt = vim.fnlocal.is_exempt_from_formatting(vim.bo.filetype, client)
 
-    if client.supports_method('textDocument/formatting') then
+    if client:supports_method('textDocument/formatting') then
       vim.api.nvim_create_autocmd('BufWritePre', {
         -- https://github.com/neovim/neovim/issues/21098#issuecomment-1320001372is_exempt_from_formatting
         vim.api.nvim_clear_autocmds({
