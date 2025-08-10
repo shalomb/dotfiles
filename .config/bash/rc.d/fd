@@ -13,3 +13,5 @@ install-fd() {
   )
   rm -fr "$_TMP"
 }
+
+alias as-tree='tree --fromfile'
