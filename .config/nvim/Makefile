@@ -2,24 +2,50 @@
 
 .ONESHELL:
 SHELL := /bin/bash
-SHELLFLAGS := -x -u nounset -ec
-MAKEFILE := $(realpath $(lastword $(MAKEFILE_LIST)))
+SHELLFLAGS := -x -o pipefail -uec
+# MAKEFILE := $(realpath $(lastword $(MAKEFILE_LIST)))
+# MAKEFLAGS         += --no-print-directory
+# MAKEFLAGS         += --warn-undefined-variables
 
 .SILENT: install
 .PHONY: install
 install: nvim tools
+
+# .SILENT: nvim
+.PHONY: nvim
+nvim: ## Install prebuilt nvim
+	@:
+	set -eu -o pipefail
+	echo "[$$-]"
+	latest=$(shell bob ls-remote | grep --color=never -iPo 'v0.11.\d+' | head -n1)
+	echo "Latest found: $$latest"
+	bob install "$$latest"
+	echo $$?
+	ln -svf "$$HOME/.local/share/bob/$$latest/bin/nvim" "$$HOME/.local/bin/nvim"
+	bob list
+	nvim --headless -c ':version' -c ':echo ""' -c ':q'
+
+.PHONY: update
+update: ## update neovim components
+	@:
+	set -x
+	# nvim --headless -c ':PackerUpdate' -c ':q'
+	nvim --headless -c ':TSUpdate'     -c ':q'
+	nvim --headless -c ':TSUpdateSync' -c ':q'
+	# These following commands do not seem to be invocable from CLI
+	nvim --headless -c ':Lazy update'  -c ':q'
+	nvim --headless -c ':Lazy profile'  -c ':q'
+	nvim --headless -c ':version' -c ':q'
+	# See ~/.local/state/nvim/mason.log
+	nvim --headless -c ':MasonUpdate'  -c ':q'
+	nvim --headless -c ':MasonToolsInstallSync'  -c ':q'
+	nvim --headless -c ':MasonToolsUpdateSync'  -c ':q'
 
 .PHONY: aux
 aux: ex vimdiff view rvim rview
 
 .PHONY: all
 all: install aux test clean
-
-.PHONY: clean
-clean:
-
-.PHONY: test
-test:
 
 # https://tracker.debian.org/pkg/neovim
 .PHONY: deps
@@ -37,6 +63,44 @@ build-env: deps  ## setup the build dependencies
 		git clone https://github.com/neovim/neovim.git
 	fi
 
+.SILENT: test
+.PHONY: test
+test:  ## test the nvim installtion
+	set -v
+	tmpfile=$$(mktemp /tmp/nvim-health.log.XXXXXX)
+	trap "rm $$tmpfile || true" INT EXIT
+
+	nvim --headless -c ':version' -c ':echo ""' -c ':q'
+	nvim --headless -c ':checkpath' -c ':echo ""' -c ':q'
+	echo
+
+	echo "Checking lua files in ~/.config/nvim/lua"
+	for i in $(shell find ~/.config/nvim/lua -name '*.lua'); do
+		echo "Checking syntax of $$i"
+		nvim --headless -c ":luafile $$i" -c ':echo ""' -c ':q'
+	done
+	echo
+
+	echo "Checking health of nvim components"
+	for component in lazy vim.lsp vim.treesitter nvim-treesitter null-ls telescope vim.health vim.provider; do
+		echo "Checking health of $$component"
+		nvim --headless "+checkhealth $$component" "+w!$$tmpfile" "+echo" +qa 2>/dev/null
+		if grep -E 'WARNING|ERROR' "$$tmpfile"; then
+			echo "Warnings or errors found in healthcheck $$component!"
+			exit 1
+		fi
+	done
+	echo ""
+
+	for component in vim.deprecated; do
+		echo "Checking deprecations via $$component"
+		nvim --headless "+checkhealth $$component" "+w!$$tmpfile" "+echo" +qa 2>/dev/null
+		grep -E 'WARNING' "$$tmpfile"
+		if grep -E 'ERROR' "$$tmpfile"; then
+			echo "Warnings or errors found in healthcheck $$component!"
+		fi
+	done
+
 # https://github.com/neovim/neovim/wiki/Installing-Neovim#install-from-source
 # https://gist.github.com/shalomb/c20478247be553c45ed94b90583b5c41
 .SILENT: nvim-from-source
@@ -48,7 +112,7 @@ nvim-from-source: build-env ## Run all package installers
 	git fetch --all
 	tag=$$(git describe --tags --abbrev=0)  # last tag e.g. nightly
 	tag=$$(git describe --tags $$(git rev-list --tags --max-count=1) --match 'v0.1[0-9]*.[0-9]*')  # Last annotated tags
-	tag='v0.10.1' # 'v0.9.5'
+	tag='v0.11.3' # 'v0.9.5'
 	echo ----------------------------
 	echo "Checking out tag: $$tag"
 	echo ----------------------------
@@ -63,19 +127,6 @@ nvim-from-source: build-env ## Run all package installers
 .PHONY: nvim-from-source
 build: nvim-from-source  ## build nvim
 	@:
-
-.SILENT: nvim
-.PHONY: nvim
-nvim: ## Install prebuilt nvim
-	@:
-	apt-cache policy neovim
-	sudo apt install neovim -t prebuilt-mpr
-
-.SILENT: test
-.PHONY: test
-test:  ## test the nvim installtion
-	nvim --headless -c ':checkhealth'
-	nvim --headless -c ':version'
 
 ex: ## install ex
 	echo 'command nvim -e "$@"' > ~/.local/bin/ex
@@ -107,22 +158,6 @@ profile: ## profile neovim startup
 	@:
 	set -x
 	nvim --startuptime $$TMP/neovim.startuptime /etc/services +qa; nvim $$TMP/neovim.startuptime; rm -v $$TMP/neovim.startuptime;
-
-.PHONY: update
-update: ## update neovim components
-	@:
-	set -x
-	# nvim --headless -c ':PackerUpdate' -c ':q'
-	nvim --headless -c ':TSUpdate'     -c ':q'
-	nvim --headless -c ':TSUpdateSync' -c ':q'
-	# These following commands do not seem to be invocable from CLI
-	nvim --headless -c ':Lazy update'  -c ':q'
-	nvim --headless -c ':Lazy profile'  -c ':q'
-	nvim --headless -c ':version' -c ':q'
-	# See ~/.local/state/nvim/mason.log
-	nvim --headless -c ':MasonUpdate'  -c ':q'
-	nvim --headless -c ':MasonToolsInstallSync'  -c ':q'
-	nvim --headless -c ':MasonToolsUpdateSync'  -c ':q'
 
 .PHONY: tools
 tools:  ## install tools / prereqs
