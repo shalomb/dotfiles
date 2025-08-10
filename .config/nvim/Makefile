@@ -115,13 +115,14 @@ update: ## update neovim components
 	# nvim --headless -c ':PackerUpdate' -c ':q'
 	nvim --headless -c ':TSUpdate'     -c ':q'
 	nvim --headless -c ':TSUpdateSync' -c ':q'
-	# See ~/.local/state/nvim/mason.log
-	nvim --headless -c ':MasonUpdate'  -c ':q'
-	nvim --headless -c ':MasonToolsUpdate'  -c ':q'
 	# These following commands do not seem to be invocable from CLI
 	nvim --headless -c ':Lazy update'  -c ':q'
 	nvim --headless -c ':Lazy profile'  -c ':q'
 	nvim --headless -c ':version' -c ':q'
+	# See ~/.local/state/nvim/mason.log
+	nvim --headless -c ':MasonUpdate'  -c ':q'
+	nvim --headless -c ':MasonToolsInstallSync'  -c ':q'
+	nvim --headless -c ':MasonToolsUpdateSync'  -c ':q'
 
 .PHONY: tools
 tools:  ## install tools / prereqs
