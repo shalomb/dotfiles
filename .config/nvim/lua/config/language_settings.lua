@@ -1,8 +1,21 @@
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
+local buffer_only_opts = {
+  et = true, ts = true, sts = true, sw = true, tw = true, ai = true, cin = true, ft = true
+}
+local global_opts = {
+  ff = true, enc = true, fenc = true
+}
+
 local function set_buffer_options(opts)
-  for k, v in pairs(opts) do vim.bo[k] = v end
+  for k, v in pairs(opts) do
+    if buffer_only_opts[k] then
+      vim.bo[k] = v
+    elseif global_opts[k] then
+      vim.o[k] = v
+    end
+  end
 end
 
 local lang_settings = {
