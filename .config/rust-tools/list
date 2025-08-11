@@ -10,6 +10,7 @@ htmlq            htmlq            https://github.com/mgdm/htmlq
 hyperfine        hyperfine        https://github.com/sharkdp/hyperfine
 jless            jless            https://github.com/PaulJuliusMartinez/jless
 jnv              jnv              https://github.com/ynqa/jnv
+just             just             https://github.com/casey/just
 mdcat            mdcat            https://github.com/swsnr/mdcat
 pastel           pastel           https://github.com/sharkdp/pastel
 ripgrep          ripgrep          https://github.com/burntsushi/ripgrep
