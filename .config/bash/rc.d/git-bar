@@ -199,10 +199,13 @@ function ghb {
   esac
 }
 
-#! ghi - gh browse issue/pr
+#! ghi - gh browse issue/pr # issues
 function ghi { gh browse "${*:-.}"; }
 
-#! ghr - gh browse -r
+#! ghprv - gh pr view -w # pr view
+function ghprv { gh pr view --web "$*"; }
+
+#! ghr - gh browse -r # releases
 function ghr { gh browse -r "${*:-.}"; }
 
 #| git-default-branch - show default/HEAD branches on remotes
