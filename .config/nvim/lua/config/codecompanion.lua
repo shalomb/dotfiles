@@ -1,5 +1,25 @@
+-- @description Configures the CodeCompanion plugin, defining strategies, keymaps, and integrating MCP Hub tools and resources for enhanced Neovim functionality.
+
+-- See https://github.com/olimorris/codecompanion.nvim/blob/main/lua/codecompanion/config.lua#L178
+-- for defaults
+
 require("codecompanion").setup({
+  strategies = {
+    chat = {
+      variables = {
+        ["buffer"] = {
+          opts = {
+            default_params = 'pin', -- or 'watch'
+          },
+        },
+      },
+    },
+    inline = {
+    },
+  },
   extensions = {
+    -- @name: mcphub
+    -- @description: Configuration for CodeCompanion with MCP Hub integration
     mcphub = {
       callback = "mcphub.extensions.codecompanion",
       opts = {
@@ -17,3 +37,22 @@ require("codecompanion").setup({
     }
   }
 })
+
+local augroup = vim.api.nvim_create_augroup
+local autocmd = vim.api.nvim_create_autocmd
+
+local group = augroup("codecompanion.chat.tweaks", { clear = true })
+
+autocmd("FileType", {
+  group = group,
+  pattern = "codecompanion",
+  callback = vim.schedule_wrap(function()
+    vim.cmd("echo 'CodeCompanion chat tweaks start'")
+    vim.keymap.set({ "n", "v" }, "}", "}", { noremap = true, silent = true })
+    vim.keymap.set({ "n", "v" }, "{", "{", { noremap = true, silent = true })
+    vim.cmd("echo 'CodeCompanion chat tweaks end'")
+  end),
+})
+
+vim.cmd([[cab cc CodeCompanion]])
+vim.cmd([[cab ccb CodeCompanion #buffer]])

@@ -1,3 +1,9 @@
+-- ./config/ contains the configuration for each plugin.
+
+-- @module plugins
+-- @brief This module is used by the `lazy.nvim` plugin manager to load
+-- plugins.
+
 return {
 
   {
@@ -259,7 +265,7 @@ return {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
       "ravitemer/mcphub.nvim",
-      "github/copilot.vim"
+      "github/copilot.vim" -- required to setup the github auth
     },
   },
 }
