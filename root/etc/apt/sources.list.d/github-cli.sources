@@ -1,0 +1,8 @@
+# deb [arch=arm64 signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main
+
+Types: deb
+URIs: https://cli.github.com/packages
+Suites: stable
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/githubcli-archive-keyring.gpg

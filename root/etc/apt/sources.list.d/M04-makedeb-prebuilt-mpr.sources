@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://proget.makedeb.org/
+Suites: prebuilt-mpr
+Components: trixie 
+Signed-By: /usr/share/keyrings/prebuilt-mpr-archive-keyring.gpg
