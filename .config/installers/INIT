@@ -7,7 +7,7 @@
 set -o errexit -o nounset -o pipefail
 shopt -s extglob nullglob globstar
 
-[[ ${DEBUG-} ]] && set -xv
+[[ ${DEBUG:-} ]] && set -xv
 
 : ${XDG_DATA_BIN=$(realpath "${XDG_DATA_HOME}/../bin")}
 
