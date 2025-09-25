@@ -26,8 +26,7 @@ function install_gh_standalone_script() {
     wget --user-agent="github-script-installer" -qc "$url" -O "$tool"
     chmod +x "$tool"
     hash -r
-    type -a "$tool"
-    echo
+    echo "Installed $tool successfully"
   )
 }
 
