@@ -71,7 +71,7 @@ The repository uses git submodules for external dependencies:
 - **tmux-plugins/tpm**: Tmux plugin manager
 - **shalomb/octo**: Custom CLI tools (`cwds-list`, `projects-list`, `vim-fru`)
 - **shalomb/fetch-me**: System information tool
-- **packer.nvim**: Neovim plugin manager (cloned, not submodule)
+- **lazy.nvim**: Neovim plugin manager (replaced deprecated packer.nvim)
 
 ### Submodule Operations
 
