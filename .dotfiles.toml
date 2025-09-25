@@ -1,0 +1,129 @@
+# Dotfile Manager Configuration
+
+[exclusions]
+# File patterns to exclude from sync operations
+patterns = [
+    # Development files
+    "*.pyc",
+    "*.pyo", 
+    "*.pyd",
+    "__pycache__/",
+    "*.egg-info/",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    ".ruff_cache/",
+    
+    # Build artifacts
+    "build/",
+    "dist/",
+    "*.egg/",
+    "*.whl",
+    
+    # IDE/Editor files
+    ".vscode/",
+    ".idea/",
+    "*.swp",
+    "*.swo", 
+    "*.swx",
+    "*.tmp",
+    "*.bak",
+    "*~",
+    
+    # OS files
+    ".DS_Store",
+    "Thumbs.db",
+    ".directory",
+    
+    # Git files
+    ".git/",
+    ".gitignore",
+    
+    # Virtual environments
+    ".venv/",
+    "venv/",
+    ".env/",
+    "env/",
+    
+    # Node.js
+    "node_modules/",
+    "npm-debug.log*",
+    "yarn-debug.log*",
+    "yarn-error.log*",
+    
+    # Logs
+    "*.log",
+    "logs/",
+    
+    # Temporary files
+    "tmp/",
+    "temp/",
+    "*.tmp",
+    "*.temp",
+    
+    # Package manager files (keep in repo, don't sync to home)
+    "pyproject.toml",
+    "requirements*.txt",
+    "package.json",
+    "package-lock.json",
+    "yarn.lock",
+    "Cargo.toml",
+    "Cargo.lock",
+    "go.mod",
+    "go.sum",
+    
+    # Documentation (keep in repo, don't sync to home)
+    "README.md",
+    "TODO.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "*.md",
+    
+    # Test files
+    "tests/",
+    "test/",
+    "spec/",
+    "*_test.py",
+    "test_*.py",
+    
+    # Source code (keep in repo, don't sync to home)
+    "src/",
+    "lib/",
+    "*.py",
+    "*.js",
+    "*.ts",
+    "*.go",
+    "*.rs",
+    "*.java",
+    "*.cpp",
+    "*.c",
+    "*.h",
+]
+
+# Directories to exclude completely
+exclude_directories = [
+    ".git",
+    ".venv", 
+    "venv",
+    "node_modules",
+    "build",
+    "dist",
+    "tests",
+    "test",
+    "src",
+    "lib",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+]
+
+# Files to exclude completely  
+exclude_files = [
+    "pyproject.toml",
+    "requirements.txt",
+    "package.json",
+    "README.md",
+    "TODO.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    ".gitignore",
+]
