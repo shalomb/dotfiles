@@ -1,0 +1,9 @@
+#!/bin/bash
+# tmux_osc52 - OSC52 clipboard integration for tmux
+# This script handles copying text to the system clipboard using OSC52 escape sequences
+
+# Read from stdin
+text=$(cat)
+
+# Use OSC52 escape sequence to set clipboard
+printf "\033]52;c;%s\007" "$(printf "%s" "$text" | base64)"

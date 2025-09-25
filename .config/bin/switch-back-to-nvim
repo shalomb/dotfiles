@@ -1,0 +1,16 @@
+#!/bin/bash
+# switch-back-to-nvim - Switch back to nvim session in tmux
+# This script helps navigate back to nvim when using tmux
+
+# Check if we're in a tmux session
+if [ -n "$TMUX" ]; then
+    # Try to find and switch to a pane running nvim
+    tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}' | \
+    grep -i nvim | \
+    head -1 | \
+    cut -d' ' -f1 | \
+    xargs -r tmux switch-client -t
+else
+    echo "Not in a tmux session"
+    exit 1
+fi

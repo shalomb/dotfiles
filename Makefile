@@ -29,7 +29,7 @@ refresh:  ## refresh all dotfiles in $HOME with versions in repo
 	# Install all dotfiles into the home directory
 	find .* \
 	  \( -name ".git" -o -name "INIT" -o -name "*.sw?" -o -name "*~" \) -prune \
-	  -o -type f -exec ./dotfile_stash export {} +
+	  -o -type f -exec uv run dotfile-manager export {} +
 
 .PHONY: apt apt-clean
 apt: .config/apt/INIT  ## Install apt packages

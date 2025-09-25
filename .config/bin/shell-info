@@ -1,0 +1,26 @@
+#!/bin/bash
+# Shell environment information for cursor-agent
+
+echo "=== Shell Environment Information ==="
+echo "Shell: $SHELL"
+echo "User: $USER"
+echo "Home: $HOME"
+echo "PWD: $PWD"
+echo ""
+
+echo "=== Aliases ==="
+alias | grep -E "(cp|rm|mv|ln|mkdir|rmdir|grep|find)" | head -10
+echo ""
+
+echo "=== Interactive Commands ==="
+echo "Commands that may prompt for confirmation:"
+echo "- cp (may prompt for overwrite)"
+echo "- rm (may prompt for removal)"
+echo "- mv (may prompt for overwrite)"
+echo "- ln (may prompt for overwrite)"
+echo ""
+
+echo "=== Recommendations ==="
+echo "Use full paths (/bin/cp, /bin/rm) or 'command' prefix to bypass aliases"
+echo "Example: command cp file1 file2"
+echo "Example: /bin/rm file"
