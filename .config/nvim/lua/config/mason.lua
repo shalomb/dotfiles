@@ -5,7 +5,7 @@ local vim = vim
 vim.opt.completeopt = { "menu", "menuone", "noinsert", "noselect" }
 
 local mason = require('mason')
-local util = require("lspconfig").util
+-- Updated to use vim.lsp.config for Neovim 0.11+
 -- local whichkey = require("which-key")
 
 mason.setup({

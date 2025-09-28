@@ -1,35 +1,400 @@
 #!/bin/bash
+# Core dotfiles command for lazy-loading and navigation
 
-dotfiles_directory="$XDG_CONFIG_HOME/dotfiles"
+# Get dotfiles root directory
+DOTFILES_ROOT="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles"
 
-function dotfiles {
-  if (($# == 0)); then
-    #shellcheck disable=SC2164
-    cd "$dotfiles_directory"
-    return
-  fi
-
-  local arg="$1"
-  if [[ $arg == '.' ]]; then
-    #shellcheck disable=SC2164
-    cd "$dotfiles_directory/${PWD##"$HOME"/}"
-    return
-  fi
-
-  local selection
-  selection=$(
-    FZF_DEFAULT_COMMAND="
-      cd '$dotfiles_directory' && find . -name .git -prune -o -print
-    " fzf -q "$@"
-  )
-  local path="$dotfiles_directory/$selection"
-  if [[ -f $path ]]; then
-    ( cd "${path%/*}"
-      "${EDITOR:-vim}" "$path"
-    ) || return
-  else
-    cd "$path" || return
-  fi
+# Main dotfiles function
+dotfiles() {
+    local cmd="$1"
+    shift
+    
+    case "$cmd" in
+        enter)
+            _dotfiles_enter "$@"
+            ;;
+        load)
+            _dotfiles_load "$@"
+            ;;
+        list)
+            _dotfiles_list "$@"
+            ;;
+        search)
+            _dotfiles_search "$@"
+            ;;
+        prompt)
+            _dotfiles_prompt "$@"
+            ;;
+        reload)
+            _dotfiles_reload "$@"
+            ;;
+        help|--help|-h)
+            _dotfiles_help
+            ;;
+        "")
+            # No command: go to dotfiles root
+            cd "$DOTFILES_ROOT"
+            ;;
+        *)
+            echo "Unknown command: $cmd" >&2
+            _dotfiles_help
+            return 1
+            ;;
+    esac
 }
 
-alias .f='dotfiles .'
+# Enter dotfiles directory
+_dotfiles_enter() {
+    local target_dir="$1"
+    
+    if [[ -z "$target_dir" ]]; then
+        # No args: go to dotfiles root
+        cd "$DOTFILES_ROOT"
+    elif [[ "$target_dir" == "." ]]; then
+        # "." means: go to current dir's equivalent in dotfiles
+        local current_path="${PWD##$HOME/}"
+        if [[ -d "$DOTFILES_ROOT/$current_path" ]]; then
+            cd "$DOTFILES_ROOT/$current_path"
+        else
+            echo "No equivalent directory found in dotfiles: $current_path" >&2
+            return 1
+        fi
+    else
+        # Specific directory: go to that dir in dotfiles
+        if [[ -d "$DOTFILES_ROOT/$target_dir" ]]; then
+            cd "$DOTFILES_ROOT/$target_dir"
+        else
+            echo "Directory not found in dotfiles: $target_dir" >&2
+            return 1
+        fi
+    fi
+}
+
+# Load a tool configuration
+_dotfiles_load() {
+    local tool="$1"
+    
+    if [[ -z "$tool" ]]; then
+        echo "Usage: dotfiles load <tool>" >&2
+        echo "Available tools:" >&2
+        _dotfiles_list_tools
+        return 1
+    fi
+    
+    local tool_file="$DOTFILES_ROOT/.config/bash/tools/${tool}.sh"
+    
+    if [[ -f "$tool_file" ]]; then
+        if [[ -r "$tool_file" ]]; then
+            source "$tool_file"
+            # Test if the tool is actually available
+            if command -v "$tool" >/dev/null 2>&1; then
+                echo "✅ Loaded tool: $tool"
+            else
+                echo "⚠️  Tool file loaded but command not available: $tool" >&2
+                echo "   (Tool may not be installed or PATH not updated)" >&2
+            fi
+        else
+            echo "❌ Cannot read tool file: $tool_file" >&2
+            return 1
+        fi
+    else
+        echo "❌ Tool not found: $tool" >&2
+        echo "Available tools:" >&2
+        _dotfiles_list_tools
+        return 1
+    fi
+}
+
+# List available tools
+_dotfiles_list() {
+    local category="$1"
+    
+    if [[ -n "$category" ]]; then
+        echo "Tools in category: $category"
+        echo "========================"
+        _dotfiles_list_tools_by_category "$category"
+    else
+        echo "Available tools:"
+        echo "================"
+        _dotfiles_list_tools_with_categories
+    fi
+}
+
+# Search for tools
+_dotfiles_search() {
+    local term="$1"
+    
+    if [[ -z "$term" ]]; then
+        echo "Usage: dotfiles search <term>" >&2
+        return 1
+    fi
+    
+    echo "Searching for: $term"
+    echo "===================="
+    
+    # Search in tool names and descriptions
+    find "$DOTFILES_ROOT/.config/bash/tools/" -name "*.sh" -exec grep -l -i "$term" {} \; 2>/dev/null | \
+    while read -r file; do
+        local tool_name="${file##*/}"
+        tool_name="${tool_name%.sh}"
+        echo "  $tool_name"
+    done
+}
+
+# Upgrade prompt to ghostship
+_dotfiles_prompt() {
+    local action="${1:-upgrade}"
+    
+    case "$action" in
+        upgrade|ghostship)
+            if command -v ghostship &>/dev/null; then
+                echo "🔄 Upgrading to ghostship prompt..."
+                source <(ghostship init bash 2>/dev/null) && {
+                    echo "✨ Ghostship prompt loaded!"
+                } || {
+                    echo "❌ Failed to load ghostship prompt"
+                    return 1
+                }
+            else
+                echo "❌ Ghostship not available"
+                return 1
+            fi
+            ;;
+        simple|minimal)
+            echo "🔄 Switching to simple prompt..."
+            PS1='\u@\h:\w\$ '
+            echo "✨ Simple prompt loaded!"
+            ;;
+        status)
+            if command -v prompt-command >/dev/null 2>&1; then
+                echo "✨ Current prompt: Ghostship"
+            else
+                echo "📝 Current prompt: Simple"
+            fi
+            ;;
+        *)
+            echo "Usage: dotfiles prompt {upgrade|simple|status}" >&2
+            return 1
+            ;;
+    esac
+}
+
+# Reload configuration
+_dotfiles_reload() {
+    local target="${1:-all}"
+    
+    case "$target" in
+        all|config)
+            echo "🔄 Reloading all bash configuration..."
+            reload
+            ;;
+        tools)
+            echo "🔄 Reloading tools directory..."
+            if [[ -d "$DOTFILES_ROOT/.config/bash/tools" ]]; then
+                echo "📁 Tools directory refreshed"
+            else
+                echo "❌ Tools directory not found"
+                return 1
+            fi
+            ;;
+        prompt)
+            echo "🔄 Reloading prompt..."
+            if command -v prompt-command >/dev/null 2>&1; then
+                _dotfiles_prompt upgrade
+            else
+                echo "📝 Using simple prompt"
+            fi
+            ;;
+        *)
+            echo "Usage: dotfiles reload {all|tools|prompt}" >&2
+            echo "  all     - Reload all bash configuration"
+            echo "  tools   - Refresh tools directory"
+            echo "  prompt  - Reload current prompt"
+            return 1
+            ;;
+    esac
+}
+
+# List all tools with categories
+_dotfiles_list_tools_with_categories() {
+    local tools_dir="$DOTFILES_ROOT/.config/bash/tools"
+    
+    if [[ ! -d "$tools_dir" ]]; then
+        echo "No tools directory found. Run 'dotfiles migrate' to set up tools."
+        return 1
+    fi
+    
+    # Group tools by category
+    local categories=()
+    while IFS= read -r -d '' file; do
+        local tool_name="${file##*/}"
+        tool_name="${tool_name%.sh}"
+        
+        # Extract category from filename or content
+        local category="other"
+        if [[ "$tool_name" =~ ^(k3s|kubectl|minikube|helm|k9s|kustomize)$ ]]; then
+            category="kubernetes"
+        elif [[ "$tool_name" =~ ^(aws|gcloud|terraform|terrascan)$ ]]; then
+            category="cloud"
+        elif [[ "$tool_name" =~ ^(go|rust|cargo|python|npm|nvm|rbenv|uv)$ ]]; then
+            category="development"
+        elif [[ "$tool_name" =~ ^(git|gh|gitlab)$ ]]; then
+            category="git"
+        elif [[ "$tool_name" =~ ^(ssh|tmux|vim|fzf)$ ]]; then
+            category="system"
+        fi
+        
+        categories+=("$category:$tool_name")
+    done < <(find "$tools_dir" -name "*.sh" -print0)
+    
+    # Sort and display by category
+    printf '%s\n' "${categories[@]}" | sort | \
+    awk -F: '
+        BEGIN { current_cat = "" }
+        {
+            if ($1 != current_cat) {
+                if (current_cat != "") print ""
+                printf "📁 %s:\n", $1
+                current_cat = $1
+            }
+            printf "  %s\n", $2
+        }
+    '
+}
+
+# List tools by category
+_dotfiles_list_tools_by_category() {
+    local category="$1"
+    local tools_dir="$DOTFILES_ROOT/.config/bash/tools"
+    
+    find "$tools_dir" -name "*.sh" | while read -r file; do
+        local tool_name="${file##*/}"
+        tool_name="${tool_name%.sh}"
+        
+        # Check if tool matches category
+        local matches=false
+        case "$category" in
+            kubernetes)
+                [[ "$tool_name" =~ ^(k3s|kubectl|minikube|helm|k9s|kustomize)$ ]] && matches=true
+                ;;
+            cloud)
+                [[ "$tool_name" =~ ^(aws|gcloud|terraform|terrascan)$ ]] && matches=true
+                ;;
+            development)
+                [[ "$tool_name" =~ ^(go|rust|cargo|python|npm|nvm|rbenv|uv)$ ]] && matches=true
+                ;;
+            git)
+                [[ "$tool_name" =~ ^(git|gh|gitlab)$ ]] && matches=true
+                ;;
+            system)
+                [[ "$tool_name" =~ ^(ssh|tmux|vim|fzf)$ ]] && matches=true
+                ;;
+        esac
+        
+        if [[ "$matches" == true ]]; then
+            echo "  $tool_name"
+        fi
+    done
+}
+
+# Simple tool list
+_dotfiles_list_tools() {
+    local tools_dir="$DOTFILES_ROOT/.config/bash/tools"
+    
+    if [[ -d "$tools_dir" ]]; then
+        find "$tools_dir" -name "*.sh" -exec basename {} .sh \; | sort
+    fi
+}
+
+# Help text
+_dotfiles_help() {
+    cat << EOF
+dotfiles - Lazy-loading dotfiles management
+
+USAGE:
+    dotfiles [command] [args...]
+
+COMMANDS:
+    enter [dir]     Enter dotfiles directory
+                    - No args: go to dotfiles root
+                    - ".": go to current dir's equivalent in dotfiles  
+                    - <dir>: go to specific directory in dotfiles
+    
+    load <tool>     Load a tool configuration
+    
+    list [category] List available tools
+                    - No args: show all tools by category
+                    - <category>: show tools in specific category
+    
+    search <term>   Search for tools by name or description
+    
+    prompt [action] Manage prompt (upgrade|simple|status)
+                    - upgrade: load ghostship prompt
+                    - simple: use simple prompt
+                    - status: show current prompt type
+    
+    reload [target] Reload configuration (all|tools|prompt)
+                    - all: reload all bash configuration
+                    - tools: refresh tools directory
+                    - prompt: reload current prompt
+    
+    help            Show this help
+
+EXAMPLES:
+    dotfiles                    # Go to dotfiles root
+    dotfiles enter .config/bash # Go to bash config directory
+    dotfiles enter .            # Go to current dir's equivalent
+    dotfiles load kubectl       # Load kubectl tools
+    dotfiles list kubernetes    # List kubernetes tools
+    dotfiles search aws         # Search for aws-related tools
+    dotfiles prompt upgrade     # Upgrade to ghostship prompt
+    dotfiles prompt status       # Check current prompt type
+    dotfiles reload             # Reload all bash configuration
+    dotfiles reload prompt      # Reload current prompt
+
+EOF
+}
+
+# Tab completion
+_dotfiles_complete() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    
+    case "${prev}" in
+        dotfiles)
+            COMPREPLY=( $(compgen -W "enter load list search prompt reload help" -- "${cur}") )
+            ;;
+        load)
+            # Get available tools
+            local tools_dir="$DOTFILES_ROOT/.config/bash/tools"
+            if [[ -d "$tools_dir" ]]; then
+                local tools=$(find "$tools_dir" -name "*.sh" -exec basename {} .sh \; | tr '\n' ' ')
+                COMPREPLY=( $(compgen -W "${tools}" -- "${cur}") )
+            fi
+            ;;
+        list)
+            COMPREPLY=( $(compgen -W "kubernetes cloud development git system other" -- "${cur}") )
+            ;;
+        prompt)
+            COMPREPLY=( $(compgen -W "upgrade simple status" -- "${cur}") )
+            ;;
+        reload)
+            COMPREPLY=( $(compgen -W "all tools prompt" -- "${cur}") )
+            ;;
+        enter)
+            # Get available directories in dotfiles
+            if [[ -d "$DOTFILES_ROOT" ]]; then
+                local dirs=$(find "$DOTFILES_ROOT" -maxdepth 2 -type d | sed "s|$DOTFILES_ROOT/||" | grep -v "^$" | tr '\n' ' ')
+                COMPREPLY=( $(compgen -W "${dirs}" -- "${cur}") )
+            fi
+            ;;
+    esac
+}
+
+# Set up completion
+complete -F _dotfiles_complete dotfiles
+
+# Export the function
+export -f dotfiles

@@ -18,6 +18,11 @@ if [[ $TERM == 'linux' ]]; then
   setterm -blength 0
 fi
 
+# Fix TERM for clickable links support
+if [[ $TERM == 'dumb' ]]; then
+  export TERM=tmux-256color
+fi
+
 if [[ -r ~/.config/bash/bashrc ]]; then
   source ~/.config/bash/bashrc
 fi

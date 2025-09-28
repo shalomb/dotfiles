@@ -88,4 +88,7 @@ copilot-handler() {
 suggest() { copilot-handler 'suggest' "$@"; }
 explain() { copilot-handler 'explain' "$@"; }
 
-eval "$(gh copilot alias -- bash)"
+# Only set up copilot aliases if copilot is available
+if gh extension list | grep -q "github/gh-copilot"; then
+  eval "$(gh copilot alias -- bash 2>/dev/null)" || true
+fi

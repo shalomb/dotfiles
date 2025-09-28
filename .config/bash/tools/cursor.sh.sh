@@ -41,24 +41,8 @@ _cursor_gpg_check() {
     return $exit_code
 }
 
-# Enhanced cursor-agent wrapper with silent GPG check
-cursor-agent() {
-    # Run silent GPG pre-flight check
-    if ! _cursor_gpg_check >/dev/null 2>&1; then
-        _cursor_gpg_check
-        # Don't return 1 in interactive shells to prevent shell exit
-        if [[ -n "$PS1" ]]; then
-            echo "cursor-agent: GPG check failed, but continuing in interactive shell"
-            return 0
-        else
-            return 1
-        fi
-    fi
-
-    # Call the actual cursor-agent command with all arguments
-    command cursor-agent "$@"
-}
+# Enhanced cursor-agent alias with silent GPG check
+alias cursor-agent='_cursor_gpg_check >/dev/null 2>&1 || (_cursor_gpg_check && [[ -n "$PS1" ]] && echo "cursor-agent: GPG check failed, but continuing in interactive shell"); command cursor-agent'
 
 # Export the function
 export -f _cursor_gpg_check
-export -f cursor-agent

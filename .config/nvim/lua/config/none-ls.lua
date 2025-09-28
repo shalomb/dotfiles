@@ -84,7 +84,9 @@ nullls.setup {
     -- diagnostics.curlylint, -- jinja, django, nunjucks templates
     -- diagnostics.djlint, -- html linter/formatter
     -- diagnostics.dotenv_linter,
-    diagnostics.editorconfig_checker, -- missing executable ec
+    diagnostics.editorconfig_checker.with {
+      extra_args = { "--disable", "max_line_length" }
+    },
     -- diagnostics.flake8,
     diagnostics.gitlint,
     diagnostics.golangci_lint,
@@ -101,7 +103,7 @@ nullls.setup {
     --     }
     --   }
     -- },
-    diagnostics.markdownlint,
+    -- diagnostics.markdownlint, -- Disabled due to persistent virtual text issues
     -- diagnostics.misspell,
     diagnostics.mypy,
     -- diagnostics.opacheck,

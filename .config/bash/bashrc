@@ -1,118 +1,36 @@
 #!/bin/bash
 
- ##############################################################################
-#   ~/.config/bash/bashrc: executed by bash(1) for non-login shells.           #
-#     Also nstalled at ~/.bashrc for legacy reasons.                           #
-#                                                                              #
-#   See /usr/share/doc/bash/examples/startup-files (in the package bash-doc)   #
-#   for examples                                                               #
- ##############################################################################
+# Simple bashrc - just the essentials
 
-# If not running interactively, don't do anything, just return
-[[ ${-//[!i]/} ]] || return
+# Load core functions and colors
+source ~/.config/bash/rc.d/01-functions
+source ~/.config/bash/rc.d/02-colours
 
-if [[ -e ~/.config/profile ]]; then
-  source ~/.config/profile &>/dev/null
+# Load aliases
+if [[ -f ~/.config/bash/aliases ]]; then
+    source ~/.config/bash/aliases
 fi
 
-export FCEDIT="$EDITOR"
-
-export IGNOREEOF=5
-export TIMEFORMAT=$'\nReal: %3lR\tUser: %3lU\tSys: %3lS\tCPU: %P'
-
-if type -P screen &> /dev/null; then
-  read screen_session _ < <(screen -ls | grep "$PPID\.")
-  export screen_session
+# Load completion
+if [[ -f ~/.config/bash/completion ]]; then
+    source ~/.config/bash/completion
 fi
 
-# Shell Options
-# echo -n "setting shell options .. "
-shopt -s cdable_vars
-shopt -s cdspell
-shopt -s checkhash
-shopt -s checkwinsize
-shopt -s cmdhist
-shopt -s extglob
-#shopt -u expand_aliases
-shopt -s histappend histreedit histverify
-shopt -u huponexit
-shopt -s mailwarn
-shopt -s no_empty_cmd_completion  # bash>=2.04 only
-shopt -s sourcepath
-shopt -s progcomp
-shopt -s promptvars
+# Load dotfiles command
+# Load essential functions (cdp, etc)
+# Load AWS functions
+source ~/.config/bash/tools/aws.sh
+# Load Git functions
+# Load git-bar (gbar command)
+source ~/.config/bash/tools/git-bar.sh
+source ~/.config/bash/tools/git.sh
+source ~/.config/bash/tools/fzf-utils.sh
+source ~/.config/bash/rc.d/dotfiles
 
-set -o braceexpand
-set -o hashall
-set -o histexpand
-set -o ignoreeof
-set -o notify
-set -o vi
+# Set up ghostship prompt
+source <(ghostship init bash)
 
-function source() {
-  if [[ ${TRACE_SOURCE-} ]]; then
-    before=$(date +%s%N)
-  fi
-
-  builtin source "$@"
-
-  if [[ ${TRACE_SOURCE-} ]]; then
-    after=$(date +%s%N)
-    printf '%10d ns %s %s\n' "$(( after - before ))" "$(date --rfc-3339=ns)" "$@"
-  fi
+# Simple reload function
+reload() {
+    source ~/.config/bash/bashrc
 }
-
-# reload - convenience function around source
-#   * takes multiple arguments,
-function reload () {
-  if [[ -n "$@" ]]; then
-    for f; do
-      if [[ -f "$f" && -r "$f" ]]; then
-        if [[ ${f##*/} != @(tags|ctags) ]] && ! file -i "$f" | grep -iq binary; then
-          source "$f"
-        fi
-      fi
-    done
-  else
-    reload  /etc/bash_completion       \
-            ~/.config/bash/bashrc
-  fi
-}
-
-# # Source aliases
-reload  ~/.config/bash/completion \
-        ~/.config/bash/aliases
-
-
-if type -P dircolors &>/dev/null; then
-  {
-    if [[ -f ~/.dircolors && -r ~/.dircolors ]]; then
-      eval "$(dircolors -b ~/.dircolors)"
-    fi
-  } &> /dev/null
-fi
-
-
-# Remove duplicates, non-existent directories from $VAR pass in.
-clean_path () {
-  local path
-  path=${!1}
-  path=(${path//:/ })
-  eval "$1=\"$( perl -e ' print join ":", grep -d $_, grep !$s{$_}++, @ARGV ' ${path[@]%*/} )\""
-}
-
-clean_path PATH;    export PATH
-clean_path MANPATH; export MANPATH
-
-for script in ~/.config/bash/rc.d/{,.}*; do
-  reload "$script"
-done
-
-# Right, we're ready to hand over control to the user now!
-# Print some informational trivia.
-echo -e "$USER@$HOSTNAME/$TTY $BASH ($$|$PPID) $BASH_VERSION $MACHTYPE ${TMUX+"$(tmux -V) ($TMUX_PANE)"}"
-uname -a
-
-uptime
-
-type -P fortune &>/dev/null && fortune 2>&1 && echo ""

@@ -30,6 +30,10 @@ refresh:  ## refresh all dotfiles in $HOME with versions in repo
 	find .* \
 	  \( -name ".git" -o -name "INIT" -o -name "*.sw?" -o -name "*~" \) -prune \
 	  -o -type f -exec uv run dotfile-manager export {} +
+	# Clean up orphaned files that are no longer tracked
+	find .* \
+	  \( -name ".git" -o -name "INIT" -o -name "*.sw?" -o -name "*~" \) -prune \
+	  -o -type d -exec uv run dotfile-manager cleanup {} \;
 
 .PHONY: apt apt-clean
 apt: .config/apt/INIT  ## Install apt packages
@@ -147,6 +151,11 @@ update:  ## Update all components
 .PHONY: clean
 clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup apt-clean python-cleanup
 
+.PHONY: test
+test: ## Run all tests (usage: make test [FEATURE=aws-login] [DEBUG=1])
+	@echo "Running simple test suite..."
+	@tests/simple-test.sh
+
 .DEFAULT_GOAL := help
 help: ## Show make targets available
 	@ echo "Available tasks:"
@@ -154,3 +163,18 @@ help: ## Show make targets available
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s - %s\n", $$1, $$2}'
 
 # vim: ts=2 sts=2 sw=2 noet
+
+.PHONY: deploy-bash
+deploy-bash:  ## Deploy only bash configuration files (fast)
+	# Deploy bash configuration files only
+	uv run dotfile-manager export .config/bash/
+	# Clean up orphaned bash files
+	uv run dotfile-manager cleanup .config/bash/
+
+.PHONY: deploy-config
+deploy-config:  ## Deploy only .config directory (fast)
+	# Deploy .config directory only
+	uv run dotfile-manager export .config/
+	# Clean up orphaned .config files
+	uv run dotfile-manager cleanup .config/
+

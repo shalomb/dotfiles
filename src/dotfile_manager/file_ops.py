@@ -1,10 +1,12 @@
 """File operations for dotfile management."""
 
+import json
 import logging
 import os
 import shutil
+from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,7 @@ class FileOperations:
         """Initialize file operations."""
         self.debug = debug
         self.config = config
+        self.registry_file = Path.cwd() / ".dotfiles-managed-files.json"
     
     def export_file(self, src_path: Path, dst_path: Path, force: bool = False) -> None:
         """Export a single file using hard link."""
@@ -125,3 +128,192 @@ class FileOperations:
             pass
         
         return False
+    
+    def detect_orphans(self, target_dir: Path, repo_files: Set[Path]) -> List[Path]:
+        """Detect orphaned files in target directory."""
+        orphans = []
+        
+        if not target_dir.exists():
+            return orphans
+        
+        # Get all files in target directory
+        for item in target_dir.rglob("*"):
+            if item.is_file():
+                # Get relative path from target directory
+                try:
+                    rel_path = item.relative_to(target_dir)
+                    
+                    # Check if this file is managed by the repo
+                    if rel_path not in repo_files:
+                        # Also check if it's in our managed files registry
+                        if not self._is_in_registry(item):
+                            orphans.append(item)
+                except ValueError:
+                    # Path is not under target directory (shouldn't happen)
+                    continue
+        
+        return sorted(orphans)
+    
+    def _is_in_registry(self, file_path: Path) -> bool:
+        """Check if file is in the managed files registry."""
+        if not self.registry_file.exists():
+            return False
+        
+        try:
+            with open(self.registry_file, 'r') as f:
+                registry = json.load(f)
+            
+            # Convert to Path objects for comparison
+            managed_paths = {Path(p) for p in registry.get('managed_files', [])}
+            return file_path in managed_paths
+        except (json.JSONDecodeError, KeyError):
+            return False
+    
+    def _update_registry(self, managed_files: Set[Path]) -> None:
+        """Update the managed files registry."""
+        registry_data = {
+            'last_updated': datetime.now().isoformat(),
+            'managed_files': [str(f) for f in sorted(managed_files)]
+        }
+        
+        with open(self.registry_file, 'w') as f:
+            json.dump(registry_data, f, indent=2)
+        
+        logger.info(f"Updated managed files registry: {self.registry_file}")
+    
+    def create_backup(self, target_dir: Path) -> Path:
+        """Create a backup of the target directory."""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_dir = target_dir.parent / f"{target_dir.name}.backup_{timestamp}"
+        
+        if target_dir.exists():
+            shutil.copytree(target_dir, backup_dir, symlinks=True)
+            logger.info(f"Created backup: {backup_dir}")
+        
+        return backup_dir
+    
+    def bulk_review_orphans(self, orphans: List[Path], target_dir: Path) -> bool:
+        """Present bulk review of orphaned files for user approval."""
+        if not orphans:
+            print("✅ No orphaned files found.")
+            return True
+        
+        print(f"\n🔍 ORPHANED FILES REVIEW")
+        print(f"{'='*60}")
+        print(f"Target directory: {target_dir}")
+        print(f"Found {len(orphans)} orphaned files:")
+        print()
+        
+        # Group files by directory for better organization
+        files_by_dir = {}
+        for orphan in orphans:
+            parent_dir = orphan.parent
+            if parent_dir not in files_by_dir:
+                files_by_dir[parent_dir] = []
+            files_by_dir[parent_dir].append(orphan)
+        
+        # Display files organized by directory
+        for parent_dir in sorted(files_by_dir.keys()):
+            print(f"📁 {parent_dir.relative_to(target_dir)}")
+            for file_path in sorted(files_by_dir[parent_dir]):
+                rel_path = file_path.relative_to(target_dir)
+                file_size = file_path.stat().st_size if file_path.exists() else 0
+                print(f"   📄 {rel_path} ({file_size} bytes)")
+            print()
+        
+        # Show summary
+        total_size = sum(f.stat().st_size for f in orphans if f.exists())
+        print(f"📊 SUMMARY:")
+        print(f"   • Total files: {len(orphans)}")
+        print(f"   • Total size: {total_size:,} bytes ({total_size/1024:.1f} KB)")
+        print()
+        
+        # Safety confirmation with explicit typing
+        print("⚠️  SAFETY CONFIRMATION REQUIRED")
+        print("This will permanently delete the orphaned files listed above.")
+        print("Type 'DELETE ORPHANS' (exactly) to confirm deletion:")
+        
+        confirmation = input("> ").strip()
+        
+        if confirmation == "DELETE ORPHANS":
+            print("✅ Confirmation received. Proceeding with cleanup...")
+            return True
+        else:
+            print("❌ Confirmation not received. Skipping cleanup.")
+            return False
+    
+    def cleanup_orphans(self, orphans: List[Path], dry_run: bool = False) -> None:
+        """Clean up orphaned files."""
+        if not orphans:
+            return
+        
+        if dry_run:
+            print(f"\n🔍 DRY RUN - Would delete {len(orphans)} orphaned files:")
+            for orphan in orphans:
+                print(f"   Would delete: {orphan}")
+            return
+        
+        # Actually delete the files
+        deleted_count = 0
+        for orphan in orphans:
+            try:
+                if orphan.exists():
+                    orphan.unlink()
+                    deleted_count += 1
+                    logger.info(f"Deleted orphaned file: {orphan}")
+            except OSError as e:
+                logger.error(f"Failed to delete {orphan}: {e}")
+        
+        print(f"✅ Cleaned up {deleted_count} orphaned files.")
+    
+    def export_directory_with_cleanup(self, src_path: Path, dst_path: Path, 
+                                    force: bool = False, cleanup: bool = False,
+                                    dry_run: bool = False, interactive: bool = False,
+                                    create_backup: bool = True) -> None:
+        """Export directory with optional orphan cleanup."""
+        # First, do normal export
+        self.export_directory(src_path, dst_path, force=force)
+        
+        if not cleanup:
+            return
+        
+        # Get list of files that should be managed
+        managed_files = set()
+        for root, dirs, files in os.walk(src_path):
+            root_path = Path(root)
+            rel_path = root_path.relative_to(src_path)
+            dst_dir = dst_path / rel_path
+            
+            for file_name in files:
+                src_file = root_path / file_name
+                if not self._should_skip_file(src_file):
+                    rel_file_path = dst_dir / file_name
+                    managed_files.add(rel_file_path.relative_to(dst_path))
+        
+        # Update registry with current managed files
+        self._update_registry(managed_files)
+        
+        # Detect orphans
+        orphans = self.detect_orphans(dst_path, managed_files)
+        
+        if not orphans:
+            print("✅ No orphaned files found.")
+            return
+        
+        # Create backup if requested
+        backup_dir = None
+        if create_backup and not dry_run:
+            backup_dir = self.create_backup(dst_path)
+            print(f"📦 Backup created: {backup_dir}")
+        
+        # Handle cleanup based on mode
+        if dry_run:
+            self.cleanup_orphans(orphans, dry_run=True)
+        elif interactive:
+            if self.bulk_review_orphans(orphans, dst_path):
+                self.cleanup_orphans(orphans, dry_run=False)
+        else:
+            # Non-interactive mode - just log what would be cleaned
+            logger.info(f"Found {len(orphans)} orphaned files (use --interactive to review)")
+            for orphan in orphans:
+                logger.info(f"  Orphaned: {orphan}")

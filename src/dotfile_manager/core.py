@@ -34,7 +34,9 @@ class DotfileManager:
         else:
             logging.basicConfig(level=logging.INFO)
     
-    def export(self, files: List[str], force: bool = False) -> None:
+    def export(self, files: List[str], force: bool = False, cleanup: bool = False,
+               dry_run: bool = False, interactive: bool = False, 
+               create_backup: bool = True) -> None:
         """Export files from repository to home directory."""
         logger.info(f"Exporting files: {files}")
         
@@ -59,7 +61,14 @@ class DotfileManager:
                 if src_path.is_file():
                     self.file_ops.export_file(src_path, dst_path, force=force)
                 elif src_path.is_dir():
-                    self.file_ops.export_directory(src_path, dst_path, force=force)
+                    if cleanup:
+                        self.file_ops.export_directory_with_cleanup(
+                            src_path, dst_path, force=force, cleanup=cleanup,
+                            dry_run=dry_run, interactive=interactive,
+                            create_backup=create_backup
+                        )
+                    else:
+                        self.file_ops.export_directory(src_path, dst_path, force=force)
                 else:
                     logger.warning(f"Unknown file type: {src_path}")
     

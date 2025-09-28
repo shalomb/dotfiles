@@ -78,6 +78,9 @@ patterns = [
     "LICENSE",
     "*.md",
     
+    # Dotfile manager registry (keep in repo, don't sync to home)
+    ".dotfiles-managed-files.json",
+    
     # Test files
     "tests/",
     "test/",
@@ -126,4 +129,5 @@ exclude_files = [
     "CHANGELOG.md",
     "LICENSE",
     ".gitignore",
+    ".dotfiles-managed-files.json",
 ]
