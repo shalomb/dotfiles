@@ -3,7 +3,7 @@
 
 -- https://github.com/hashicorp/terraform-ls/blob/main/docs/USAGE.md#neovim-v080
 
-local lspconfig = require("lspconfig")
+-- Updated to use vim.lsp.config for Neovim 0.11+
 local cmp = require("cmp")
 local luasnip = require("luasnip")
 
@@ -102,7 +102,7 @@ local on_attach = function(client, bufnr)
 end
 
 for _, lsp_server in ipairs(language_servers) do
-  lspconfig[lsp_server].setup({
+  vim.lsp.config(lsp_server, {
     flags = { debounce_text_changes = 150 },
     on_attach = on_attach,
     capabilities = capabilities,

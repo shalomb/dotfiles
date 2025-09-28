@@ -92,7 +92,7 @@ return {
       "hrsh7th/cmp-path",
 
       -- LSP Support
-      "neovim/nvim-lspconfig",
+      { "neovim/nvim-lspconfig", version = "v0.1.8" }, -- Pin to last version compatible with Neovim 0.10
       "WhoIsSethDaniel/mason-tool-installer.nvim",
       "mason-org/mason-lspconfig.nvim",
 
@@ -258,14 +258,14 @@ return {
     build = "npm install -g mcp-hub@latest", -- Installs `mcp-hub` node binary globally
   },
 
-  {
-    "olimorris/codecompanion.nvim",
-    opts = {},
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter",
-      "ravitemer/mcphub.nvim",
-      "github/copilot.vim" -- required to setup the github auth
-    },
-  },
+  -- {
+  --   "olimorris/codecompanion.nvim",
+  --   opts = {},
+  --   dependencies = {
+  --     "nvim-lua/plenary.nvim",
+  --     "nvim-treesitter/nvim-treesitter",
+  --     "ravitemer/mcphub.nvim",
+  --     "github/copilot.vim" -- required to setup the github auth
+  --   },
+  -- },
 }

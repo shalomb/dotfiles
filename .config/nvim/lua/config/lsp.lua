@@ -13,10 +13,10 @@ local whichkey = require("which-key")
 
 ---- lspconfig ----
 
-local lspconfig = require('lspconfig')
+-- Updated to use vim.lsp.config for Neovim 0.11+
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-lspconfig.lua_ls.setup({
+vim.lsp.config('lua_ls', {
   -- on_attach = lsp.default_keymaps({buffer = bufnr}),
   capabilities = capabilities,
   flags = { debounce_text_changes = 150 },
@@ -35,11 +35,11 @@ lspconfig.lua_ls.setup({
   }
 })
 
-lspconfig.pyright.setup({
+vim.lsp.config('pyright', {
   -- on_attach = on_attach,
   capabilities = capabilities,
   flags = { debounce_text_changes = 150 },
-  root_dir = util.root_pattern(".venv", "venv", "pyrightconfig.json"),
+  root_dir = vim.fs.find({ ".venv", "venv", "pyrightconfig.json" }, { path = vim.fs.dirname(vim.api.nvim_buf_get_name(0)), upward = true })[1],
   settings = {
     pyright = {
       disableLanguageServices = false,
@@ -55,13 +55,13 @@ lspconfig.pyright.setup({
   },
 })
 
-lspconfig.rust_analyzer.setup {
+vim.lsp.config('rust_analyzer', {
   -- Server-specific settings. See `:help lspconfig-setup`
   capabilities = capabilities,
   settings = {
     ['rust-analyzer'] = {},
   },
-}
+})
 
 -- lspconfig.gopls.setup({})
 
@@ -234,14 +234,14 @@ vim.api.nvim_create_autocmd('LspAttach', {
 -- Configure `ruff-lsp`.
 -- See: https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#ruff
 -- For the default config, along with instructions on how to customize the settings
-require('lspconfig').ruff.setup {
+vim.lsp.config('ruff', {
   init_options = {
     settings = {
       -- Any extra CLI arguments for `ruff` go here.
       args = {},
-    }
-  }
-}
+    },
+  },
+})
 
 -- -- debugging
 -- -- vim.lsp.set_log_level("debug")

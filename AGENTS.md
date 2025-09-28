@@ -40,12 +40,12 @@ make install
 ### 2. Individual File/Directory Deployment
 
 ```bash
-# Deploy specific configuration
-make install .bashrc
-make install .config/nvim/
-make install .config/tmux/
+# Deploy specific configuration using make
+make install TARGET=.bashrc
+make install TARGET=.config/nvim/
+make install TARGET=.config/tmux/
 
-# Or using the new Python tool (planned)
+# Or using the Python tool directly
 uv run python -m dotfile_manager export .bashrc
 uv run python -m dotfile_manager export .config/nvim/
 ```
