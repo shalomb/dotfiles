@@ -4,11 +4,11 @@ This directory contains patches for various applications that have known issues 
 
 ## Available Patches
 
-### cursor-agent-bash-fix
+### cursor-agent-patch
 Fixes bash initialization issues in cursor-agent by adding proper bash initialization prefix.
 
 **Files:**
-- `cursor-agent-bash-fix.sh` - The patch script
+- `cursor-agent-patch.sh` - The consolidated patch script
 
 **Usage:**
 ```bash
@@ -16,14 +16,22 @@ Fixes bash initialization issues in cursor-agent by adding proper bash initializ
 make patch APP=cursor-agent
 
 # Or apply directly
-.config/patches/cursor-agent-bash-fix.sh apply
+.config/patches/cursor-agent-patch.sh apply
 
 # Check patch status
-.config/patches/cursor-agent-bash-fix.sh status
+.config/patches/cursor-agent-patch.sh status
 
 # Restore from backup
-.config/patches/cursor-agent-bash-fix.sh restore
+.config/patches/cursor-agent-patch.sh restore
 ```
+
+**Features:**
+- Automatically finds all cursor-agent installations
+- Creates backups before patching
+- Handles multiple versions gracefully
+- Provides detailed status reporting
+- Runs basic tests after patching
+- Color-coded output for better UX
 
 ## Adding New Patches
 
