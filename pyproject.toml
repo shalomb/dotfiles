@@ -4,11 +4,13 @@ version = "0.1.0"
 description = "UV managed python libs"
 requires-python = ">=3.12"
 dependencies = [
+    "checkov>=3.2.439",
     "codespell>=2.4.1",
     "colorama>=0.4.6",
     "debugpy>=1.8.14",
     "icecream>=2.1.5",
     "jinja2>=3.1.6",
+    "jiratui>=0.1.1",
     "pip>=25.1.1",
     "pygohcl>=1.2.5",
     "pytest>=8.4.2",

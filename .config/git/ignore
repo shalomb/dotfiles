@@ -76,3 +76,5 @@ tags
 .config/tmux/plugins/**
 submodules/**
 .config/submodules/**
+
+**/.claude/settings.local.json
