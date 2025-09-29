@@ -6,6 +6,7 @@ du-dust          dust             https://github.com/bootandy/dust
 eva              eva              https://github.com/nerdypepper/eva
 exa              exa              https://github.com/ogham/exa
 fd-find          fd-find          https://github.com/sharkdp/fd-find
+git-delta        git-delta        https://github.com/dandavison/delta
 htmlq            htmlq            https://github.com/mgdm/htmlq
 hyperfine        hyperfine        https://github.com/sharkdp/hyperfine
 jless            jless            https://github.com/PaulJuliusMartinez/jless
