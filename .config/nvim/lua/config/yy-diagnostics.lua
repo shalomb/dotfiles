@@ -37,30 +37,22 @@ vim.diagnostic.config({
   },
 })
 
+-- Modern diagnostic signs configuration
 local signs = {
-  Error = "E ",
-  Warning = "W ",
-  Hint = "H",
-  Information = "I "
+  Error = "✘",
+  Warning = "▲", 
+  Hint = "⚑",
+  Information = ""
 }
 
 for type, icon in pairs(signs) do
-  local hl = "LspDiagnosticsSign" .. type
-  vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
-end
-
-local sign = function(opts)
-  vim.fn.sign_define(opts.name, {
-    texthl = opts.name,
-    text = opts.text,
-    numhl = ''
+  local hl = "DiagnosticSign" .. type
+  vim.fn.sign_define(hl, {
+    text = icon,
+    texthl = hl,
+    numhl = ""
   })
 end
-
-sign({ name = 'DiagnosticSignError', text = '✘' })
-sign({ name = 'DiagnosticSignWarn', text = '▲' })
-sign({ name = 'DiagnosticSignHint', text = '⚑' })
-sign({ name = 'DiagnosticSignInfo', text = '' })
 
 local luasnip = require("luasnip")
 local augroup = vim.api.nvim_create_augroup("luasnip-expand", { clear = true })

@@ -90,20 +90,7 @@ sessionize() {
 }
 
 if [[ ${1-} == "-l" ]]; then
-  # Check if we're in an interactive environment
-  if [[ -t 0 && -t 1 ]]; then
-    # Interactive - use fzf
-    session=$(tmux ls | fzf --border)
-  else
-    # Non-interactive - show formatted list
-    echo "🔄 Available Sessions:"
-    echo ""
-    tmux ls
-    echo ""
-    echo "Type session name or press Ctrl+C to cancel"
-    read -p "Session: " session
-  fi
-  
+  session=$(tmux ls | fzf)
   session=${session%%:*}
   echo "$session"
   tmux-attach "$session"
@@ -112,31 +99,8 @@ if [[ ${1-} == "-l" ]]; then
 elif [[ ${1-} == "-s" ]]; then
   shift;
   (( $# > 1 )) && set -- -q "$@"
-  
-  # Check if we're in an interactive environment
-  if [[ -t 0 && -t 1 ]]; then
-    # Interactive - use fzf
-    session=$(gum projects --format fzf | fzf --ansi --border "$@")
-  else
-    # Non-interactive - show formatted list and wait
-    echo "📁 Available Projects:"
-    echo ""
-    gum projects --format fzf
-    echo ""
-    echo "Type project name or press Ctrl+C to cancel"
-    read -p "Project: " session
-  fi
-  
-  if [[ -n "$session" ]]; then
-    sessionize "$session"
-  else
-    echo "No project selected"
-  fi
-  
-  # Keep window open for a moment so user can see what happened
-  echo ""
-  echo "Press any key to close this window..."
-  read -n 1
+  session=$(projects-list | fzf "$@")
+  sessionize "$session"
   exit $?
 
 elif (( $# >= 1 )); then
