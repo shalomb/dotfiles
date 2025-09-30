@@ -261,6 +261,107 @@ Tests focus on **behavior** not **implementation**:
 - ✅ Tests verify hard links work correctly
 - ❌ Tests don't care about internal function names or class structure
 
+## Tmux Configuration Workflow
+
+### Symlink Chain Architecture
+
+The tmux configuration uses a **symlink chain** for proper dotfile management:
+
+```
+~/.tmux.conf → ~/.config/tmux.conf → ~/.config/dotfiles/.config/tmux.conf
+```
+
+**Source of truth**: `~/.config/dotfiles/.config/tmux.conf` (in repository)
+
+### Development Workflow
+
+#### 1. Making Changes
+```bash
+# Edit the tmux configuration in the repository
+vim ~/.config/dotfiles/.config/tmux.conf
+
+# Or edit directly (changes are immediately reflected)
+vim ~/.config/tmux.conf
+```
+
+#### 2. Deploying Changes
+```bash
+# Deploy using the dotfile manager
+cd ~/.config/dotfiles
+./dotfile_stash export .config/tmux.conf
+```
+
+#### 3. Reloading tmux Configuration
+```bash
+# Reload tmux configuration
+tmux source-file ~/.tmux.conf
+
+# Or use the reload popup (C-a r)
+# This shows a visual confirmation popup
+```
+
+#### 4. Testing New Bindings
+```bash
+# Test that new bindings are active
+tmux list-keys | grep "C-i"  # Check specific binding
+tmux list-keys | grep "bind-key.*r"  # Check reload binding
+```
+
+### Key Bindings
+
+- **`C-a r`**: Reload tmux configuration with visual popup
+- **`C-a C-o`**: Project selection (tmuxie -s)
+- **`C-a C-u`**: Session selection (tmuxie -l)  
+- **`C-a C-i`**: GitHub clone interface (tmuxie -i)
+
+### Troubleshooting
+
+#### Binding Not Working
+1. **Check if binding exists**: `tmux list-keys | grep "C-i"`
+2. **Reload config**: `tmux source-file ~/.tmux.conf`
+3. **Verify symlinks**: `ls -la ~/.tmux.conf ~/.config/tmux.conf`
+
+#### Popup Not Showing
+1. **Test popup directly**: `tmux display-popup -E -w 50% -h 30% "echo 'test'"`
+2. **Check TERM variable**: Should not be `dumb` for popups
+3. **Verify tmux version**: `tmux -V` (popups require tmux 3.2+)
+
+#### Configuration Not Loading
+1. **Check symlink chain**: `ls -la ~/.tmux.conf ~/.config/tmux.conf`
+2. **Redeploy**: `./dotfile_stash export .config/tmux.conf`
+3. **Force reload**: `tmux source-file ~/.tmux.conf`
+
+### Best Practices
+
+1. **Always test bindings** after making changes
+2. **Use the reload popup** (`C-a r`) for visual confirmation
+3. **Keep symlink chain intact** - don't break the dotfile management
+4. **Commit changes** to the repository after testing
+5. **Document new bindings** in this file
+
+## Core Development Principles
+
+### **Use Correct Conventions, Processes, and Interfaces**
+
+This is the **fundamental principle** for all development and testing in this repository. Always:
+
+1. **Follow established workflows**: Use the documented processes for each component
+2. **Use proper deployment tools**: Don't manually copy files - use the dotfile management system
+3. **Respect the architecture**: Maintain symlink chains, hardlink systems, and submodule integrity
+4. **Test through official interfaces**: Use the provided testing and validation tools
+5. **Document changes**: Update documentation when adding new workflows or processes
+
+### **Component-Specific Workflows**
+
+Each component has its own established workflow:
+
+- **tmux**: Symlink chain → dotfile_stash → reload popup
+- **nvim**: Submodule management → plugin updates → config reload
+- **bash**: Profile management → shell reload → function testing
+- **gum**: Go build → install → cache refresh → integration testing
+
+**Never bypass these workflows** - they ensure consistency, reliability, and proper integration.
+
 ## Agent Integration
 
 When working with this repository:
@@ -271,5 +372,61 @@ When working with this repository:
 4. **Follow the Makefile patterns**: Use existing targets when possible
 5. **Test deployments**: Run `make test` to verify functionality before committing
 6. **Run integration tests**: Use `make test-integration` for comprehensive validation
+7. **Follow component workflows**: Use the documented processes for each component
+8. **Maintain architectural integrity**: Don't break symlink chains or hardlink systems
 
-The repository is designed for **incremental updates** - you can deploy individual files or directories without affecting the entire system.
+### **Development Workflow Checklist**
+
+Before making any changes:
+
+- [ ] **Identify the component** (tmux, nvim, bash, gum, etc.)
+- [ ] **Review the workflow** for that component
+- [ ] **Use the correct tools** (dotfile_stash, make targets, etc.)
+- [ ] **Test through official interfaces** (reload popups, validation commands)
+- [ ] **Document any new processes** in this file
+- [ ] **Commit changes** after validation
+
+The repository is designed for **incremental updates** - you can deploy individual files or directories without affecting the entire system, but always through the proper channels.
+
+## Agent Preferences
+
+### **Manpage Format**
+When presenting manpage-style documentation, use this compact inverted format:
+
+```
+# COMMAND(1)
+- **-h, --help** - Help
+- **-d, --debug** - Debug logging
+- **-c, --config** - Config file (~/.config/command/config.toml)
+```bash
+command init bash
+command prompt --status $? --cmd-duration $DURATION
+command colors
+```
+## EXPLICATION
+Shell command providing terminal functionality via letters/numbers.
+## DESCRIPTION
+- **version** - Show version
+- **character/time** - Print timing info
+- **completion** - Generate shell completions
+- **colors** - Show color table
+- **config** - Configure window shortcuts  
+- **prompt** - Generate prompt with status
+- **init** - Initialize shell integration
+## COMMANDS
+```
+command [command] [flags]
+command init [bash|zsh]
+command prompt --status $? --cmd-duration $DURATION
+```
+## SYNOPSIS
+command - shell command with window shortcuts
+## NAME
+```
+
+**Key principles:**
+- **Inverted order**: NAME → SYNOPSIS → COMMANDS → DESCRIPTION → EXPLICATION
+- **No blank lines** after section headings
+- **Compact format** with minimal vertical space
+- **Consistent indentation** for readability
+- **Include only essential sections**: NAME, SYNOPSIS, COMMANDS, DESCRIPTION, EXPLICATION
