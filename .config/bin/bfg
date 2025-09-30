@@ -1,0 +1,222 @@
+#!/bin/bash
+# BFG Repo-Cleaner wrapper script
+# Manages BFG JAR file downloads and execution
+
+set -euo pipefail
+
+# Source colors if available and in interactive terminal
+if [[ -t 1 && -f "$HOME/.config/bash/rc.d/02-colours" ]]; then
+    source "$HOME/.config/bash/rc.d/02-colours" 2>/dev/null || true
+fi
+
+# Fallback colors if sourcing failed
+if [[ -z "${blue:-}" ]]; then
+    blue='\033[0;34m'
+    green='\033[0;32m'
+    yellow='\033[1;33m'
+    red='\033[0;31m'
+    reset='\033[0m'
+fi
+
+# Configuration
+BFG_VERSION="${BFG_VERSION:-latest}"
+BFG_DIR="${BFG_DIR:-$HOME/.local/share/bfg}"
+BFG_JAR="$BFG_DIR/bfg.jar"
+BFG_REPO="rtyley/bfg-repo-cleaner"
+MAVEN_REPO="https://repo1.maven.org/maven2/com/madgag/bfg"
+
+# Logging functions
+log_info() {
+    echo -e "${blue}[INFO]${reset} $*"
+}
+
+log_warn() {
+    echo -e "${yellow}[WARN]${reset} $*"
+}
+
+log_error() {
+    echo -e "${red}[ERROR]${reset} $*"
+}
+
+log_success() {
+    echo -e "${green}[SUCCESS]${reset} $*"
+}
+
+# Check if Java is available
+check_java() {
+    if ! command -v java >/dev/null 2>&1; then
+        log_error "Java is not installed or not in PATH"
+        log_info "Please install Java 8 or later:"
+        log_info "  Ubuntu/Debian: sudo apt install openjdk-11-jdk"
+        log_info "  macOS: brew install openjdk@11"
+        log_info "  Or download from: https://adoptium.net/"
+        exit 1
+    fi
+    
+    # Check Java version
+    local java_version
+    java_version=$(java -version 2>&1 | head -n1 | cut -d'"' -f2 | cut -d'.' -f1)
+    if [[ "$java_version" -lt 8 ]]; then
+        log_error "Java version $java_version is too old. BFG requires Java 8 or later."
+        exit 1
+    fi
+    
+    log_info "Java version: $(java -version 2>&1 | head -n1)"
+}
+
+# Get latest version from GitHub API
+get_latest_version() {
+    local version
+    version=$(curl -s "https://api.github.com/repos/$BFG_REPO/releases/latest" | jq -r '.tag_name' | sed 's/^v//')
+    if [[ "$version" == "null" || -z "$version" ]]; then
+        log_error "Failed to get latest version from GitHub API"
+        exit 1
+    fi
+    echo "$version"
+}
+
+# Download BFG JAR file
+download_bfg() {
+    local version="$1"
+    local jar_url="$MAVEN_REPO/$version/bfg-$version.jar"
+    
+    log_info "Downloading BFG $version from Maven Central..."
+    log_info "URL: $jar_url"
+    
+    # Create directory if it doesn't exist
+    mkdir -p "$BFG_DIR"
+    
+    # Download with progress
+    if command -v wget >/dev/null 2>&1; then
+        wget --progress=bar:force -O "$BFG_JAR" "$jar_url"
+    elif command -v curl >/dev/null 2>&1; then
+        curl -L --progress-bar -o "$BFG_JAR" "$jar_url"
+    else
+        log_error "Neither wget nor curl is available for downloading"
+        exit 1
+    fi
+    
+    if [[ -f "$BFG_JAR" ]]; then
+        log_success "BFG $version downloaded successfully"
+        log_info "JAR file: $BFG_JAR"
+    else
+        log_error "Failed to download BFG JAR file"
+        exit 1
+    fi
+}
+
+# Check if BFG JAR exists and is valid
+check_bfg_jar() {
+    if [[ ! -f "$BFG_JAR" ]]; then
+        return 1
+    fi
+    
+    # Check if JAR is valid by trying to get its manifest
+    if ! java -jar "$BFG_JAR" --version >/dev/null 2>&1; then
+        log_warn "BFG JAR file appears to be corrupted, will re-download"
+        rm -f "$BFG_JAR"
+        return 1
+    fi
+    
+    return 0
+}
+
+# Update BFG to latest version
+update_bfg() {
+    local latest_version
+    latest_version=$(get_latest_version)
+    
+    log_info "Latest BFG version: $latest_version"
+    
+    # Check if we already have the latest version
+    if [[ -f "$BFG_JAR" ]]; then
+        local current_version
+        current_version=$(java -jar "$BFG_JAR" --version 2>&1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -n1)
+        if [[ "$current_version" == "$latest_version" ]]; then
+            log_success "BFG is already up to date (version $current_version)"
+            return 0
+        fi
+        log_info "Current version: $current_version"
+    fi
+    
+    download_bfg "$latest_version"
+}
+
+# Main function
+main() {
+    # Parse arguments
+    local update_only=false
+    local args=()
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --update)
+                update_only=true
+                shift
+                ;;
+            --version)
+                if [[ -f "$BFG_JAR" ]]; then
+                    java -jar "$BFG_JAR" --version
+                else
+                    log_error "BFG JAR not found. Run with --update to download."
+                    exit 1
+                fi
+                exit 0
+                ;;
+            --help|-h)
+                echo "BFG Repo-Cleaner Wrapper"
+                echo ""
+                echo "Usage: $0 [OPTIONS] [BFG_ARGS...]"
+                echo ""
+                echo "Options:"
+                echo "  --update     Download/update BFG to latest version"
+                echo "  --version    Show BFG version"
+                echo "  --help, -h   Show this help message"
+                echo ""
+                echo "Environment variables:"
+                echo "  BFG_VERSION  Specific version to use (default: latest)"
+                echo "  BFG_DIR      Directory to store BFG JAR (default: ~/.local/share/bfg)"
+                echo ""
+                echo "Examples:"
+                echo "  $0 --update"
+                echo "  $0 --delete-folders folder1,folder2"
+                echo "  $0 --delete-files '*.{key,log}'"
+                echo "  $0 --replace-text replacements.txt"
+                exit 0
+                ;;
+            *)
+                args+=("$1")
+                shift
+                ;;
+        esac
+    done
+    
+    # Check Java
+    check_java
+    
+    # Handle update-only mode
+    if [[ "$update_only" == true ]]; then
+        update_bfg
+        exit 0
+    fi
+    
+    # Check if BFG JAR exists
+    if ! check_bfg_jar; then
+        log_warn "BFG JAR not found or corrupted"
+        
+        if [[ "$BFG_VERSION" == "latest" ]]; then
+            log_info "Downloading latest version..."
+            update_bfg
+        else
+            log_info "Downloading version $BFG_VERSION..."
+            download_bfg "$BFG_VERSION"
+        fi
+    fi
+    
+    # Execute BFG with provided arguments
+    log_info "Executing BFG with arguments: ${args[*]}"
+    java -jar "$BFG_JAR" "${args[@]}"
+}
+
+# Run main function with all arguments
+main "$@"
