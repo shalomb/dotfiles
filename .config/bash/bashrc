@@ -35,5 +35,6 @@ source <(ghostship init bash)
 
 # Simple reload function
 reload() {
-    source ~/.config/bash/bashrc
+    # Source the repository version directly to avoid circular reference
+    source ~/.config/dotfiles/.config/bash/bashrc
 }

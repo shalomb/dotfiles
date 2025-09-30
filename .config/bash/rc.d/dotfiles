@@ -186,7 +186,7 @@ _dotfiles_reload() {
     case "$target" in
         all|config)
             echo "🔄 Reloading all bash configuration..."
-            reload
+            source ~/.config/dotfiles/.config/bash/bashrc
             ;;
         tools)
             echo "🔄 Reloading tools directory..."
