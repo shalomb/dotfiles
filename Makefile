@@ -171,17 +171,12 @@ help: ## Show make targets available
 
 # vim: ts=2 sts=2 sw=2 noet
 
-.PHONY: deploy-bash
-deploy-bash:  ## Deploy only bash configuration files (fast)
-	# Deploy bash configuration files only
-	env PYTHONPATH=src uv run python -m dotfile_manager export .config/bash/
-	# Clean up orphaned bash files
-	env PYTHONPATH=src uv run python -m dotfile_manager cleanup .config/bash/
+	./dotfile_stash export .bashrc
+	./dotfile_stash export .config/bash/
+	# Deploy bash configuration directory and all dependencies
+	# Deploy bashrc
 
-.PHONY: deploy-config
-deploy-config:  ## Deploy only .config directory (fast)
-	# Deploy .config directory only
-	env PYTHONPATH=src uv run python -m dotfile_manager export .config/
-	# Clean up orphaned .config files
-	env PYTHONPATH=src uv run python -m dotfile_manager cleanup .config/
-
+.PHONY: deploy
+deploy:  ## Deploy bashrc and all dependencies
+	./dotfile_stash export .bashrc
+	./dotfile_stash export .config/bash/
