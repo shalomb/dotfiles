@@ -29,3 +29,4 @@ go-install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@latest
 go-install github.com/terraform-docs/terraform-docs@latest
 go-install github.com/warrensbox/terraform-switcher@latest
 go-install golang.org/x/lint/golint@latest
+go-install github.com/shalomb/gum@latest

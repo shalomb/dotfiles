@@ -196,3 +196,10 @@ package*lock*
 package.json
 *.log
 .mypy*
+
+# Temporary context files
+tmp-CONTEXT.md
+
+# Cursor IDE files (keep cli-config.json)
+!.cursor/cli-config.json
+.cursor/

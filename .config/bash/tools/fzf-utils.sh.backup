@@ -50,20 +50,17 @@ function cdd {
 #| cdp - cd to project
 function cdp {
   query="$@"
-  dir="$( {
-    # Use gum for better data and formatting
-    gum dirs --format fzf
-    gum projects --format fzf
-  } | fzf --ansi \
-          --bind=ctrl-s:toggle-sort \
-          --cycle \
-          --height 60% \
-          --no-mouse \
-          --print-query \
-          --query="$query" \
-          --reverse \
-          --tiebreak=index |
-    awk '{ print $2 }'  # Skip emoji, get the path
+  dir="$( (cwds-list; projects-list) |
+        column -t |
+        fzf --bind=ctrl-s:toggle-sort \
+            --cycle \
+            --height 50% \
+            --no-mouse \
+            --print-query \
+            --query="$query" \
+            --reverse \
+            --tiebreak=index |
+          awk '{ print $1 }'
   )"
 
   query="${dir%$'\n'}"

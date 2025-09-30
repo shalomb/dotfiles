@@ -80,8 +80,8 @@ function cd {
 
         # Frequently Accessed Dirs
         -f)
-          # Use gum for better data
-          while read -r i; do candidates+=("$i"); done < <(gum dirs --format simple)
+          # TODO Rename this file
+          while read -r i; do candidates+=("$i"); done < <(cwds-list)
         ;;
 
         # Omni
@@ -91,15 +91,15 @@ function cd {
           done < <(
             cat ~/.cache/dir-selected
             dirs -l -p
-            gum dirs --format simple
+            cwds-list
             cat "$bookmarks"
-            gum projects --format simple
+            projects-list
           )
         ;;
 
         # Projects
         -p)
-          while read -r i; do candidates+=("$i"); done < <(gum projects --format simple)
+          while read -r i; do candidates+=("$i"); done < <(projects-list)
         ;;
 
         # Dirstack
