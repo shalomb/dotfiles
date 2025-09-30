@@ -5,17 +5,17 @@
 
 bash_completion_dir=/usr/share/bash-completion/completions/
 
-local BOLD=$(tput bold)
-local RESET=$(tput sgr0)
-local REVERSE=$(tput rev)
-local BLACK=$(tput setaf 0)
-local RED=$(tput setaf 1)
-local GREEN=$(tput setaf 2)
-local YELLOW=$(tput setaf 3)
-local BLUE=$(tput setaf 4)
-local MAGENTA=$(tput setaf 5)
-local CYAN=$(tput setaf 6)
-local WHITE=$(tput setaf 7)
+BOLD=$(tput bold)
+RESET=$(tput sgr0)
+REVERSE=$(tput rev)
+BLACK=$(tput setaf 0)
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
+MAGENTA=$(tput setaf 5)
+CYAN=$(tput setaf 6)
+WHITE=$(tput setaf 7)
 
 if [[ -d $bash_completion_dir ]]; then
   for completion in "$bash_completion_dir"/git*; do
@@ -509,12 +509,12 @@ function grv { gr -v; }
 #| gS - git show
 function gS { command git "show" "$@"; }
 
-#| gs - git st
+#| gs - git status
 function gs {
   if (($# == 0)); then
-    _git_arg_wrapper "st" --branch --short
+    _git_arg_wrapper "status" --branch --short
   else
-    _git_arg_wrapper "st" "$@"
+    _git_arg_wrapper "status" "$@"
   fi
 }
 __git_complete gs _git_status
