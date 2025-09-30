@@ -1,0 +1,28 @@
+#!/bin/bash
+# BFG Repo-Cleaner installation and setup
+
+set -euo pipefail
+
+# Check if Java is available
+if ! command -v java >/dev/null 2>&1; then
+    echo "Java is required for BFG Repo-Cleaner"
+    echo "Please install Java 8 or later:"
+    echo "  Ubuntu/Debian: sudo apt install openjdk-11-jdk"
+    echo "  macOS: brew install openjdk@11"
+    echo "  Or download from: https://adoptium.net/"
+    exit 1
+fi
+
+# Check Java version
+java_version=$(java -version 2>&1 | head -n1 | cut -d'"' -f2 | cut -d'.' -f1)
+if [[ "$java_version" -lt 8 ]]; then
+    echo "Java version $java_version is too old. BFG requires Java 8 or later."
+    exit 1
+fi
+
+echo "Java version: $(java -version 2>&1 | head -n1)"
+
+# Install BFG wrapper script
+echo "BFG Repo-Cleaner wrapper is available at: ~/.local/bin/bfg"
+echo "Run 'bfg --update' to download the latest BFG JAR file"
+echo "Run 'bfg --help' for usage information"

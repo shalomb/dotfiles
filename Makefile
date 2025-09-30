@@ -29,11 +29,11 @@ refresh:  ## refresh all dotfiles in $HOME with versions in repo
 	# Install all dotfiles into the home directory
 	find .* \
 	  \( -name ".git" -o -name "INIT" -o -name "*.sw?" -o -name "*~" \) -prune \
-	  -o -type f -exec uv run dotfile-manager export {} +
+	  -o -type f -exec env PYTHONPATH=src uv run python -m dotfile_manager export {} +
 	# Clean up orphaned files that are no longer tracked
 	find .* \
 	  \( -name ".git" -o -name "INIT" -o -name "*.sw?" -o -name "*~" \) -prune \
-	  -o -type d -exec uv run dotfile-manager cleanup {} \;
+	  -o -type d -exec env PYTHONPATH=src uv run python -m dotfile_manager cleanup {} \;
 
 .PHONY: apt apt-clean
 apt: .config/apt/INIT  ## Install apt packages
@@ -69,7 +69,7 @@ apt-clean:
 submodules: .config/submodules/INIT .config/submodules/UPDATE
 
 .PHONY: tools
-tools: go-tools rust-tools workspace-tools ## Install CLI tools
+tools: go-tools rust-tools workspace-tools bfg-tools ## Install CLI tools
 
 .PHONY: npm-tools npm-cleanup
 npm-tools: ## Run npm-tools installer
@@ -100,6 +100,13 @@ go-cleanup: ## Cleanup the gomod cache
 	go clean -modcache # ~/.local/share/go
 	go clean -fuzzcache
 	find ~/.cache/go-*/ -atime +30 -delete || true
+
+.PHONY: bfg-tools bfg-cleanup
+bfg-tools: ## Run bfg-tools installer
+	.config/bfg-tools/INIT
+
+bfg-cleanup: ## Cleanup BFG JAR files
+	rm -f ~/.local/share/bfg/bfg.jar
 
 .PHONY: rustup
 rustup: ## Configure rustup
@@ -149,7 +156,7 @@ update:  ## Update all components
 	make python-tools
 
 .PHONY: clean
-clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup apt-clean python-cleanup
+clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup apt-clean python-cleanup bfg-cleanup
 
 .PHONY: test
 test: ## Run all tests (usage: make test [FEATURE=aws-login] [DEBUG=1])
@@ -167,14 +174,14 @@ help: ## Show make targets available
 .PHONY: deploy-bash
 deploy-bash:  ## Deploy only bash configuration files (fast)
 	# Deploy bash configuration files only
-	uv run dotfile-manager export .config/bash/
+	env PYTHONPATH=src uv run python -m dotfile_manager export .config/bash/
 	# Clean up orphaned bash files
-	uv run dotfile-manager cleanup .config/bash/
+	env PYTHONPATH=src uv run python -m dotfile_manager cleanup .config/bash/
 
 .PHONY: deploy-config
 deploy-config:  ## Deploy only .config directory (fast)
 	# Deploy .config directory only
-	uv run dotfile-manager export .config/
+	env PYTHONPATH=src uv run python -m dotfile_manager export .config/
 	# Clean up orphaned .config files
-	uv run dotfile-manager cleanup .config/
+	env PYTHONPATH=src uv run python -m dotfile_manager cleanup .config/
 
