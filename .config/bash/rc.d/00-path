@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# Comprehensive PATH setup for all development tools
+# This file sets up the PATH with all necessary directories
+
+# Start with a clean PATH (system paths only)
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"
+
+# Add user-specific directories in order of priority
+# 1. Local user bin (highest priority)
+if [[ -d "$HOME/.local/bin" ]]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# 2. Go tools (from GOPATH/bin)
+if [[ -d "$HOME/.local/share/go/bin" ]]; then
+    export PATH="$HOME/.local/share/go/bin:$PATH"
+fi
+
+# 3. Go tools (from GOBIN or default)
+if [[ -d "$HOME/go/bin" ]]; then
+    export PATH="$HOME/go/bin:$PATH"
+fi
+
+# 4. Rust/Cargo tools
+if [[ -d "$HOME/.cargo/bin" ]]; then
+    export PATH="$HOME/.cargo/bin:$PATH"
+fi
+
+# 5. Neovim (bob)
+if [[ -d "$HOME/.local/share/bob/nvim-bin" ]]; then
+    export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
+fi
+
+# 6. Python virtual environments
+if [[ -d "$HOME/.venv/bin" ]]; then
+    export PATH="$HOME/.venv/bin:$PATH"
+fi
+
+# 7. Node.js tools (if nvm is used)
+if [[ -d "$HOME/.nvm" ]]; then
+    export PATH="$HOME/.nvm:$PATH"
+fi
+
+# 8. Ruby tools (if rbenv is used)
+if [[ -d "$HOME/.rbenv/bin" ]]; then
+    export PATH="$HOME/.rbenv/bin:$PATH"
+fi
+
+# 9. Arkade tools
+if [[ -d "$HOME/.arkade/bin" ]]; then
+    export PATH="$HOME/.arkade/bin:$PATH"
+fi
+
+# 10. Perl6 tools
+if [[ -d "/usr/share/perl6/site/bin" ]]; then
+    export PATH="/usr/share/perl6/site/bin:$PATH"
+fi
+
+# Export PATH for subprocesses
+export PATH
+
+# Debug function to show current PATH
+path-debug() {
+    echo "Current PATH:"
+    echo "$PATH" | tr ':' '\n' | nl
+}
+
+# Function to check if a command is available
+has-cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Test function to verify key tools are available
+test-path() {
+    local tools=("ghostship" "nvim" "cargo" "go" "uv" "tmuxie")
+    local missing=()
+    
+    echo "Testing PATH setup..."
+    echo "===================="
+    
+    for tool in "${tools[@]}"; do
+        if has-cmd "$tool"; then
+            echo "✅ $tool: $(which "$tool")"
+        else
+            echo "❌ $tool: not found"
+            missing+=("$tool")
+        fi
+    done
+    
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        echo ""
+        echo "Missing tools: ${missing[*]}"
+        echo "Run 'path-debug' to see current PATH"
+        return 1
+    else
+        echo ""
+        echo "🎉 All tools found!"
+        return 0
+    fi
+}

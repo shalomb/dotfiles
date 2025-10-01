@@ -5,6 +5,9 @@
 # Set XDG Base Directory variables if not already set
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 
+# Load PATH configuration first (before any tools)
+source ~/.config/bash/rc.d/00-path
+
 # Load core functions and colors
 source ~/.config/bash/rc.d/01-functions
 source ~/.config/bash/rc.d/02-colours

@@ -2,7 +2,7 @@
 # Core dotfiles command for lazy-loading and navigation
 
 # Get dotfiles root directory
-DOTFILES_ROOT="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles"
+export DOTFILES_ROOT="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles"
 
 # Main dotfiles function
 dotfiles() {
