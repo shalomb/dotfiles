@@ -8,6 +8,11 @@
 #     these files are located in the bash-doc package.                  #
  #######################################################################
 
+# Prevent infinite recursion - if bashrc has already been sourced, don't source it again
+if [[ -n "$BASH_RC_SOURCED" ]]; then
+  return 0
+fi
+
 # For SSH logins, we need to source bashrc even if not interactive initially
 # Only skip if we're definitely non-interactive (like running scripts)
 if [[ -z "$PS1" && -z "$SSH_CLIENT" && -z "$SSH_TTY" ]]; then
