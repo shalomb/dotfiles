@@ -2,6 +2,9 @@
 
 # Simple bashrc - just the essentials
 
+# Set flag to prevent infinite recursion with bash_profile
+export BASH_RC_SOURCED=1
+
 # Set XDG Base Directory variables if not already set
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 
