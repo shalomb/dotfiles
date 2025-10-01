@@ -9,11 +9,24 @@ export BASH_RC_SOURCED=1
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 
 # Load PATH configuration first (before any tools)
-source ~/.config/bash/rc.d/00-path
+if [[ -f ~/.config/bash/rc.d/00-path ]]; then
+    source ~/.config/bash/rc.d/00-path
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: PATH configuration file missing" >&2
+fi
 
 # Load core functions and colors
-source ~/.config/bash/rc.d/01-functions
-source ~/.config/bash/rc.d/02-colours
+if [[ -f ~/.config/bash/rc.d/01-functions ]]; then
+    source ~/.config/bash/rc.d/01-functions
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Functions file missing" >&2
+fi
+
+if [[ -f ~/.config/bash/rc.d/02-colours ]]; then
+    source ~/.config/bash/rc.d/02-colours
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Colors file missing" >&2
+fi
 
 # Load aliases
 if [[ -f ~/.config/bash/aliases ]]; then
@@ -28,16 +41,44 @@ fi
 # Load dotfiles command
 # Load essential functions (cdp, etc)
 # Load AWS functions
-source ~/.config/bash/tools/aws.sh
+if [[ -f ~/.config/bash/tools/aws.sh ]]; then
+    source ~/.config/bash/tools/aws.sh
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: AWS tools file missing" >&2
+fi
+
 # Load Git functions
 # Load git-bar (gbar command)
-source ~/.config/bash/tools/git-bar.sh
-source ~/.config/bash/tools/git.sh
-source ~/.config/bash/tools/fzf-utils.sh
-source ~/.config/bash/rc.d/dotfiles
+if [[ -f ~/.config/bash/tools/git-bar.sh ]]; then
+    source ~/.config/bash/tools/git-bar.sh
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Git bar tools file missing" >&2
+fi
+
+if [[ -f ~/.config/bash/tools/git.sh ]]; then
+    source ~/.config/bash/tools/git.sh
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Git tools file missing" >&2
+fi
+
+if [[ -f ~/.config/bash/tools/fzf-utils.sh ]]; then
+    source ~/.config/bash/tools/fzf-utils.sh
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: FZF utils file missing" >&2
+fi
+
+if [[ -f ~/.config/bash/rc.d/dotfiles ]]; then
+    source ~/.config/bash/rc.d/dotfiles
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Dotfiles command file missing" >&2
+fi
 
 # Set up ghostship prompt
-source <(ghostship init bash)
+if command -v ghostship >/dev/null 2>&1; then
+    source <(ghostship init bash) 2>/dev/null
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship not available, using fallback prompt" >&2
+fi
 
 # Simple reload function
 reload() {
