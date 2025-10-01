@@ -8,8 +8,11 @@
 #     these files are located in the bash-doc package.                  #
  #######################################################################
 
-# If not running interactively, don't do anything, just return
-[[ ${-//[!i]/} ]] || return 0
+# For SSH logins, we need to source bashrc even if not interactive initially
+# Only skip if we're definitely non-interactive (like running scripts)
+if [[ -z "$PS1" && -z "$SSH_CLIENT" && -z "$SSH_TTY" ]]; then
+  return 0
+fi
 
 # the default umask is set in /etc/login.defs
 umask 022
