@@ -16,6 +16,68 @@ export HISTSIZE=1000
 export HISTFILESIZE=2000
 export HISTFILE="$HOME/.bash_history"
 
+# Load core functions and colors
+if [[ -f ~/.config/bash/rc.d/01-functions ]]; then
+    source ~/.config/bash/rc.d/01-functions
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Functions file missing" >&2
+fi
+
+if [[ -f ~/.config/bash/rc.d/02-colours ]]; then
+    source ~/.config/bash/rc.d/02-colours
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Colors file missing" >&2
+fi
+
+# Load aliases
+if [[ -f ~/.config/bash/aliases ]]; then
+    source ~/.config/bash/aliases
+fi
+
+# Set up ghostship prompt
+if command -v ghostship >/dev/null 2>&1; then
+    # Define the missing 'defined' function that ghostship init depends on
+    defined() {
+        type "$1" &>/dev/null
+    }
+    
+    # Ensure COLUMNS is set to prevent ghostship hang
+    export COLUMNS="${COLUMNS:-80}"
+    
+    # Try to initialize ghostship, but handle errors gracefully
+    if source <(ghostship init bash) 2>/dev/null; then
+        # Ghostship initialized successfully
+        [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init succeeded" >&2
+    else
+        [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init failed, using fallback prompt" >&2
+        # Simple fallback prompt
+        PS1='\u@\h:\w\$ '
+    fi
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship not available, using fallback prompt" >&2
+    # Simple fallback prompt
+    PS1='\u@\h:\w\$ '
+fi
+
+# Load essential tool integrations
+if [[ -f ~/.config/bash/tools/git.sh ]]; then
+    source ~/.config/bash/tools/git.sh
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Git tools file missing" >&2
+fi
+
+if [[ -f ~/.config/bash/tools/fzf-utils.sh ]]; then
+    source ~/.config/bash/tools/fzf-utils.sh
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: FZF utils file missing" >&2
+fi
+
+# Simple reload function
+reload() {
+    # Source the repository version directly to avoid circular reference
+    source ~/.config/dotfiles/.config/bash/bashrc
+}
+
 # Check window size after each command
 shopt -s checkwinsize
 
