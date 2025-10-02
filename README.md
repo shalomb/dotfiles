@@ -38,8 +38,22 @@ git add !$
 git commit -m 'Added .bin/somefile'
 ```
 
+## XDG-Compliant Deployment
+
+The repository now supports XDG-compliant deployment for bash configuration files:
+
+```bash
+# Deploy bash configurations with XDG compliance
+./scripts/deploy-bash-xdg.sh deploy
+
+# Verify deployment status
+./scripts/deploy-bash-xdg.sh status
+```
+
+This creates symlinks in the home directory pointing to XDG-compliant paths in the repository, solving the symlink chain fragility issues while maintaining full XDG Base Directory specification compliance.
+
 ## TODO
 
 * encrypt certain files ??
-* rewrite `./dotfile_stash`
+* ~~rewrite `./dotfile_stash`~~ ✅ **COMPLETED**: XDG-compliant deployment implemented
 * decompose the monolith - into submodules?
