@@ -2,7 +2,37 @@
 
 set -eu -o pipefail
 
-cd "$HOME"
+# Install Python tools globally using uv
+echo "Installing Python tools globally with uv..."
 
-uv init --python 3.12 --no-package --vcs none --no-readme --no-workspace
-rm -v main.py
+# Install tools that provide CLI commands
+uv tool install ansible
+uv tool install ansible-lint
+uv tool install checkov
+uv tool install httpie
+uv tool install pylint
+uv tool install ruff
+uv tool install sshuttle
+uv tool install vint
+uv tool install yamllint
+uv tool install yq
+
+# Install development tools
+uv tool install pip
+
+# Install additional development libraries in a global environment
+echo "Installing development libraries..."
+uv venv ~/.local/share/python-dev
+source ~/.local/share/python-dev/bin/activate
+uv pip install \
+    gitpython \
+    icecream \
+    jinja2 \
+    pyyaml \
+    rich \
+    toml \
+    xdg
+
+echo "Python tools installation complete!"
+echo "Installed tools:"
+uv tool list
