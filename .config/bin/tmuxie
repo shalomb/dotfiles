@@ -53,7 +53,7 @@ function sessionize() {
       tmux new-session -d -s "$name" -c "$dir" "bash -l" \; \
         switch-client -t "$name"
     else
-      exec tmux -u -l -2 new-session -s "$name" -c "$dir"
+      exec tmux -u -2 new-session -s "$name" -c "$dir" "bash -l"
     fi
   fi
 }
