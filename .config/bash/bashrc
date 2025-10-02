@@ -49,6 +49,14 @@ fi
 
 # Load dotfiles command
 # Load essential functions (cdp, etc)
+
+# Load bash history configuration
+if [[ -f ~/.config/bash/tools/history.sh ]]; then
+    source ~/.config/bash/tools/history.sh
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: History tools file missing" >&2
+fi
+
 # Load AWS functions
 if [[ -f ~/.config/bash/tools/aws.sh ]]; then
     source ~/.config/bash/tools/aws.sh
