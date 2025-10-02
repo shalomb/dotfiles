@@ -8,6 +8,28 @@
 #     these files are located in the bash-doc package.                  #
  #######################################################################
 
+# ADR-001: Environment Variables in Login Shells
+# ================================================
+# DECISION: Move environment variables (PATH, MANPATH, etc.) from bashrc to bash_profile
+# RATIONALE: 
+#   - Login shells should source bash_profile for environment setup
+#   - Non-terminal shells source bashrc, which should source bash_profile
+#   - This ensures all shell types get proper environment variables
+#   - Follows bash manpage best practices for startup file organization
+# CONSEQUENCES:
+#   - PATH and other env vars are available in all shell contexts
+#   - Single source of truth for environment configuration
+#   - Fixes tmux new window PATH issues
+# ================================================
+
+# Load environment variables (PATH, MANPATH, etc.) for all shell types
+# This ensures login shells, non-terminal shells, and interactive shells all get proper environment
+if [[ -f ~/.config/bash/rc.d/00-path ]]; then
+    source ~/.config/bash/rc.d/00-path
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: PATH configuration file missing" >&2
+fi
+
 # Prevent infinite recursion - if bashrc has already been sourced, don't source it again
 if [[ -n "$BASH_RC_SOURCED" ]]; then
   return 0
@@ -15,7 +37,7 @@ fi
 
 # For SSH logins, we need to source bashrc even if not interactive initially
 # Only skip if we're definitely non-interactive (like running scripts)
-if [[ -z "$PS1" && -z "$SSH_CLIENT" && -z "$SSH_TTY" ]]; then
+if [[ -z "${PS1:-}" && -z "${SSH_CLIENT:-}" && -z "${SSH_TTY:-}" ]]; then
   return 0
 fi
 
@@ -41,3 +63,5 @@ if [[ ${TTY:-$(tty)} == /dev/tty1 ]]; then
   TMOUT=120
   clear
 fi
+
+. "$HOME/.local/bin/env"

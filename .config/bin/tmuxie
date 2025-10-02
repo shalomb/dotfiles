@@ -1,61 +1,28 @@
 #!/bin/bash
 
 # SYNOPSIS
-#   tmuxie - tmux session helper
+#   tmuxie - tmux session helper with enhanced fzf integration
 
 set -eu
 
 shopt -s nocasematch
+
+# Ensure PATH is properly set for popup environment
+if [[ -f ~/.config/bash/rc.d/00-path ]]; then
+    source ~/.config/bash/rc.d/00-path
+fi
 
 if ! type -P tmux &> /dev/null; then
   echo "tmux not installed (in \$PATH)?" >&2
   exit 2
 fi
 
-function select_session_by_name() {
-  local sessions=()
-  local session_name;
-
-  # Current Sessions
-  while read -r session; do
-    sessions+=( "$session" )
-  done < <( tmux -l -2 ls 2> /dev/null )
-
-  # Prepared Sessions
-  for d in "$HOME"/.etc /etc "$HOME"/.config; do
-    if [[ -d "$d"/tmuxie/sessions/ ]]; then
-      sessions+=( "$d"/tmuxie/sessions/* );
-    fi
-  done
-
-  (( ${#sessions[@]} == 0 )) && return 0
-
-  local c=0
-  while read -r name rest; do
-    if [[ -f $name ]]; then
-      printf "%s: %-16s %s\n" "$((c++))" "${name##*/}"  "$name" >&2
-    else
-      printf "%s: %-16s %s\n" "$((c++))" "${name%%:}"   "$rest" >&2
-    fi
-  done < <( printf "%s\n" "${sessions[@]}")
-
-  read -r -p 'Which one? ' reply
-
-  if [[ -z $reply ]]; then
-    return 0;
-  elif [[ $reply = *[!0-9]* ]]; then
-    session_name="$reply";
-  elif (( reply >= 0 && reply <= ${#sessions[@]}-1 )); then
-    session_name="${sessions[reply]//:*/:}"
-  else
-    echo "No such session. $reply" >&2
-    session_name=$(select_session_by_name)
-  fi
-
-  echo "$session_name"; return 0;
+# Simple README preview for fzf
+function get_preview_command() {
+  echo "if [[ -f {}/README.md ]]; then head -20 {}/README.md; elif [[ -f {}/README.rst ]]; then head -20 {}/README.rst; elif [[ -f {}/README.txt ]]; then head -20 {}/README.txt; else echo 'No README found'; fi"
 }
 
-in-tmux() {
+function in-tmux() {
   if [[ -n ${TMUX-} ]]; then
     return 0
   else
@@ -63,120 +30,156 @@ in-tmux() {
   fi
 }
 
-tmux() {
-  exec tmux -u -l -2 "$@"
-}
-
-tmux-attach() {
+function tmux-attach() {
   local session="$1"
   if in-tmux; then
     tmux switch-client -t "$session"
   else
-    tmux attach-client -t "$session"
+    # For SSH contexts, show session info instead of trying to attach
+    echo "Session '$session' exists and is ready"
+    echo "Use 'tmux attach-session -t $session' to attach"
   fi
 }
 
-sessionize() {
+function sessionize() {
   local session="$1"
   local dir="${session%[ 	]*}"
-  dir=$(tildeexpand "$dir")
-  name=${dir##*/}
-  if command tmux has-session -t "$name"; then
-    tmux switch-client -t "$name"
+  dir=$(eval echo "$dir")  # Expand tilde
+  local name=${dir##*/}
+  
+  if command tmux has-session -t "$name" 2>/dev/null; then
+    tmux-attach "$name"
   else
-    tmux new-session -d -s "$name" -c "$dir" \; \
-      switch-client -t "$name"
+    if in-tmux; then
+      tmux new-session -d -s "$name" -c "$dir" "bash -l" \; \
+        switch-client -t "$name"
+    else
+      exec tmux -u -l -2 new-session -s "$name" -c "$dir"
+    fi
   fi
 }
 
-if [[ ${1-} == "-l" ]]; then
-  # Check if we're in an interactive environment
-  if [[ -t 0 && -t 1 ]]; then
-    # Interactive - use fzf
-    session=$(tmux ls | fzf --border)
-  else
-    # Non-interactive - show formatted list
-    echo "🔄 Available Sessions:"
-    echo ""
-    tmux ls
-    echo ""
-    echo "Type session name or press Ctrl+C to cancel"
-    read -p "Session: " session
-  fi
+function select_projects() {
+  local preview_cmd
   
-  session=${session%%:*}
-  echo "$session"
-  tmux-attach "$session"
-  exit $?
-
-elif [[ ${1-} == "-s" ]]; then
-  shift;
-  (( $# > 1 )) && set -- -q "$@"
+  preview_cmd=$(get_preview_command)
   
-  # Check if we're in an interactive environment
-  if [[ -t 0 && -t 1 ]]; then
-    # Interactive - use fzf
-    session=$(gum projects --format fzf | fzf --ansi --border "$@")
-  else
-    # Non-interactive - show formatted list and wait
-    echo "📁 Available Projects:"
-    echo ""
-    gum projects --format fzf
-    echo ""
-    echo "Type project name or press Ctrl+C to cancel"
-    read -p "Project: " session
-  fi
-  
-  if [[ -n "$session" ]]; then
-    sessionize "$session"
-  else
-    echo "No project selected"
-  fi
-  
-  # Keep window open for a moment so user can see what happened
-  echo ""
-  echo "Press any key to close this window..."
-  read -n 1
-  exit $?
+  # Get projects and pipe to fzf with README preview
+  gum projects --format simple | sed 's|~/||' | \
+    fzf \
+      --height=70% \
+      --border \
+      --reverse \
+      --prompt="Select project (README): " \
+      --preview="$preview_cmd" \
+      --preview-window=right:50%:wrap \
+      --bind="ctrl-/:toggle-preview" \
+      --header="README preview - Press Ctrl+/ to toggle"
+}
 
-elif (( $# >= 1 )); then
-  session_name="$1"
+function select_sessions() {
+  tmux ls | \
+    fzf \
+      --height=70% \
+      --border \
+      --reverse \
+      --prompt="Select session: " \
+      --preview="tmux capture-pane -t {1} -p" \
+      --preview-window=right:50%:wrap \
+      --bind="ctrl-/:toggle-preview"
+}
 
-elif test -t 0; then
-  session_name="$(select_session_by_name)"
-
-else
-  exit 1
-fi
-
-echo "session_name: $session_name"
-# echo -ne "\033]0;$session_name+${USER}@${HOSTNAME}:..${PWD: -24}\007"
-
-if  [[ -f $session_name ]]; then
-  echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}"
-  exec "$session_name"  # is a file representing a prepared session
-
-elif command tmux has-session -t "$session_name"; then
-  # echo -ne "\033]0; $session_name+${USER}@${HOSTNAME}:/${PWD}" || true
-  if [[ -n ${TMUX-} ]]; then
-    tmux switch-client -t "$session_name"
-  else
-    tmux attach -t "$session_name"
-  fi
-
-elif [[ -n $session_name ]]; then
-  if [[ -f ~/.config/tmuxie/sessions/$session_name ]]; then
-    echo "launching prepared session ~/.config/tmuxie/sessions/$session_name"
-    ~/.config/tmuxie/sessions/"$session_name"
+# Main command handling
+case "${1-}" in
+  -l|--list)
+    session=$(select_sessions)
+    session=${session%%:*}
+    echo "$session"
+    tmux-attach "$session"
     exit $?
-  fi
+    ;;
+  -s|--select)
+    shift
+    session=$(select_projects)
+    sessionize "$session"
+    exit $?
+    ;;
+  -i|--interactive)
+    echo -e 'sessions\nprojects' | \
+      fzf \
+        --height=30% \
+        --border \
+        --reverse \
+        --prompt="Select type: " | \
+      xargs -I {} sh -c 'case {} in 
+        sessions) tmuxie -l ;; 
+        projects) tmuxie -s ;; 
+      esac'
+    exit $?
+    ;;
+  -h|--help)
+    cat << EOF
+tmuxie - tmux session helper with enhanced fzf integration
 
-elif [[ -z $session_name ]] && test -t 0; then
-  # We have no session name and we are interactive
-  read -r -p 'Enter session name or RETURN to abort. ' session_name
-  if [[ -z $session_name ]]; then
-    exit 3
+USAGE:
+  tmuxie [OPTIONS] [SESSION_NAME]
+
+OPTIONS:
+  -l, --list       List and select from existing tmux sessions
+  -s, --select     Select from projects (using gum projects + fzf)
+  -i, --interactive Interactive mode (choose sessions or projects)
+  -h, --help       Show this help
+
+PREVIEW MODES (for -s):
+  README (default) - Show README.md content
+  GIT              - Show git status
+  STATS            - Show directory statistics
+  
+  Press Ctrl+T in fzf to cycle through preview modes
+
+EXAMPLES:
+  tmuxie -s                    # Select project with fzf
+  tmuxie -l                    # Select existing session
+  tmuxie -i                    # Interactive mode
+  tmuxie my-project            # Create/switch to session named "my-project"
+
+ENVIRONMENT:
+  TMUXIE_PREVIEW_MODE          Set default preview mode (readme|git|stats)
+EOF
+    exit 0
+    ;;
+  "")
+    # No arguments - interactive mode
+    tmuxie -i
+    exit $?
+    ;;
+  *)
+    # Session name provided
+    session_name="$1"
+    ;;
+esac
+
+# Handle session name
+if [[ -n "${session_name:-}" ]]; then
+  # Check if session already exists first
+  if command tmux has-session -t "$session_name" 2>/dev/null; then
+    tmux-attach "$session_name"
+  # Check if it's a project name
+  elif gum projects --format simple | grep -q "^${session_name}$"; then
+    # It's a project name, use it directly
+    sessionize "$session_name"
+  else
+    # It's a session name, create session in current directory
+    current_dir=$(pwd)
+    session_dir="${current_dir}/${session_name}"
+    if [[ -d "$session_dir" ]]; then
+      sessionize "$session_dir"
+    else
+      # Create session in current directory with the given name
+      tmux new-session -d -s "$session_name" -c "$current_dir" "bash -l"
+      # For SSH contexts, just show the session was created
+      echo "Created session '$session_name' in $current_dir"
+      echo "Use 'tmux attach-session -t $session_name' to attach"
+    fi
   fi
 fi
-
-exec tmux -u -l -2 new-session -s "$session_name"

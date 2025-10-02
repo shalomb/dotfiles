@@ -269,7 +269,7 @@ class FileOperations:
     def export_directory_with_cleanup(self, src_path: Path, dst_path: Path, 
                                     force: bool = False, cleanup: bool = False,
                                     dry_run: bool = False, interactive: bool = False,
-                                    create_backup: bool = True) -> None:
+                                    create_backup: bool = False) -> None:
         """Export directory with optional orphan cleanup."""
         # First, do normal export
         self.export_directory(src_path, dst_path, force=force)

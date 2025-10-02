@@ -137,12 +137,13 @@ make npm-cleanup
 ./dotfile_stash diff <files>     # Compare repo vs home
 ```
 
-**Planned (Python + uv):**
+**Current (Python + uv):**
 ```bash
 uv run python -m dotfile_manager export <files>
 uv run python -m dotfile_manager import <files>
 uv run python -m dotfile_manager status <files>
 uv run python -m dotfile_manager diff <files>
+uv run python -m dotfile_manager export <files> --backup  # Only if backup needed
 ```
 
 ### Key Features
@@ -150,6 +151,7 @@ uv run python -m dotfile_manager diff <files>
 - **Selective Management**: Only manages files tracked by the repository
 - **Safe Deployment**: Preserves unmanaged files in target directories
 - **Force Mode**: Overwrites managed files when needed
+- **Git-First Philosophy**: No automatic backups (git is source of truth)
 
 ## Tool-Specific Configurations
 

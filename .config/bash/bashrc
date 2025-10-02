@@ -2,18 +2,27 @@
 
 # Simple bashrc - just the essentials
 
+# ADR-001: Environment Variables Moved to bash_profile
+# ====================================================
+# DECISION: Remove environment variable setup from bashrc
+# RATIONALE:
+#   - Environment variables (PATH, MANPATH, etc.) belong in bash_profile
+#   - bashrc should focus on interactive shell features (functions, aliases, options)
+#   - This follows bash manpage best practices for startup file organization
+# CONSEQUENCES:
+#   - bashrc sources bash_profile, so environment variables are still available
+#   - Cleaner separation of concerns between profile and rc files
+#   - Fixes tmux new window PATH issues by ensuring proper initialization order
+# ====================================================
+
 # Set flag to prevent infinite recursion with bash_profile
 export BASH_RC_SOURCED=1
 
 # Set XDG Base Directory variables if not already set
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 
-# Load PATH configuration first (before any tools)
-if [[ -f ~/.config/bash/rc.d/00-path ]]; then
-    source ~/.config/bash/rc.d/00-path
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: PATH configuration file missing" >&2
-fi
+# Note: PATH and other environment variables are now loaded from bash_profile
+# This ensures proper initialization order for all shell types
 
 # Load core functions and colors
 if [[ -f ~/.config/bash/rc.d/01-functions ]]; then
@@ -75,9 +84,18 @@ fi
 
 # Set up ghostship prompt
 if command -v ghostship >/dev/null 2>&1; then
+    # Define the missing 'defined' function that ghostship init depends on
+    defined() {
+        type "$1" &>/dev/null
+    }
+    
+    # Ensure COLUMNS is set to prevent ghostship hang
+    export COLUMNS="${COLUMNS:-80}"
     source <(ghostship init bash) 2>/dev/null
 else
     [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship not available, using fallback prompt" >&2
+    # Simple fallback prompt
+    PS1='\u@\h:\w\$ '
 fi
 
 # Simple reload function
@@ -85,3 +103,4 @@ reload() {
     # Source the repository version directly to avoid circular reference
     source ~/.config/dotfiles/.config/bash/bashrc
 }
+. "$HOME/.local/bin/env"
