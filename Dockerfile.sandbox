@@ -1,0 +1,39 @@
+FROM debian:trixie-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    python3 \
+    python3-pip \
+    python3-venv \
+    curl \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create test user
+RUN useradd -m -s /bin/bash testuser
+
+# Set working directory
+WORKDIR /home/testuser
+
+# Copy dotfiles repository
+COPY . /home/testuser/dotfiles/
+
+# Set ownership
+RUN chown -R testuser:testuser /home/testuser
+
+# Switch to test user
+USER testuser
+
+# Set up Python environment
+WORKDIR /home/testuser/dotfiles
+RUN python3 -m venv .venv
+RUN .venv/bin/pip install --upgrade pip
+RUN .venv/bin/pip install uv rich click pytest
+
+# Set environment variables
+ENV PATH="/home/testuser/dotfiles/.venv/bin:$PATH"
+ENV PYTHONPATH="/home/testuser/dotfiles/src"
+
+# Default command
+CMD ["/bin/bash"]

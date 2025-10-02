@@ -49,3 +49,4 @@ function defined() {
 function call-if-defined() {
   defined "$1" && "$1"
 }
+

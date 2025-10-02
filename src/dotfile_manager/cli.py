@@ -29,10 +29,11 @@ def cli(ctx: click.Context, debug: bool) -> None:
 @click.option("--cleanup", is_flag=True, help="Clean up orphaned files in target directories")
 @click.option("--dry-run", is_flag=True, help="Show what would be done without making changes")
 @click.option("--interactive", is_flag=True, help="Interactive mode for orphan cleanup review")
-@click.option("--no-backup", is_flag=True, help="Skip creating backup before cleanup")
+@click.option("--backup", is_flag=True, help="Create backup before cleanup (git is source of truth)")
+@click.option("--working-dir", is_flag=True, help="Use working directory files instead of git HEAD")
 @click.pass_context
 def export(ctx: click.Context, files: List[str], force: bool, cleanup: bool,
-           dry_run: bool, interactive: bool, no_backup: bool) -> None:
+           dry_run: bool, interactive: bool, backup: bool, working_dir: bool) -> None:
     """Export files from repository to home directory."""
     manager: DotfileManager = ctx.obj["manager"]
     
@@ -50,7 +51,8 @@ def export(ctx: click.Context, files: List[str], force: bool, cleanup: bool,
             cleanup=cleanup,
             dry_run=dry_run, 
             interactive=interactive,
-            create_backup=not no_backup
+            create_backup=backup,
+            working_dir=working_dir
         )
         
         if dry_run:
@@ -107,13 +109,39 @@ def diff(ctx: click.Context, files: List[str]) -> None:
 
 
 @cli.command()
+@click.argument("files", nargs=-1, required=False)
+@click.option("--working-dir", is_flag=True, help="Use working directory files instead of git HEAD")
+@click.option("--dry-run", is_flag=True, help="Show what would be done without making changes")
+@click.option("--force", is_flag=True, help="Force overwrite existing files")
+@click.pass_context
+def sync(ctx: click.Context, files: List[str], working_dir: bool, 
+         dry_run: bool, force: bool) -> None:
+    """Synchronize files between repository and home directory."""
+    manager: DotfileManager = ctx.obj["manager"]
+    
+    if dry_run:
+        console.print("[blue]DRY RUN MODE - No changes will be made[/blue]")
+    
+    try:
+        manager.sync(
+            files=files,
+            working_dir=working_dir,
+            dry_run=dry_run,
+            force=force
+        )
+    except Exception as e:
+        console.print(f"[red]Sync failed: {e}[/red]")
+        sys.exit(1)
+
+
+@cli.command()
 @click.argument("files", nargs=-1, required=True)
 @click.option("--dry-run", is_flag=True, help="Show what would be cleaned without making changes")
 @click.option("--interactive", is_flag=True, help="Interactive mode for orphan cleanup review")
-@click.option("--no-backup", is_flag=True, help="Skip creating backup before cleanup")
+@click.option("--backup", is_flag=True, help="Create backup before cleanup (git is source of truth)")
 @click.pass_context
 def cleanup(ctx: click.Context, files: List[str], dry_run: bool, 
-            interactive: bool, no_backup: bool) -> None:
+            interactive: bool, backup: bool) -> None:
     """Clean up orphaned files in target directories."""
     manager: DotfileManager = ctx.obj["manager"]
     
@@ -159,7 +187,7 @@ def cleanup(ctx: click.Context, files: List[str], dry_run: bool,
                 
                 # Create backup if requested
                 backup_dir = None
-                if not no_backup and not dry_run:
+                if backup and not dry_run:
                     backup_dir = manager.file_ops.create_backup(dst_path)
                     console.print(f"[blue]Backup created: {backup_dir}[/blue]")
                 

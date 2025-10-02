@@ -29,11 +29,11 @@ refresh:  ## refresh all dotfiles in $HOME with versions in repo
 	# Install all dotfiles into the home directory
 	find .* \
 	  \( -name ".git" -o -name "INIT" -o -name "*.sw?" -o -name "*~" \) -prune \
-	  -o -type f -exec env PYTHONPATH=src uv run python -m dotfile_manager export {} +
+	  -o -type f -exec env PYTHONPATH=src $(HOME)/.local/bin/uv run python -m dotfile_manager export {} +
 	# Clean up orphaned files that are no longer tracked
 	find .* \
 	  \( -name ".git" -o -name "INIT" -o -name "*.sw?" -o -name "*~" \) -prune \
-	  -o -type d -exec env PYTHONPATH=src uv run python -m dotfile_manager cleanup {} \;
+	  -o -type d -exec env PYTHONPATH=src $(HOME)/.local/bin/uv run python -m dotfile_manager cleanup {} \;
 
 .PHONY: apt apt-clean
 apt: .config/apt/INIT  ## Install apt packages
@@ -90,7 +90,7 @@ workspace-tools: ## Run workspace-tools installer
 
 python-cleanup: ## Cleanup the pip cache
 	find ~/.cache/pip/ ~/.cache/pypoetry/ -atime +30 -delete || true
-	command -v uv || uv cache clean
+	command -v $(HOME)/.local/bin/uv || $(HOME)/.local/bin/uv cache clean
 
 .PHONY: go-tools
 go-tools: ## Run go-tools installer
