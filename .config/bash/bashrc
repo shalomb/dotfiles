@@ -3,13 +3,7 @@
 # Minimal bashrc - based on /etc/skel/.bashrc
 # Building up incrementally to identify issues
 
-# If not running interactively, don't do anything
-case $- in
-    *i*) ;;
-      *) return;;
-esac
-
-# XDG Base Directory specification
+# XDG Base Directory specification (set before interactive check)
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -20,6 +14,12 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 [[ -z "$XDG_CONFIG_HOME" ]] && export XDG_CONFIG_HOME="$HOME/.config"
 [[ -z "$XDG_DATA_HOME" ]] && export XDG_DATA_HOME="$HOME/.local/share"
 [[ -z "$XDG_STATE_HOME" ]] && export XDG_STATE_HOME="$HOME/.local/state"
+
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
 
 # History configuration
 shopt -s histappend
