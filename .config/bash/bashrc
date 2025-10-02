@@ -1,123 +1,47 @@
 #!/bin/bash
 
-# Simple bashrc - just the essentials
+# Minimal bashrc - based on /etc/skel/.bashrc
+# Building up incrementally to identify issues
 
-# ADR-001: Environment Variables Moved to bash_profile
-# ====================================================
-# DECISION: Remove environment variable setup from bashrc
-# RATIONALE:
-#   - Environment variables (PATH, MANPATH, etc.) belong in bash_profile
-#   - bashrc should focus on interactive shell features (functions, aliases, options)
-#   - This follows bash manpage best practices for startup file organization
-# CONSEQUENCES:
-#   - bashrc sources bash_profile, so environment variables are still available
-#   - Cleaner separation of concerns between profile and rc files
-#   - Fixes tmux new window PATH issues by ensuring proper initialization order
-# ====================================================
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
 
-# Set flag to prevent infinite recursion with bash_profile
-export BASH_RC_SOURCED=1
+# History configuration
+HISTCONTROL=ignoreboth
+shopt -s histappend
+HISTSIZE=1000
+HISTFILESIZE=2000
 
-# Set XDG Base Directory variables if not already set
-export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+# Check window size after each command
+shopt -s checkwinsize
 
-# Note: PATH and other environment variables are now loaded from bash_profile
-# This ensures proper initialization order for all shell types
-
-# Load core functions and colors
-if [[ -f ~/.config/bash/rc.d/01-functions ]]; then
-    source ~/.config/bash/rc.d/01-functions
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Functions file missing" >&2
+# Set debian chroot if available
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
 fi
 
-if [[ -f ~/.config/bash/rc.d/02-colours ]]; then
-    source ~/.config/bash/rc.d/02-colours
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Colors file missing" >&2
+# Simple prompt
+PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+
+# Enable color support of ls
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
 fi
 
-# Load aliases
-if [[ -f ~/.config/bash/aliases ]]; then
-    source ~/.config/bash/aliases
+# Load bash aliases if they exist
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
 fi
 
-# Load completion
-if [[ -f ~/.config/bash/completion ]]; then
-    source ~/.config/bash/completion
+# Enable programmable completion
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
 fi
-
-# Load dotfiles command
-# Load essential functions (cdp, etc)
-
-# Load bash history configuration
-if [[ -f ~/.config/bash/tools/history.sh ]]; then
-    source ~/.config/bash/tools/history.sh
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: History tools file missing" >&2
-fi
-
-# Load AWS functions
-if [[ -f ~/.config/bash/tools/aws.sh ]]; then
-    source ~/.config/bash/tools/aws.sh
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: AWS tools file missing" >&2
-fi
-
-# Load Git functions
-# Load git-bar (gbar command)
-if [[ -f ~/.config/bash/tools/git-bar.sh ]]; then
-    source ~/.config/bash/tools/git-bar.sh
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Git bar tools file missing" >&2
-fi
-
-if [[ -f ~/.config/bash/tools/git.sh ]]; then
-    source ~/.config/bash/tools/git.sh
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Git tools file missing" >&2
-fi
-
-if [[ -f ~/.config/bash/tools/fzf-utils.sh ]]; then
-    source ~/.config/bash/tools/fzf-utils.sh
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: FZF utils file missing" >&2
-fi
-
-if [[ -f ~/.config/bash/rc.d/dotfiles ]]; then
-    source ~/.config/bash/rc.d/dotfiles
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Dotfiles command file missing" >&2
-fi
-
-# Set up ghostship prompt
-if command -v ghostship >/dev/null 2>&1; then
-    # Define the missing 'defined' function that ghostship init depends on
-    defined() {
-        type "$1" &>/dev/null
-    }
-    
-    # Ensure COLUMNS is set to prevent ghostship hang
-    export COLUMNS="${COLUMNS:-80}"
-    
-    # Try to initialize ghostship, but handle errors gracefully
-    if source <(ghostship init bash) 2>/dev/null; then
-        # Ghostship initialized successfully
-        [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init succeeded" >&2
-    else
-        [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init failed, using fallback prompt" >&2
-        # Simple fallback prompt
-        PS1='\u@\h:\w\$ '
-    fi
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship not available, using fallback prompt" >&2
-    # Simple fallback prompt
-    PS1='\u@\h:\w\$ '
-fi
-
-# Simple reload function
-reload() {
-    # Source the repository version directly to avoid circular reference
-    source ~/.config/dotfiles/.config/bash/bashrc
-}
-. "$HOME/.local/bin/env"
