@@ -10,11 +10,19 @@ case $- in
 esac
 
 # History configuration
-export HISTCONTROL=ignoreboth
 shopt -s histappend
-export HISTSIZE=1000
-export HISTFILESIZE=2000
-export HISTFILE="$HOME/.bash_history"
+export HISTCONTROL=ignoredups
+export HISTFILE="$XDG_CACHE_HOME/bash/history"
+export HISTFILESIZE="32768"
+export HISTIGNORE='&:ls: ls *:[bf]g'
+export HISTSIZE="$HISTFILESIZE"
+export HISTTIMEFORMAT='%FT%T'$'\t'
+
+# Create history file and symlink if it doesn't exist
+if [[ ! -e $HISTFILE ]]; then
+  mkdir -p "${HISTFILE%/*}"
+  ln -svf "$HISTFILE" ~/.bash_history
+fi
 
 # Load core functions and colors
 if [[ -f ~/.config/bash/rc.d/01-functions ]]; then
@@ -32,6 +40,15 @@ fi
 # Load aliases
 if [[ -f ~/.config/bash/aliases ]]; then
     source ~/.config/bash/aliases
+fi
+
+# Enable programmable completion
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
 fi
 
 # Set up ghostship prompt
@@ -70,6 +87,12 @@ if [[ -f ~/.config/bash/tools/fzf-utils.sh ]]; then
     source ~/.config/bash/tools/fzf-utils.sh
 else
     [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: FZF utils file missing" >&2
+fi
+
+if [[ -f ~/.config/bash/tools/aws.sh ]]; then
+    source ~/.config/bash/tools/aws.sh
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: AWS tools file missing" >&2
 fi
 
 # Simple reload function
