@@ -36,7 +36,7 @@ class DotfileManager:
         else:
             logging.basicConfig(level=logging.INFO)
     
-    def export(self, files: List[str], force: bool = False, cleanup: bool = False,
+    def export(self, files: List[str], cleanup: bool = False,
                dry_run: bool = False, interactive: bool = False, 
                create_backup: bool = False, working_dir: bool = False) -> None:
         """Export files from repository to home directory."""
@@ -67,16 +67,16 @@ class DotfileManager:
                 logger.info(f"Exporting {src_path} -> {dst_path}")
                 
                 if src_path.is_file():
-                    self.file_ops.export_file(src_path, dst_path, force=force)
+                    self.file_ops.export_file(src_path, dst_path, force=True)
                 elif src_path.is_dir():
                     if cleanup:
                         self.file_ops.export_directory_with_cleanup(
-                            src_path, dst_path, force=force, cleanup=cleanup,
+                            src_path, dst_path, force=True, cleanup=cleanup,
                             dry_run=dry_run, interactive=interactive,
                             create_backup=create_backup
                         )
                     else:
-                        self.file_ops.export_directory(src_path, dst_path, force=force)
+                        self.file_ops.export_directory(src_path, dst_path, force=True)
                 else:
                     logger.warning(f"Unknown file type: {src_path}")
     
@@ -327,7 +327,7 @@ class DotfileManager:
         console.print(f"[blue]Backup created: {backup_dir}[/blue]")
     
     def sync(self, files: Optional[List[str]] = None, working_dir: bool = False, 
-             dry_run: bool = False, force: bool = False) -> None:
+             dry_run: bool = False) -> None:
         """Synchronize files between repository and home directory."""
         if files is None:
             # Get all tracked files from git
