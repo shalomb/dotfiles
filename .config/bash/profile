@@ -30,10 +30,8 @@ else
     [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: PATH configuration file missing" >&2
 fi
 
-# Prevent infinite recursion - if bashrc has already been sourced, don't source it again
-if [[ -n "$BASH_RC_SOURCED" ]]; then
-  return 0
-fi
+# Note: Removed BASH_RC_SOURCED check as it was causing circular dependency
+# The bashrc has its own interactive check to prevent issues
 
 # For SSH logins, we need to source bashrc even if not interactive initially
 # Only skip if we're definitely non-interactive (like running scripts)
