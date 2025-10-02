@@ -35,9 +35,8 @@ function tmux-attach() {
   if in-tmux; then
     tmux switch-client -t "$session"
   else
-    # For SSH contexts, show session info instead of trying to attach
-    echo "Session '$session' exists and is ready"
-    echo "Use 'tmux attach-session -t $session' to attach"
+    # Attach to the session (works in SSH contexts)
+    exec tmux attach-session -t "$session"
   fi
 }
 
@@ -177,9 +176,8 @@ if [[ -n "${session_name:-}" ]]; then
     else
       # Create session in current directory with the given name
       tmux new-session -d -s "$session_name" -c "$current_dir" "bash -l"
-      # For SSH contexts, just show the session was created
-      echo "Created session '$session_name' in $current_dir"
-      echo "Use 'tmux attach-session -t $session_name' to attach"
+      # Attach to the newly created session
+      exec tmux attach-session -t "$session_name"
     fi
   fi
 fi
