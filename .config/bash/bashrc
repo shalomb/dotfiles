@@ -95,6 +95,12 @@ else
     [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: AWS tools file missing" >&2
 fi
 
+if [[ -f ~/.config/bash/tools/python.sh ]]; then
+    source ~/.config/bash/tools/python.sh
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Python tools file missing" >&2
+fi
+
 # Simple reload function
 reload() {
     # Source the repository version directly to avoid circular reference
