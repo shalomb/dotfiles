@@ -8,7 +8,6 @@ This repository manages dotfiles using a **hardlink-based deployment system** th
 
 ```
 dotfiles/
-├── dotfile_stash              # Legacy Perl deployment script (to be replaced)
 ├── Makefile                   # Build system and deployment orchestration
 ├── pyproject.toml            # Python project configuration (uv + ruff)
 ├── root/                     # System-wide configuration files
@@ -129,14 +128,6 @@ make npm-cleanup
 
 ### File Deployment System
 
-**Current (Legacy Perl):**
-```bash
-./dotfile_stash export <files>    # Deploy files to home directory
-./dotfile_stash import <files>   # Import files from home directory
-./dotfile_stash status <files>   # Check git status
-./dotfile_stash diff <files>     # Compare repo vs home
-```
-
 **Current (Python + uv):**
 ```bash
 uv run python -m dotfile_manager export <files>
@@ -193,15 +184,14 @@ make submodules            # Update git submodules
 ## Development Notes
 
 ### Current Issues
-- **dotfile_stash bug**: Removes entire target directories during export
-- **Legacy Perl**: Script is old and needs modernization
+- **All critical bugs fixed**: Python implementation resolves directory removal issues
 
 ### Planned Improvements
-- **Python rewrite**: Modern, type-safe implementation
-- **uv integration**: Full Python dependency management
-- **Selective deployment**: Only touch managed files
-- **Better error handling**: Robust error messages and recovery
-- **Makefile integration**: `make install <target>` support
+- **Python rewrite**: ✅ Modern, type-safe implementation (IN PROGRESS)
+- **uv integration**: ✅ Full Python dependency management (COMPLETE)
+- **Selective deployment**: ✅ Only touch managed files (COMPLETE)
+- **Better error handling**: ✅ Robust error messages and recovery (COMPLETE)
+- **Makefile integration**: `make install <target>` support (IN PROGRESS)
 
 ### File Management Philosophy
 - **Hard links**: Maintain single file in both locations
@@ -288,9 +278,14 @@ vim ~/.config/tmux.conf
 
 #### 2. Deploying Changes
 ```bash
-# Deploy using the dotfile manager
+# Deploy using the modern Python dotfile manager (RECOMMENDED)
 cd ~/.config/dotfiles
-./dotfile_stash export .config/tmux.conf
+uv run python -m dotfile_manager export .config/tmux.conf
+
+# Or using make (when implemented)
+make install TARGET=.config/tmux.conf
+
+# Legacy method removed - use Python manager
 ```
 
 #### 3. Reloading tmux Configuration
@@ -314,7 +309,7 @@ tmux list-keys | grep "bind-key.*r"  # Check reload binding
 - **`C-a r`**: Reload tmux configuration with visual popup
 - **`C-a C-o`**: Project selection (tmuxie -s)
 - **`C-a C-u`**: Session selection (tmuxie -l)  
-- **`C-a C-i`**: GitHub clone interface (tmuxie -i)
+- **`C-a C-i`**: Interactive mode (tmuxie -i)
 
 ### Troubleshooting
 
@@ -330,7 +325,7 @@ tmux list-keys | grep "bind-key.*r"  # Check reload binding
 
 #### Configuration Not Loading
 1. **Check symlink chain**: `ls -la ~/.tmux.conf ~/.config/tmux.conf`
-2. **Redeploy**: `./dotfile_stash export .config/tmux.conf`
+2. **Redeploy**: `uv run python -m dotfile_manager export .config/tmux.conf`
 3. **Force reload**: `tmux source-file ~/.tmux.conf`
 
 ### Best Practices
@@ -357,7 +352,7 @@ This is the **fundamental principle** for all development and testing in this re
 
 Each component has its own established workflow:
 
-- **tmux**: Symlink chain → dotfile_stash → reload popup
+- **tmux**: Symlink chain → Python dotfile_manager → reload popup
 - **nvim**: Submodule management → plugin updates → config reload
 - **bash**: Profile management → shell reload → function testing
 - **gum**: Go build → install → cache refresh → integration testing
