@@ -76,29 +76,15 @@ else
     PS1='\u@\h:\w\$ '
 fi
 
-# Load essential tool integrations
-if [[ -f ~/.config/bash/tools/git.sh ]]; then
-    source ~/.config/bash/tools/git.sh
+# Load enabled tools from enabled directory
+if [[ -d ~/.config/bash/enabled ]]; then
+    for script in ~/.config/bash/enabled/*.sh; do
+        if [[ -f "$script" ]]; then
+            source "$script"
+        fi
+    done
 else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Git tools file missing" >&2
-fi
-
-if [[ -f ~/.config/bash/tools/fzf-utils.sh ]]; then
-    source ~/.config/bash/tools/fzf-utils.sh
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: FZF utils file missing" >&2
-fi
-
-if [[ -f ~/.config/bash/tools/aws.sh ]]; then
-    source ~/.config/bash/tools/aws.sh
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: AWS tools file missing" >&2
-fi
-
-if [[ -f ~/.config/bash/tools/python.sh ]]; then
-    source ~/.config/bash/tools/python.sh
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Python tools file missing" >&2
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Enabled tools directory missing" >&2
 fi
 
 # Simple reload function

@@ -1,0 +1,1 @@
+../tools/aws.sh
