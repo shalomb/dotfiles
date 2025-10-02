@@ -50,7 +50,9 @@ function cdd {
 #| cdp - cd to project
 function cdp {
   query="$@"
-  dir="$( {
+  
+  # Process gum output to swap columns and clean up repo URLs
+  selection="$( {
     # Use gum for better data and formatting
     gum dirs --format fzf
     gum projects --format fzf
@@ -63,22 +65,40 @@ function cdp {
           --query="$query" \
           --reverse \
           --tiebreak=index |
-    awk '{ print $2 }'  # Skip emoji, get the path
+    # Process the selection to swap columns and clean up
+    awk '{
+      # Extract repo URL (column 2) and directory (column 3)
+      repo_url = $2
+      dir = $3
+      
+      # Clean up repo URL: remove protocol and host
+      gsub(/^https?:\/\/[^\/]+\//, "", repo_url)
+      gsub(/\.git$/, "", repo_url)
+      
+      # Remove ~/ prefix from directory
+      gsub(/^~\//, "", dir)
+      
+      # Swap columns: repo first, then directory
+      print repo_url " " dir
+    }'
   )"
 
-  query="${dir%$'\n'}"
-  dir="${dir##*$'\n'}"
+  query="${selection%$'\n'}"
+  selection="${selection##*$'\n'}"
 
-  [[ -z $dir && -z $query ]] && return
+  [[ -z $selection && -z $query ]] && return
 
-  dir="${dir//\~/$HOME}"
-  dir="${dir%/}"
-
-  if [[ -e $dir && ! -d $dir ]]; then
+  # Extract the directory from the processed selection
+  dir="${selection##* }"
+  
+  # Set PWD to ~/ before doing cd
+  cd ~/
+  
+  # Handle the directory
+  if [[ -e "$dir" && ! -d "$dir" ]]; then
     echo "$dir not a directory?" >&2
     cd "${dir%/*}"
-  elif [[ ! -d $dir ]]; then
-    # dir="${query%/}"
+  elif [[ ! -d "$dir" ]]; then
     file="${dir##*/}"
     dir="${dir%/*}"
     echo "Missing target, f() creates '$dir/$file'." >&2
