@@ -91,7 +91,13 @@ if command -v ghostship >/dev/null 2>&1; then
     
     # Ensure COLUMNS is set to prevent ghostship hang
     export COLUMNS="${COLUMNS:-80}"
-    source <(ghostship init bash) 2>/dev/null
+    
+    # Try to initialize ghostship, but handle errors gracefully
+    if ! source <(ghostship init bash) 2>/dev/null; then
+        [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init failed, using fallback prompt" >&2
+        # Simple fallback prompt
+        PS1='\u@\h:\w\$ '
+    fi
 else
     [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship not available, using fallback prompt" >&2
     # Simple fallback prompt
