@@ -1,0 +1,20 @@
+# Python development libraries (not CLI tools)
+# These are installed in a global environment for import in scripts
+
+GitPython
+Jinja2
+MarkupSafe
+PyYAML
+jmespath
+jsonpointer
+jsonschema
+neovim
+pycurl
+pygohcl
+pynvim
+rich
+toml
+typing-extensions
+urllib3
+webcolors
+xdg
