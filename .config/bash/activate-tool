@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Tool activation script for bash configuration
+# Usage: activate-tool <tool-name> [enable|disable]
+
+set -euo pipefail
+
+TOOL="$1"
+ACTION="${2:-enable}"
+
+DOTFILES_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ENABLED_DIR="$DOTFILES_ROOT/.config/bash/enabled"
+DISABLED_DIR="$DOTFILES_ROOT/.config/bash/disabled"
+TOOLS_DIR="$DOTFILES_ROOT/.config/bash/tools"
+RCD_DIR="$DOTFILES_ROOT/.config/bash/rc.d"
+
+# Find the tool file
+TOOL_FILE=""
+if [[ -f "$TOOLS_DIR/${TOOL}.sh" ]]; then
+    TOOL_FILE="$TOOLS_DIR/${TOOL}.sh"
+elif [[ -f "$RCD_DIR/$TOOL" ]]; then
+    TOOL_FILE="$RCD_DIR/$TOOL"
+else
+    echo "❌ Tool not found: $TOOL" >&2
+    echo "Available tools:" >&2
+    find "$TOOLS_DIR" "$RCD_DIR" -name "*.sh" -o -name "*" -type f | sed 's|.*/||' | sort | uniq
+    exit 1
+fi
+
+case "$ACTION" in
+    enable)
+        # Move from disabled to enabled
+        if [[ -L "$DISABLED_DIR/${TOOL}.sh" ]]; then
+            mv "$DISABLED_DIR/${TOOL}.sh" "$ENABLED_DIR/${TOOL}.sh"
+            echo "✅ Enabled: $TOOL"
+        elif ls "$ENABLED_DIR/${TOOL}.sh" >/dev/null 2>&1; then
+            echo "ℹ️  Already enabled: $TOOL"
+        else
+            # Create new symlink
+            ln -sf "$TOOL_FILE" "$ENABLED_DIR/${TOOL}.sh"
+            echo "✅ Enabled: $TOOL"
+        fi
+        ;;
+    disable)
+        # Move from enabled to disabled
+        if [[ -L "$ENABLED_DIR/${TOOL}.sh" ]]; then
+            mv "$ENABLED_DIR/${TOOL}.sh" "$DISABLED_DIR/${TOOL}.sh"
+            echo "✅ Disabled: $TOOL"
+        elif ls "$DISABLED_DIR/${TOOL}.sh" >/dev/null 2>&1; then
+            echo "ℹ️  Already disabled: $TOOL"
+        else
+            # Create new symlink in disabled
+            ln -sf "$TOOL_FILE" "$DISABLED_DIR/${TOOL}.sh"
+            echo "✅ Disabled: $TOOL"
+        fi
+        ;;
+    *)
+        echo "Usage: activate-tool <tool-name> [enable|disable]" >&2
+        exit 1
+        ;;
+esac
+
+echo "🔄 Run 'reload' to apply changes"

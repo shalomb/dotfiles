@@ -1,0 +1,1 @@
+/home/unop/.config/dotfiles/.config/bash/rc.d/prompt_command
