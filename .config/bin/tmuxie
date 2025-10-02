@@ -35,8 +35,17 @@ function tmux-attach() {
   if in-tmux; then
     tmux switch-client -t "$session"
   else
-    # Attach to the session (works in SSH contexts)
-    exec tmux attach-session -t "$session"
+    # Attach to the session, handle SSH contexts gracefully
+    if [[ -n "${SSH_CLIENT:-}" || -n "${SSH_TTY:-}" ]]; then
+      # SSH context: try to attach, but don't fail if terminal is not available
+      tmux attach-session -t "$session" 2>/dev/null || {
+        echo "Session '$session' exists. Use 'tmux attach -t $session' to connect."
+        exit 0
+      }
+    else
+      # Local context: attach directly
+      exec tmux attach-session -t "$session"
+    fi
   fi
 }
 
@@ -53,7 +62,19 @@ function sessionize() {
       tmux new-session -d -s "$name" -c "$dir" "bash -l" \; \
         switch-client -t "$name"
     else
-      exec tmux -u -2 new-session -s "$name" -c "$dir" "bash -l"
+      # Handle SSH contexts where terminal might not be available
+      if [[ -n "${SSH_CLIENT:-}" || -n "${SSH_TTY:-}" ]]; then
+        # SSH context: create detached session and then attach
+        tmux new-session -d -s "$name" -c "$dir" "bash -l"
+        # Try to attach, but don't fail if terminal is not available
+        tmux attach-session -t "$name" 2>/dev/null || {
+          echo "Session '$name' created successfully. Use 'tmux attach -t $name' to connect."
+          exit 0
+        }
+      else
+        # Local context: create and attach directly
+        exec tmux -u -2 new-session -s "$name" -c "$dir" "bash -l"
+      fi
     fi
   fi
 }
