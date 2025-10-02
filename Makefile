@@ -158,10 +158,18 @@ update:  ## Update all components
 .PHONY: clean
 clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup apt-clean python-cleanup bfg-cleanup
 
-.PHONY: test
-test: ## Run all tests (usage: make test [FEATURE=aws-login] [DEBUG=1])
-	@echo "Running simple test suite..."
-	@tests/simple-test.sh
+.PHONY: test test-fast
+test: ## Run acceptance tests (usage: make test [FAST=1])
+	@if [ "$(FAST)" = "1" ]; then \
+		echo "Running fast tests..."; \
+		uv run pytest tests/test_environment.py tests/test_dotfile_deployment.py -v; \
+	else \
+		echo "Running full acceptance tests..."; \
+		uv run pytest tests/test_environment.py tests/test_shell_integration.py tests/test_tmux.py tests/test_dotfile_deployment.py -v; \
+	fi
+
+test-fast: ## Run fast tests only (environment + deployment)
+	@uv run pytest tests/test_environment.py tests/test_dotfile_deployment.py -v
 
 .DEFAULT_GOAL := help
 help: ## Show make targets available
