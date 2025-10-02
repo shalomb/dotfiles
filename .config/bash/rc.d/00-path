@@ -12,6 +12,11 @@ if [[ -d "$HOME/.local/bin" ]]; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
+# 1.5. Config bin (dotfiles tools)
+if [[ -d "$HOME/.config/bin" ]]; then
+    export PATH="$HOME/.config/bin:$PATH"
+fi
+
 # 2. Go tools (from GOPATH/bin)
 if [[ -d "$HOME/.local/share/go/bin" ]]; then
     export PATH="$HOME/.local/share/go/bin:$PATH"
