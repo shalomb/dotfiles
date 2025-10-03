@@ -75,8 +75,8 @@ perljoin ()
 }
 
 eval "$(dircolors -b)"
-export    LS_OPTS='--color=auto'
-alias     ls='\exa $LS_OPTS'
+export    LS_OPTS='--color=auto --group-directories-first --time-style=long-iso'
+alias     ls='exa $LS_OPTS'
 alias     l='ls -Fhs modified'
 alias     l1='\ls -1'
 alias     lA='ls -A'
