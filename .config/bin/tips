@@ -39,23 +39,19 @@ function list_tips() {
 oldpwd="$PWD"
 cd "$tipsdir" || exit
 
-if (( $# == 0 )) || [[ $1 = @(-l|--ls|--list) ]]; then
+if [[ $1 = @(-l|--ls|--list) ]]; then
   list_tips | perl -lpe 'BEGIN{$/="\0"}' | column | less
   exit $?
 
-elif (( $# == 0 )) || [[ $1 = @(-s|--st|--status) ]]; then
+elif [[ $1 = @(-s|--st|--status) ]]; then
   git status --short --porcelain
   exit $?
 
-elif (( $# == 0 )) || [[ $1 = @(--SYNC) ]]; then
-  if                                                             \
-    ( git diff-index HEAD -- | grep -q '.')  ||                  \
-    ( git ls-files . --exclude-standard --others | grep -q '.' ) \
-  ; then
-    git add .
-    git commit -m "Autocommit on $(hostname -f), $(date)"
-  fi
-  git pull && git push
+elif [[ $1 = @(--sync) ]]; then
+  # Simple: stash, pull rebase, pop stash
+  git stash
+  git pull --rebase
+  git stash pop
   exit $?
 
 elif [[ $1 = "/" ]]; then
@@ -66,6 +62,70 @@ elif [[ $1 = "/" ]]; then
 
 fi
 
+# If no arguments, use fzf for interactive selection like cdp
+if (( $# == 0 )); then
+  # Check for changes on origin
+  if git fetch --all --quiet; then
+    behind=$(git rev-list --count HEAD..@{upstream} 2>/dev/null || echo "0")
+    ahead=$(git rev-list --count @{upstream}..HEAD 2>/dev/null || echo "0")
+    
+    if [[ $behind -gt 0 ]]; then
+      echo "⚠️  Repository is $behind commits behind origin"
+      echo "   Run 'ob --sync' to update"
+      echo ""
+    fi
+    
+    if [[ $ahead -gt 0 ]]; then
+      echo "📤 Repository is $ahead commits ahead of origin"
+      echo ""
+    fi
+  fi
+  
+  query=""
+  
+  # Get list of existing files and directories
+  selection="$( {
+    # List existing files and directories
+    find . -type f -print0 | sort -z | perl -lpe 'BEGIN{$/="\0"}'
+    find . -type d -print0 | sort -z | perl -lpe 'BEGIN{$/="\0"}'
+  } | fzf --ansi \
+          --bind=ctrl-s:toggle-sort \
+          --cycle \
+          --height 60% \
+          --no-mouse \
+          --print-query \
+          --query="$query" \
+          --reverse \
+          --tiebreak=index \
+          --header="Select file to edit (or type new filename)"
+  )"
+
+  query="${selection%$'\n'}"
+  selection="${selection##*$'\n'}"
+
+  [[ -z $selection && -z $query ]] && exit 0
+
+  # Use selection if available, otherwise use query for new file
+  target="${selection:-$query}"
+  
+  # Clean up the target path
+  target="${target//\/\///}"
+  target="${target//\*/}"
+  
+  # Handle directory creation for new files
+  if [[ ! -e "$target" ]]; then
+    dir="${target%/*}"
+    if [[ $dir != "$target" ]] && [[ ! -d $dir ]]; then
+      mkdir -vp "$dir"
+    fi
+    echo "Creating new file: $target"
+  fi
+  
+  nvim -c 'set conceallevel=2' "$target"
+  exit $?
+fi
+
+# Handle explicit arguments (existing behavior)
 files=()
 for glob in "$@"; do
   while read -r -d $'' file; do
@@ -74,11 +134,7 @@ for glob in "$@"; do
 done
 
 if (( ${#files[@]} == 0 )); then
-  if (( $# == 0 )); then
-    files=( . )
-  else
-    files=( "$@" )
-  fi
+  files=( "$@" )
 fi
 
 files=( "${files[@]//\/\///}" )
