@@ -385,6 +385,70 @@ Before making any changes:
 
 The repository is designed for **incremental updates** - you can deploy individual files or directories without affecting the entire system, but always through the proper channels.
 
+## Commit Convention
+
+**STRICT REQUIREMENT**: All commits MUST follow the component-based convention:
+
+### **Format: `<component>: <description>`**
+
+### **Components:**
+- **`bash:`** - Bash configuration, scripts, and shell-related changes
+- **`nvim:`** - Neovim configuration, plugins, and editor-related changes  
+- **`tmux:`** - Tmux configuration, bindings, and session management
+- **`git:`** - Git configuration, hooks, and repository-related changes
+- **`vim:`** - Vim configuration and editor-related changes
+- **`zsh:`** - Zsh configuration and shell-related changes
+- **`fish:`** - Fish shell configuration and related changes
+- **`alacritty:`** - Alacritty terminal configuration
+- **`i3:`** - i3 window manager configuration
+- **`rofi:`** - Rofi launcher configuration
+- **`ranger:`** - Ranger file manager configuration
+- **`fzf:`** - fzf fuzzy finder configuration
+- **`gum:`** - Gum CLI tool configuration
+- **`ghostship:`** - Ghostship prompt manager
+- **`tmuxie:`** - Tmuxie session manager
+- **`feat:`** - New features and functionality
+- **`fix:`** - Bug fixes and corrections
+- **`cleanup:`** - Code cleanup and refactoring
+- **`deprecate:`** - Removing deprecated features
+- **`loadenv:`** - Environment loading and variables
+- **`docs:`** - Documentation updates
+- **`test:`** - Testing-related changes
+- **`make:`** - Makefile and build system changes
+- **`python:`** - Python tools and scripts
+- **`uv:`** - uv package manager configuration
+
+### **Examples:**
+```bash
+bash: Use ghostship to manage PS1 if available
+nvim: Add fzf integration for file selection
+tmux: Disable visual-bell to stop annoying popups
+test: Add comprehensive pytest-based acceptance testing framework
+tmuxie: Resolve SSH attachment bug
+cleanup: Remove deprecated tools and fix installer output
+nvim: Remove markview plugin due to treesitter conflicts
+loadenv: Source secrets/vars for current dir from pass vaults
+```
+
+### **Rules:**
+1. **Always use lowercase** for component names
+2. **Use descriptive descriptions** that explain what changed
+3. **Keep descriptions concise** but informative
+4. **Use present tense** for descriptions
+5. **No action verbs** in the description (the component implies the action)
+
+### **Prohibited Formats:**
+- ❌ `Add debug output to troubleshoot file creation`
+- ❌ `Update ob/tips script: add fzf integration`
+- ❌ `Fix unbound variable error when no arguments provided`
+- ❌ `Implement enabled/disabled directory system`
+
+### **Required Format:**
+- ✅ `ob: Add debug output to troubleshoot file creation`
+- ✅ `ob: Add fzf integration and file creation`
+- ✅ `ob: Fix unbound variable error when no arguments provided`
+- ✅ `bash: Implement enabled/disabled directory system`
+
 ## Agent Preferences
 
 ### **Manpage Format**

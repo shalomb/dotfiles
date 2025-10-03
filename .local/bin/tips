@@ -39,22 +39,22 @@ function list_tips() {
 oldpwd="$PWD"
 cd "$tipsdir" || exit
 
-if [[ $1 = @(-l|--ls|--list) ]]; then
+if (( $# > 0 )) && [[ $1 = @(-l|--ls|--list) ]]; then
   list_tips | perl -lpe 'BEGIN{$/="\0"}' | column | less
   exit $?
 
-elif [[ $1 = @(-s|--st|--status) ]]; then
+elif (( $# > 0 )) && [[ $1 = @(-s|--st|--status) ]]; then
   git status --short --porcelain
   exit $?
 
-elif [[ $1 = @(--sync) ]]; then
+elif (( $# > 0 )) && [[ $1 = @(--sync) ]]; then
   # Simple: stash, pull rebase, pop stash
   git stash
   git pull --rebase
   git stash pop
   exit $?
 
-elif [[ $1 = "/" ]]; then
+elif (( $# > 0 )) && [[ $1 = "/" ]]; then
   shift;
   cmd="$1"; shift;
   ( set -x; "$cmd" "$@"; ) 2>&1 | less
@@ -103,24 +103,59 @@ if (( $# == 0 )); then
   query="${selection%$'\n'}"
   selection="${selection##*$'\n'}"
 
+  # Debug output
+  echo "DEBUG: Raw fzf output: '$selection'"
+  echo "DEBUG: Query: '$query'"
+  echo "DEBUG: Selection: '$selection'"
+
   [[ -z $selection && -z $query ]] && exit 0
 
   # Use selection if available, otherwise use query for new file
   target="${selection:-$query}"
+  echo "DEBUG: Initial target: '$target'"
   
   # Clean up the target path
   target="${target//\/\///}"
   target="${target//\*/}"
+  echo "DEBUG: After cleanup: '$target'"
   
-  # Handle directory creation for new files
-  if [[ ! -e "$target" ]]; then
-    dir="${target%/*}"
-    if [[ $dir != "$target" ]] && [[ ! -d $dir ]]; then
-      mkdir -vp "$dir"
+  # Handle tips files - convert tips/ prefix to actual path
+  if [[ $target == tips/* ]]; then
+    echo "DEBUG: Detected tips file"
+    actual_target="$HOME/tips/${target#tips/}"
+    echo "DEBUG: Actual tips target: '$actual_target'"
+    if [[ -e "$actual_target" ]]; then
+      target="$actual_target"
+      echo "DEBUG: Tips file exists, using: '$target'"
+    else
+      # For new tips files, create in tips directory
+      dir="$HOME/tips/${target#tips/}"
+      dir="${dir%/*}"
+      echo "DEBUG: Creating tips directory: '$dir'"
+      if [[ $dir != "$target" ]] && [[ ! -d $dir ]]; then
+        mkdir -vp "$dir"
+      fi
+      target="$HOME/tips/${target#tips/}"
+      echo "Creating new tips file: $target"
     fi
-    echo "Creating new file: $target"
+  else
+    echo "DEBUG: Regular file (not tips)"
+    # Handle directory creation for new files in current directory
+    if [[ ! -e "$target" ]]; then
+      echo "DEBUG: File doesn't exist, creating directory structure"
+      dir="${target%/*}"
+      echo "DEBUG: Directory for new file: '$dir'"
+      if [[ $dir != "$target" ]] && [[ ! -d $dir ]]; then
+        mkdir -vp "$dir"
+        echo "DEBUG: Created directory: '$dir'"
+      fi
+      echo "Creating new file: $target"
+    else
+      echo "DEBUG: File exists: '$target'"
+    fi
   fi
   
+  echo "DEBUG: Final target for nvim: '$target'"
   nvim -c 'set conceallevel=2' "$target"
   exit $?
 fi
