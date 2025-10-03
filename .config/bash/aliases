@@ -77,12 +77,12 @@ perljoin ()
 eval "$(dircolors -b)"
 export    LS_OPTS='--color=auto --group-directories-first --time-style=long-iso'
 alias     ls='exa $LS_OPTS'
-alias     l='ls -Fhs modified'
-alias     l1='\ls -1'
+alias     l='ls -Fhs'
+alias     l1='ls -1'
 alias     lA='ls -A'
-alias     la='ls -aBFgils modified'
-alias     ll='ls -BFgils modified'
-alias     lt='ls -lt modified'
+alias     la='ls -la'
+alias     ll='ls -l'
+alias     lt='ls -lt'
 
 function lr() {
   find . | g "$*"
