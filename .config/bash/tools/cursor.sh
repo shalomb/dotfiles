@@ -41,8 +41,17 @@ _cursor_gpg_check() {
     return $exit_code
 }
 
-# Enhanced cursor-agent alias with silent GPG check
-alias cursor-agent='_cursor_gpg_check >/dev/null 2>&1 || (_cursor_gpg_check && [[ -n "$PS1" ]] && echo "cursor-agent: GPG check failed, but continuing in interactive shell"); command cursor-agent'
+# Strict cursor-agent function - no fallback, GPG must work
+_cursor_agent_strict() {
+    if ! _cursor_gpg_check; then
+        echo "cursor-agent: GPG check failed - fix GPG setup before continuing" >&2
+        exit 1
+    fi
+    command cursor-agent "$@"
+}
+
+# Create alias to the strict function
+alias cursor-agent='_cursor_agent_strict'
 
 # Export the function
 export -f _cursor_gpg_check
@@ -62,5 +71,6 @@ export -f _cursor_gpg_check
 #
 # 4. Now cursor-agent will use GPG signing instead of --no-gpg-sign
 #
-# Note: If GPG check fails, cursor-agent will automatically use --no-gpg-sign
-# to prevent hanging on GPG prompts in non-interactive environments.
+# Note: If GPG check fails, cursor-agent will REFUSE TO START.
+# This ensures all commits are properly GPG signed.
+# Fix GPG setup before using cursor-agent.
