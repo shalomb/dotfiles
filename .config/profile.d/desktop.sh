@@ -3,6 +3,11 @@
 # If we're not running interactively, return.
 test -t 0 || return 0
 
+# Only source desktop configuration if running in a desktop environment
+if [ -z "${DISPLAY:-}" ]; then
+  return 0
+fi
+
 : ${BROWSER="$(/usr/bin/which x-www-browser)"}; export BROWSER;
 : ${XEDITOR="$(/usr/bin/which gvim)"};          export XEDITOR;
 
@@ -26,5 +31,5 @@ GNOME_DESKTOP_SESSION_ID='profile0';      export GNOME_DESKTOP_SESSION_ID;
 
 # Disable user desktop icons
 if command -v gsettings &>/dev/null; then
-  gsettings set org.gnome.desktop.background show-desktop-icons false
+  gsettings set org.gnome.desktop.background show-desktop-icons false 2>/dev/null || true
 fi
