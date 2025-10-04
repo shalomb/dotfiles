@@ -58,8 +58,13 @@ if [ "$TERM" = 'dumb' ]; then
   export TERM=tmux-256color
 fi
 
-# NOTE: bashrc sourcing removed to prevent infinite loops
-# bashrc is sourced separately by bash for interactive shells
+# Source bashrc for interactive shells (standard bash convention)
+# This ensures tmux new windows and login shells get full bash configuration
+if [ -f ~/.bashrc ]; then
+    export BASH_PROFILE_SOURCED=1
+    . ~/.bashrc
+    unset BASH_PROFILE_SOURCED
+fi
 
 if [ "${TTY:-$(tty)}" = '/dev/tty1' ]; then
   unset TMOUT
