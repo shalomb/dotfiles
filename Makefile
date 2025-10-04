@@ -12,16 +12,15 @@ init: ## Run all package installers
 	# Call all other INIT scripts in this directory hierarchy
 	find -L .config/ -name "INIT" -type f -exec {} \;
 
-cronjobs: ## Install our cronjobs
-	# m h  dom mon dow   command
+cronjobs: ## Install our cronjobs using gum's sensible defaults
+	# Use gum's built-in crontab generation for optimal scheduling
 	@{ \
 	  echo "SHELL=/bin/bash"; \
 	  echo "PATH=$$PATH"; \
 	  echo; \
-	  crontab -l | grep -v '^PATH='; \
-	  echo "*/1  * * * *   gum dirs --refresh"     2>/dev/null; \
-	  echo "*/30 * * * *   gum projects --refresh" 2>/dev/null;  \
-		echo "0 0 * * *      sh -c '> ~/.local/state/nvim/lsp.log'" ; \
+	  crontab -l | grep -v '^PATH=' 2>/dev/null || true; \
+	  gum --crontab | grep -v '^#' | grep -v '^$$'; \
+	  echo "0 0 * * *      sh -c '> ~/.local/state/nvim/lsp.log'" ; \
 	} | awk '(/^#/ || !a[$$0]++)' \
 	  | crontab -
 
