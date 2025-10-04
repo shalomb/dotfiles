@@ -1,1 +1,0 @@
-/home/unop/.config/dotfiles/.config/bash/tools/pwd.sh

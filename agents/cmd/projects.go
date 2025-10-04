@@ -69,23 +69,38 @@ func getProjectDirs() []string {
 		filepath.Join(os.Getenv("HOME"), "projects"),
 	}
 	
-	// Read from projects-dirs.list if it exists
+	// Read from gum config.yaml if it exists
 	configDir := os.Getenv("XDG_CONFIG_HOME")
 	if configDir == "" {
 		configDir = filepath.Join(os.Getenv("HOME"), ".config")
 	}
 	
-	projectsDirsList := filepath.Join(configDir, "projects-dirs.list")
-	if data, err := os.ReadFile(projectsDirsList); err == nil {
+	gumConfigPath := filepath.Join(configDir, "gum", "config.yaml")
+	if data, err := os.ReadFile(gumConfigPath); err == nil {
+		// Parse YAML to extract projects directories
 		lines := strings.Split(string(data), "\n")
+		inProjectsSection := false
 		for _, line := range lines {
 			line = strings.TrimSpace(line)
-			if line != "" && !strings.HasPrefix(line, "#") {
-				// Expand ~ to home directory
-				if strings.HasPrefix(line, "~/") {
-					line = filepath.Join(os.Getenv("HOME"), line[2:])
+			if strings.HasPrefix(line, "projects:") {
+				inProjectsSection = true
+				continue
+			}
+			if inProjectsSection {
+				if strings.HasPrefix(line, "- ") {
+					// Extract directory path
+					dir := strings.TrimSpace(line[2:])
+					if dir != "" && !strings.HasPrefix(dir, "#") {
+						// Expand ~ to home directory
+						if strings.HasPrefix(dir, "~/") {
+							dir = filepath.Join(os.Getenv("HOME"), dir[2:])
+						}
+						dirs = append(dirs, dir)
+					}
+				} else if line != "" && !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
+					// End of projects section
+					break
 				}
-				dirs = append(dirs, line)
 			}
 		}
 	}

@@ -19,8 +19,8 @@ cronjobs: ## Install our cronjobs
 	  echo "PATH=$$PATH"; \
 	  echo; \
 	  crontab -l | grep -v '^PATH='; \
-	  echo "*/1  * * * *   cwds-list -u"     2>/dev/null; \
-	  echo "*/30 * * * *   projects-list -u" 2>/dev/null;  \
+	  echo "*/1  * * * *   gum dirs --refresh"     2>/dev/null; \
+	  echo "*/30 * * * *   gum projects --refresh" 2>/dev/null;  \
 		echo "0 0 * * *      sh -c '> ~/.local/state/nvim/lsp.log'" ; \
 	} | awk '(/^#/ || !a[$$0]++)' \
 	  | crontab -
@@ -188,3 +188,12 @@ help: ## Show make targets available
 deploy:  ## Deploy bashrc and all dependencies
 	./dotfile_stash export .bashrc
 	./dotfile_stash export .config/bash/
+
+.PHONY: lint
+lint: ## Lint all bash and profile files with shellcheck
+	@echo "Linting bash files with bash standards..."
+	@find .config/bash -name "*.sh" -o -name "bashrc" | xargs shellcheck -s bash
+	@echo "Linting profile files with POSIX standards..."
+	@find .config/profile.d -name "*.sh" | xargs shellcheck -s sh
+	@shellcheck -s sh .config/bash/profile
+	@echo "✅ All shell files passed linting!"

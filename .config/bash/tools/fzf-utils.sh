@@ -65,11 +65,17 @@ function cdp {
           --query="$query" \
           --reverse \
           --tiebreak=index |
-    # Process the selection to swap columns and clean up
-    awk '{
-      # Extract repo URL (column 2) and directory (column 3)
+  # Process the selection to handle different gum output formats
+  awk '{
+    if (NF == 1) {
+      # gum dirs format: single directory path
+      dir = $1
+      gsub(/^~\//, "", dir)
+      print "" " " dir  # Empty repo, directory
+    } else if (NF == 2) {
+      # gum projects format: directory path, git URL
+      dir = $1
       repo_url = $2
-      dir = $3
       
       # Clean up repo URL: remove protocol and host
       gsub(/^https?:\/\/[^\/]+\//, "", repo_url)
@@ -80,16 +86,30 @@ function cdp {
       
       # Swap columns: repo first, then directory
       print repo_url " " dir
-    }'
+    } else {
+      # Empty line or malformed - return empty to indicate cancellation
+      print ""
+    }
+  }'
   )"
 
-  query="${selection%$'\n'}"
+  query="${selection%$'\n'*}"
   selection="${selection##*$'\n'}"
 
-  [[ -z $selection && -z $query ]] && return
+  # Check if we have a valid selection
+  if [[ -z $selection ]]; then
+    # No selection made (user cancelled or only entered query)
+    return
+  fi
 
   # Extract the directory from the processed selection
   dir="${selection##* }"
+  
+  # Validate that we have a directory to work with
+  if [[ -z $dir ]]; then
+    echo "No directory selected" >&2
+    return
+  fi
   
   # Set PWD to ~/ before doing cd
   cd ~/
