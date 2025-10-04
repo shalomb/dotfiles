@@ -30,6 +30,7 @@ imagemagick                install
 inkscape                   install
 javascript-common          install
 libcaca-dev                install
+libglib2.0-bin             install
 libnotify-bin              install
 netpbm                     install
 network-manager            install
