@@ -22,6 +22,9 @@ case $- in
       *) return;;
 esac
 
+# Shell options
+set -o ignoreeof  # Prevent Ctrl+D from exiting bash (use 'exit' instead)
+
 # History configuration
 shopt -s histappend
 export HISTCONTROL=ignoredups
