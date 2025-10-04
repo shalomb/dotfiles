@@ -17,9 +17,18 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 [[ -z "$XDG_STATE_HOME" ]] && export XDG_STATE_HOME="$HOME/.local/state"
 
 # If not running interactively, don't do anything
+# Exception: Allow sourcing from bash_profile for login shells
 case $- in
     *i*) ;;
-      *) return;;
+      *) 
+        # Check if we're being sourced from bash_profile (login shell context)
+        if [ -n "${BASH_PROFILE_SOURCED:-}" ]; then
+            # Allow sourcing even in non-interactive mode for login shells
+            :
+        else
+            return
+        fi
+        ;;
 esac
 
 # Shell options
