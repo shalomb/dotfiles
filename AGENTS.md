@@ -460,6 +460,33 @@ loadenv: Source secrets/vars for current dir from pass vaults
 - **Recovery mechanisms**: Automatic GPG agent recovery when signing fails
 - **Documentation**: Comprehensive GPG setup and troubleshooting documentation
 
+### **Dotfile Manager Enforcement**
+**MANDATORY REQUIREMENT**: All file deployments MUST use the dotfile manager. No exceptions.
+
+- **No manual file operations**: Never use `cp`, `mv`, `rm` on managed files
+- **Always use dotfile manager**: Use `uv run python -m dotfile_manager export <files>`
+- **Consistency validation**: Pre-commit hooks validate hardlink integrity
+- **Home directory sync**: Repository changes must be deployed via dotfile manager
+- **Orphaned file detection**: Automated checks prevent broken hardlinks
+- **Enforcement**: Commits are blocked if home directory is inconsistent
+
+### **Discussion Format**
+When user types "discuss" or requests analysis of complex topics, use this structured format:
+
+## **Current State**
+- [Bullet points describing what exists now]
+
+## **Identified Issues** 
+- [Bullet points describing problems or gaps]
+
+## **Potential Solutions**
+- [Bullet points describing possible approaches or improvements]
+
+## **Yes/No Summary**
+- [Clear recommendation with rationale]
+
+This format ensures systematic analysis and actionable outcomes for complex technical discussions.
+
 ### **Script Naming Convention**
 - **Executable scripts**: No `.sh` suffix (e.g., `gpg-agent-recover`, `ssh-retry`)
 - **Sourceable scripts**: Use `.sh` suffix (e.g., `update_ssh_agent.sh`, `cursor.sh`)
