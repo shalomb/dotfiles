@@ -117,6 +117,8 @@ libc-bin                   install
 libc-dev-bin               install
 libc-l10n                  install
 libfile-which-perl         install
+libdbus-glib-1-dev         deinstall
+libglib2.0-bin             deinstall
 libkrb5-dev                install
 libssl-dev                 install
 libxcb-xfixes0-dev         install
