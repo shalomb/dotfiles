@@ -262,7 +262,8 @@ class DotfileManager:
         if not any(changes.values()):
             return
         
-        console.print("\n[yellow]⚠️  Uncommitted changes detected![/yellow]")
+        console.print("\n[bold red]🚨 CRITICAL: UNCOMMITTED CHANGES DETECTED! 🚨[/bold red]")
+        console.print("[bold red]❌ Repository has uncommitted changes that will be overwritten![/bold red]")
         
         # Show summary of changes
         if changes["modified"]:
@@ -272,8 +273,9 @@ class DotfileManager:
         if changes["untracked"]:
             console.print(f"[yellow]Untracked files: {', '.join(changes['untracked'])}[/yellow]")
         
+        console.print("\n[bold red]⚠️  DEPLOYMENT BLOCKED - Uncommitted changes detected![/bold red]")
         console.print("\n[bold]Options:[/bold]")
-        console.print("1. Use git HEAD (overwrite uncommitted changes)")
+        console.print("1. Use git HEAD (overwrite uncommitted changes) - [bold red]DESTRUCTIVE![/bold red]")
         console.print("2. Use working directory (preserve uncommitted changes)")
         console.print("3. Abort sync")
         console.print("4. Commit changes first")
@@ -282,14 +284,18 @@ class DotfileManager:
             choice = Prompt.ask(
                 "Choose an option (1-4)",
                 choices=["1", "2", "3", "4"],
-                default="3"
+                default="4"
             )
             
             if choice == "1":
-                if Confirm.ask("⚠️  This will overwrite uncommitted changes. Continue?"):
+                console.print("\n[bold red]⚠️  DESTRUCTIVE OPERATION WARNING![/bold red]")
+                console.print("[red]This will PERMANENTLY DELETE your uncommitted changes![/red]")
+                if Confirm.ask("[bold red]Are you absolutely sure you want to proceed?[/bold red]"):
                     self._create_backup_for_changes(changes)
+                    console.print("[yellow]Proceeding with destructive operation...[/yellow]")
                     return  # Continue with git HEAD mode
                 else:
+                    console.print("[green]Destructive operation cancelled[/green]")
                     continue
             elif choice == "2":
                 console.print("[blue]Using working directory mode...[/blue]")

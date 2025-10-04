@@ -1,44 +1,48 @@
-# Dotfiles Documentation
+# Documentation Structure
 
-This documentation follows the [Diataxis](https://diataxis.fr/) framework for technical documentation.
+This documentation follows the **Diataxis framework** for technical documentation, organizing content into four distinct types:
 
-## Documentation Structure
+## Documentation Types
 
-### 📚 [Tutorials](./tutorials/)
+### 📚 **Tutorials** (`tutorials/`)
 **Learning-oriented** - Step-by-step guides for newcomers
-- Getting started with dotfiles
-- Setting up development environment
-- First-time installation guide
+- How to set up GPG signing in TUI environments
+- How to configure cursor-agent for GPG integration
+- How to troubleshoot GPG pinentry issues
 
-### 🔧 [How-to Guides](./how-to-guides/)
+### 🎯 **How-to Guides** (`how-to-guides/`)
 **Problem-oriented** - Practical solutions for specific tasks
-- How to add a new tool configuration
-- How to deploy changes to production
-- How to troubleshoot common issues
+- How to fix GPG pinentry in tmux/SSH sessions
+- How to configure GPG agent for cursor-agent
+- How to validate GPG signing in CI/CD
 
-### 📖 [Technical Reference](./technical-reference/)
+### 📖 **Technical Reference** (`technical-reference/`)
 **Information-oriented** - Detailed technical specifications
-- Configuration file formats
-- Command-line tool usage
-- API documentation
+- GPG configuration reference
+- cursor-agent API documentation
+- Environment variable specifications
 
-### 💡 [Explanation](./explanation/)
-**Understanding-oriented** - Background and context
-- Architecture decisions
-- Design principles
-- Requirements and specifications
+### 💡 **Explanation** (`explanation/`)
+**Understanding-oriented** - Conceptual background and context
+- Why GPG signing is mandatory
+- How TUI environments affect GPG workflows
+- The cursor-agent GPG integration architecture
 
-## Quick Start
+## Key Documentation Areas
 
-- **New to dotfiles?** Start with [Tutorials](./tutorials/)
-- **Need to solve a problem?** Check [How-to Guides](./how-to-guides/)
-- **Looking for specific info?** See [Technical Reference](./technical-reference/)
-- **Want to understand why?** Read [Explanation](./explanation/)
+### 🔐 **GPG Integration**
+- **Problem**: GPG pinentry fails in TUI environments (tmux, SSH, cursor-agent)
+- **Solution**: Comprehensive GPG workflow documentation and tooling
+- **Focus**: Mandatory GPG signing for all commits
 
-## Contributing
+### 🤖 **Cursor-Agent Integration**
+- **Problem**: Agent workflows need GPG signing capability
+- **Solution**: cursor-agent GPG integration design
+- **Focus**: Seamless GPG operations in agent environments
 
-When adding documentation:
-1. Choose the appropriate Diataxis category
-2. Follow the established patterns
-3. Keep content focused and practical
-4. Update this README if adding new sections
+## Documentation Standards
+
+- **BDD Modeling**: All workflows documented with Given-When-Then scenarios
+- **Diataxis Compliance**: Clear separation of documentation types
+- **Practical Focus**: Real-world problems and solutions
+- **Agent-Friendly**: Documentation optimized for AI agent consumption

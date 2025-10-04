@@ -451,6 +451,20 @@ loadenv: Source secrets/vars for current dir from pass vaults
 
 ## Agent Preferences
 
+### **GPG Signing Policy**
+**MANDATORY REQUIREMENT**: All commits MUST be GPG signed. No exceptions.
+
+- **No unsigned commits**: Every commit must be cryptographically signed
+- **Agent capability**: AI agents must be able to sign commits autonomously
+- **TUI compatibility**: GPG signing must work in terminal environments (tmux, SSH, cursor-agent)
+- **Recovery mechanisms**: Automatic GPG agent recovery when signing fails
+- **Documentation**: Comprehensive GPG setup and troubleshooting documentation
+
+### **Script Naming Convention**
+- **Executable scripts**: No `.sh` suffix (e.g., `gpg-agent-recover`, `ssh-retry`)
+- **Sourceable scripts**: Use `.sh` suffix (e.g., `update_ssh_agent.sh`, `cursor.sh`)
+- **Location**: Executable scripts go in `~/.local/bin/`, sourceable scripts in `.config/bash/tools/`
+
 ### **Manpage Format**
 When presenting manpage-style documentation, use this compact inverted format:
 
