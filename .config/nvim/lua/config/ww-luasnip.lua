@@ -35,12 +35,27 @@ local types = require("luasnip.util.types")
 local parse = require("luasnip.util.parser").parse_snippet
 local ms = ls.multi_snippet
 
+-- Setup luasnip with proper logging configuration
+-- Configure luasnip to reduce verbose logging
+require("luasnip").setup({
+  -- Disable verbose logging by setting log level
+  log_level = vim.log.levels.ERROR,
+})
+
+-- Set global log level to reduce luasnip warnings
+vim.lsp.set_log_level("ERROR")
+
 ls.config.set_config({
   history = true, -- keep around last snippet local to jump back
   enable_autosnippets = true,
 })
 
-require("luasnip.loaders.from_vscode").lazy_load()
+-- Load vscode snippets with reduced logging
+-- Configure luasnip to be less verbose about missing snippets
+require("luasnip.loaders.from_vscode").lazy_load({
+  exclude = { "tree-sitter-just" }, -- Exclude problematic package
+  silent = true, -- Reduce logging verbosity
+})
 require("luasnip.loaders.from_vscode").lazy_load({ paths = "~/.cache/snippets/" })
 require("luasnip.loaders.from_lua").lazy_load({ paths = "~/.config/nvim/lua/snippets/" })
 
