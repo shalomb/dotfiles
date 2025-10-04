@@ -1,12 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 
- #######################################################################
-#   ~/.config/bash/profile: executed by bash(1) for login shells.       #
-#     Installed at ~/.bash_profile for legacy reasons.                  #
-#                                                                       #
-#   See /usr/share/doc/bash/examples/startup-files for examples;        #
-#     these files are located in the bash-doc package.                  #
- #######################################################################
+# SOURCING: ~/.profile, ~/.bash_profile (symlinks)
+# SOURCES: profile.d/*.sh, 00-path, ~/.local/bin/env
+# DOES NOT SOURCE: bashrc (prevents infinite loops)
 
 # ADR-001: Environment Variables in Login Shells
 # ================================================
@@ -22,12 +18,23 @@
 #   - Fixes tmux new window PATH issues
 # ================================================
 
+# Source profile.d files (POSIX compliant, portable)
+# This ensures environment variables are available across all shells (bash, sh, zsh, ksh, etc.)
+if [ -d ~/.config/profile.d ]; then
+  for i in ~/.config/profile.d/*.sh; do
+    if [ -r "$i" ]; then
+      . "$i"
+    fi
+  done
+  unset i
+fi
+
 # Load environment variables (PATH, MANPATH, etc.) for all shell types
 # This ensures login shells, non-terminal shells, and interactive shells all get proper environment
-if [[ -f ~/.config/bash/rc.d/00-path ]]; then
-    source ~/.config/bash/rc.d/00-path
+if [ -f ~/.config/bash/rc.d/00-path ]; then
+    . ~/.config/bash/rc.d/00-path
 else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: PATH configuration file missing" >&2
+    [ -n "${DOTFILES_DEBUG:-}" ] && echo "debug: PATH configuration file missing" >&2
 fi
 
 # Note: Removed BASH_RC_SOURCED check as it was causing circular dependency
@@ -35,27 +42,26 @@ fi
 
 # For SSH logins, we need to source bashrc even if not interactive initially
 # Only skip if we're definitely non-interactive (like running scripts)
-if [[ -z "${PS1:-}" && -z "${SSH_CLIENT:-}" && -z "${SSH_TTY:-}" ]]; then
+if [ -z "${PS1:-}" ] && [ -z "${SSH_CLIENT:-}" ] && [ -z "${SSH_TTY:-}" ]; then
   return 0
 fi
 
 # the default umask is set in /etc/login.defs
 umask 022
 
-if [[ $TERM == 'linux' ]]; then
+if [ "$TERM" = 'linux' ]; then
   setterm -blength 0
 fi
 
 # Fix TERM for clickable links support
-if [[ $TERM == 'dumb' ]]; then
+if [ "$TERM" = 'dumb' ]; then
   export TERM=tmux-256color
 fi
 
-if [[ -r ~/.config/bash/bashrc ]]; then
-  source ~/.config/bash/bashrc
-fi
+# NOTE: bashrc sourcing removed to prevent infinite loops
+# bashrc is sourced separately by bash for interactive shells
 
-if [[ ${TTY:-$(tty)} == /dev/tty1 ]]; then
+if [ "${TTY:-$(tty)}" = '/dev/tty1' ]; then
   unset TMOUT
   tmout 5 "exec startx > $TMP/startx.log 2>&1"
   TMOUT=120
