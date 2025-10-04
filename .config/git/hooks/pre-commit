@@ -1,0 +1,12 @@
+#!/bin/bash
+# Pre-commit hook that runs GPG validation and consistency checks
+# This ensures every commit is properly GPG signed and dotfiles are consistent
+
+# Run the GPG check
+.config/git/hooks/pre-commit-gpg-check
+
+# Run consistency validation
+.config/git/hooks/pre-commit-consistency-check
+
+# If we get here, both GPG and consistency checks passed - proceed with commit
+exit 0

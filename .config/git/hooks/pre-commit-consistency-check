@@ -1,0 +1,144 @@
+#!/bin/bash
+# Pre-commit consistency validation hook
+# Ensures home directory is consistent with repository state
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+HOME_DIR="$HOME"
+CONFIG_DIR="$HOME_DIR/.config"
+
+echo -e "${BLUE}🔍 Validating dotfile consistency...${NC}"
+
+# Function to check if a file is properly hardlinked
+check_hardlink() {
+    local repo_file="$1"
+    local home_file="$2"
+    
+    if [[ ! -f "$repo_file" ]]; then
+        echo -e "${RED}❌ Repository file missing: $repo_file${NC}"
+        return 1
+    fi
+    
+    if [[ ! -f "$home_file" ]]; then
+        echo -e "${RED}❌ Home file missing: $home_file${NC}"
+        return 1
+    fi
+    
+    # Check if files are hardlinked (same inode)
+    local repo_inode=$(stat -c %i "$repo_file" 2>/dev/null || echo "")
+    local home_inode=$(stat -c %i "$home_file" 2>/dev/null || echo "")
+    
+    if [[ "$repo_inode" != "$home_inode" ]]; then
+        echo -e "${RED}❌ Files not hardlinked: $repo_file <-> $home_file${NC}"
+        echo -e "${RED}   Repository inode: $repo_inode, Home inode: $home_inode${NC}"
+        return 1
+    fi
+    
+    return 0
+}
+
+# Function to find orphaned files in home directory
+find_orphaned_files() {
+    local orphaned_count=0
+    
+    echo -e "${YELLOW}🔍 Checking for orphaned files in home directory...${NC}"
+    
+    # Check common dotfile locations
+    for home_file in "$HOME_DIR"/.bashrc "$HOME_DIR"/.bash_profile "$CONFIG_DIR"/bash/bashrc "$CONFIG_DIR"/tmux/tmux.conf; do
+        if [[ -f "$home_file" ]]; then
+            # Check if this file should be managed by dotfile manager
+            local repo_file=""
+            case "$home_file" in
+                "$HOME_DIR/.bashrc")
+                    repo_file="$REPO_ROOT/.config/bash/bashrc"
+                    ;;
+                "$HOME_DIR/.bash_profile")
+                    repo_file="$REPO_ROOT/.config/bash/profile"
+                    ;;
+                "$CONFIG_DIR/bash/bashrc")
+                    repo_file="$REPO_ROOT/.config/bash/bashrc"
+                    ;;
+                "$CONFIG_DIR/tmux/tmux.conf")
+                    repo_file="$REPO_ROOT/.config/tmux.conf"
+                    ;;
+            esac
+            
+            if [[ -n "$repo_file" && -f "$repo_file" ]]; then
+                if ! check_hardlink "$repo_file" "$home_file"; then
+                    ((orphaned_count++))
+                fi
+            fi
+        fi
+    done
+    
+    return $orphaned_count
+}
+
+# Function to validate managed directories
+validate_managed_directories() {
+    local error_count=0
+    
+    echo -e "${YELLOW}🔍 Validating managed directories...${NC}"
+    
+    # Check bash configuration directory
+    if [[ -d "$CONFIG_DIR/bash" ]]; then
+        for script in "$CONFIG_DIR/bash/enabled"/*.sh; do
+            if [[ -f "$script" ]]; then
+                local script_name=$(basename "$script")
+                local repo_script="$REPO_ROOT/.config/bash/enabled/$script_name"
+                
+                if [[ -f "$repo_script" ]]; then
+                    if ! check_hardlink "$repo_script" "$script"; then
+                        ((error_count++))
+                    fi
+                fi
+            fi
+        done
+    fi
+    
+    return $error_count
+}
+
+# Main validation
+main() {
+    local total_errors=0
+    
+    # Check for orphaned files
+    if ! find_orphaned_files; then
+        ((total_errors++))
+    fi
+    
+    # Validate managed directories
+    if ! validate_managed_directories; then
+        ((total_errors++))
+    fi
+    
+    if [[ $total_errors -eq 0 ]]; then
+        echo -e "${GREEN}✅ Dotfile consistency validation passed${NC}"
+        return 0
+    else
+        echo -e "${RED}❌ Dotfile consistency validation failed${NC}"
+        echo -e "${RED}   Found $total_errors consistency issues${NC}"
+        echo ""
+        echo -e "${YELLOW}To fix consistency issues:${NC}"
+        echo "1. Use dotfile manager to deploy changes:"
+        echo "   uv run python -m dotfile_manager export <files>"
+        echo "2. Check for manual file operations in home directory"
+        echo "3. Ensure all managed files are properly hardlinked"
+        echo ""
+        echo -e "${RED}Commit blocked to maintain dotfile consistency${NC}"
+        return 1
+    fi
+}
+
+# Run validation
+main "$@"
