@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Minimal bashrc - based on /etc/skel/.bashrc
-# Building up incrementally to identify issues
+# SOURCING: ~/.bashrc (symlink), interactive bash shells
+# SOURCES: rc.d/*, aliases, enabled/*.sh
+# DOES NOT SOURCE: profile (prevents infinite loops)
 
 # XDG Base Directory specification (set before interactive check)
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -135,3 +136,5 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+
+export GPG_TTY=$(tty)
