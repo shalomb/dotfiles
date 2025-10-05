@@ -66,8 +66,8 @@ browse-md-start() {
     echo "🚀 Starting markdown HTTP server on port $port..."
     echo "📁 Serving directory: $(pwd)"
     
-    # Start custom markdown HTTP server
-    python3 "$(dirname "${BASH_SOURCE[0]}")/markdown_server.py" "$port" "$(pwd)" >/dev/null 2>&1 &
+    # Start simple markdown HTTP server
+    python3 "$(dirname "${BASH_SOURCE[0]}")/simple_markdown_server.py" "$port" "$(pwd)" >/dev/null 2>&1 &
     local server_pid=$!
     
     # Save PID for cleanup
@@ -95,7 +95,7 @@ browse-md-start() {
     echo "   - Access from host Mac: $url"
     echo "   - Access from VM: http://localhost:$port"
     echo "   - Stop server: kill $server_pid"
-    echo "   - Check if running: ps aux | grep 'markdown_server.py'"
+    echo "   - Check if running: ps aux | grep 'simple_markdown_server.py'"
 }
 
 # Cleanup function to stop servers
