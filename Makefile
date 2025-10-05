@@ -38,18 +38,21 @@ refresh:  ## refresh all dotfiles in $HOME with versions in repo
 apt: .config/apt/INIT  ## Install apt packages
 
 apt-clean:
-	sudo apt clean
-	sudo apt autoclean
-	sudo apt autopurge
-	sudo apt autoremove
+	# Skipping apt commands that require sudo
+	# sudo apt clean
+	# sudo apt autoclean
+	# sudo apt autopurge
+	# sudo apt autoremove
 	uv cache clean
 	find ~/.cache/ -type f -atime +182 -delete
 	find ~/.config/ -iname ".mypy_cache" -exec rm -fr {} +
 	find ~/.cache/act/ -atime +30 -delete
-	bash -c 'shopt -s extglob; rm -fr /usr/share/man/!(man*|en*)'
-	sudo localepurge
-	sudo locale-gen
-	sudo sh -c 'free && sync && swapoff -a && swapon -a && echo 3 > /proc/sys/vm/drop_caches && free'
+	# Skipping man page cleanup that requires sudo
+	# bash -c 'shopt -s extglob; rm -fr /usr/share/man/!(man*|en*)'
+	# sudo localepurge
+	# sudo locale-gen
+	# Skipping system memory cache clearing that requires sudo
+	# sudo sh -c 'free && sync && swapoff -a && swapon -a && echo 3 > /proc/sys/vm/drop_caches && free'
 	df -hP
 
 .PHONY: .config/apt/INIT
