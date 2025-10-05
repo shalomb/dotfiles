@@ -182,10 +182,9 @@ whichkey.add({
         '<leader>/',
         function()
             local last_search = vim.fn.getreg('/')
-            my_live_grep()
-            vim.api.nvim_input(last_search)
+            require("telescope.builtin").live_grep({ default_text = last_search })
         end,
-        desc = "my_live_grep"
+        desc = "live_grep"
     },
     {
         '<leader>?',
