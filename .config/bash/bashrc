@@ -16,6 +16,25 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 [[ -z "$XDG_DATA_HOME" ]] && export XDG_DATA_HOME="$HOME/.local/share"
 [[ -z "$XDG_STATE_HOME" ]] && export XDG_STATE_HOME="$HOME/.local/state"
 
+# Load enabled tools from enabled directory
+# This happens for both interactive shells and when sourced from bash_profile
+if [[ -d ~/.config/bash/enabled ]]; then
+    for script in ~/.config/bash/enabled/*.sh; do
+        if [[ -r "$script" ]]; then
+            source "$script"
+        fi
+    done
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Enabled tools directory missing" >&2
+fi
+
+# SSH Agent Management
+# Bootstrap SSH agent for this shell
+if [[ -f ~/.config/bash/tools/ssh-agent-bootstrap.sh ]]; then
+    source ~/.config/bash/tools/ssh-agent-bootstrap.sh
+    bootstrap_ssh_agent
+fi
+
 # If not running interactively, don't do anything
 # Exception: Allow sourcing from bash_profile for login shells
 case $- in
@@ -99,17 +118,6 @@ else
     [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship not available, using fallback prompt" >&2
     # Simple fallback prompt
     PS1='\u@\h:\w\$ '
-fi
-
-# Load enabled tools from enabled directory
-if [[ -d ~/.config/bash/enabled ]]; then
-    for script in ~/.config/bash/enabled/*.sh; do
-        if [[ -f "$script" ]]; then
-            source "$script"
-        fi
-    done
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Enabled tools directory missing" >&2
 fi
 
 # Simple reload function
