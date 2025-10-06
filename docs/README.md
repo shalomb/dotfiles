@@ -1,32 +1,41 @@
 # Documentation Structure
 
-This documentation follows the **Diataxis framework** for technical documentation, organizing content into four distinct types:
+This documentation follows the **Diataxis framework** for technical documentation, organizing content into four distinct types based on user needs.
 
 ## Documentation Types
 
 ### 📚 **Tutorials** (`tutorials/`)
 **Learning-oriented** - Step-by-step guides for newcomers
-- How to set up GPG signing in TUI environments
-- How to configure cursor-agent for GPG integration
-- How to troubleshoot GPG pinentry issues
+
+**Available:**
+- [GPG BDD Scenarios](./tutorials/gpg-bdd-scenarios.md) - Behavior-driven development scenarios for GPG integration
 
 ### 🎯 **How-to Guides** (`how-to-guides/`)
 **Problem-oriented** - Practical solutions for specific tasks
-- How to fix GPG pinentry in tmux/SSH sessions
-- How to configure GPG agent for cursor-agent
-- How to validate GPG signing in CI/CD
+
+**Available:**
+- [GPG TUI Setup](./how-to-guides/gpg-tui-setup.md) - How to configure GPG in terminal environments
 
 ### 📖 **Technical Reference** (`technical-reference/`)
 **Information-oriented** - Detailed technical specifications
-- GPG configuration reference
-- cursor-agent API documentation
-- Environment variable specifications
+
+**Available:**
+- [Agent Context Documentation](./technical-reference/agent-context-documentation.md) - Standards for agent context headers
+- [Bash Standards](./technical-reference/bash-standards/) - Bash coding standards and references
+  - [Bash Practices](./technical-reference/bash-standards/bash-practices.html) - Modern bash practices
+  - [Bash FAQ 073](./technical-reference/bash-standards/bash-faq-073.html) - Parameter expansions
+  - [Bash Pitfalls](./technical-reference/bash-standards/bash-pitfalls.html) - Common mistakes
+- [Cursor Agent GPG Integration](./technical-reference/cursor-agent-gpg-integration.md) - Technical specifications
 
 ### 💡 **Explanation** (`explanation/`)
 **Understanding-oriented** - Conceptual background and context
-- Why GPG signing is mandatory
-- How TUI environments affect GPG workflows
-- The cursor-agent GPG integration architecture
+
+**Available:**
+- [GPG TUI Integration](./explanation/gpg-tui-integration.md) - Why and how GPG works in TUI environments
+- [Architecture Decision Records](./explanation/decisions/) - Key architectural decisions
+  - [ADR-001: Environment Variables in Login Shells](./explanation/decisions/ADR-001-environment-variables-in-login-shells.md)
+  - [ADR-002: tmuxie Script Replacement](./explanation/decisions/ADR-002-tmuxie-script-replacement.md)
+  - [ADR-003: XDG-Compliant Bash Deployment](./explanation/decisions/ADR-003-xdg-compliant-bash-deployment.md)
 
 ## Key Documentation Areas
 
@@ -35,14 +44,34 @@ This documentation follows the **Diataxis framework** for technical documentatio
 - **Solution**: Comprehensive GPG workflow documentation and tooling
 - **Focus**: Mandatory GPG signing for all commits
 
-### 🤖 **Cursor-Agent Integration**
-- **Problem**: Agent workflows need GPG signing capability
-- **Solution**: cursor-agent GPG integration design
-- **Focus**: Seamless GPG operations in agent environments
+### 🤖 **Agent Integration**
+- **Problem**: Agent workflows need clear context and standards
+- **Solution**: Agent context documentation and coding standards
+- **Focus**: Prevent misunderstandings and improve efficiency
+
+### 🛠️ **Development Standards**
+- **Problem**: Inconsistent bash coding practices
+- **Solution**: Bash standards documentation and validation
+- **Focus**: Modern bash practices, shellcheck integration
 
 ## Documentation Standards
 
-- **BDD Modeling**: All workflows documented with Given-When-Then scenarios
 - **Diataxis Compliance**: Clear separation of documentation types
+- **BDD Modeling**: Workflows documented with Given-When-Then scenarios
 - **Practical Focus**: Real-world problems and solutions
 - **Agent-Friendly**: Documentation optimized for AI agent consumption
+- **Living Documentation**: Updated with architectural decisions and changes
+
+## Quick Navigation
+
+**Getting Started:**
+- Start with [GPG TUI Setup](./how-to-guides/gpg-tui-setup.md) for basic configuration
+- Read [GPG TUI Integration](./explanation/gpg-tui-integration.md) for understanding
+
+**Development:**
+- Reference [Bash Standards](./technical-reference/bash-standards/) for coding
+- Follow [Agent Context Documentation](./technical-reference/agent-context-documentation.md) for file headers
+
+**Architecture:**
+- Review [Architecture Decision Records](./explanation/decisions/) for context
+- Understand [Cursor Agent GPG Integration](./technical-reference/cursor-agent-gpg-integration.md) for technical details
