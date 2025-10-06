@@ -293,6 +293,7 @@ alias vsp='vi '
 alias y='yazi'
 alias Y='ssh -t host /opt/homebrew/bin/yazi'
 alias dust='~/.cargo/bin/dust'
+alias ca='cursor-agent'
 
 # Python virtual environment activation
 function activate() {
