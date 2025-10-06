@@ -415,7 +415,7 @@ function glf {
 
 #| glg - git log --grep="$1"
 function glg {
-  git log -i --grep="$1" --oneline --date=format:%FT%T --pretty=format:"%h %ad <%an> - %s"
+  git log -i --grep="${1:-}" --oneline --date=format:%FT%T --pretty=format:"%h %ad <%an> - %s"
 }
 
 #| glp - git glp
@@ -431,7 +431,7 @@ function gp {
 #| gP - git push
 function gP {
   (($# == 0)) && set -- -u origin $(gbr)
-  command git push "$@"
+  command git push "${@:-}"
 }
 
 #| gPa - git push --all
