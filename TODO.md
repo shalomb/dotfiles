@@ -215,10 +215,11 @@ See `docs/agent-context-documentation.md` for full standards and examples.
 # 🚨 CRITICAL: Dotfiles Recovery Plan
 
 ## 📋 **Current State Analysis**
-- **Internal Quality**: Significant progress on Python dotfile manager, testing framework, and architectural improvements
-- **User Experience**: **BROKEN** - Many functions/aliases missing due to restructuring
-- **Root Cause**: Files moved around during refactoring, not properly sourced in new structure
-- **Impact**: Daily workflow disrupted, essential tools unavailable
+- **Internal Quality**: ✅ **SIGNIFICANT PROGRESS** - Python dotfile manager, testing framework, bash standards, documentation structure
+- **User Experience**: ⚠️ **PARTIALLY RESTORED** - Core functions working, some convenience functions may be missing
+- **Documentation**: ✅ **MAJOR IMPROVEMENT** - Diataxis compliance, agent context standards, accurate signposting
+- **Root Cause**: Files moved during refactoring, symlink architecture restored, but some functions may need verification
+- **Impact**: Daily workflow mostly functional, but comprehensive audit needed
 
 ## 🎯 **Recovery Goals**
 - **Stability**: Restore all missing functions/aliases without breaking new architecture
@@ -229,22 +230,28 @@ See `docs/agent-context-documentation.md` for full standards and examples.
 ## 🔧 **Priority Recovery Plan**
 
 ### **Phase 1: Assessment & Inventory (IMMEDIATE)**
-- [ ] **Audit missing functions/aliases**: Compare current state vs 2-3 months ago
-- [ ] **Identify broken sourcing**: Find files that moved but aren't being loaded
-- [ ] **Create function inventory**: Document all expected functions/aliases
-- [ ] **Test current functionality**: Run comprehensive shell functionality tests
+- [x] **Documentation structure**: ✅ Diataxis compliance achieved
+- [x] **Agent context standards**: ✅ Documentation framework established
+- [x] **Bash standards framework**: ✅ Shellcheck integration and validation
+- [ ] **Comprehensive function audit**: Verify all essential functions are working
+- [ ] **Alias verification**: Check all expected aliases are available
+- [ ] **User workflow testing**: Test daily tasks end-to-end
 
-### **Phase 2: Fix Test Suite (HIGH PRIORITY)**
-- [ ] **Fix TUI compatibility**: Make `make test` work in cursor-agent environment
-- [ ] **Create fast behavioral tests**: Quick tests for user experience validation
-- [ ] **Implement function/alias tests**: Automated detection of missing functionality
-- [ ] **Add regression tests**: Prevent future breakage during refactoring
+### **Phase 2: Test Suite Enhancement (HIGH PRIORITY)**
+- [x] **TUI compatibility**: ✅ Tests work in cursor-agent environment
+- [x] **Fast behavioral tests**: ✅ Shellcheck and standards validation
+- [x] **Bash standards tests**: ✅ Modern bash practices enforced
+- [ ] **Function/alias inventory tests**: Automated detection of missing functionality
+- [ ] **User workflow tests**: End-to-end testing of daily tasks
+- [ ] **Performance benchmarks**: Shell startup and function execution times
 
-### **Phase 3: Restore Missing Functionality (HIGH PRIORITY)**
-- [ ] **Restore missing functions**: Re-enable all essential functions from 2-3 months ago
-- [ ] **Fix sourcing issues**: Ensure all moved files are properly sourced
-- [ ] **Validate aliases**: Restore all missing aliases and shortcuts
-- [ ] **Test user workflows**: Ensure daily tasks work as expected
+### **Phase 3: Functionality Verification (HIGH PRIORITY)**
+- [x] **Symlink architecture**: ✅ Dotfile manager preserves symlinks correctly
+- [x] **Core functions**: ✅ dotfiles command with subcommands working
+- [ ] **Function inventory**: Comprehensive audit of all expected functions
+- [ ] **Alias verification**: Check all aliases are properly loaded
+- [ ] **User workflow validation**: Test complete daily workflows
+- [ ] **Missing function restoration**: Restore any functions that are actually missing
 
 ### **Phase 4: Stability Framework (MEDIUM PRIORITY)**
 - [ ] **Create stability tests**: Tests that run before any major changes
@@ -260,29 +267,54 @@ See `docs/agent-context-documentation.md` for full standards and examples.
 
 ## 🚨 **Immediate Actions Required**
 
-### **1. Function/Alias Audit**
+### **1. Comprehensive Function Audit (NEXT PRIORITY)**
 ```bash
-# Compare current vs historical state
-git show 2a5d7d4:.config/bash/rc.d/01-functions > /tmp/old-functions
-git show 2a5d7d4:.config/bash/aliases > /tmp/old-aliases
-# Compare with current files to identify missing items
-```
-
-### **2. Test Suite Fix**
-```bash
-# Make tests TUI-compatible
-make test 2>/dev/null || echo "Tests need TUI fix"
-# Create fast behavioral tests
-uv run python -m pytest tests/ -v --tb=short
-```
-
-### **3. Missing Functionality Detection**
-```bash
-# Test essential functions
+# Test all essential functions
 type -t reload || echo "MISSING: reload function"
 type -t dotfiles || echo "MISSING: dotfiles function"
-# Add more essential function checks
+type -t tmuxie || echo "MISSING: tmuxie function"
+# Create comprehensive function inventory
+compgen -A function | sort > /tmp/current-functions
 ```
+
+### **2. User Workflow Testing**
+```bash
+# Test daily workflows end-to-end
+dotfiles list
+dotfiles enter
+tmuxie -l
+# Verify all aliases work
+alias | grep -E "(ls|grep|git|cd)"
+```
+
+### **3. Performance Benchmarking**
+```bash
+# Measure shell startup time
+time bash -c "exit"
+# Test function execution times
+time dotfiles list
+time tmuxie -l
+```
+
+## 🎯 **Next Highest Priority Task**
+
+### **Comprehensive Function & Alias Audit**
+
+**Goal**: Verify all essential functions and aliases are working correctly
+
+**Tasks**:
+1. **Function inventory**: Create complete list of expected functions
+2. **Alias verification**: Check all aliases are properly loaded
+3. **User workflow testing**: Test complete daily workflows
+4. **Missing function detection**: Identify any functions that are actually missing
+5. **Performance testing**: Ensure functions execute quickly
+
+**Success Criteria**:
+- All essential functions work (`reload`, `dotfiles`, `tmuxie`, etc.)
+- All aliases available (`ls`, `grep`, `git` shortcuts, etc.)
+- Daily workflows complete successfully
+- Performance benchmarks established
+- Comprehensive test coverage for user experience
 
 ## 📊 **Success Criteria**
 - [ ] **All essential functions work**: reload, dotfiles, navigation, etc.
