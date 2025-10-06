@@ -107,7 +107,7 @@ _dotfiles_load() {
 
 # List available tools
 _dotfiles_list() {
-    local category="$1"
+    local category="${1:-}"
     
     if [[ -n "$category" ]]; then
         echo "Tools in category: $category"
