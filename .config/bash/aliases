@@ -293,3 +293,20 @@ alias vsp='vi '
 alias y='yazi'
 alias Y='ssh -t host /opt/homebrew/bin/yazi'
 alias dust='~/.cargo/bin/dust'
+
+# Python virtual environment activation
+function activate() {
+  local venv="${1:-venv}"
+  if [[ -d "$venv" ]]; then
+    printf 'Activating %s (%s) .. ' "$venv" "$(readlink -f "$venv")" >&2
+    if source "$venv/bin/activate"; then
+      printf 'OK\n' >&2
+    else
+      printf 'FAILED\n' >&2
+      return 1
+    fi
+  else
+    printf 'Requested venv (%s) not present\n' "$venv" >&2
+    return 1
+  fi
+}

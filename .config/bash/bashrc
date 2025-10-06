@@ -16,6 +16,10 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 [[ -z "$XDG_DATA_HOME" ]] && export XDG_DATA_HOME="$HOME/.local/share"
 [[ -z "$XDG_STATE_HOME" ]] && export XDG_STATE_HOME="$HOME/.local/state"
 
+# Set default editor if not already set
+export EDITOR="${EDITOR:-$(command -v vim 2>/dev/null || command -v nano 2>/dev/null || command -v vi 2>/dev/null || echo 'vi')}"
+export FCEDIT="$EDITOR"
+
 # Load enabled tools from enabled directory
 # This happens for both interactive shells and when sourced from bash_profile
 if [[ -d ~/.config/bash/enabled ]]; then
