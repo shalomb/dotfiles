@@ -431,11 +431,15 @@ When working with this repository:
 
 Before making any changes:
 
+- [ ] **Check current end-state** (read `docs/explanation/end-state-evolution.md`)
+- [ ] **Assess current state** (discover what's working and what's not)
+- [ ] **Recalculate plans** (update TODO.md based on current end-state)
 - [ ] **Identify the component** (tmux, nvim, bash, gum, etc.)
 - [ ] **Review the workflow** for that component
 - [ ] **Use the correct tools** (dotfile_stash, make targets, etc.)
 - [ ] **Test through official interfaces** (reload popups, validation commands)
 - [ ] **Document any new processes** in this file
+- [ ] **Update end-state docs** if making significant changes
 - [ ] **Commit changes** after validation
 
 The repository is designed for **incremental updates** - you can deploy individual files or directories without affecting the entire system, but always through the proper channels.

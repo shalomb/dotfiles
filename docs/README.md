@@ -31,6 +31,7 @@ This documentation follows the **Diataxis framework** for technical documentatio
 **Understanding-oriented** - Conceptual background and context
 
 **Available:**
+- [End-State Evolution](./explanation/end-state-evolution.md) - How the end-state evolves and discovery process
 - [GPG TUI Integration](./explanation/gpg-tui-integration.md) - Why and how GPG works in TUI environments
 - [Architecture Decision Records](./explanation/decisions/) - Key architectural decisions
   - [ADR-001: Environment Variables in Login Shells](./explanation/decisions/ADR-001-environment-variables-in-login-shells.md)

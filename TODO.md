@@ -218,8 +218,15 @@ See `docs/agent-context-documentation.md` for full standards and examples.
 - **Internal Quality**: ✅ **SIGNIFICANT PROGRESS** - Python dotfile manager, testing framework, bash standards, documentation structure
 - **User Experience**: ⚠️ **PARTIALLY RESTORED** - Core functions working, some convenience functions may be missing
 - **Documentation**: ✅ **MAJOR IMPROVEMENT** - Diataxis compliance, agent context standards, accurate signposting
+- **End-State Awareness**: ✅ **FRAMEWORK ESTABLISHED** - End-state evolution documentation and discovery process
 - **Root Cause**: Files moved during refactoring, symlink architecture restored, but some functions may need verification
 - **Impact**: Daily workflow mostly functional, but comprehensive audit needed
+
+## 🎯 **Current End-State (v4.0)**
+- **Functional**: All essential functions working, comprehensive alias coverage, fast performance
+- **Technical**: Clean architecture, comprehensive testing, modern bash standards, Diataxis docs
+- **Evolutionary**: Scalable framework, maintainable code, future-proof design
+- **Reference**: See `docs/explanation/end-state-evolution.md` for full end-state definition
 
 ## 🎯 **Recovery Goals**
 - **Stability**: Restore all missing functions/aliases without breaking new architecture
@@ -302,6 +309,8 @@ time tmuxie -l
 
 **Goal**: Verify all essential functions and aliases are working correctly
 
+**End-State Alignment**: This task moves us toward end-state v4.0 (comprehensive function coverage + performance benchmarks)
+
 **Tasks**:
 1. **Function inventory**: Create complete list of expected functions
 2. **Alias verification**: Check all aliases are properly loaded
@@ -315,6 +324,22 @@ time tmuxie -l
 - Daily workflows complete successfully
 - Performance benchmarks established
 - Comprehensive test coverage for user experience
+
+## 🔄 **End-State Discovery Process**
+
+### **Before Starting Any Major Work**
+1. **Read end-state docs**: `docs/explanation/end-state-evolution.md`
+2. **Assess current state**: Use discovery tools to understand what's working
+3. **Identify gaps**: Compare current state to end-state goals
+4. **Recalculate plans**: Update TODO.md based on current end-state
+5. **Update end-state**: Document any changes to end-state goals
+
+### **End-State Recalculation Triggers**
+- **Major architectural changes**: New patterns or structures
+- **User experience issues**: Broken workflows or missing functionality
+- **Technology updates**: New tools or deprecated practices
+- **Performance degradation**: Slower operations or test failures
+- **Regular reviews**: Monthly assessment of progress and needs
 
 ## 📊 **Success Criteria**
 - [ ] **All essential functions work**: reload, dotfiles, navigation, etc.
