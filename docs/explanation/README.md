@@ -4,19 +4,14 @@
 
 ## Available Explanations
 
-### Architecture and Design
-- [tmuxie Requirements](./TMUXIE-REQUIREMENTS.md) - Complete requirements and user stories
-- [System Architecture](./system-architecture.md) - Overall system design
-- [Design Principles](./design-principles.md) - Core design decisions
+### GPG Integration
+- [GPG TUI Integration](./gpg-tui-integration.md) - Why and how GPG works in TUI environments
 
-### Background and Context
-- [Why These Tools](./why-these-tools.md) - Tool selection rationale
-- [Configuration Philosophy](./configuration-philosophy.md) - Approach to configuration management
-- [Development Workflow](./development-workflow.md) - How development is organized
-
-### Decision Records
-- [Architecture Decisions](./architecture-decisions.md) - Key architectural choices
-- [Tool Selection](./tool-selection.md) - Why specific tools were chosen
+### Architecture Decisions
+- [Architecture Decision Records](./decisions/) - Key architectural decisions
+  - [ADR-001: Environment Variables in Login Shells](./decisions/ADR-001-environment-variables-in-login-shells.md)
+  - [ADR-002: tmuxie Script Replacement](./decisions/ADR-002-tmuxie-script-replacement.md)
+  - [ADR-003: XDG-Compliant Bash Deployment](./decisions/ADR-003-xdg-compliant-bash-deployment.md)
 
 ## Explanation Guidelines
 
@@ -26,3 +21,11 @@ Explanations should:
 - Include **rationale** and **trade-offs**
 - Help **understand** the system
 - Focus on **understanding** rather than doing
+
+## Planned Explanations
+
+- System Architecture - Overall system design
+- Design Principles - Core design decisions
+- Why These Tools - Tool selection rationale
+- Configuration Philosophy - Approach to configuration management
+- Development Workflow - How development is organized

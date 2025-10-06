@@ -4,13 +4,8 @@
 
 ## Available Tutorials
 
-### Getting Started
-- [First-time Installation](./first-time-installation.md) - Complete setup guide
-- [Understanding the Structure](./understanding-structure.md) - How dotfiles are organized
-
-### Development Environment
-- [Setting up tmux](./setting-up-tmux.md) - tmux configuration and usage
-- [Configuring Neovim](./configuring-neovim.md) - Neovim setup and plugins
+### GPG Integration
+- [GPG BDD Scenarios](./gpg-bdd-scenarios.md) - Behavior-driven development scenarios for GPG integration
 
 ## Tutorial Guidelines
 
@@ -20,3 +15,10 @@ Tutorials should:
 - Include **complete examples**
 - Be **reproducible** and **tested**
 - Focus on **learning** rather than reference
+
+## Planned Tutorials
+
+- First-time Installation - Complete dotfiles setup guide
+- Understanding the Structure - How dotfiles are organized
+- Setting up tmux - tmux configuration and usage
+- Configuring Neovim - Neovim setup and plugins
