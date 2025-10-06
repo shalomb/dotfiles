@@ -395,6 +395,23 @@ When working with this repository:
 7. **Follow component workflows**: Use the documented processes for each component
 8. **Maintain architectural integrity**: Don't break symlink chains or hardlink systems
 
+### **Agent Context Documentation**
+
+**IMPORTANT**: All key configuration files include lightweight context documentation to prevent misunderstandings:
+
+- **AGENT_CONTEXT**: Brief description of file purpose and key concepts
+- **ARCHITECTURE**: High-level architectural patterns used  
+- **DESIGN_PATTERN**: Specific design patterns or conventions
+
+**Example:**
+```bash
+# AGENT_CONTEXT: dotfiles command with subcommands (enter, list, search, load)
+# ARCHITECTURE: enabled/ -> symlinks -> rc.d/ or tools/
+# DESIGN_PATTERN: Single command with subcommands, not separate functions
+```
+
+**Reference**: See `docs/agent-context-documentation.md` for full standards and examples.
+
 ### **Development Workflow Checklist**
 
 Before making any changes:

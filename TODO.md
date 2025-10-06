@@ -178,6 +178,40 @@ This TODO item covers comprehensive BDD/spec testing for the dotfiles repository
 
 ---
 
+# Agent Context Documentation Implementation
+
+## 📋 **TODO: Add agent context documentation to all key files**
+
+### **Goal**
+Prevent agent misunderstandings by adding lightweight context documentation to all key configuration files.
+
+### **Format**
+```bash
+# AGENT_CONTEXT: Brief description of file purpose and key concepts
+# ARCHITECTURE: High-level architectural patterns used
+# DESIGN_PATTERN: Specific design patterns or conventions
+```
+
+### **Files to Update**
+- [ ] `.config/bash/bashrc` - Main bash configuration
+- [ ] `.config/bash/rc.d/dotfiles` - Dotfiles command system
+- [ ] `.config/bash/rc.d/01-functions` - Core functions
+- [ ] `.config/tmux/tmux.conf` - Tmux configuration
+- [ ] `.config/nvim/init.lua` - Neovim configuration
+- [ ] `src/dotfile_manager/file_ops.py` - File operations
+- [ ] `src/dotfile_manager/core.py` - Core dotfile manager
+- [ ] `Makefile` - Build system
+- [ ] All `.config/bash/tools/*.sh` - Tool configurations
+- [ ] All `.config/bash/rc.d/*` - RC configuration files
+
+### **Priority**
+**LOW** - Documentation improvement, not functional requirement
+
+### **Reference**
+See `docs/agent-context-documentation.md` for full standards and examples.
+
+---
+
 # 🚨 CRITICAL: Dotfiles Recovery Plan
 
 ## 📋 **Current State Analysis**
