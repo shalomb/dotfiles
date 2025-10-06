@@ -442,6 +442,11 @@ Before making any changes:
 - [ ] **Update end-state docs** if making significant changes
 - [ ] **Commit changes** after validation
 
+### **Agent Workflow Commands**
+
+- **`next`** - Quick refresh of AGENTS.md and get back on track (shows current status and next priority)
+- **`agent-status`** - Comprehensive agent workflow status check
+
 The repository is designed for **incremental updates** - you can deploy individual files or directories without affecting the entire system, but always through the proper channels.
 
 ## Commit Convention
