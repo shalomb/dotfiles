@@ -178,6 +178,101 @@ This TODO item covers comprehensive BDD/spec testing for the dotfiles repository
 
 ---
 
+# 🚨 CRITICAL: Dotfiles Recovery Plan
+
+## 📋 **Current State Analysis**
+- **Internal Quality**: Significant progress on Python dotfile manager, testing framework, and architectural improvements
+- **User Experience**: **BROKEN** - Many functions/aliases missing due to restructuring
+- **Root Cause**: Files moved around during refactoring, not properly sourced in new structure
+- **Impact**: Daily workflow disrupted, essential tools unavailable
+
+## 🎯 **Recovery Goals**
+- **Stability**: Restore all missing functions/aliases without breaking new architecture
+- **Scalability**: Framework that can evolve without disrupting existing functionality
+- **Testing**: Fast, reliable tests that ensure user experience remains intact
+- **Quality**: Maintain internal improvements while fixing user-facing issues
+
+## 🔧 **Priority Recovery Plan**
+
+### **Phase 1: Assessment & Inventory (IMMEDIATE)**
+- [ ] **Audit missing functions/aliases**: Compare current state vs 2-3 months ago
+- [ ] **Identify broken sourcing**: Find files that moved but aren't being loaded
+- [ ] **Create function inventory**: Document all expected functions/aliases
+- [ ] **Test current functionality**: Run comprehensive shell functionality tests
+
+### **Phase 2: Fix Test Suite (HIGH PRIORITY)**
+- [ ] **Fix TUI compatibility**: Make `make test` work in cursor-agent environment
+- [ ] **Create fast behavioral tests**: Quick tests for user experience validation
+- [ ] **Implement function/alias tests**: Automated detection of missing functionality
+- [ ] **Add regression tests**: Prevent future breakage during refactoring
+
+### **Phase 3: Restore Missing Functionality (HIGH PRIORITY)**
+- [ ] **Restore missing functions**: Re-enable all essential functions from 2-3 months ago
+- [ ] **Fix sourcing issues**: Ensure all moved files are properly sourced
+- [ ] **Validate aliases**: Restore all missing aliases and shortcuts
+- [ ] **Test user workflows**: Ensure daily tasks work as expected
+
+### **Phase 4: Stability Framework (MEDIUM PRIORITY)**
+- [ ] **Create stability tests**: Tests that run before any major changes
+- [ ] **Implement change validation**: Ensure refactoring doesn't break user experience
+- [ ] **Add rollback capability**: Quick recovery from broken states
+- [ ] **Document recovery procedures**: Clear steps for future maintenance
+
+### **Phase 5: Scalability & Evolution (LOW PRIORITY)**
+- [ ] **Design evolution framework**: Safe way to add new configs without breaking existing
+- [ ] **Implement change management**: Process for major architectural changes
+- [ ] **Create migration tools**: Automated tools for future restructuring
+- [ ] **Document best practices**: Guidelines for maintaining stability
+
+## 🚨 **Immediate Actions Required**
+
+### **1. Function/Alias Audit**
+```bash
+# Compare current vs historical state
+git show 2a5d7d4:.config/bash/rc.d/01-functions > /tmp/old-functions
+git show 2a5d7d4:.config/bash/aliases > /tmp/old-aliases
+# Compare with current files to identify missing items
+```
+
+### **2. Test Suite Fix**
+```bash
+# Make tests TUI-compatible
+make test 2>/dev/null || echo "Tests need TUI fix"
+# Create fast behavioral tests
+uv run python -m pytest tests/ -v --tb=short
+```
+
+### **3. Missing Functionality Detection**
+```bash
+# Test essential functions
+type -t reload || echo "MISSING: reload function"
+type -t dotfiles || echo "MISSING: dotfiles function"
+# Add more essential function checks
+```
+
+## 📊 **Success Criteria**
+- [ ] **All essential functions work**: reload, dotfiles, navigation, etc.
+- [ ] **All aliases available**: ls, grep, git shortcuts, etc.
+- [ ] **Fast tests pass**: < 30 seconds for full test suite
+- [ ] **TUI compatibility**: Tests work in cursor-agent environment
+- [ ] **Regression prevention**: Future changes can't break user experience
+- [ ] **Documentation updated**: Clear recovery procedures documented
+
+## 🎯 **Timeline**
+- **Phase 1**: 1-2 days (assessment and inventory)
+- **Phase 2**: 2-3 days (fix test suite and create behavioral tests)
+- **Phase 3**: 3-5 days (restore missing functionality)
+- **Phase 4**: 1-2 weeks (stability framework)
+- **Phase 5**: Ongoing (scalability and evolution)
+
+## 📝 **Notes**
+- **Focus on user experience**: Internal quality improvements are good, but user functionality is critical
+- **Test-driven recovery**: Use tests to validate that functionality is restored
+- **Incremental approach**: Fix one component at a time, test thoroughly
+- **Document everything**: Clear documentation prevents future issues
+
+---
+
 # SSH Agent & GPG Signing Issues
 
 ## 🚨 Current Issues
