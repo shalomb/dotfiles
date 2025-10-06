@@ -21,7 +21,7 @@ class FileOperations:
         self.registry_file = Path.cwd() / ".dotfiles-managed-files.json"
     
     def export_file(self, src_path: Path, dst_path: Path, force: bool = False) -> None:
-        """Export a single file using hard link."""
+        """Export a single file, preserving symlinks."""
         # Create parent directory if it doesn't exist
         dst_path.parent.mkdir(parents=True, exist_ok=True)
         
@@ -38,15 +38,26 @@ class FileOperations:
                 logger.error(f"Cannot replace directory with file: {dst_path}")
                 return
         
-        # Create hard link
-        try:
-            dst_path.hardlink_to(src_path)
-            logger.info(f"Created hard link: {src_path} -> {dst_path}")
-        except OSError as e:
-            logger.error(f"Failed to create hard link: {e}")
-            # Fallback to copy if hard link fails (different filesystem)
-            shutil.copy2(src_path, dst_path)
-            logger.info(f"Copied file instead: {src_path} -> {dst_path}")
+        # Handle symlinks: preserve them instead of following to target
+        if src_path.is_symlink():
+            try:
+                dst_path.symlink_to(src_path.readlink())
+                logger.info(f"Created symlink: {src_path} -> {dst_path}")
+            except OSError as e:
+                logger.error(f"Failed to create symlink: {e}")
+                # Fallback to copy if symlink fails
+                shutil.copy2(src_path, dst_path)
+                logger.info(f"Copied file instead: {src_path} -> {dst_path}")
+        else:
+            # Create hard link for regular files
+            try:
+                dst_path.hardlink_to(src_path)
+                logger.info(f"Created hard link: {src_path} -> {dst_path}")
+            except OSError as e:
+                logger.error(f"Failed to create hard link: {e}")
+                # Fallback to copy if hard link fails (different filesystem)
+                shutil.copy2(src_path, dst_path)
+                logger.info(f"Copied file instead: {src_path} -> {dst_path}")
     
     def export_directory(self, src_path: Path, dst_path: Path, force: bool = False) -> None:
         """Export a directory tree."""
