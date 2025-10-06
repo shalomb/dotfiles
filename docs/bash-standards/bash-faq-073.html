@@ -1,0 +1,291 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style type="text/css">.backtick { background-color: #eeeeee; font-size: larger; }</style><meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<meta name="robots" content="index,nofollow">
+
+<title>BashFAQ/073 - Greg's Wiki</title>
+<script type="text/javascript" src="/moin_static1911/common/js/common.js"></script>
+
+<script type="text/javascript">
+<!--
+var search_hint = "Search";
+//-->
+</script>
+
+
+<link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="/moin_static1911/modernized/css/common.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" media="screen" href="/moin_static1911/modernized/css/screen.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" media="print" href="/moin_static1911/modernized/css/print.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" media="projection" href="/moin_static1911/modernized/css/projection.css">
+
+<!-- css only for MS IE6/IE7 browsers -->
+<!--[if lt IE 8]>
+   <link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="/moin_static1911/modernized/css/msie.css">
+<![endif]-->
+
+
+<link rel="alternate" title="Greg's Wiki: BashFAQ/073" href="/BashFAQ/073?diffs=1&amp;show_att=1&amp;action=rss_rc&amp;unique=0&amp;page=BashFAQ%2F073&amp;ddiffs=1" type="application/rss+xml">
+<link rel="alternate" type="application/wiki" title="Edit" href="/BashFAQ/073?action=edit">
+
+<link rel="Start" href="/EnglishFrontPage">
+<link rel="Alternate" title="Wiki Markup" href="/BashFAQ/073?action=raw">
+<link rel="Alternate" media="print" title="Print View" href="/BashFAQ/073?action=print">
+<link rel="Up" href="/BashFAQ">
+<link rel="Search" href="/FindPage">
+<link rel="Index" href="/TitleIndex">
+<link rel="Glossary" href="/WordIndex">
+<link rel="Help" href="/HelpOnFormatting">
+</head>
+
+<body  lang="en" dir="ltr">
+
+<div id="header">
+
+<form id="searchform" method="get" action="/BashFAQ/073">
+<div>
+<input type="hidden" name="action" value="fullsearch">
+<input type="hidden" name="context" value="180">
+<label for="searchinput">Search:</label>
+<input id="searchinput" type="text" name="value" value="" size="20"
+    onfocus="searchFocus(this)" onblur="searchBlur(this)"
+    onkeyup="searchChange(this)" onchange="searchChange(this)" alt="Search">
+<input id="titlesearch" name="titlesearch" type="submit"
+    value="Titles" alt="Search Titles">
+<input id="fullsearch" name="fullsearch" type="submit"
+    value="Text" alt="Search Full Text">
+</div>
+</form>
+<script type="text/javascript">
+<!--// Initialize search form
+var f = document.getElementById('searchform');
+f.getElementsByTagName('label')[0].style.display = 'none';
+var e = document.getElementById('searchinput');
+searchChange(e);
+searchBlur(e);
+//-->
+</script>
+
+<div id="logo"><a href="/EnglishFrontPage"><img src="/moin_static1911/common/moinmoin.png" alt="MoinMoin Logo"></a></div>
+<div id="username"><a href="/BashFAQ/073?action=login" id="login" rel="nofollow">Login</a></div>
+<h1 id="locationline">
+
+<span id="pagelocation"><span class="pagepath"><a href="/BashFAQ">BashFAQ</a></span><span class="sep">/</span><a href="/BashFAQ/073">073</a></span>
+</h1>
+
+
+<ul id="navibar">
+<li class="wikilink"><a href="/BashGuide">BashGuide</a></li><li class="wikilink"><a href="/BashFAQ">BashFAQ</a></li><li class="wikilink"><a href="/RecentChanges">RecentChanges</a></li><li class="wikilink"><a href="/FindPage">FindPage</a></li><li class="wikilink"><a href="/HelpContents">HelpContents</a></li><li class="current"><a href="/BashFAQ/073">BashFAQ/073</a></li>
+</ul>
+
+<div id="pageline"><hr style="display:none;"></div>
+
+<ul class="editbar"><li><a href="/BashFAQ/073?action=edit&amp;editor=text" name="texteditlink" rel="nofollow">Edit</a></li><li class="toggleCommentsButton" style="display:none;"><a href="#" class="nbcomment" onClick="toggleComments();return false;">Comments</a></li><li><a class="nbinfo" href="/BashFAQ/073?action=info" rel="nofollow">Info</a></li><li><a class="nbattachments" href="/BashFAQ/073?action=AttachFile" rel="nofollow">Attachments</a></li><li>
+<form class="actionsmenu" method="GET" action="/BashFAQ/073">
+<div>
+    <label>More Actions:</label>
+    <select name="action"
+        onchange="if ((this.selectedIndex != 0) &&
+                      (this.options[this.selectedIndex].disabled == false)) {
+                this.form.submit();
+            }
+            this.selectedIndex = 0;">
+        <option value="raw">Raw Text</option>
+<option value="print">Print View</option>
+<option value="RenderAsDocbook">Render as Docbook</option>
+<option value="refresh">Delete Cache</option>
+<option value="show" disabled class="disabled">------------------------</option>
+<option value="SpellCheck">Check Spelling</option>
+<option value="LikePages">Like Pages</option>
+<option value="LocalSiteMap">Local Site Map</option>
+<option value="show" disabled class="disabled">------------------------</option>
+<option value="RenamePage" disabled class="disabled">Rename Page</option>
+<option value="DeletePage" disabled class="disabled">Delete Page</option>
+<option value="show" disabled class="disabled">------------------------</option>
+<option value="show" disabled class="disabled">Subscribe User</option>
+<option value="show" disabled class="disabled">------------------------</option>
+<option value="show" disabled class="disabled">Remove Spam</option>
+<option value="show" disabled class="disabled">Revert to this revision</option>
+<option value="PackagePages">Package Pages</option>
+<option value="SyncPages">Sync Pages</option>
+<option value="show" disabled class="disabled">------------------------</option>
+<option value="Load">Load</option>
+<option value="Save">Save</option>
+<option value="SlideShow">SlideShow</option>
+    </select>
+    <input type="submit" value="Do">
+    
+</div>
+<script type="text/javascript">
+<!--// Init menu
+actionsMenuInit('More Actions:');
+//-->
+</script>
+</form>
+</li></ul>
+
+</div>
+
+<div id="page" lang="en" dir="ltr">
+<div dir="ltr" id="content" lang="en"><span class="anchor" id="top"></span>
+<span class="anchor" id="line-1"></span><p class="line867"><span class="anchor" id="faq73"></span> <span class="anchor" id="line-2"></span>
+<h2 id="How_can_I_use_parameter_expansion.3F__How_can_I_get_substrings.3F__How_can_I_get_a_file_without_its_extension.2C_or_get_just_a_file.27s_extension.3F_What_are_some_good_ways_to_do_basename_and_dirname.3F">How can I use parameter expansion?  How can I get substrings?  How can I get a file without its extension, or get just a file's extension? What are some good ways to do basename and dirname?</h2>
+<span class="anchor" id="line-3"></span><p class="line874">Parameter expansion is an important subject. This page contains a concise overview of parameter expansion. <span class="anchor" id="line-4"></span><span class="anchor" id="line-5"></span><ul><li><p class="line862">The <a href="/BashGuide/Parameters#Parameter_Expansion">Bash Guide</a> includes an introduction for beginners. <span class="anchor" id="line-6"></span></li><li><p class="line862">The <a href="/BashFAQ/100">string manipulation tutorial</a> is a more in-depth tutorial with additional examples. <span class="anchor" id="line-7"></span></li><li><p class="line862">The "<a href="/BashSheet#Parameter_Operations">Bash Sheet</a>" includes a complete quick-reference on the available parameter expansions. <span class="anchor" id="line-8"></span></li><li><p class="line862">The official Bash <a class="http" href="http://tiswww.case.edu/php/chet/bash/bash.html#lbBB">manpage</a> and <a class="https" href="https://tiswww.case.edu/php/chet/bash/bashref.html#Shell-Parameter-Expansion">infopage</a> cover the full capabilities. <span class="anchor" id="line-9"></span></li><li><p class="line862">There is also a <a class="https" href="https://web.archive.org/web/20230408142504/https://wiki.bash-hackers.org/syntax/pe">Bash hackers article</a> with complete documentation. <span class="anchor" id="line-10"></span><span class="anchor" id="line-11"></span></li></ul><p class="line862">Parameter Expansion substitutes a variable or special parameter for its value.  It is the primary way of dereferencing (referring to) variables in Bourne-like shells such as Bash.  Parameter expansion can also perform various operations on the value at the same time for convenience. Remember to <a href="/Quotes">quote your expansions</a>. <span class="anchor" id="line-12"></span><span class="anchor" id="line-13"></span><p class="line862">The first set of capabilities involves <em>removing a substring</em>, from either the beginning or the end of a parameter.  Here's an example using parameter expansion with something akin to a hostname (dot-separated components): <span class="anchor" id="line-14"></span><span class="anchor" id="line-15"></span><p class="line867"><span class="anchor" id="line-16"></span><span class="anchor" id="line-17"></span><span class="anchor" id="line-18"></span><span class="anchor" id="line-19"></span><span class="anchor" id="line-20"></span><span class="anchor" id="line-21"></span><span class="anchor" id="line-22"></span><span class="anchor" id="line-23"></span><pre><span class="anchor" id="line-1"></span>parameter     result
+<span class="anchor" id="line-2"></span>-----------   ------------------------------
+<span class="anchor" id="line-3"></span>$name         polish.ostrich.racing.champion
+<span class="anchor" id="line-4"></span>${name#*.}           ostrich.racing.champion
+<span class="anchor" id="line-5"></span>${name##*.}                         champion
+<span class="anchor" id="line-6"></span>${name%%.*}   polish
+<span class="anchor" id="line-7"></span>${name%.*}    polish.ostrich.racing</pre><span class="anchor" id="line-24"></span><p class="line874">And here's an example of the parameter expansions for a typical filename: <span class="anchor" id="line-25"></span><span class="anchor" id="line-26"></span><p class="line867"><span class="anchor" id="line-27"></span><span class="anchor" id="line-28"></span><span class="anchor" id="line-29"></span><span class="anchor" id="line-30"></span><span class="anchor" id="line-31"></span><span class="anchor" id="line-32"></span><span class="anchor" id="line-33"></span><span class="anchor" id="line-34"></span><pre><span class="anchor" id="line-1-1"></span>parameter     result
+<span class="anchor" id="line-2-1"></span>-----------   --------------------------------------------------------
+<span class="anchor" id="line-3-1"></span>$file         /usr/share/java-1.4.2-sun/demo/applets/Clock/Clock.class
+<span class="anchor" id="line-4-1"></span>${file#*/}     usr/share/java-1.4.2-sun/demo/applets/Clock/Clock.class
+<span class="anchor" id="line-5-1"></span>${file##*/}                                                Clock.class
+<span class="anchor" id="line-6-1"></span>${file%%/*}
+<span class="anchor" id="line-7-1"></span>${file%/*}    /usr/share/java-1.4.2-sun/demo/applets/Clock</pre><span class="anchor" id="line-35"></span><p class="line862">US keyboard users may find it helpful to observe that, on the keyboard, the "#" is to the left of the "%" symbol.  Mnemonically, "#" operates on the left side of a parameter, and "%" operates on the right.  The <a href="/glob">glob</a> after the "%" or "%%" or "#" or "##" specifies what pattern to <em>remove</em> from the parameter expansion. Another mnemonic is that in an English sentence "#" usually comes before a number (e.g., "The #1 Bash reference site"), while "%" usually comes after a number (e.g., "Now 5% discounted"), so they operate on those sides. <span class="anchor" id="line-36"></span><span class="anchor" id="line-37"></span><p class="line874">You cannot nest parameter expansions.  If you need to perform two expansions steps, use a variable to hold the result of the first expansion: <span class="anchor" id="line-38"></span><span class="anchor" id="line-39"></span><p class="line867"><span class="anchor" id="line-40"></span><span class="anchor" id="line-41"></span><span class="anchor" id="line-42"></span><span class="anchor" id="line-43"></span><pre><span class="anchor" id="line-1-2"></span># foo holds: key="some value"
+<span class="anchor" id="line-2-2"></span>bar=${foo#*=\"} bar=${bar%\"*}
+<span class="anchor" id="line-3-2"></span># now bar holds: some value</pre><span class="anchor" id="line-44"></span><p class="line862">Here are a few more examples (but <em>please</em> see the real documentation for a list of all the features!).  I include these mostly so people won't break the wiki again, trying to add new questions that answer this stuff. <span class="anchor" id="line-45"></span><span class="anchor" id="line-46"></span><p class="line867"><span class="anchor" id="line-47"></span><span class="anchor" id="line-48"></span><span class="anchor" id="line-49"></span><span class="anchor" id="line-50"></span><span class="anchor" id="line-51"></span><span class="anchor" id="line-52"></span><span class="anchor" id="line-53"></span><span class="anchor" id="line-54"></span><span class="anchor" id="line-55"></span><span class="anchor" id="line-56"></span><span class="anchor" id="line-57"></span><span class="anchor" id="line-58"></span><span class="anchor" id="line-59"></span><span class="anchor" id="line-60"></span><pre><span class="anchor" id="line-1-3"></span>${string:2:1}   # The third character of string (0, 1, 2 = third)
+<span class="anchor" id="line-2-3"></span>${string:1}     # The string starting from the second character
+<span class="anchor" id="line-3-3"></span>                # Note: this is equivalent to ${string#?}
+<span class="anchor" id="line-4-2"></span>${string%?}     # The string with its last character removed.
+<span class="anchor" id="line-5-2"></span>${string: -1}   # The last character of string
+<span class="anchor" id="line-6-2"></span>${string:(-1)}  # The last character of string, alternate syntax
+<span class="anchor" id="line-7-2"></span>                # Note: string:-1 means something entirely different; see below.
+<span class="anchor" id="line-8"></span>
+<span class="anchor" id="line-9"></span>${file%.mp3}    # The filename without the .mp3 extension
+<span class="anchor" id="line-10"></span>                # Very useful in loops of the form: for file in *.mp3; do ...
+<span class="anchor" id="line-11"></span>${file%.*}      # The filename without its last extension
+<span class="anchor" id="line-12"></span>${file%%.*}     # The filename without all of its extensions
+<span class="anchor" id="line-13"></span>${file##*.}     # The extension only, assuming there is one. If not, will expand to: $file</pre><span class="anchor" id="line-61"></span><p class="line867">
+<h3 id="Examples_of_Filename_Manipulation">Examples of Filename Manipulation</h3>
+<span class="anchor" id="line-62"></span><p class="line874">Here  is one POSIX-compliant way to take a full pathname, extract the  directory component of the pathname, the filename, just the extension,  the filename without the extension (the "stub"), any numeric portion  occurring at the end of the stub (ignoring any digits that occur in the  middle of the filename), perform arithmetic on that number (in this  case, incrementing by one), and reassemble the entire filename adding a  prefix to the filename and replacing the number in the filename with  another one. <span class="anchor" id="line-63"></span><span class="anchor" id="line-64"></span><p class="line867"><span class="anchor" id="line-65"></span><span class="anchor" id="line-66"></span><span class="anchor" id="line-67"></span><span class="anchor" id="line-68"></span><span class="anchor" id="line-69"></span><span class="anchor" id="line-70"></span><span class="anchor" id="line-71"></span><span class="anchor" id="line-72"></span><span class="anchor" id="line-73"></span><span class="anchor" id="line-74"></span><span class="anchor" id="line-75"></span><span class="anchor" id="line-76"></span><span class="anchor" id="line-77"></span><span class="anchor" id="line-78"></span><span class="anchor" id="line-79"></span><pre><span class="anchor" id="line-1-4"></span>FullPath=/path/to/name4afile-009.ext     # result:   #   /path/to/name4afile-009.ext
+<span class="anchor" id="line-2-4"></span>Filename=${FullPath##*/}                             #   name4afile-009.ext
+<span class="anchor" id="line-3-4"></span>PathPref=${FullPath%"$Filename"}                     #   /path/to/
+<span class="anchor" id="line-4-3"></span>FileStub=${Filename%.*}                              #   name4afile-009
+<span class="anchor" id="line-5-3"></span>FileExt=${Filename#"$FileStub"}                      #   .ext
+<span class="anchor" id="line-6-3"></span>FnumPossLeading0s=${FileStub##*[![:digit:]]}         #   009
+<span class="anchor" id="line-7-3"></span>FnumOnlyLeading0s=${FnumPossLeading0s%%[!0]*}        #   00
+<span class="anchor" id="line-8-1"></span>FileNumber=${FnumPossLeading0s#"$FnumOnlyLeading0s"} #   9
+<span class="anchor" id="line-9-1"></span>NextNumber=$(( FileNumber + 1 ))                     #   10
+<span class="anchor" id="line-10-1"></span>NextNumberWithLeading0s=$(printf "%0${#FnumPossLeading0s}d" "$NextNumber")
+<span class="anchor" id="line-11-1"></span>                                                     #   010
+<span class="anchor" id="line-12-1"></span>FileStubNoNum=${FileStub%"$FnumPossLeading0s"}       #   name4afile-
+<span class="anchor" id="line-13-1"></span>NewFullPath=${PathPref}New_${FileStubNoNum}${NextNumberWithLeading0s}${FileExt}
+<span class="anchor" id="line-14"></span>                        # Final result is:           #   /path/to/New_name4afile-010.ext</pre><span class="anchor" id="line-80"></span><p class="line862">Note that trying to get the directory component of the pathname with <tt class="backtick">PathPref="${FullPath%/*}"</tt> will fail to return an empty string if <tt class="backtick">$FullPath</tt> is <tt class="backtick">"SomeFilename.ext"</tt> or some other pathname without a slash.  Similarly, trying to get the file extension using <tt class="backtick">FileExt="${Filename#*.}"</tt> fails to return an empty string if <tt class="backtick">$Filename</tt> has no dot (and thus no extension). <span class="anchor" id="line-81"></span><span class="anchor" id="line-82"></span><p class="line862">Also note that it is necessary to get rid of leading zeroes for <tt class="backtick">$FileNumber</tt> in order to perform arithmetic, or else the number is interpreted as octal. Alternatively, one can add a <tt class="backtick">10#</tt> prefix to force base 10.  In the example above, trying to calculate  <tt class="backtick">$((&nbsp;FnumPossLeading0s&nbsp;+&nbsp;1&nbsp;))</tt>  results in an error since "00809" is not a valid number.  If we had  used "00777" instead, then there would have been no error, but  <tt class="backtick">$((&nbsp;FnumPossLeading0s&nbsp;+&nbsp;1&nbsp;))</tt>  would result in "1000" (since octal 777 + 1 is octal 1000) which is probably not what was intended.  See <a href="/ArithmeticExpression">ArithmeticExpression</a>. <span class="anchor" id="line-83"></span><span class="anchor" id="line-84"></span><p class="line862">Quoting is not needed in variable assignment, since <a href="/WordSplitting">WordSplitting</a>  does not occur.  On the other hand, variables referenced inside a  parameter expansion need to be quoted (for example, quote <tt class="backtick">$Filename</tt> in <tt class="backtick">PathPref=${FullPath%"$Filename"}</tt>  ) or else any * or ? or other such characters within the filename would  incorrectly become part of the parameter expansion (for example, if an  asterisk is the first character in the filename --try  <tt class="backtick">FullPath="dir/*filename"</tt> ). <span class="anchor" id="line-85"></span><span class="anchor" id="line-86"></span><span class="anchor" id="line-87"></span><p class="line867">
+<h3 id="Bash_4">Bash 4</h3>
+<span class="anchor" id="line-88"></span><p class="line862">Bash 4 introduced some additional parameter expansions: toupper (<strong>^</strong>) and tolower (<strong>,</strong>). <span class="anchor" id="line-89"></span><span class="anchor" id="line-90"></span><p class="line867"><span class="anchor" id="line-91"></span><span class="anchor" id="line-92"></span><span class="anchor" id="line-93"></span><span class="anchor" id="line-94"></span><span class="anchor" id="line-95"></span><span class="anchor" id="line-96"></span><span class="anchor" id="line-97"></span><span class="anchor" id="line-98"></span><pre><span class="anchor" id="line-1-5"></span># string='hello, World!'
+<span class="anchor" id="line-2-5"></span>parameter     result
+<span class="anchor" id="line-3-5"></span>-----------   --------------------------------------------------------
+<span class="anchor" id="line-4-4"></span>${string^}    Hello, World! # First character to uppercase
+<span class="anchor" id="line-5-4"></span>${string^^}   HELLO, WORLD! # All characters to uppercase
+<span class="anchor" id="line-6-4"></span>${string,}    hello, World! # First character to lowercase
+<span class="anchor" id="line-7-4"></span>${string,,}   hello, world! # All characters to lowercase</pre><span class="anchor" id="line-99"></span><span class="anchor" id="line-100"></span><p class="line862">Bash 4.4 introduced another set of expansions, which it calls <em>Parameter transformation</em>: <span class="anchor" id="line-101"></span><span class="anchor" id="line-102"></span><p class="line867"><span class="anchor" id="line-103"></span><span class="anchor" id="line-104"></span><span class="anchor" id="line-105"></span><span class="anchor" id="line-106"></span><span class="anchor" id="line-107"></span><span class="anchor" id="line-108"></span><pre><span class="anchor" id="line-1-6"></span>${string@Q}     # Quote to be reused as input, like printf %q
+<span class="anchor" id="line-2-6"></span>${string@E}     # Expand C-style backslash combos, similar to printf %b
+<span class="anchor" id="line-3-6"></span>${string@P}     # Prompt string expansion, using the rules for PS1
+<span class="anchor" id="line-4-5"></span>${string@A}     # Assignment statement creation, like declare -p but different
+<span class="anchor" id="line-5-5"></span>${string@a}     # attributes fetch</pre><span class="anchor" id="line-109"></span><span class="anchor" id="line-110"></span><p class="line874">In action: <span class="anchor" id="line-111"></span><span class="anchor" id="line-112"></span><p class="line867"><span class="anchor" id="line-113"></span><span class="anchor" id="line-114"></span><span class="anchor" id="line-115"></span><span class="anchor" id="line-116"></span><span class="anchor" id="line-117"></span><span class="anchor" id="line-118"></span><span class="anchor" id="line-119"></span><span class="anchor" id="line-120"></span><span class="anchor" id="line-121"></span><span class="anchor" id="line-122"></span><span class="anchor" id="line-123"></span><span class="anchor" id="line-124"></span><span class="anchor" id="line-125"></span><span class="anchor" id="line-126"></span><span class="anchor" id="line-127"></span><span class="anchor" id="line-128"></span><span class="anchor" id="line-129"></span><span class="anchor" id="line-130"></span><span class="anchor" id="line-131"></span><span class="anchor" id="line-132"></span><span class="anchor" id="line-133"></span><pre><span class="anchor" id="line-1-7"></span>$ string=$'nice "day" isn\'t it?' ; echo "${string@Q}"
+<span class="anchor" id="line-2-7"></span>'nice "day" isn'\''t it?'
+<span class="anchor" id="line-3-7"></span>
+<span class="anchor" id="line-4-6"></span>$ string='hello\tworld' ; echo "${string@E}"
+<span class="anchor" id="line-5-6"></span>hello   world
+<span class="anchor" id="line-6-5"></span>
+<span class="anchor" id="line-7-5"></span>$ string='\h:\w\$ ' ; echo "${string@P}"
+<span class="anchor" id="line-8-2"></span>wooledg:~$ 
+<span class="anchor" id="line-9-2"></span>
+<span class="anchor" id="line-10-2"></span>$ string=hello ; echo "${string@A}"
+<span class="anchor" id="line-11-2"></span>string='hello'
+<span class="anchor" id="line-12-2"></span>$ a=(an array); echo "${a[@]@A}"
+<span class="anchor" id="line-13-2"></span>declare -a a=([0]="an" [1]="array")
+<span class="anchor" id="line-14-1"></span>$ declare -ri i=3 ; echo "${i@A}"
+<span class="anchor" id="line-15"></span>declare -ir i='3'
+<span class="anchor" id="line-16"></span>
+<span class="anchor" id="line-17"></span>$ echo "${string@a}"
+<span class="anchor" id="line-18"></span>
+<span class="anchor" id="line-19"></span>$ echo "${a@a}" "${i@a}"
+<span class="anchor" id="line-20"></span>a ir</pre><span class="anchor" id="line-134"></span><span class="anchor" id="line-135"></span><p class="line867">
+<h3 id="Parameter_Expansion_on_Arrays">Parameter Expansion on Arrays</h3>
+<span class="anchor" id="line-136"></span><p class="line867"><a href="/BashFAQ/005">BASH arrays</a> are remarkably flexible, because they are well integrated with the other shell expansions.  Any parameter expansion that can be carried out on a scalar or individual array element can equally apply to an entire array or the set of positional parameters such that all members are expanded at once, possibly with an additional operation mapped across each element. This is done by expanding parameters of the form <tt>@</tt>, <tt>*</tt>, <tt>arrayname[@]</tt> and <tt>arrayname[*]</tt>.  It is critical that these special expansions be <a href="/Quotes">quoted</a> properly - almost always that means double-quoting (e.g. <tt>"$@"</tt> or <tt>"${cmd[@]}"</tt>) - so that the members are treated literally as individual words, regardless of their content.  For example, <tt>arr=("${list[@]}"&nbsp;foo)</tt> correctly handles all elements in the <tt class="backtick">list</tt> array. <span class="anchor" id="line-137"></span><span class="anchor" id="line-138"></span><p class="line874">First the expansions: <span class="anchor" id="line-139"></span><span class="anchor" id="line-140"></span><p class="line867"><span class="anchor" id="line-141"></span><span class="anchor" id="line-142"></span><span class="anchor" id="line-143"></span><span class="anchor" id="line-144"></span><span class="anchor" id="line-145"></span><span class="anchor" id="line-146"></span><span class="anchor" id="line-147"></span><span class="anchor" id="line-148"></span><pre><span class="anchor" id="line-1-8"></span>$ a=(alpha beta gamma)  # assign to our base array via compound assignment
+<span class="anchor" id="line-2-8"></span>$ echo "${a[@]#a}"      # chop 'a' from the beginning of every member
+<span class="anchor" id="line-3-8"></span>lpha beta gamma
+<span class="anchor" id="line-4-7"></span>$ echo "${a[@]%a}"      # from the end
+<span class="anchor" id="line-5-7"></span>alph bet gamm
+<span class="anchor" id="line-6-6"></span>$ echo "${a[@]//a/f}"   # substitution
+<span class="anchor" id="line-7-6"></span>flphf betf gfmmf</pre><span class="anchor" id="line-149"></span><p class="line874">The following expansions (substitute at beginning or end) are very useful for the next part: <span class="anchor" id="line-150"></span><span class="anchor" id="line-151"></span><p class="line867"><span class="anchor" id="line-152"></span><span class="anchor" id="line-153"></span><span class="anchor" id="line-154"></span><span class="anchor" id="line-155"></span><span class="anchor" id="line-156"></span><pre><span class="anchor" id="line-1-9"></span>$ echo "${a[@]/#a/f}"   # substitute a for f at start
+<span class="anchor" id="line-2-9"></span>flpha beta gamma
+<span class="anchor" id="line-3-9"></span>$ echo "${a[@]/%a/f}"   # at end
+<span class="anchor" id="line-4-8"></span>alphf betf gammf</pre><span class="anchor" id="line-157"></span><p class="line874">We use these to prefix or suffix every member of the list: <span class="anchor" id="line-158"></span><span class="anchor" id="line-159"></span><p class="line867"><span class="anchor" id="line-160"></span><span class="anchor" id="line-161"></span><span class="anchor" id="line-162"></span><span class="anchor" id="line-163"></span><span class="anchor" id="line-164"></span><pre><span class="anchor" id="line-1-10"></span>$ echo "${a[@]/#/a}"    # append a to beginning
+<span class="anchor" id="line-2-10"></span>aalpha abeta agamma     #    (thanks to floyd-n-milan for this)
+<span class="anchor" id="line-3-10"></span>$ echo "${a[@]/%/a}"    # append a to end
+<span class="anchor" id="line-4-9"></span>alphaa betaa gammaa</pre><span class="anchor" id="line-165"></span><p class="line874">This works by substituting an empty string at beginning or end with the value we wish to append. <span class="anchor" id="line-166"></span><span class="anchor" id="line-167"></span><p class="line874">So finally, a quick example of how you might use this in a script, say to add a user-defined prefix to every target: <span class="anchor" id="line-168"></span><span class="anchor" id="line-169"></span><p class="line867"><span class="anchor" id="line-170"></span><span class="anchor" id="line-171"></span><span class="anchor" id="line-172"></span><span class="anchor" id="line-173"></span><span class="anchor" id="line-174"></span><pre><span class="anchor" id="line-1-11"></span>$ PFX=inc_
+<span class="anchor" id="line-2-11"></span>$ a=("${a[@]/#/$PFX}")
+<span class="anchor" id="line-3-11"></span>$ echo "${a[@]}"
+<span class="anchor" id="line-4-10"></span>inc_alpha inc_beta inc_gamma</pre><span class="anchor" id="line-175"></span><p class="line874">This is very useful, as you might imagine, since it saves looping over every member of the array. <span class="anchor" id="line-176"></span><span class="anchor" id="line-177"></span><p class="line862">The special parameter <tt class="backtick">@</tt> can also be used as an array for purposes of parameter expansions: <span class="anchor" id="line-178"></span><span class="anchor" id="line-179"></span><p class="line867"><span class="anchor" id="line-180"></span><span class="anchor" id="line-181"></span><span class="anchor" id="line-182"></span><pre><span class="anchor" id="line-1-12"></span>${@:(-2):1}             # the second-to-last parameter
+<span class="anchor" id="line-2-12"></span>${@: -2:1}              # alternative syntax</pre><span class="anchor" id="line-183"></span><p class="line862">You can't use <tt class="backtick">${@:-2:1}</tt> (note the whitespace), however, because that conflicts with the syntax described in the next section. <span class="anchor" id="line-184"></span><span class="anchor" id="line-185"></span><p class="line867">
+<h3 id="Portability">Portability</h3>
+<span class="anchor" id="line-186"></span><p class="line874">The original Bourne shell (7th edition Unix) only supports a very limited set of parameter expansion options: <span class="anchor" id="line-187"></span><span class="anchor" id="line-188"></span><p class="line867"><span class="anchor" id="line-189"></span><span class="anchor" id="line-190"></span><span class="anchor" id="line-191"></span><span class="anchor" id="line-192"></span><span class="anchor" id="line-193"></span><span class="anchor" id="line-194"></span><pre><span class="anchor" id="line-1-13"></span>${var-word}             # if var is defined, use var; otherwise, "word"
+<span class="anchor" id="line-2-13"></span>${var+word}             # if var is defined, use "word"; otherwise, nothing
+<span class="anchor" id="line-3-12"></span>${var=word}             # if var is defined, use var; otherwise, use "word" AND...
+<span class="anchor" id="line-4-11"></span>                        #   also assign "word" to var
+<span class="anchor" id="line-5-8"></span>${var?error}            # if var is defined, use var; otherwise print "error" and exit</pre><span class="anchor" id="line-195"></span><p class="line874">These are the only completely portable expansions available. <span class="anchor" id="line-196"></span><span class="anchor" id="line-197"></span><p class="line862">POSIX shells (as well as <a href="/KornShell">KornShell</a> and <a href="/BASH">BASH</a>) offer those, plus a slight variant: <span class="anchor" id="line-198"></span><span class="anchor" id="line-199"></span><p class="line867"><span class="anchor" id="line-200"></span><span class="anchor" id="line-201"></span><span class="anchor" id="line-202"></span><pre><span class="anchor" id="line-1-14"></span>${var:-word}             # if var is defined AND NOT EMPTY, use var; otherwise, "word"
+<span class="anchor" id="line-2-14"></span>similarly for ${var:+word} etc.</pre><span class="anchor" id="line-203"></span><p class="line862">POSIX, Korn (all versions) and Bash all support the <tt class="backtick">${var#word}</tt>, <tt class="backtick">${var%word}</tt>, <tt class="backtick">${var##word}</tt> and <tt class="backtick">${var%%word}</tt> expansions. <span class="anchor" id="line-204"></span><span class="anchor" id="line-205"></span><p class="line862">ksh88 does not support <tt class="backtick">${var/replace/with}</tt> or <tt class="backtick">${var//replace/all}</tt>, but ksh93 and Bash do. <span class="anchor" id="line-206"></span><span class="anchor" id="line-207"></span><p class="line862">ksh88 does not support fancy expansion with arrays (e.g., <tt class="backtick">${a[@]%.gif}</tt>) but ksh93 and Bash do. <span class="anchor" id="line-208"></span><span class="anchor" id="line-209"></span><p class="line862">ksh88 does not support the <tt>arr=(...)</tt> style of compound assignment. Either use <tt>set&nbsp;-A&nbsp;arrayname&nbsp;--&nbsp;elem1&nbsp;elem2&nbsp;...</tt>, or assign each element individually with <tt>arr[0]=val1&nbsp;arr[1]=val2&nbsp;...</tt> <span class="anchor" id="line-210"></span><span class="anchor" id="bottom"></span></div><p id="pageinfo" class="info" lang="en" dir="ltr">BashFAQ/073  (last edited 2024-10-08 22:32:27 by <span title="larryv @ 100.12.174.99[100.12.174.99]"><a class="nonexistent" href="/larryv" title="larryv @ 100.12.174.99[100.12.174.99]">larryv</a></span>)</p>
+
+<div id="pagebottom"></div>
+</div>
+
+
+<div id="footer">
+<ul class="editbar"><li><a href="/BashFAQ/073?action=edit&amp;editor=text" name="texteditlink" rel="nofollow">Edit</a></li><li class="toggleCommentsButton" style="display:none;"><a href="#" class="nbcomment" onClick="toggleComments();return false;">Comments</a></li><li><a class="nbinfo" href="/BashFAQ/073?action=info" rel="nofollow">Info</a></li><li><a class="nbattachments" href="/BashFAQ/073?action=AttachFile" rel="nofollow">Attachments</a></li><li>
+<form class="actionsmenu" method="GET" action="/BashFAQ/073">
+<div>
+    <label>More Actions:</label>
+    <select name="action"
+        onchange="if ((this.selectedIndex != 0) &&
+                      (this.options[this.selectedIndex].disabled == false)) {
+                this.form.submit();
+            }
+            this.selectedIndex = 0;">
+        <option value="raw">Raw Text</option>
+<option value="print">Print View</option>
+<option value="RenderAsDocbook">Render as Docbook</option>
+<option value="refresh">Delete Cache</option>
+<option value="show" disabled class="disabled">------------------------</option>
+<option value="SpellCheck">Check Spelling</option>
+<option value="LikePages">Like Pages</option>
+<option value="LocalSiteMap">Local Site Map</option>
+<option value="show" disabled class="disabled">------------------------</option>
+<option value="RenamePage" disabled class="disabled">Rename Page</option>
+<option value="DeletePage" disabled class="disabled">Delete Page</option>
+<option value="show" disabled class="disabled">------------------------</option>
+<option value="show" disabled class="disabled">Subscribe User</option>
+<option value="show" disabled class="disabled">------------------------</option>
+<option value="show" disabled class="disabled">Remove Spam</option>
+<option value="show" disabled class="disabled">Revert to this revision</option>
+<option value="PackagePages">Package Pages</option>
+<option value="SyncPages">Sync Pages</option>
+<option value="show" disabled class="disabled">------------------------</option>
+<option value="Load">Load</option>
+<option value="Save">Save</option>
+<option value="SlideShow">SlideShow</option>
+    </select>
+    <input type="submit" value="Do">
+    
+</div>
+<script type="text/javascript">
+<!--// Init menu
+actionsMenuInit('More Actions:');
+//-->
+</script>
+</form>
+</li></ul>
+
+<ul id="credits">
+<li><a href="http://moinmo.in/" title="This site uses the MoinMoin Wiki software.">MoinMoin Powered</a></li><li><a href="http://moinmo.in/Python" title="MoinMoin is written in Python.">Python Powered</a></li><li><a href="http://moinmo.in/GPL" title="MoinMoin is GPL licensed.">GPL licensed</a></li><li><a href="http://validator.w3.org/check?uri=referer" title="Click here to validate this page.">Valid HTML 4.01</a></li>
+</ul>
+
+
+</div>
+</body>
+</html>
+

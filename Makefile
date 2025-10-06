@@ -162,16 +162,26 @@ clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup apt-clean python-cleanu
 
 .PHONY: test test-fast
 test: ## Run acceptance tests (usage: make test [FAST=1])
+	@echo "Running bash standards validation..."
+	@tests/bash-standards/validate-standards.sh
+	@echo "Running shellcheck validation..."
+	@tests/bash-standards/run-shellcheck.sh
+	@echo "Running Python tests..."
 	@if [ "$(FAST)" = "1" ]; then \
 		echo "Running fast tests..."; \
-		uv run pytest tests/test_environment.py tests/test_dotfile_deployment.py -v; \
+		uv run pytest tests/test_environment.py tests/test_dotfile_deployment.py -v --tb=short; \
 	else \
 		echo "Running full acceptance tests..."; \
-		uv run pytest tests/test_environment.py tests/test_shell_integration.py tests/test_tmux.py tests/test_dotfile_deployment.py -v; \
+		uv run pytest tests/test_environment.py tests/test_shell_integration.py tests/test_tmux.py tests/test_dotfile_deployment.py -v --tb=short; \
 	fi
 
 test-fast: ## Run fast tests only (environment + deployment)
-	@uv run pytest tests/test_environment.py tests/test_dotfile_deployment.py -v
+	@echo "Running bash standards validation..."
+	@tests/bash-standards/validate-standards.sh
+	@echo "Running shellcheck validation..."
+	@tests/bash-standards/run-shellcheck.sh
+	@echo "Running fast Python tests..."
+	@uv run pytest tests/test_environment.py tests/test_dotfile_deployment.py -v --tb=short
 
 .DEFAULT_GOAL := help
 help: ## Show make targets available
