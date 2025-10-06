@@ -348,27 +348,42 @@ This is the **fundamental principle** for all development and testing in this re
 4. **Test through official interfaces**: Use the provided testing and validation tools
 5. **Document changes**: Update documentation when adding new workflows or processes
 
-### **Definition of Done: Test-Driven Development**
+### **Definition of Done: Test-Driven Development + Documentation**
 
-**MANDATORY REQUIREMENT**: Every task MUST pass `make test` before being marked complete. No exceptions.
+**MANDATORY REQUIREMENT**: Every task MUST pass `make test` AND meet documentation standards before being marked complete. No exceptions.
 
+**Testing Requirements:**
 - **Test-First Development**: Run `make test` before starting any work
 - **Continuous Validation**: Run `make test` after each significant change
 - **Completion Gate**: `make test` must pass before marking any task as complete
 - **Fast Feedback**: Tests must complete in < 30 seconds for rapid iteration
 - **TUI Compatibility**: Tests must work in cursor-agent environment without breaking TUI
 
+**Documentation Requirements:**
+- **Diataxis Compliance**: All documentation must follow proper categorization (tutorials, how-to, reference, explanation)
+- **Agent Context Headers**: Key configuration files must include AGENT_CONTEXT, ARCHITECTURE, DESIGN_PATTERN headers
+- **Accurate Signposting**: READMEs must reflect actual content, not placeholders
+- **Living Documentation**: Update docs when architecture or processes change
+- **Reference Updates**: Fix all references when files are moved or restructured
+
 **Process:**
 1. **Before starting**: Run `make test` to establish baseline
 2. **During development**: Run `make test` after each change
-3. **Before completion**: Run `make test` to validate final state
-4. **Mark complete**: Only after `make test` passes successfully
+3. **Documentation check**: Ensure docs reflect changes and follow standards
+4. **Before completion**: Run `make test` to validate final state
+5. **Mark complete**: Only after `make test` passes AND documentation is updated
 
 **Test Suite Requirements:**
 - **Shellcheck validation**: All bash files must pass shellcheck
 - **Functionality tests**: Core functions must work as expected
 - **Architecture tests**: Symlink/hardlink integrity maintained
 - **Performance tests**: Shell startup and function execution times
+
+**Documentation Standards:**
+- **Diataxis framework**: Proper categorization by user need
+- **Agent context**: Prevent misunderstandings with clear headers
+- **Accurate references**: All links and references must work
+- **Consistency**: Follow established patterns and conventions
 - **Regression tests**: Prevent breaking existing functionality
 
 ### **Component-Specific Workflows**
@@ -410,7 +425,7 @@ When working with this repository:
 # DESIGN_PATTERN: Single command with subcommands, not separate functions
 ```
 
-**Reference**: See `docs/agent-context-documentation.md` for full standards and examples.
+**Reference**: See `docs/technical-reference/agent-context-documentation.md` for full standards and examples.
 
 ### **Development Workflow Checklist**
 
