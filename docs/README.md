@@ -26,6 +26,8 @@ This documentation follows the **Diataxis framework** for technical documentatio
   - [Bash FAQ 073](./technical-reference/bash-standards/bash-faq-073.html) - Parameter expansions
   - [Bash Pitfalls](./technical-reference/bash-standards/bash-pitfalls.html) - Common mistakes
 - [Cursor Agent GPG Integration](./technical-reference/cursor-agent-gpg-integration.md) - Technical specifications
+- [Shell Sourcing Analysis](./reference/shell-sourcing-analysis.md) - Detailed shell sourcing flow analysis
+- [Variable Sourcing Analysis](./reference/variable-sourcing-analysis.md) - Variable, function, and alias sourcing analysis
 
 ### 💡 **Explanation** (`explanation/`)
 **Understanding-oriented** - Conceptual background and context
@@ -33,6 +35,8 @@ This documentation follows the **Diataxis framework** for technical documentatio
 **Available:**
 - [End-State Evolution](./explanation/end-state-evolution.md) - How the end-state evolves and discovery process
 - [GPG TUI Integration](./explanation/gpg-tui-integration.md) - Why and how GPG works in TUI environments
+- [Final Shell Sourcing Analysis](./explanation/FINAL-SHELL-SOURCING-ANALYSIS.md) - Proven consistency across all shell types
+- [Final Variable Sourcing Proof](./explanation/FINAL-VARIABLE-SOURCING-PROOF.md) - Cleanroom validation of sourcing model
 - [Architecture Decision Records](./explanation/decisions/) - Key architectural decisions
   - [ADR-001: Environment Variables in Login Shells](./explanation/decisions/ADR-001-environment-variables-in-login-shells.md)
   - [ADR-002: tmuxie Script Replacement](./explanation/decisions/ADR-002-tmuxie-script-replacement.md)
@@ -55,6 +59,11 @@ This documentation follows the **Diataxis framework** for technical documentatio
 - **Solution**: Bash standards documentation and validation
 - **Focus**: Modern bash practices, shellcheck integration
 
+### 🧪 **Testing Framework**
+- **Problem**: Need comprehensive validation of shell sourcing behavior
+- **Solution**: Behavioral testing framework with cleanroom validation
+- **Focus**: Prove consistency across all shell types and contexts
+
 ## Documentation Standards
 
 - **Diataxis Compliance**: Clear separation of documentation types
@@ -75,4 +84,9 @@ This documentation follows the **Diataxis framework** for technical documentatio
 
 **Architecture:**
 - Review [Architecture Decision Records](./explanation/decisions/) for context
+- Check [Architecture Directory](./architecture/) for additional ADRs
 - Understand [Cursor Agent GPG Integration](./technical-reference/cursor-agent-gpg-integration.md) for technical details
+
+**Testing:**
+- Run [Shell Sourcing Tests](../tests/shell-sourcing/) for validation
+- Review [Final Analysis](./explanation/FINAL-SHELL-SOURCING-ANALYSIS.md) for conclusions
