@@ -1,1 +1,0 @@
-../rc.d/source_bash_completion

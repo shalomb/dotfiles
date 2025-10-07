@@ -81,7 +81,7 @@ _dotfiles_load() {
         return 1
     fi
     
-    local tool_file="$DOTFILES_ROOT/.config/bash/tools/${tool}.sh"
+    local tool_file="$DOTFILES_ROOT/.config/bash/disabled/${tool}.sh"
     
     if [[ -f "$tool_file" ]]; then
         if [[ -r "$tool_file" ]]; then
@@ -133,7 +133,7 @@ _dotfiles_search() {
     echo "===================="
     
     # Search in tool names and descriptions
-    find "$DOTFILES_ROOT/.config/bash/tools/" -name "*.sh" -exec grep -l -i "$term" {} \; 2>/dev/null | \
+    find "$DOTFILES_ROOT/.config/bash/disabled/" -name "*.sh" -exec grep -l -i "$term" {} \; 2>/dev/null | \
     while read -r file; do
         local tool_name="${file##*/}"
         tool_name="${tool_name%.sh}"
@@ -217,7 +217,7 @@ _dotfiles_reload() {
 
 # List all tools with categories
 _dotfiles_list_tools_with_categories() {
-    local tools_dir="$DOTFILES_ROOT/.config/bash/tools"
+    local tools_dir="$DOTFILES_ROOT/.config/bash/disabled"
     
     if [[ ! -d "$tools_dir" ]]; then
         echo "No tools directory found. Run 'dotfiles migrate' to set up tools."
@@ -265,7 +265,7 @@ _dotfiles_list_tools_with_categories() {
 # List tools by category
 _dotfiles_list_tools_by_category() {
     local category="$1"
-    local tools_dir="$DOTFILES_ROOT/.config/bash/tools"
+    local tools_dir="$DOTFILES_ROOT/.config/bash/disabled"
     
     find "$tools_dir" -name "*.sh" | while read -r file; do
         local tool_name="${file##*/}"
@@ -299,7 +299,7 @@ _dotfiles_list_tools_by_category() {
 
 # Simple tool list
 _dotfiles_list_tools() {
-    local tools_dir="$DOTFILES_ROOT/.config/bash/tools"
+    local tools_dir="$DOTFILES_ROOT/.config/bash/disabled"
     
     if [[ -d "$tools_dir" ]]; then
         find "$tools_dir" -name "*.sh" -exec basename {} .sh \; | sort
@@ -368,7 +368,7 @@ _dotfiles_complete() {
             ;;
         load)
             # Get available tools
-            local tools_dir="$DOTFILES_ROOT/.config/bash/tools"
+            local tools_dir="$DOTFILES_ROOT/.config/bash/disabled"
             if [[ -d "$tools_dir" ]]; then
                 local tools=$(find "$tools_dir" -name "*.sh" -exec basename {} .sh \; | tr '\n' ' ')
                 COMPREPLY=( $(compgen -W "${tools}" -- "${cur}") )
