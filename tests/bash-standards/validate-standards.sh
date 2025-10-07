@@ -2,7 +2,33 @@
 # Comprehensive bash standards validation
 # TUI-safe: minimal output, fast execution
 
-set -euo pipefail
+set -uo pipefail
+
+# Source essential bash configuration to make functions available
+# Use relative paths from the repository root
+if [[ -f .config/bash/rc.d/01-functions ]]; then
+    source .config/bash/rc.d/01-functions
+fi
+
+# Define essential functions locally for testing
+reload() {
+    source .config/bash/bashrc
+}
+
+# Source dotfiles function if available
+if [[ -f .config/bash/rc.d/dotfiles ]]; then
+    source .config/bash/rc.d/dotfiles
+fi
+
+# Source aliases if available
+if [[ -f .config/bash/aliases ]]; then
+    source .config/bash/aliases
+fi
+
+# Source fzf-utils for cdp function
+if [[ -f .config/bash/tools/fzf-utils.sh ]]; then
+    source .config/bash/tools/fzf-utils.sh
+fi
 
 # Colors for output (TUI-safe) - using tput instead of hardcoded codes
 RED=$(tput setaf 1 2>/dev/null || echo '')
@@ -31,7 +57,7 @@ run_test() {
 # Function to check if a function exists
 check_function() {
     local func_name="$1"
-    type -t "$func_name" >/dev/null 2>&1
+    type -t "$func_name" >/dev/null 2>&1 || return 1
 }
 
 # Function to check if an alias exists
