@@ -13,6 +13,7 @@ jless            jless            https://github.com/PaulJuliusMartinez/jless
 jnv              jnv              https://github.com/ynqa/jnv
 just             just             https://github.com/casey/just
 mdcat            mdcat            https://github.com/swsnr/mdcat
+mdserve          mdserve          https://github.com/jfernandez/mdserve
 pastel           pastel           https://github.com/sharkdp/pastel
 ripgrep          ripgrep          https://github.com/burntsushi/ripgrep
 tree-sitter-cli  tree-sitter-cli  https://github.com/tree-sitter/tree-sitter-cli
