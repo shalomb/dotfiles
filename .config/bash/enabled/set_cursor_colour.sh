@@ -1,1 +1,0 @@
-../rc.d/set_cursor_colour

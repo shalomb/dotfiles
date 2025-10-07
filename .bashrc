@@ -32,12 +32,7 @@ else
     [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Enabled tools directory missing" >&2
 fi
 
-# SSH Agent Management
-# Bootstrap SSH agent for this shell
-if [[ -f ~/.config/bash/tools/ssh-agent-bootstrap.sh ]]; then
-    source ~/.config/bash/tools/ssh-agent-bootstrap.sh
-    bootstrap_ssh_agent
-fi
+# SSH Agent Management is now handled via enabled/ directory loading
 
 # If not running interactively, don't do anything
 # Exception: Allow sourcing from bash_profile for login shells
@@ -152,7 +147,7 @@ if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
-# Enable programmable completion
+# Enable programmable completion (consolidated)
 if ! shopt -oq posix; then
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
