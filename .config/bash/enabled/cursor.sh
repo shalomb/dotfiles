@@ -47,6 +47,9 @@ _cursor_agent_strict() {
         echo "cursor-agent: GPG check failed - fix GPG setup before continuing" >&2
         exit 1
     fi
+    # Set memory limits before running cursor-agent
+    # -m: max memory size (2GB), -v: virtual memory (4GB), -d: data segment (1GB)
+    ulimit -m 2097152 -v 4194304 -d 1048576
     nice -n 15 command cursor-agent "$@"
 }
 
