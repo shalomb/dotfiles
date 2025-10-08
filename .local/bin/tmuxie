@@ -90,13 +90,14 @@ function select_projects() {
   gum projects --format simple | sed 's|~/||' | \
     fzf \
       --height=100% \
+      --min-height=20 \
+      --no-header \
       --border \
       --reverse \
-      --prompt="Select project (README): " \
+      --prompt="Select project: " \
       --preview="$preview_cmd" \
-      --preview-window=right:50%:wrap \
-      --bind="ctrl-/:toggle-preview" \
-      --header="README preview - Press Ctrl+/ to toggle"
+      --preview-window=hidden,right:50%:wrap \
+      --bind="ctrl-/:toggle-preview"
 }
 
 function select_sessions() {
