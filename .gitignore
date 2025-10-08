@@ -204,3 +204,4 @@ tmp-CONTEXT.md
 !.cursor/cli-config.json
 .cursor/
 .config/bash/bashrc.backup
+tmp/
