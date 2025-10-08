@@ -20,18 +20,6 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 export EDITOR="${EDITOR:-$(command -v vim 2>/dev/null || command -v nano 2>/dev/null || command -v vi 2>/dev/null || echo 'vi')}"
 export FCEDIT="$EDITOR"
 
-# Load enabled tools from enabled directory
-# This happens for both interactive shells and when sourced from bash_profile
-if [[ -d ~/.config/bash/enabled ]]; then
-    for script in ~/.config/bash/enabled/*.sh; do
-        if [[ -r "$script" ]]; then
-            source "$script"
-        fi
-    done
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Enabled tools directory missing" >&2
-fi
-
 # SSH Agent Management is now handled via enabled/ directory loading
 
 # If not running interactively, don't do anything
@@ -78,6 +66,18 @@ if [[ -f ~/.config/bash/rc.d/02-colours ]]; then
     source ~/.config/bash/rc.d/02-colours
 else
     [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Colors file missing" >&2
+fi
+
+# Load enabled tools from enabled directory
+# This happens AFTER rc.d functions are loaded so @has-cmd is available
+if [[ -d ~/.config/bash/enabled ]]; then
+    for script in ~/.config/bash/enabled/*.sh; do
+        if [[ -r "$script" ]]; then
+            source "$script"
+        fi
+    done
+else
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Enabled tools directory missing" >&2
 fi
 
 # Load aliases
