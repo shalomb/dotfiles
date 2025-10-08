@@ -1,0 +1,52 @@
+#!/bin/bash
+
+function gitignore() {
+  cp -v ~/.gitignore .
+}
+
+function __my_git_ps1 {
+  git_ps1_text=$(__git_ps1 '%s')
+
+  if [[ -z $git_ps1_text ]] || (( ${#git_ps1_text} == 0 )); then
+    printf '\001%s\002%s\001%s\002'  "$bold$grey_236" "-" "$reset"
+    return
+  fi
+  s=0
+
+  git_ps1_text="${git_ps1_text//feature\//f\/}"
+  git_ps1_text="${git_ps1_text//bugfix\//b\/}"
+  git_ps1_text="${git_ps1_text//release\//r\/}"
+  git_ps1_text="${git_ps1_text//hotfix\//h\/}"
+  git_ps1_text="${git_ps1_text//support\//s\/}"
+
+  if (( ${#git_ps1_text} > 24 )); then
+    git_ps1_text="${git_ps1_text:0:24}⋯"
+  fi
+
+  gs=$(git status --ignore-submodules=all 2>/dev/null)
+
+  if grep -iq "Changes not staged" <<<"$gs"; then
+    printf '\001%s\002%s\001%s\002' "$orange_166" "$git_ps1_text" "$reset"
+  elif grep -iq "^Untracked files:" <<<"$gs"; then
+    printf '\001%s\002%s\001%s\002' "$yellow_222" "$git_ps1_text" "$reset"
+  elif grep -iq "^Changes to be committed:" <<<"$gs"; then
+    printf '\001%s\002%s\001%s\002' "$underline$yellow_222" "$git_ps1_text" "$reset"
+  else
+    printf '\001%s\002%s\001%s\002' "$green_36" "$git_ps1_text" "$reset"
+  fi
+
+  divergence_text=$(grep -iPo "(?:behind|ahead of) '.*?' by \d+" <<<"$gs")
+
+  divergence_symbol=''
+  grep -iq "ahead"  <<<"$divergence_text" && divergence_symbol+='+'
+  grep -iq "behind" <<<"$divergence_text" && divergence_symbol+='-'
+
+  if divergence_amount=$(grep -Po '\d+$' <<<"$divergence_text"); then
+    printf '\001%s\002%s\001%s\002' \
+      "$red_196" "$divergence_symbol$divergence_amount" "$reset"
+    return
+  fi
+
+}
+
+# vim:fenc=utf8
