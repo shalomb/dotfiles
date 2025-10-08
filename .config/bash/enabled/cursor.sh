@@ -48,10 +48,11 @@ _cursor_agent_strict() {
         exit 1
     fi
     # Set memory limits before running cursor-agent
-    # -m: max memory size (2GB) - limits physical RAM usage
+    # -m: max memory size (1.5GB) - limits physical RAM usage to avoid swap pressure
     # -d: data segment (1GB) - limits heap/data usage
-    # Note: Not limiting virtual memory (-v) to allow memory-mapped files and swap
-    ulimit -m 2097152 -d 1048576
+    # -v: virtual memory (2GB) - limits total virtual memory to discourage swap usage
+    # Note: Aggressive limits due to small swap partition (210MB) being 100% full
+    ulimit -m 1572864 -d 1048576 -v 2097152
     nice -n 15 command cursor-agent "$@"
 }
 
