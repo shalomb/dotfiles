@@ -8,30 +8,36 @@ This directory contains patches for various applications that have known issues 
 Fixes bash initialization issues in cursor-agent by adding proper bash initialization prefix.
 
 **Files:**
-- `cursor-agent-patch.sh` - The consolidated patch script
+- `cursor-agent/` - Python-based patch system directory
+  - `patch.py` - Main Python implementation (robust, precise)
+  - `cursor-agent-patch.sh` - Shell wrapper script
+  - `pyproject.toml` - Python project configuration
+  - `README.md` - Detailed documentation
 
 **Usage:**
 ```bash
 # Apply the patch (recommended)
 make patch APP=cursor-agent
 
-# Or apply directly
-.config/patches/cursor-agent-patch.sh apply
+# Or apply directly using Python-based system
+.config/patches/cursor-agent/cursor-agent-patch.sh apply
 
 # Check patch status
-.config/patches/cursor-agent-patch.sh status
+.config/patches/cursor-agent/cursor-agent-patch.sh status
 
 # Restore from backup
-.config/patches/cursor-agent-patch.sh restore
+.config/patches/cursor-agent/cursor-agent-patch.sh restore
 ```
 
 **Features:**
-- Automatically finds all cursor-agent installations
-- Creates backups before patching
-- Handles multiple versions gracefully
-- Provides detailed status reporting
-- Runs basic tests after patching
-- Color-coded output for better UX
+- **Robust Python implementation**: Uses precise regex pattern matching
+- **Safe operations**: No risk of corrupting JavaScript code
+- **Automatic installation detection**: Finds all cursor-agent installations
+- **Backup creation**: Creates backups before patching
+- **Comprehensive testing**: Basic functionality tests after patching
+- **Error handling**: Graceful failure recovery
+- **Type safety**: Full Python type hints and validation
+- **Color-coded output**: Clear status messages
 
 ## Adding New Patches
 
