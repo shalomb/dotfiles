@@ -7,6 +7,24 @@ set -eu
 
 shopt -s nocasematch
 
+# Lightweight observability
+# Enable by setting TMUXIE_DEBUG=1 or TMUXIE_OBS=1, optionally TMUXIE_LOG to a file path
+_tmuxie_log() {
+  if [[ -z "${TMUXIE_DEBUG:-}" && -z "${TMUXIE_OBS:-}" && -z "${TMUXIE_LOG:-}" ]]; then
+    return 0
+  fi
+  local log_path
+  if [[ -n "${TMUXIE_LOG:-}" ]]; then
+    log_path="$TMUXIE_LOG"
+  else
+    # Default to XDG cache; user can override to repo ./tmp/tmuxie.log via TMUXIE_LOG
+    log_path="${XDG_CACHE_HOME:-$HOME/.cache}/tmuxie/tmuxie.log"
+  fi
+  mkdir -p "$(dirname "$log_path")" 2>/dev/null || true
+  # shellcheck disable=SC2129
+  printf '%s | %s\n' "$(date +'%F %T')" "$*" >>"$log_path"
+}
+
 # Ensure PATH is properly set for popup environment
 if [[ -f ~/.config/bash/rc.d/00-path ]]; then
     source ~/.config/bash/rc.d/00-path
@@ -85,6 +103,7 @@ function select_projects() {
   local preview_cmd
   
   preview_cmd=$(get_preview_command)
+  _tmuxie_log "select_projects: term=${TERM-} lines=$(tput lines 2>/dev/null || echo ?) cols=$(tput cols 2>/dev/null || echo ?) projects=$(gum projects --format simple | wc -l)"
   
   # Get projects and pipe to fzf with README preview
   gum projects --format simple | sed 's|~/||' | \
@@ -115,6 +134,7 @@ function select_sessions() {
 # Main command handling
 case "${1-}" in
   -l|--list)
+    _tmuxie_log "mode=list"
     session=$(select_sessions)
     session=${session%%:*}
     echo "$session"
@@ -123,11 +143,13 @@ case "${1-}" in
     ;;
   -s|--select)
     shift
+    _tmuxie_log "mode=select"
     session=$(select_projects)
     sessionize "$session"
     exit $?
     ;;
   -i|--interactive)
+    _tmuxie_log "mode=interactive"
     echo -e 'sessions\nprojects' | \
       fzf \
         --height=30% \
