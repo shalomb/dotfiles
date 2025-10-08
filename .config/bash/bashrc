@@ -32,7 +32,7 @@ case $- in
             # Allow sourcing even in non-interactive mode for login shells
             :
         else
-            return
+            exit 0
         fi
         ;;
 esac
