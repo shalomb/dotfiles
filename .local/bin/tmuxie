@@ -7,24 +7,6 @@ set -eu
 
 shopt -s nocasematch
 
-# Lightweight observability
-# Enable by setting TMUXIE_DEBUG=1 or TMUXIE_OBS=1, optionally TMUXIE_LOG to a file path
-_tmuxie_log() {
-  if [[ -z "${TMUXIE_DEBUG:-}" && -z "${TMUXIE_OBS:-}" && -z "${TMUXIE_LOG:-}" ]]; then
-    return 0
-  fi
-  local log_path
-  if [[ -n "${TMUXIE_LOG:-}" ]]; then
-    log_path="$TMUXIE_LOG"
-  else
-    # Default to XDG cache; user can override to repo ./tmp/tmuxie.log via TMUXIE_LOG
-    log_path="${XDG_CACHE_HOME:-$HOME/.cache}/tmuxie/tmuxie.log"
-  fi
-  mkdir -p "$(dirname "$log_path")" 2>/dev/null || true
-  # shellcheck disable=SC2129
-  printf '%s | %s\n' "$(date +'%F %T')" "$*" >>"$log_path"
-}
-
 # Ensure PATH is properly set for popup environment
 if [[ -f ~/.config/bash/rc.d/00-path ]]; then
     source ~/.config/bash/rc.d/00-path
@@ -35,11 +17,9 @@ if ! type -P tmux &> /dev/null; then
   exit 2
 fi
 
-# Enhanced README preview for fzf using glow for Markdown and bat for others
+# Simple README preview for fzf
 function get_preview_command() {
-  local bat_cmd="$HOME/.cargo/bin/bat"
-  local glow_cmd="$HOME/.local/share/go/bin/glow"
-  echo "if [[ -f {}/README.md ]]; then $glow_cmd --style=dark --width=50 {}/README.md; elif [[ -f {}/README.rst ]]; then $bat_cmd --color always --style=plain --line-range=1:20 {}/README.rst; elif [[ -f {}/README.txt ]]; then $bat_cmd --color always --style=plain --line-range=1:20 {}/README.txt; else echo 'No README found'; fi"
+  echo "if [[ -f {}/README.md ]]; then head -20 {}/README.md; elif [[ -f {}/README.rst ]]; then head -20 {}/README.rst; elif [[ -f {}/README.txt ]]; then head -20 {}/README.txt; else echo 'No README found'; fi"
 }
 
 function in-tmux() {
@@ -55,13 +35,8 @@ function tmux-attach() {
   if in-tmux; then
     tmux switch-client -t "$session"
   else
-    # In SSH contexts, don't use exec so the session stays open
-    if [[ -n "${SSH_CLIENT:-}" || -n "${SSH_TTY:-}" ]]; then
-      tmux attach-session -t "$session"
-    else
-      # Local context: use exec
-      exec tmux attach-session -t "$session"
-    fi
+    # Attach to the session (works in SSH contexts)
+    exec tmux attach-session -t "$session"
   fi
 }
 
@@ -78,16 +53,7 @@ function sessionize() {
       tmux new-session -d -s "$name" -c "$dir" "bash -l" \; \
         switch-client -t "$name"
     else
-      # In SSH contexts, create detached and try to attach
-      if [[ -n "${SSH_CLIENT:-}" || -n "${SSH_TTY:-}" ]]; then
-        tmux new-session -d -s "$name" -c "$dir" "bash -l"
-        if ! tmux attach-session -t "$name" 2>/dev/null; then
-          echo "Session '$name' created. Use 'tmux attach -t $name' to connect."
-        fi
-      else
-        # Local context: create and attach with exec
-        exec tmux -u -2 new-session -s "$name" -c "$dir" "bash -l"
-      fi
+      exec tmux -u -l -2 new-session -s "$name" -c "$dir"
     fi
   fi
 }
@@ -96,26 +62,24 @@ function select_projects() {
   local preview_cmd
   
   preview_cmd=$(get_preview_command)
-  _tmuxie_log "select_projects: term=${TERM-} lines=$(tput lines 2>/dev/null || echo ?) cols=$(tput cols 2>/dev/null || echo ?) projects=$(gum projects --format simple | wc -l)"
   
   # Get projects and pipe to fzf with README preview
   gum projects --format simple | sed 's|~/||' | \
     fzf \
-      --height=100% \
-      --min-height=20 \
-      --no-header \
+      --height=70% \
       --border \
       --reverse \
-      --prompt="Select project: " \
+      --prompt="Select project (README): " \
       --preview="$preview_cmd" \
-      --preview-window=hidden,right:50%:wrap \
-      --bind="ctrl-/:toggle-preview"
+      --preview-window=right:50%:wrap \
+      --bind="ctrl-/:toggle-preview" \
+      --header="README preview - Press Ctrl+/ to toggle"
 }
 
 function select_sessions() {
   tmux ls | \
     fzf \
-      --height=100% \
+      --height=70% \
       --border \
       --reverse \
       --prompt="Select session: " \
@@ -127,7 +91,6 @@ function select_sessions() {
 # Main command handling
 case "${1-}" in
   -l|--list)
-    _tmuxie_log "mode=list"
     session=$(select_sessions)
     session=${session%%:*}
     echo "$session"
@@ -136,13 +99,11 @@ case "${1-}" in
     ;;
   -s|--select)
     shift
-    _tmuxie_log "mode=select"
     session=$(select_projects)
     sessionize "$session"
     exit $?
     ;;
   -i|--interactive)
-    _tmuxie_log "mode=interactive"
     echo -e 'sessions\nprojects' | \
       fzf \
         --height=30% \
