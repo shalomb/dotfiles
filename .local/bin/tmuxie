@@ -78,10 +78,12 @@ function sessionize() {
       tmux new-session -d -s "$name" -c "$dir" "bash -l" \; \
         switch-client -t "$name"
     else
-      # In SSH contexts, create detached and attach without exec
+      # In SSH contexts, create detached and try to attach
       if [[ -n "${SSH_CLIENT:-}" || -n "${SSH_TTY:-}" ]]; then
         tmux new-session -d -s "$name" -c "$dir" "bash -l"
-        tmux attach-session -t "$name"
+        if ! tmux attach-session -t "$name" 2>/dev/null; then
+          echo "Session '$name' created. Use 'tmux attach -t $name' to connect."
+        fi
       else
         # Local context: create and attach with exec
         exec tmux -u -2 new-session -s "$name" -c "$dir" "bash -l"
