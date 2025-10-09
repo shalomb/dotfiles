@@ -55,24 +55,26 @@ if [[ ! -e $HISTFILE ]]; then
   ln -svf "$HISTFILE" ~/.bash_history
 fi
 
-# Load core functions and colors
-if [[ -f ~/.config/bash/rc.d/01-functions ]]; then
-    source ~/.config/bash/rc.d/01-functions
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Functions file missing" >&2
-fi
+# Get the directory containing this bashrc file
+BASHRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ -f ~/.config/bash/rc.d/02-colours ]]; then
-    source ~/.config/bash/rc.d/02-colours
+# Load all core functions from rc.d directory
+# These must be loaded FIRST as enabled/ tools depend on them
+if [[ -d "${BASHRC_DIR}/rc.d" ]]; then
+    for script in "${BASHRC_DIR}"/rc.d/*; do
+        if [[ -f "$script" && -r "$script" ]]; then
+            source "$script"
+        fi
+    done
 else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Colors file missing" >&2
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: rc.d directory missing" >&2
 fi
 
 # Load enabled tools from enabled directory
-# This happens AFTER rc.d functions are loaded so @has-cmd is available
-if [[ -d ~/.config/bash/enabled ]]; then
-    for script in ~/.config/bash/enabled/*.sh; do
-        if [[ -r "$script" ]]; then
+# This happens AFTER rc.d functions are loaded so @has-cmd and other core functions are available
+if [[ -d "${BASHRC_DIR}/enabled" ]]; then
+    for script in "${BASHRC_DIR}"/enabled/*.sh; do
+        if [[ -f "$script" && -r "$script" ]]; then
             source "$script"
         fi
     done
