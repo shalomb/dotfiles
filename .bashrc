@@ -56,7 +56,8 @@ if [[ ! -e $HISTFILE ]]; then
 fi
 
 # Get the directory containing this bashrc file
-BASHRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Follow symlinks to get the real location
+BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 # Load all core functions from rc.d directory
 # These must be loaded FIRST as enabled/ tools depend on them
