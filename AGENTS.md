@@ -85,18 +85,21 @@ vim .config/bash/bashrc
 # 2. REQUIRED: Run tests
 make test-bash
 
-# 3. ONLY IF TESTS PASS: Deploy
-uv run python -m dotfile_manager export .config/bash/bashrc
+# 3. ONLY IF TESTS PASS: Deploy ENTIRE bash directory
+uv run python -m dotfile_manager export .config/bash/
 
 # 4. Test in current shell
 source ~/.bashrc
 
 # 5. Commit changes
-git add .config/bash/bashrc
+git add .config/bash/
 git commit -m "bash: description of change"
 ```
 
-**NO EXCEPTIONS**: Never skip `make test-bash` for bash configuration changes.
+**NO EXCEPTIONS**: 
+- Never skip `make test-bash` for bash configuration changes
+- **ALWAYS export the entire `.config/bash/` directory**, not individual files
+- This ensures all bash components (bashrc, rc.d/, enabled/, disabled/) are synchronized
 
 ## Submodules Management
 
@@ -394,8 +397,13 @@ tmux list-keys | grep "bind-key.*r"  # Check reload binding
 **Workflow:**
 ```bash
 make test-bash                # MANDATORY first step
-make test-bash && uv run python -m dotfile_manager export .config/bash/bashrc
+make test-bash && uv run python -m dotfile_manager export .config/bash/
 ```
+
+**MANDATORY EXPORT PROTOCOL**:
+- **ALWAYS export the entire `.config/bash/` directory** (not individual files)
+- This ensures all bash components are synchronized: bashrc, rc.d/, enabled/, disabled/, aliases, profile
+- Prevents issues where rc.d/ functions are missing in home directory
 
 **NO EXCEPTIONS**: This is not optional. This is not a suggestion. This is a **REQUIREMENT**.
 
