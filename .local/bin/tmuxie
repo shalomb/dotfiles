@@ -55,10 +55,12 @@ function tmux-attach() {
   if in-tmux; then
     tmux switch-client -t "$session"
   else
-    # Try to attach - if it fails, print helpful message
-    if ! tmux attach-session -t "$session" 2>/dev/null; then
-      echo "Session '$session' exists. Use 'tmux attach -t $session' to connect."
-      exit 0
+    # In SSH contexts, don't use exec so the session stays open
+    if [[ -n "${SSH_CLIENT:-}" || -n "${SSH_TTY:-}" ]]; then
+      tmux attach-session -t "$session"
+    else
+      # Local context: use exec
+      exec tmux attach-session -t "$session"
     fi
   fi
 }
