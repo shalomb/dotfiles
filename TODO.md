@@ -513,3 +513,78 @@ time tmuxie -l
 ---
 
 *This TODO item was created to address the need for comprehensive testing of the dotfiles repository's lazy-loading system, tool discovery, and performance characteristics.*
+
+---
+
+# Bashrc Architecture Simplification
+
+## 📋 **TODO: Rearchitect bashrc for simplicity and clarity**
+
+### **Current State**
+- `~/.bashrc` is a symlink to `~/.config/bashrc` which is a symlink to `~/.config/bash/bashrc`
+- `BASHRC_DIR` resolution requires `readlink -f` to follow symlinks
+- Complex symlink chain can be confusing and fragile
+- Hard to understand where files actually live
+
+### **Identified Issues**
+- **Symlink complexity**: Three-level chain (`~/.bashrc` → `~/.config/bashrc` → `~/.config/bash/bashrc`)
+- **Directory resolution**: Requires `readlink -f` which may not be portable
+- **Confusion**: Not immediately clear which file is the source of truth
+- **Fragility**: Breaking one symlink breaks the entire loading chain
+- **Debugging difficulty**: Hard to trace which file is being sourced
+
+### **Potential Solutions**
+
+#### **Option 1: Flatten Symlink Chain**
+- Make `~/.bashrc` point directly to `~/.config/bash/bashrc`
+- Eliminate the middle `~/.config/bashrc` link
+- Simpler, fewer points of failure
+- Still requires `readlink -f` for directory resolution
+
+#### **Option 2: Use Absolute Paths in Bashrc**
+- Set `BASHRC_DIR` to absolute path in bashrc
+- Remove reliance on `BASH_SOURCE[0]` resolution
+- Pro: No symlink following needed
+- Con: Less portable across systems
+
+#### **Option 3: Use Hardlinks for ~/.bashrc**
+- Keep original hardlink approach for `~/.bashrc`
+- Create `~/.config/bashrc` as a symlink for XDG compliance
+- Pro: No `readlink -f` needed
+- Con: Hardlinks require same filesystem
+
+#### **Option 4: Simplified Bootstrap**
+- `~/.bashrc` is a minimal bootstrap that sources absolute path
+- Source `~/.config/bash/bashrc` directly with full path
+- Pro: Crystal clear execution path
+- Con: Requires different bootstrap for each user
+
+### **Design Principles for New Architecture**
+1. **Clarity**: Easy to understand where files live
+2. **Simplicity**: Minimal symlink/hardlink chain
+3. **Portability**: Works across different systems
+4. **Maintainability**: Easy to debug and modify
+5. **Standards compliance**: Follow XDG Base Directory spec where appropriate
+
+### **Investigation Needed**
+- [ ] Review XDG Base Directory specification for best practices
+- [ ] Check how other dotfile managers handle this
+- [ ] Test each option for portability (macOS, Linux, BSD)
+- [ ] Consider impact on dotfile deployment system
+- [ ] Evaluate performance implications
+
+### **Success Criteria**
+- Clear, documented architecture
+- Minimal symlink/hardlink complexity
+- Easy to debug and understand
+- Works reliably across systems
+- Integrates well with dotfile manager
+
+## 🎯 **Priority**
+**LOW** - Current solution works, but architecture could be cleaner
+
+## 📝 **Notes**
+- Current fix (using `readlink -f`) solves the immediate problem
+- This is about longer-term architectural clarity
+- Should be considered during next major refactoring
+- No immediate implementation - capture design ideas first
