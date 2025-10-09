@@ -175,6 +175,13 @@ test: ## Run acceptance tests (usage: make test [FAST=1])
 		uv run pytest tests/test_environment.py tests/test_shell_integration.py tests/test_tmux.py tests/test_dotfile_deployment.py -v --tb=short; \
 	fi
 
+test-bash: ## Run bash validation only (standards + shellcheck)
+	@echo "Running bash standards validation..."
+	@tests/bash-standards/validate-standards.sh
+	@echo "Running shellcheck validation..."
+	@tests/bash-standards/run-shellcheck.sh
+	@echo "✅ Bash validation complete"
+
 test-fast: ## Run fast tests only (environment + deployment)
 	@echo "Running bash standards validation..."
 	@tests/bash-standards/validate-standards.sh

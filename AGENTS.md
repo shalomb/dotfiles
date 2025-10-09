@@ -1,5 +1,30 @@
 # Dotfiles Repository - Agent Documentation
 
+## 🚨 MANDATORY: Read Documentation First
+
+**REQUIRED AT SESSION START**: Before making any changes, read:
+
+1. **Architecture Decision Records**: `docs/architecture/ADR-*.md`
+   - Core architectural decisions and patterns
+   - Mandatory workflows and requirements
+   - Non-negotiable standards
+
+2. **Key Documentation**: `docs/README.md`
+   - Documentation structure and organization
+   - Where to find specific information
+   - Diataxis framework navigation
+
+3. **End-State**: `docs/explanation/end-state-evolution.md`
+   - Current state and goals
+   - Evolution and discovery process
+   - Success criteria
+
+**Why This Matters**: These documents prevent you from:
+- Breaking established patterns
+- Skipping mandatory validation steps
+- Making decisions that have already been decided
+- Repeating past mistakes
+
 ## Overview
 
 This repository manages dotfiles using a **hardlink-based deployment system** that maintains configuration files in version control while keeping them actively used in the home directory. Changes to files in either location are immediately reflected in both places.
@@ -51,16 +76,27 @@ uv run python -m dotfile_manager export .config/nvim/
 
 ### 3. Development Workflow
 
+**MANDATORY: Test Before Deploy** (See ADR-005)
+
 ```bash
-# Edit a configuration file
-vim .bashrc
+# 1. Edit a configuration file
+vim .config/bash/bashrc
 
-# Deploy just that file (planned)
-uv run python -m dotfile_manager export .bashrc
+# 2. REQUIRED: Run tests
+make test-bash
 
-# Or deploy entire directory
-uv run python -m dotfile_manager export .config/nvim/
+# 3. ONLY IF TESTS PASS: Deploy
+uv run python -m dotfile_manager export .config/bash/bashrc
+
+# 4. Test in current shell
+source ~/.bashrc
+
+# 5. Commit changes
+git add .config/bash/bashrc
+git commit -m "bash: description of change"
 ```
+
+**NO EXCEPTIONS**: Never skip `make test-bash` for bash configuration changes.
 
 ## Submodules Management
 
@@ -337,6 +373,33 @@ tmux list-keys | grep "bind-key.*r"  # Check reload binding
 5. **Document new bindings** in this file
 
 ## Core Development Principles
+
+### **MANDATORY: Test Before Export (ADR-005)**
+
+**REQUIREMENT**: Before ANY export of bash configuration files:
+
+1. **Run `make test-bash`** - Always, no exceptions
+2. **Wait for completion** - Don't skip this step
+3. **Check results** - Tests must pass (exit code 0)
+4. **ONLY if tests pass** - Proceed with export
+5. **If tests fail** - Fix the issue, don't skip testing
+
+**Files requiring bash testing:**
+- `.config/bash/bashrc`
+- `.config/bash/profile`
+- `.config/bash/rc.d/*`
+- `.config/bash/enabled/*`
+- `.config/bash/aliases`
+
+**Workflow:**
+```bash
+make test-bash                # MANDATORY first step
+make test-bash && uv run python -m dotfile_manager export .config/bash/bashrc
+```
+
+**NO EXCEPTIONS**: This is not optional. This is not a suggestion. This is a **REQUIREMENT**.
+
+See `docs/architecture/ADR-005-mandatory-testing-before-export.md` for full details.
 
 ### **Use Correct Conventions, Processes, and Interfaces**
 
