@@ -258,6 +258,34 @@ return {
     build = "npm install -g mcp-hub@latest", -- Installs `mcp-hub` node binary globally
   },
 
+  -- GitHub Copilot
+  {
+    "github/copilot.vim",
+    lazy = false,
+    config = function()
+      -- Copilot configuration
+      vim.g.copilot_no_tab_map = true
+      vim.g.copilot_assume_mapped = true
+      vim.g.copilot_tab_fallback = ""
+      
+      -- Key mappings
+      vim.keymap.set("i", "<C-J>", 'copilot#Accept("\\<CR>")', {
+        expr = true,
+        replace_keycodes = false,
+        desc = "Accept Copilot suggestion"
+      })
+      vim.keymap.set("i", "<C-;>", "<Plug>(copilot-next)", {
+        desc = "Next Copilot suggestion"
+      })
+      vim.keymap.set("i", "<C-,>", "<Plug>(copilot-previous)", {
+        desc = "Previous Copilot suggestion"
+      })
+      vim.keymap.set("i", "<C-\\>", "<Plug>(copilot-dismiss)", {
+        desc = "Dismiss Copilot suggestion"
+      })
+    end,
+  },
+
   -- {
   --   "olimorris/codecompanion.nvim",
   --   opts = {},
