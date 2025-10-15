@@ -30,6 +30,13 @@ function in-tmux() {
   fi
 }
 
+function _tmuxie_log() {
+  local message="$1"
+  if [[ -n "${TMUXIE_LOG:-}" ]]; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') tmuxie: $message" >> "$TMUXIE_LOG"
+  fi
+}
+
 function tmux-attach() {
   local session="$1"
   if in-tmux; then
@@ -104,17 +111,25 @@ case "${1-}" in
     exit $?
     ;;
   -i|--interactive)
-    echo -e 'sessions\nprojects' | \
+    _tmuxie_log "mode=interactive"
+    choice=$(echo -e 'sessions\nprojects' | \
       fzf \
         --height=30% \
         --border \
         --reverse \
-        --prompt="Select type: " | \
-      xargs -I {} sh -c 'case {} in 
-        sessions) tmuxie -l ;; 
-        projects) tmuxie -s ;; 
-      esac'
-    exit $?
+        --prompt="Select type: ")
+    case "$choice" in
+      sessions)
+        exec "$0" -l
+        ;;
+      projects)
+        exec "$0" -s
+        ;;
+      *)
+        echo "No selection made" >&2
+        exit 1
+        ;;
+    esac
     ;;
   -h|--help)
     cat << EOF
