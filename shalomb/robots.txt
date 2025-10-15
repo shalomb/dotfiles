@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /cv
+
+User-agent: *
+Disallow: /cv/
+
+User-agent: *
+Disallow: *.txt

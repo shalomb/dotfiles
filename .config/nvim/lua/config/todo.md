@@ -1,7 +1,7 @@
 # Todo
 
 tag management
-- copilot
+- copilot ✅ (restored)
 - ChatGPT
 - :Projects
   switch to foreign project directories

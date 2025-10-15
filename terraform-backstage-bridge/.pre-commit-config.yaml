@@ -1,0 +1,129 @@
+# Pre-commit hooks configuration for Terraform Variables Parser
+# This ensures code quality and test passing before commits
+#
+# Installation:
+#   pip install pre-commit
+#   pre-commit install
+#
+# Usage:
+#   pre-commit run --all-files  # Run all hooks on all files
+#   pre-commit run <hook-id>    # Run specific hook
+#   git commit --no-verify      # Skip pre-commit hooks (not recommended)
+
+repos:
+  # Built-in hooks for basic file validation
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        description: Trim trailing whitespace
+      - id: end-of-file-fixer
+        description: Ensure files end with newline
+      - id: check-yaml
+        description: Check YAML file syntax
+      - id: check-toml
+        description: Check TOML file syntax
+      - id: check-added-large-files
+        description: Prevent large files from being committed
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+        description: Check for merge conflict markers
+      - id: debug-statements
+        description: Check for debugger imports and breakpoints
+      - id: mixed-line-ending
+        description: Check for mixed line endings
+
+  # Python linting and formatting using Make targets for consistency
+  # Note: Run 'make pre-commit-check' manually to validate before commit
+  - repo: local
+    hooks:
+      - id: make-pre-commit-check
+        name: Comprehensive Pre-commit Validation
+        entry: make pre-commit-check
+        language: system
+        pass_filenames: false
+        files: \.(py)$
+        description: Run comprehensive validation (lint + format + type check + core tests)  # Type checking with mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.1
+    hooks:
+      - id: mypy
+        description: Run static type checking
+        additional_dependencies: [types-PyYAML]
+        args: [--ignore-missing-imports]
+
+  # Custom hooks using local make targets
+  - repo: local
+    hooks:
+      # Fast dependency check
+      - id: make-check-deps
+        name: Check Dependencies
+        entry: make check-deps
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        description: Verify all required dependencies are installed
+
+      # Quick test suite (fast validation)
+      - id: make-test-status
+        name: Core Functionality Test
+        entry: make test-status
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        description: Run core functionality tests without coverage
+
+      # Basic test suite (reasonable speed)
+      - id: make-test-basic
+        name: Basic Test Suite
+        entry: bash -c 'uv run python -m pytest tests/ -q --tb=no --no-cov --disable-warnings'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        description: Run basic test suite without coverage for faster pre-commit
+
+      # Code linting with make target
+      - id: make-lint
+        name: Code Linting (Make)
+        entry: make lint
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        files: \.(py)$
+        description: Run project-specific linting rules
+
+      # Package build verification
+      - id: make-build-check
+        name: Package Build Check
+        entry: bash -c 'if command -v uv >/dev/null 2>&1; then if uv build --no-build-logs >/dev/null 2>&1; then echo "✓ Package build successful"; rm -rf dist/ build/; else echo "✗ Package build failed" && exit 1; fi; else echo "⚠️ Skipping build check (uv not available)"; fi'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        description: Verify package can be built successfully
+
+# Configuration
+default_language_version:
+  python: python3
+
+# Run hooks on commit by default
+default_stages: [pre-commit]
+
+# Exclude patterns
+exclude: |
+  (?x)^(
+    __pycache__/.*|
+    \.git/.*|
+    \.pytest_cache/.*|
+    htmlcov/.*|
+    dist/.*|
+    build/.*|
+    \.coverage.*|
+    uv\.lock|
+    .*\.pyc
+  )$
+
+# Don't fail fast - run all hooks even if one fails
+fail_fast: false
+
+# Minimum pre-commit version
+minimum_pre_commit_version: 3.0.0

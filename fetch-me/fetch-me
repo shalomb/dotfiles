@@ -1,0 +1,337 @@
+#!/bin/bash
+
+# fetch-me
+
+# Install a (CLI) application directly from its github release.
+
+set -eu -o pipefail
+
+shopt -s nocasematch nocaseglob
+
+VERSION=0.1
+
+[[ ${TRACE-} ]] && set -xv
+
+os_regex=$(uname -o | tr '[:upper:]' '[:lower:]' | sed 's@gnu/@@')
+
+arch=$(uname -m)  # aarch64 | amd64 | x86_64
+arch_regex="${arch}"
+
+if [[ $arch == *64 ]]; then
+  arch_bitness=64
+else
+  arch_bitness=32
+fi
+
+if [[ $arch == "aarch"* ]]; then
+  arch_regex="${arch_regex}|${arch#a}|arm64"
+elif [[ $arch == @(amd64|x86_64) ]]; then
+  arch_regex="${arch_regex}|intel.?64|amd64|x86_64"
+else
+  arch_regex="${arch_regex}|intel.?32||x86|i[356]86"
+fi
+distribution=$(awk -F= '$1=="ID"{print $2}' /etc/os-release)
+
+XDG_BIN_DIR="$(readlink -f "${XDG_DATA_HOME}/../bin")"
+CACHE_DIR="${XDG_CACHE_HOME}/fetch-me"
+
+warn() {
+  echo >&2 "$@"
+}
+
+die() {
+  warn "$@"
+  exit 3
+}
+
+assert-cmd() {
+  local cmd="$1"
+  local msg="${2-}"
+  type -P "$cmd" &>/dev/null || {
+    if [[ -n $cmd ]]; then
+      warn "Warning: $cmd not installed/available. Installation"
+    else
+      die "Error: $cmd: Not found or not installed in $PATH"
+    fi
+  }
+}
+
+assert-cmd wget
+assert-cmd jq
+
+debug() {
+  if [[ ! -t 0 ]]; then
+    while read -r in; do
+      warn "DEBUG: $in"
+    done
+  elif [[ -n ${DEBUG-} ]]; then
+    warn "DEBUG: $@"
+  fi
+}
+
+wget() {
+  local header='-qc'
+  if [[ -n ${GITHUB_API_TOKEN-} ]]; then
+    header=--header="Authorization: token $GITHUB_API_TOKEN"
+  fi
+  command wget -qc "${header-}" "$@"
+}
+
+get-gh-artifact() {
+  local repo="${1%/}"
+  local type="${2-}"  # latest
+  local url="https://api.github.com/repos/${repo}/releases/${type}"
+  local url="${url%/}"
+  local cache="$CACHE_DIR/$repo"
+  mkdir -p "$cache"
+  if [[ -z $type ]]; then
+    local artifact="$cache/${url##*/}"
+  else
+    local artifact="$cache/$type"
+  fi
+  if [[ -f $artifact && ! -s $artifact ]]; then
+    rm -f "$artifact"
+  fi
+  local one_day_ago=$(date -d 'now - 1 days' +%s &>/dev/null)
+  local artifact_mtime=$(date -r "$artifact" +%s &>/dev/null)
+  if (( artifact_mtime <= one_day_ago )); then
+    rm -f "$artifact"
+    wget "$url" -O "$artifact"
+  fi
+  jq -Ser '.' "$artifact"
+}
+
+get-release() {
+  local repo="$1"
+  get-gh-artifact "$repo" | jq -Ser '.'
+}
+
+get-latest() {
+  local repo="${1%/}"
+  get-gh-artifact "$repo" latest | jq -Ser '.tag_name'
+}
+
+install-candidate() {
+  local candidate="$1"
+  local url="$2"
+  local repo="$3"
+  local command="$4"
+  local cache="$CACHE_DIR/$repo/${candidate%/*}"
+  local file="$cache/${url##*/}"
+  debug "Downloading $url"
+  mkdir -p "$cache"
+  wget -qc "$url" -O "$file"
+
+  file_type=$(file -i "$file" | awk -F'[;: ]' '{print $3}')
+  debug "Installing  $file (type: $file_type)"
+  case "$file_type" in
+    application/x-executable)
+      assert-cmd install
+      install -m=555 "$file" "$XDG_BIN_DIR/$command" 2>&1 | debug
+    ;;
+    application/gzip)
+      assert-cmd tar
+      tar xf "$file" -C "$cache"
+      cd "$cache"
+      find . -maxdepth 3 -type f -executable -exec sh -c '
+        for i; do install -v -m=555 $i '"$XDG_BIN_DIR"'; done
+      ' _ {} + 2>&1 | debug
+    ;;
+    application/vnd.debian.binary-package)
+      assert-cmd sudo
+      assert-cmd apt
+      sudo apt -yqq install "$file" | debug
+    ;;
+    *)
+      warn "Error: No installation method implemented for $file ($file_type)"
+      die "Giving up. Please install $file manually."
+    ;;
+  esac
+
+  echo -n "$repo successfully installed"
+  hash -r && type -P "$command" || true
+}
+
+find-repo() {
+  local json=$(wget "https://api.github.com/search/repositories?q=$*" -O -)
+  if [[ -z ${json} ]]; then
+    die "No response in looking for repositories matching: $*"
+  fi
+  echo "https://github.com/search?type=repositories&q=$*"
+  jq -cer '.items[] | [.full_name, .description] | @tsv' <<<"$json" |
+    while read -r item; do
+      printf ' - %s\n' "${item:0:100}"
+    done
+  exit $?
+}
+
+show-help() {
+  cat <<EOF
+
+ $0 [-hvc args] repo [command]
+
+    -t   tag/version release to install
+    -c   command to install repo as
+    -a   arch to use in search
+    -d   enable debug output
+    -f   find repo
+    -V   print version
+
+USAGE:
+  $0 sharkdp/bat          # common case - bat is installed as bat
+  $0 sharkdp/bat bat-cmd  # expose the command as bat-cmd(1)
+  $0 sharkdp/bat -v 0.20  # specifically install v0.20
+
+ENVIRONMENT VARIABLES:
+  GITHUB_API_TOKEN  - Github PAT/API Token
+  DEBUG             - Enable debug output
+  TRACE             - Enable extended bash tracing
+EOF
+}
+
+# Due to the limitation in getopts where dashed parameters cannot follow
+# arguments, we'll do a naive collection of the arguments upfront and break
+# as soon as we see anything look like a parameters.
+
+# This is to support the simple use-cases like
+#    $0 sharkdp/bat -v 0.20
+# but not
+#    $0 sharkdp/bat -v 0.20 bat
+# We'll assume that the first argument is always the short repo and the
+# subsequent arguments the command, etc that pertain to the installation
+
+args=()
+while :; do
+  if (( $# == 0 )); then
+    break
+  fi
+  if [[ $1 != -* ]]; then
+    args+=("$1")
+    shift
+  elif [[ $1 == -* ]]; then
+    break
+  fi
+done
+
+command=
+find_repo=0
+repo=
+tag=
+while getopts ":a:c:dfhst:V" opt; do
+  case $opt in
+    a)
+      arch_regex="$OPTARG"
+    ;;
+    c)
+      command="$OPTARG"
+    ;;
+    d)
+      DEBUG=1
+    ;;
+    f)
+      find_repo=1
+    ;;
+    h)
+      show-help; exit 0;
+    ;;
+    V)
+      echo "$0 $VERSION"; exit;
+    ;;
+    t)
+      tag="$OPTARG"
+    ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+    ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+    ;;
+  esac
+done
+shift $((OPTIND-1))
+
+(( ${#args[@]} > 0 )) && set -- "${args[@]}" "$@"
+
+debug "args: $@"
+
+if (( find_repo == 1 )); then
+  find-repo "$*"
+  exit
+fi
+
+[[ -z $repo ]] && repo="$1"; shift
+repo="${repo#https://github.com/}"
+
+[[ -z $command ]] && command="${1-}"; shift || true
+[[ -z $command ]] && command="${repo#*/}"
+
+(( $# > 0 )) && die "Superfluous arguments: $@"
+
+[[ -z $tag ]] && tag=$(get-latest "$repo")
+tag="${tag//[\+]/\\\\+}"
+tag="${tag//[\-]/\\\\-}"
+
+echo "Discovering releases of $repo"
+echo "  repo:    $repo (https://github.com/$repo)"
+echo "  command: $command ($(type -P "$command"))"
+echo "  tag:     $tag"
+echo "  arch:    $arch_regex"
+
+json=$(get-release "$repo" | jq -S '.[] | select(.tag_name|test("^v?'"$tag"'"))')
+candidates=($(
+  jq -Scer '
+    .assets[].browser_download_url |
+        select(.|test("'"${arch_bitness}"'")) |
+        capture("download/(?<ver>.+)").ver
+  ' <<<"$json" | sort
+))
+
+if [[ ${candidates[@]} =~ $os_regex ]]; then
+  filtered=()
+  for url in ${candidates[@]}; do
+    if [[ $url =~ $os_regex ]]; then
+      debug "matching os: $url ~ $os_regex"
+      filtered+=("$url")
+    fi
+  done
+  candidates=("${filtered[@]}")
+fi
+
+if [[ ${candidates[@]} =~ $arch_regex ]]; then
+  filtered=()
+  for url in ${candidates[@]}; do
+    if [[ $url =~ $arch_regex ]]; then
+      debug "matching arch: $url ~ $arch_regex"
+      filtered+=("$url")
+    fi
+  done
+  candidates=("${filtered[@]}")
+fi
+
+if (( ${#candidates[@]} == 0 )); then
+  die "No candidates found for $repo ($arch)"
+fi
+
+candidate=
+if (( ${#candidates[@]} == 1 )); then
+  candidate=${candidates[0]}
+  echo "Found candidate to install: $candidate"
+elif (( ${#candidates[@]} > 1 )); then
+  echo "Multiple candidates found"
+  for i in ${!candidates[@]}; do
+    printf '%3d - %s\n' "$i" "${candidates[$i]}"
+  done
+  read -p 'Which one? [0] '
+  REPLY="${REPLY:-0}"
+  candidate=${candidates[$REPLY]}
+fi
+
+url=$(
+  jq -Scer '
+    .assets[].browser_download_url | select(.|test("'"$candidate"'$"))
+  ' <<<"$json" || true
+)
+
+install-candidate "$candidate" "$url" "$repo" "$command"

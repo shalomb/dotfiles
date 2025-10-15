@@ -1,0 +1,202 @@
+html{
+  background-color :  transparent;
+  background :  #888;
+}
+body {
+  width :  800px;
+  margin :  1em auto;
+  padding :  10px 4em;
+  border :  2px solid #7a7a7a;
+  background :  #fefefe;
+  color :  #333;
+  font-smoothing :  antialiased;
+  -webkit-font-smoothing :  antialiased;
+  text-shadow :  0 0 1px rgba(0,0,0,0.3);
+  font-family :  "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size :  14px;
+  font-style :  normal;
+  font-variant :  normal;
+  font-weight :  500;
+}
+
+/* title of the resume */
+h1 {
+  color :  #757575;
+  text-align : center;
+  margin-bottom : 15px;
+}
+a:hover {
+  text-shadow :  0 0 1px rgba(0,0,0,0.6);
+}
+
+/* Titles of categories */
+h2, h3 {
+  /* This is called "sectioncolor" in the ConTeXt stylesheet. */
+  display :  inline-block;
+  color :  #444;
+  margin-bottom :  0.5em;
+}
+/* Definitions */
+dt {
+  float :  left;
+  clear :  left;
+  width :  21%;
+  /*font-weight :  bold;*/
+}
+dd {
+  margin-left :  22%;
+}
+p {
+  margin-top : 0;
+  margin-bottom : 7px;
+  page-break-after : avoid;
+  page-break-inside : avoid;
+}
+
+/* Blockquotes */
+blockquote {
+  text-align :  center
+}
+
+/* Links */
+a {
+  text-decoration :  none;
+  color :  #006699;
+}
+a:hover, a:active {
+  text-decoration :  none;
+}
+
+/* Horizontal separators */
+hr {
+  height :  1px;
+  border :  0;
+  background :  #888888;
+  text-align :  left;/*this will align it for IE*/
+  margin :  0 auto 0 0; /*this will align it left for Mozilla*/
+  background :  #ccc;
+}
+
+ul {
+  margin-top :  -4px;
+}
+ul          {
+  list-style :  none;
+}
+
+ul li:before {
+  margin-left :  -10px;
+  content :  "• \0020";
+  color :  #888;
+}
+
+em, strong {
+  font-size :  90%;
+}
+
+em {
+  font-size :  90%;
+}
+
+strong {
+  font-weight :  700;
+}
+
+p, table {
+  margin-left : 2px;
+}
+
+table {
+  width :  100%;
+  width :  auto;
+  text-align : left;
+}
+
+table th, table td {
+  text-align :  left;
+  vertical-align :  top;
+}
+
+em {
+}
+
+table td {
+  margin-left :  1px;
+}
+
+code, pre {
+  white-space :  pre-wrap;       /* css-3 */
+  white-space :  -moz-pre-wrap;  /* Mozilla, since 1999 */
+  white-space :  -pre-wrap;      /* Opera 4-6 */
+  white-space :  -o-pre-wrap;    /* Opera 7 */
+  word-wrap :  break-word;       /* Internet Explorer 5.5+ */
+}
+
+:target + * {
+  background :  #f9f9f9;
+}
+:target {
+  transform : scale(1.1,1.1);
+}
+
+:target,
+:target + p,
+:target + table {
+  display :  block !important;
+}
+
+h3#scriptingprogramming, h3#scriptingprogramming + p,
+h3#operating-systems, h3#operating-systems + p,
+h3#virtualization, h3#virtualization + p,
+h3#cloud, h3#cloud + p,
+h3#rdbmsnosql, h3#rdbmsnosql + p,
+h3#networking, h3#networking + p,
+h3#monitoring, h3#monitoring + p,
+h3#provisioning, h3#provisioning + p,
+h3#configuration-management, h3#configuration-management + p,
+h3#source-control-build, h3#source-control-build + p,
+h3#storage, h3#storage + p,
+h3#hardware, h3#hardware + p,
+h1#technology-exposure,
+h1#technology-exposure + p,
+h1#technology-exposure + table {
+  text-align :  left;
+  display :  none;
+}
+
+#TOC {
+  background :  #efefef;
+  font-size :  100%;
+  width :  280px;
+  position :  fixed;
+  top :  20%;
+  right :  -1px;
+  padding :  0.75em 0.5em 0 0em;
+  border :  1px solid gray;
+  border :  2px solid #7a7a7a;
+}
+#TOC > ul {
+  padding :  0.5em !important;
+  border :  1px solid #cfcfcf;
+  background :  white;
+  list-style :  none;
+}
+#TOC ul, #TOC li {
+  margin-left :  10px;
+  padding :  0;
+}
+
+@media print {
+  #TOC {
+    display :  none;
+  }
+  html, body{
+    background :  white;
+    width :  auto;
+    border :  none;
+  }
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  border : 1px solid red;
+}
