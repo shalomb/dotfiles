@@ -57,12 +57,20 @@ fi
 
 # Get the directory containing this bashrc file
 # Follow symlinks to get the real location
-BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+if [[ -n "${BASH_SOURCE[0]}" ]]; then
+    BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+else
+    # Fallback: assume we're in the dotfiles directory
+    BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]:-~/.bashrc}")")" && pwd)"
+fi
+
+# Set the bash configuration directory
+BASH_CONFIG_DIR="${BASHRC_DIR}/.config/bash"
 
 # Load all core functions from rc.d directory
 # These must be loaded FIRST as enabled/ tools depend on them
-if [[ -d "${BASHRC_DIR}/rc.d" ]]; then
-    for script in "${BASHRC_DIR}"/rc.d/*; do
+if [[ -d "${BASH_CONFIG_DIR}/rc.d" ]]; then
+    for script in "${BASH_CONFIG_DIR}"/rc.d/*; do
         if [[ -f "$script" && -r "$script" ]]; then
             source "$script"
         fi
@@ -73,8 +81,8 @@ fi
 
 # Load enabled tools from enabled directory
 # This happens AFTER rc.d functions are loaded so @has-cmd and other core functions are available
-if [[ -d "${BASHRC_DIR}/enabled" ]]; then
-    for script in "${BASHRC_DIR}"/enabled/*.sh; do
+if [[ -d "${BASH_CONFIG_DIR}/enabled" ]]; then
+    for script in "${BASH_CONFIG_DIR}"/enabled/*.sh; do
         if [[ -f "$script" && -r "$script" ]]; then
             source "$script"
         fi
