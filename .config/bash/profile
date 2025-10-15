@@ -58,6 +58,11 @@ if [ "$TERM" = 'dumb' ]; then
   export TERM=tmux-256color
 fi
 
+# Set editor variables for all shells (login and non-login)
+export EDITOR="vi"
+export FCEDIT="$EDITOR"
+export VISUAL="$EDITOR"
+
 # Source bashrc for interactive shells (standard bash convention)
 # This ensures tmux new windows and login shells get full bash configuration
 if [ -f ~/.bashrc ]; then
