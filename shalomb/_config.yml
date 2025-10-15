@@ -1,0 +1,58 @@
+---
+# Setup
+title:               shalomb
+tagline:             shalomb's homepage
+url:                 http://shalomb.id/
+baseurl:             "/"
+
+# About/contact
+author:
+  name:              Shalom Bhooshi
+  url:               https://shalomb.id//
+  email:             s.bhooshi@gmail.com
+
+# Custom vars
+version:             2.0.0
+
+# Defaults
+collections:
+  licenses:
+    output: true
+    permalink: /licenses/:path/
+  tips:
+    output: true
+    permalink: /tips/:path/
+
+defaults:
+  -
+    scope:
+      path: ""
+      type: "licenses"
+    values:
+      layout: license
+      featured: false
+      hidden: false
+      variant: false
+  -
+    scope:
+      path: ""
+      type: "tips"
+    values:
+      layout: tip
+      featured: false
+      hidden: false
+      variant: false
+
+# Pagination
+paginate:            5
+paginate_path:       "/blog/page/:num/"
+
+# Permalinks
+# Use of `relative_permalinks` ensures post links from the index work properly.
+permalink:           pretty
+
+# Assets
+# We specify the directory for Jekyll so we can use @imports.
+sass:
+  sass_dir:          _sass
+  style:            :compressed

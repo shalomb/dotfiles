@@ -1,0 +1,1365 @@
+#================================================================================
+# HARNESS CLOUD DEPLOYMENT TEMPLATE - PRODUCTION IDP TEMPLATE
+#================================================================================
+#
+# PURPOSE:
+#   Production-grade Harness Software Template for cloud infrastructure
+#   deployment using Terraform building blocks. Real-world example of
+#   enterprise IDP template with complex parameter structures.
+#
+# ENTERPRISE FEATURES:
+#   • Multi-cloud infrastructure provisioning
+#   • Terraform Cloud integration
+#   • Building block composition patterns
+#   • Enterprise governance and compliance
+#   • Developer self-service capabilities
+#
+# TEMPLATE COMPLEXITY:
+#   Advanced enterprise template demonstrating:
+#   - Complex parameter hierarchies
+#   - Multi-step deployment workflows
+#   - Integration with Terraform Cloud
+#   - Building block composition
+#   - Enterprise security patterns
+#
+# REAL-WORLD USAGE:
+#   Actual production template used in enterprise environments
+#   for Infrastructure as Code self-service. Represents the
+#   target complexity level for parser output validation.
+#
+# VALIDATION PURPOSE:
+#   Used to test parser's ability to handle enterprise-grade
+#   template complexity and ensure generated templates meet
+#   production requirements for developer platform deployment.
+#
+#================================================================================
+
+---
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+# some metadata about the template itself
+metadata:
+  name: dev-cloud-starter
+  title: Cloud Infrastructure Provisioner
+  description: |-
+    Deploys cloud resources into the Takeda Enterprise Cloud using the Takeda Terraform Cloud + Terraform Building Blocks.
+
+    Refer to the [TechDocs for usage instructions](https://app.harness.io/ng/account/etUzqvIyRSixpOWJqF4_Qg/module/idp/docs/default/Template/dev-cloud-starter).
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://github.com/orgs/oneTakeda/repositories?q=terraform-aws-
+      title: Takeda Building Blocks
+      icon: dashboard
+spec:
+  owner: Foundation_Technologies_Platform_Cloud_Services
+  type: service
+  steps:
+    - id: trigger
+      name: Build your infrastructure
+      action: trigger:harness-custom-pipeline
+      input:
+        url: https://app.harness.io/ng/account/etUzqvIyRSixpOWJqF4_Qg/all/orgs/GDDT/projects/Foundation_Technologies_Platform_Cloud_Services/pipelines/clouddeployment/pipeline-studio/?branch=TIO124-cloud-pattern&connectorRef=oneTakeda&storeType=REMOTE&repoName=cse-team-harness-pipelines
+        inputset:
+          apms_id: ${{ parameters.apms_id }}
+          data: ${{ parameters.resources }}
+          formContext: ${{ parameters }}
+          owner: ${{ parameters.user }}
+          region: ${{ parameters.region }}
+          tec_account: ${{ parameters.tec_account }}
+          workspace_purpose: ${{ parameters.workspace_purpose }}
+        apikey: ${{ parameters.token }}
+        showOutputVariables: true
+  output:
+    links:
+      - title: Pipeline Details
+        url: ${{ steps.trigger.output.PipelineUrl }}
+    text:
+      - title: Step output foo
+        content: |-
+          status:  `${{ steps['trigger'].output.status }}`
+          foo: `"${{ steps.trigger.output['pipeline.stages.echo.spec.execution.steps.Gen.output.outputVariables.foo'] }}"`
+          apms_id: `"${{ steps.trigger.output['pipeline.variables.apms_id'] }}"`
+  # Configure inputs - https://developer.harness.io/docs/internal-developer-portal/flows/flows-input
+  parameters:
+    - title: Cloud Resource Definition
+      type: object
+      required:
+        # - user
+        # - apms_id
+        # - region
+        # - tec_account
+        - resources
+      properties:
+        # User Session Token: https://developer.harness.io/docs/internal-developer-portal/flows/worflowyaml/#--mode-1-user-session-token
+        token:
+          title: Harness Token
+          type: string
+          ui:widget: password
+          ui:field: HarnessAuthToken
+        user:
+          title: Choose a User who will own the deployment
+          type: string
+          default: 'user:default/shalom.bhooshi'
+          description: |
+            Use a name of a harness user who will be named as the requestor of the deployment.
+            This must be a valid harness user, and the user must be a person who is authorized to
+            make infrastructure changes in the `tec_account` named below.
+          ui:field: OwnerPicker
+          ui:options:
+            allowArbitraryValues: false  # Must be a harness user
+            allowedKinds:
+              - User
+        apms_id:
+          type: string
+          pattern: '^(APMS-)?[0-9]{5}$'
+          description: |-
+            APMS ID of the Business Application (as set in [LeanIX](https://takeda.leanix.net/TakedaProduction/dashboard/))
+            that will own the resources provisioned by this workflow.
+          default: '93400'  # TODO: Remove
+        tec_account:
+          # TODO: Provision a list of accounts that the current user is permitted to deploy into
+          type: string
+          enum:
+            - tec-dce-inn-dev
+            - tec-man-foo-test
+            - tec-rnd-sci-dev
+            - tec-rnd-sci-tst
+            - tec-ent-bar-dev
+            - tec-ent-bar-tst
+          description: |-
+            The target [TEC AWS account](https://d-90677b2a7e.awsapps.com/start/#/?tab=accounts) that will be used
+            to deploy the cloud resources into.
+            The account should be its full-form and must exist ([click here](https://d-90677b2a7e.awsapps.com/start/#/) to check)
+            and have been vended by the Takeda AVM (Account Vending Machine).
+          default: 'tec-dce-inn-dev'
+        region:
+          type: string
+          enum:
+            - us-east-1
+            - us-west-2
+            - ap-northeast-1
+            - ap-southeast-1
+            - eu-central-1
+            - eu-west-2
+          default: us-east-1
+          description: |-
+            The [AWS region](https://onetakeda.atlassian.net/wiki/spaces/CCE/pages/3765075976/AWS+Services+Naming+Conventions#4.19-Country-%2F-Region-Codes)
+            of the TEC account to deploy resources into (Currently not supported!)
+        workspace_purpose:
+          type: string
+          default: ShalomBhooshi
+          description: |-
+            (**Optional**) The purpose of the TFC workspace (last field of the workspace name).
+            - This is needed when selecting an exact workspace when there are multiple matches for an APMS ID + TEC Account pair.
+            - If this name is left empty, this field is set to the normalized name of the LeanIX application (first 48 alphanumeric characters).
+            - If no workspaces are found, this field is used in naming (the last field) of any workspaces created.
+        resources:
+          description: |-
+            ### Cloud Resource Definition
+
+            Define the resource(s) required to build out your cloud infrastructure in this section.
+            At least one resource is required - click *➕* below to add multiple resources.
+
+            - To link resources by passing the outputs of one "module" into the inputs of another,
+            use the `resources-<x>.<resource_output>` convention in fields that take text inputs.
+            (e.g. `resources-1.id`, `resources-2.arn`, etc)
+            - To pass in literals that should not be quoted - use the `literal:<value>` convention.
+            (e.g. `literal:local.shared_tags`, `literal:module.EC2.private_ip_address`)
+          type: array
+          minItems: 1
+          uniqueItems: false
+          ui:help: |-
+            ❗Submission Guidance: ❗
+            Please review your request carefully in the next screen before hitting 'Create'.
+            If the pipeline fails, may always replay the submission using the 'Start Over'.
+          ui:options:
+            addable: true
+            orderable: true
+            removable: true
+          items:
+            type: object
+            description: Choose from one of the available Takeda Cloud Building Blocks
+            required:
+              - resource
+            properties:
+              resource:
+                # description: 'Type of Takeda [Building Block](https://github.com/orgs/oneTakeda/repositories?q=terraform-aws-)'
+                type: string
+                enum:
+                  # List of Bulding blocks published to this workflow
+                  # TODO: We need a better code hygiene standard around the building blocks HCL to
+                  # make them parseable for this form.
+                  - terraform-aws-EC2
+                  - terraform-aws-SecurityGroup
+                  - terraform-aws-S3
+                  - terraform-aws-RDS
+                  - terraform-aws-ApplicationLoadBalancer
+                  - terraform-aws-NetworkLoadBalancer
+                  - terraform-aws-ACMCertificate
+            dependencies:
+              resource:
+                oneOf:
+                  # Drop down of the building blocks
+                  - properties:
+                      resource:
+                        enum:
+                          - terraform-aws-EC2
+                      version:
+                        type: string
+                        ui:readonly: true
+                        default: '2.0.0'
+                        description: 'Latest version as of [Wed  9 Jul 09:13:37 CEST 2025](https://example.com/)'
+                      definition:
+                        $ref: "#/terraform-aws-EC2/definition"
+                  - properties:
+                      resource:
+                        enum:
+                          - terraform-aws-SecurityGroup
+                      version:
+                        type: string
+                        ui:readonly: true
+                        default: '2.0.0'
+                        description: 'Latest version as of [Wed  9 Jul 09:13:37 CEST 2025](https://example.com/)'
+                      definition:
+                        $ref: "#/terraform-aws-SecurityGroup/definition"
+                  - properties:
+                      resource:
+                        enum:
+                          - terraform-aws-S3
+                      version:
+                        type: string
+                        ui:readonly: true
+                        default: '2.0.0'
+                        description: 'Latest version as of [Wed  9 Jul 09:13:37 CEST 2025](https://example.com/)'
+                      definition:
+                        $ref: "#/terraform-aws-S3/definition"
+
+                  - properties:
+                      resource:
+                        enum:
+                          - terraform-aws-RDS
+                      version:
+                        type: string
+                        ui:readonly: true
+                        default: '2.0.0'
+                        description: 'Latest version as of [Wed  9 Jul 09:13:37 CEST 2025](https://example.com/)'
+                      definition:
+                        $ref: "#/terraform-aws-RDS/definition"
+                        # terraform-aws-S3 definitionS begins
+                  - properties:
+                      resource:
+                        enum:
+                          - terraform-aws-ApplicationLoadBalancer
+                      version:
+                        type: string
+                        ui:readonly: true
+                        default: '2.0.0'
+                        description: 'Latest version as of [Wed  9 Jul 09:13:37 CEST 2025](https://example.com/)'
+                      definition:
+                        $ref: "#/terraform-aws-ApplicationLoadBalancer/definition"
+                  - properties:
+                      resource:
+                        enum:
+                          - terraform-aws-NetworkLoadBalancer
+                      version:
+                        type: string
+                        ui:readonly: true
+                        default: '2.0.0'
+                        description: 'Latest version as of [Wed  9 Jul 09:13:37 CEST 2025](https://example.com/)'
+                      definition:
+                        $ref: "#/terraform-aws-NetworkLoadBalancer/definition"
+                  - properties:
+                      resource:
+                        enum:
+                          - terraform-aws-ACMCertificate
+                      version:
+                        type: string
+                        ui:readonly: true
+                        default: '2.0.0'
+                        description: 'Latest version as of [Wed  9 Jul 09:13:37 CEST 2025](https://example.com/)'
+                      definition:
+                        $ref: "#/terraform-aws-ACMCertificate/definition"
+      terraform-aws-S3:
+        definition:
+          title: terraform-aws-S3 Terraform Building Block
+          type: object
+          description: "[Takeda Service Standard(s)](https://onetakeda.atlassian.net/wiki/search?text=S3&spaces=CCE&ancestor=1765343338)
+            | [TFC Module](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/S3/aws) | [Code](https://github.com/oneTakeda/terraform-aws-S3/tree/v3.0.1)
+            | [v3.0.1](https://github.com/oneTakeda/terraform-aws-S3/releases/tag/v3.0.1) | [Changelog](https://github.com/oneTakeda/terraform-aws-S3/releases)
+            | [Inputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/S3/aws/3.0.1?tab=inputs) | [Outputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/S3/aws/3.0.1?tab=outputs)
+            | [Examples](https://github.com/oneTakeda/terraform-aws-S3/tree/v3.0.1/examples) | [Github Issues](https://github.com/oneTakeda/terraform-aws-S3/issues)
+            | [Usage](https://github.com/oneTakeda/terraform-aws-S3/issues)\n\n### Description \n#### Takeda S3\n\nAmazon
+            Simple Storage Service (Amazon S3) is object storage with a simple web service interface to store and retrieve
+            any amount of data from anywhere on the web. It is designed to deliver 99.999999999% durability, and scale past
+            trillions of objects worldwide.\n\nS3 buckets are used to upload, store and retrieve an unlimited number of files,
+            which are presented and manipulated as objects.  S3 supports features such as versioning and can be configured
+            to automatically manage the lifecycle of the object by scheduling either expiration (object deletion) or transition
+            to Amazon Glacier.\n\n[**Takeda S3 Standards**](https://onetakeda.atlassian.net/wiki/spaces/CCE/pages/1931084840/S3)\n\n###
+            <ins>Capability of This Module</ins> \n\n1. Cr... [more](https://github.com/oneTakeda/terraform-aws-S3/tree/main/README.md)"
+          required:
+            - purpose
+          properties:
+            purpose:
+              type: string
+              description: Description of bucket purpose  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22purpose%22)
+              default: null
+            includeExtendedProperties:
+              title: Show extended inputs?
+              type: boolean
+              default: false
+          dependencies:
+            includeExtendedProperties:
+              allOf:
+                - if:
+                    properties:
+                      includeExtendedProperties:
+                        const: true
+                  then:
+                    properties:
+                      bucket_key_alias:
+                        type: string
+                        description: Alias or ID of the KMS key to use for encrypting the bucket  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22bucket_key_alias%22)
+                        default: alias/TEC-S3
+                      bucket_versioning:
+                        type: string
+                        description: 'Versioning state of the bucket.    Valid values: Enabled, Suspended, or Disabled.    Disabled
+                          should only be used when creating or importing resources that correspond to unversioned S3 buckets.  [code
+                          docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22bucket_versioning%22)'
+                        default: Disabled
+                      control_object_ownership:
+                        type:
+                          - boolean
+                          - string
+                        description: Whether to manage S3 Bucket Ownership Controls on this bucket.  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22control_object_ownership%22)
+                        default: false
+                      cors_rule:
+                        type: array
+                        description: List of maps containing rules for Cross-Origin Resource Sharing.  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22cors_rule%22)
+                        uniqueItems: false
+                        minItems: 0
+                        items:
+                          type: string
+                      create_s3_bucket_notification:
+                        type:
+                          - boolean
+                          - string
+                        description: 'Whether to enable event notification for S3   reference: https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html  [code
+                          docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22create_s3_bucket_notification%22)'
+                        default: false
+                      custom_lifecycle_rules:
+                        type: array
+                        description: '(Warning!!! This will overwrite the default lifecycle policy set by terraform , which
+                          is approved by finops and cpc)   Custom lifecycle rule to configured for S3 bucket   reference:
+                          https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration  [code
+                          docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22custom_lifecycle_rules%22)'
+                        uniqueItems: false
+                        minItems: 0
+                        items:
+                          type: string
+                      disable_default_lifecycle_policy:
+                        type:
+                          - boolean
+                          - string
+                        description: (Usage is not recommended, and disabling this will incur storage costs.)   Disable The
+                          Default Lifecycle policy associated with the S3 bucket.  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22disable_default_lifecycle_policy%22)
+                        default: false
+                      disable_intelligent_tiering_archive_configurations:
+                        type:
+                          - boolean
+                          - string
+                        description: (Optional,Usage is not recommended)   Must be set only if there is an explicit requirement   Disable
+                          the intelligent tiering Archive Configurations , so the objects are transitioned towards `Archive
+                          Access` and `Deep Archive Access`  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22disable_intelligent_tiering_archive_configurations%22)
+                        default: false
+                      enable_access_log:
+                        type:
+                          - boolean
+                          - string
+                        description: whether to enable access logging for bucket  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22enable_access_log%22)
+                        default: true
+                      enable_bucket_key:
+                        type:
+                          - boolean
+                          - string
+                        description: Whether to enable bucket key while defining server side encryption  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22enable_bucket_key%22)
+                        default: true
+                      enable_lambda_notifications:
+                        type: object
+                        description: Use Lambda as the destination of your S3 events.  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22enable_lambda_notifications%22)
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                      enable_object_lock:
+                        type:
+                          - boolean
+                          - string
+                        description: Indicate for which buckets to enable object locking  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22enable_object_lock%22)
+                        default: false
+                      enable_sns_notifications:
+                        type: object
+                        description: Use SNS as the destination of your S3 events.  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22enable_sns_notifications%22)
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                      enable_sqs_notifications:
+                        type: object
+                        description: Use SQS as the destination of your S3 events.  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22enable_sqs_notifications%22)
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                      enable_tiering:
+                        type:
+                          - boolean
+                          - string
+                        description: Enable or disable S3 Intelligent-Tiering  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22enable_tiering%22)
+                        default: true
+                      eventbridge:
+                        type:
+                          - boolean
+                          - string
+                        description: Whether to enable Amazon EventBridge notifications  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22eventbridge%22)
+                        default: null
+                      object_lock_configuration:
+                        type: object
+                        description: Optional configuration settings for S3 Object Lock.  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22object_lock_configuration%22)
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                      object_ownership:
+                        type: string
+                        description: 'Used to control ownership of objects uploaded to your bucket and to disable or enable
+                          access control lists (ACLs).   Valid values: BucketOwnerEnforced, BucketOwnerPreferred or ObjectWriter.    ''BucketOwnerEnforced'':
+                          ACLs are disabled, and the bucket owner automatically owns and has full control over every object
+                          in the bucket.    ''BucketOwnerPreferred'': Objects uploaded to the bucket change ownership to the
+                          bucket owner if the objects are uploaded with the bucket-owner-full-control canned ACL.   ''ObjectWriter'':
+                          The uploading account will own the object if the object is uploaded with the bucket-owner-full-control
+                          canned ACL.      reference: https://docs.aws.amazon.com/AmazonS3/latest/userguide/about-object-ownership.html  [code
+                          docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22object_ownership%22)'
+                        default: BucketOwnerPreferred
+                      request_payer:
+                        type: string
+                        description: '(Optional) Specifies who should bear the cost of Amazon S3 data transfer. Can be either
+                          `BucketOwner` or `Requester`.    By default, the owner of the S3 bucket would incur the costs of
+                          any data transfer.    ref: https://docs.aws.amazon.com/AmazonS3/latest/userguide/RequesterPaysBuckets.html  [code
+                          docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22request_payer%22)'
+                        default: null
+                      server_access_log_bucket:
+                        type: string
+                        description: Name of the server access log bucket in the account  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22server_access_log_bucket%22)
+                        default: ''
+                      transfer_acceleration:
+                        type: string
+                        description: Use an accelerated endpoint for faster data transfers   Possible values are `Enabled`
+                          or `Suspended`  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22transfer_acceleration%22)
+                        default: null
+                      transition_default_minimum_object_size:
+                        type: string
+                        description: '(Optional) The default minimum object size behavior applied to the lifecycle configuration.   Valid
+                          values: `all_storage_classes_128K`, `varies_by_storage_class`  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22transition_default_minimum_object_size%22)'
+                        default: all_storage_classes_128K
+                      user_preferred_index:
+                        type: number
+                        description: A value to influence the ID suffixed to the S3 bucket name.    This is needed to avoid
+                          name conflicts when calling this building block as a child module more than once per Terraform plan/apply
+                          run  [code docs..>](https://github.com/oneTakeda/terraform-aws-S3/blob/main/variables.tf#:~:text=variable%20%22user_preferred_index%22)
+
+      # terraform-aws-S3 definition ends
+
+      # terraform-aws-EC2 definitionS begins
+      terraform-aws-EC2:
+        definition:
+          title: terraform-aws-EC2 Building Block
+          type: object
+          description: "[Module](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/EC2/aws) | [Code](https://github.com/oneTakeda/terraform-aws-EC2/tree/v3.0.0)
+            | [v3.0.0](https://github.com/oneTakeda/terraform-aws-EC2/releases/tag/v3.0.0) | [Changelog](https://github.com/oneTakeda/terraform-aws-EC2/releases)
+            | [Inputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/EC2/aws/3.0.0?tab=inputs) | [Outputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/EC2/aws/3.0.0?tab=outputs)
+            | [Examples](https://github.com/oneTakeda/terraform-aws-EC2/tree/v3.0.0/examples) | [Github Issues](https://github.com/oneTakeda/terraform-aws-EC2/issues)
+            | [AWS Product Docs](https://aws.amazon.com/search/?searchQuery=EC2)\n\n### Description \n#### Amazon Elastic
+            Compute Cloud (Amazon EC2)\n\nAmazon Elastic Compute Cloud (Amazon EC2) provides on-demand, scalable computing
+            capacity in the Amazon Web Services (AWS) Cloud. Using Amazon EC2 reduces hardware costs so you can develop and
+            deploy applications faster. You can use Amazon EC2 to launch as many or as few virtual servers as you need, configure
+            security and networking, and manage storage. You can add capacity (scale up) to handle compute-heavy tasks, such
+            as monthly or yearly processes, or spikes in website traffic. When usage decreases, you can reduce capacity (scale
+            down) again.\n\n**[takeda_standards](https://onetakeda.atlassian.net/wiki/spaces/CCE/pages/3439362094/AWS+EC2)**\n\n**[aws_official_documentation](https://docs.aws.ama...
+            [more](https://github.com/oneTakeda/terraform-aws-EC2/tree/main/README.md)"
+          required:
+            - instance_type
+          properties:
+            instance_type:
+              type: string
+              description: The size for the EC2(s)  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22instance_type%22)
+              default: null
+            os:
+              type: string
+              description: 'The OS for the EC2(s). One of: `RHEL9`, `RHEL8`, `RHEL7`, `Windows2019`, `Windows2016`, `AZL2`  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22os%22)'
+              default: RHEL8
+              enum:
+                - AZL2
+                - RHEL7
+                - RHEL8
+                - RHEL9
+                - Windows2016
+                - Windows2019
+            root_volume_size:
+              type: number
+              description: Size for the root EBS volume  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22root_volume_size%22)
+            instance_tier:
+              type: string
+              description: 'The network tier in which the instance will be deployed. One of: `app`, `dat`, `web`  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22instance_tier%22)'
+              default: app
+              enum:
+                - app
+                - dat
+                - web
+            subnet_az_id:
+              type: string
+              description: To set to az1/az2/az3 in case of instance couldn't be deployed in randomly choosed region  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22subnet_az_id%22)
+              default: ''
+              enum:
+                - ''
+                - az1
+                - az2
+                - az3
+            security_groups:
+              type: array
+              description: The Security Groups to be attached on the EC2(s)  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22security_groups%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            additional_ebs_config:
+              type: array
+              description: Used when additional EBS volumes are required.   Includes volume_size, device_name ,mount_point
+                which is added to EBS Name tag   (e.g. USVGA12345DX001-TMP) iops and type"  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22additional_ebs_config%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: object
+                properties:
+                  additional_ebs_volume_size:
+                    type: number
+                  additional_ebs_device_name:
+                    type: string
+                  additional_ebs_mount_point:
+                    type: string
+                  additional_ebs_iops:
+                    type: number
+                  additional_ebs_type:
+                    type: string
+                    default: gp3
+                  additional_ebs_throughput:
+                    type: number
+            includeExtendedProperties:
+              title: Show extended inputs?
+              type: boolean
+              default: false
+          dependencies:
+            includeExtendedProperties:
+              allOf:
+                - if:
+                    properties:
+                      includeExtendedProperties:
+                        const: true
+                  then:
+                    properties:
+                      ami_id:
+                        type: string
+                        description: Used when exact AMI-ID needs to be specified  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22ami_id%22)
+                        default: ''
+                      ami_version:
+                        type: string
+                        description: Version of AMI in parameter store, if not set than latest version is used  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22ami_version%22)
+                        default: ''
+                      asec_djo:
+                        type: string
+                        description: The Active Directory domain to join Windows Instances to (onetakeda.com by default).   You
+                          can specify a different domain or leave this tag empty to not join a domain  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22asec_djo%22)
+                        default: onetakeda
+                      create_ssh_key_pair:
+                        type:
+                          - boolean
+                          - string
+                        description: '"**Only for use with custom AMI or Appliances**.     This flag instructs the building
+                          block to create an SSH key pair for injection into the     EC2 instance i.e. when provisioning instances
+                          from AWS marketplace or vendor AMIs     as opposed to the Takeda Golden AMIs.     Must be used in
+                          conjunction with a user-supplied `public_key`"  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22create_ssh_key_pair%22)'
+                        default: false
+                      disable_api_stop:
+                        type:
+                          - boolean
+                          - string
+                        description: If true, enables EC2 Instance Stop Protection  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22disable_api_stop%22)
+                        default: false
+                      ebs_optimized:
+                        type:
+                          - boolean
+                          - string
+                        description: If true, the launched EC2 instance will be EBS-optimized"   Reference:- https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-optimized.html  [code
+                          docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22ebs_optimized%22)
+                        default: false
+                      ephemeral_block_devices:
+                        type: array
+                        description: Customize Ephemeral (also known as Instance Store) volumes on the instance  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22ephemeral_block_devices%22)
+                        uniqueItems: false
+                        minItems: 0
+                        items:
+                          type: string
+                      iam_instance_profile:
+                        type: string
+                        description: IAM role attached to the EC2 instance during provisioning.   Change only if role with
+                          specific policies is required  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22iam_instance_profile%22)
+                        default: TEC-EC2-SSM
+                      instance_name:
+                        type: string
+                        description: 'The EC2 instance_name and OS hostname to assign to the instances created by this building
+                          block.   The default behaviour of this building block is to autogenerate the instance names to match
+                          the   Takeda Naming Standards, this variable overrides that behaviour and allows the user to set
+                          the   instances'' names. When overriding this name, it is important to still try and observe the
+                          spirit   of the Takeda Naming Standards to aid in operations as well as the hostname constraints
+                          as set   out by NetBIOS protocols in the case of Windows and RFC1034 otherwise.   Caution: Only
+                          useful when `count` is 1 otherwise all instances take on the same instance name.  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22instance_name%22)'
+                        default: ''
+                      metadata_options:
+                        type: object
+                        description: Customize the metadata options of the instance  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22metadata_options%22)
+                        properties:
+                          http_endpoint:
+                            type: string
+                          http_put_response_hop_limit:
+                            type: number
+                          http_tokens:
+                            type: string
+                          instance_metadata_tags:
+                            type: string
+                      monitoring:
+                        type:
+                          - boolean
+                          - string
+                        description: If true, the launched EC2 instance will have detailed monitoring enabled  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22monitoring%22)
+                        default: false
+                      network_interface:
+                        type: array
+                        description: Customize network interfaces to be attached at instance boot time  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22network_interface%22)
+                        uniqueItems: false
+                        minItems: 0
+                        items:
+                          type: string
+                      private_ip:
+                        type: string
+                        description: Private IP address to associate with the instance in a VPC  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22private_ip%22)
+                        default: null
+                      public_key:
+                        type: string
+                        description: 'The contents of an SSH public key for use in key_name for the EC2 instance   e.g. public_key
+                          = \"ssh-rsa AAAzaC1y... me@takeda.com\"    A note on Security: Please consider the security and
+                          availability of the   counterpart private key and store the private keys in a secrets management
+                          service   (AWS Secrets, Github Secrets, Hashicorp Vault, etc) rather than in code.    The public
+                          key on the other hand is not meant to be treated as a secret and can be   stored in cleartext in
+                          code  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22public_key%22)'
+                        default: ''
+                      secondary_private_ips:
+                        type: array
+                        description: A list of secondary private IPv4 addresses to assign to the instance's primary network
+                          interface (eth0) in a VPC.    Can only be assigned to the primary network interface (eth0) attached
+                          at instance creation, not a pre-existing network interface i.e. referenced in a `network_interface
+                          block`  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22secondary_private_ips%22)
+                        uniqueItems: false
+                        minItems: 0
+                        items:
+                          type: string
+                      subnet_name:
+                        type: string
+                        description: The variable serves as a reference to a subnet within an AWS account with non-standard
+                          subnets.   **Don't use it unless absolutely necessary.    Additionally, setting the subnet_name
+                          specifies a particular target Availability Zone (AZ) for EC2.**  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22subnet_name%22)
+                        default: ''
+                      user_data:
+                        type: string
+                        description: Custom code that replaces the default user_data script  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22user_data%22)
+                        default: ''
+                      user_data_replace_on_change:
+                        type:
+                          - boolean
+                          - string
+                        description: '!!Warning , setting this to true will recreate your instance   When used in combination
+                          with user_data , will trigger a destroy and recreate when set to true.    Defaults to false if not
+                          set   conflicts with user_data_replace_on_change_no_destory if set  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22user_data_replace_on_change%22)'
+                        default: false
+                      user_preferred_index:
+                        type: number
+                        description: 'A value to influence the ID suffixed of EC2 instances.   This is needed to avoid name
+                          conflicts when calling this building block as a   child module more than once per Terraform plan/apply
+                          run.   NOTE: This actual ID set is dependant on the addition of this value and   the next-highest
+                          available ID in the environment  [code docs..>](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22user_preferred_index%22)'
+
+      # terraform-aws-EC2 definition ends
+
+      # terraform-aws-SecurityGroup definition begins
+      terraform-aws-SecurityGroup:
+        definition:
+          title: terraform-aws-SecurityGroup Building Block
+          type: object
+          description: "[Module](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/SecurityGroup/aws) |
+            [Code](https://github.com/oneTakeda/terraform-aws-SecurityGroup/tree/v3.0.0) | [v3.0.0](https://github.com/oneTakeda/terraform-aws-SecurityGroup/releases/tag/v3.0.0)
+            | [Changelog](https://github.com/oneTakeda/terraform-aws-SecurityGroup/releases) | [Inputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/SecurityGroup/aws/3.0.0?tab=inputs)
+            | [Outputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/SecurityGroup/aws/3.0.0?tab=outputs)
+            | [Examples](https://github.com/oneTakeda/terraform-aws-SecurityGroup/tree/v3.0.0/examples) | [Github Issues](https://github.com/oneTakeda/terraform-aws-SecurityGroup/issues)
+            | [AWS Product Docs](https://aws.amazon.com/search/?searchQuery=SecurityGroup)\n\n### Description \n#### Takeda
+            Security group\n\nA security group controls the traffic that is allowed to reach and leave the resources that
+            it is associated with. For example, after you associate a security group with an EC2 instance, it controls the
+            inbound and outbound traffic for the instance.\n\nTakeda Security group Standards\n\n[Takeda Security group Standards](https://onetakeda.atlassian.net/wiki/spaces/CCE/pages/2198504698/Security+Group+Basics+and+Best+Practices)\n...
+            [more](https://github.com/oneTakeda/terraform-aws-SecurityGroup/tree/main/README.md)"
+          required:
+            - purpose
+          properties:
+            prefix_lists:
+              type: array
+              description: The list of managed prefix lists IDs to apply to apply to each security group rule managed by this
+                block. Conflicts with `use_takeda_internal_prefix_list` attribute set within the security group rule definitions  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-SecurityGroup/blob/main/variables.tf#:~:text=variable%20%22prefix_lists%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            purpose:
+              type: string
+              description: The short purpose (32 char max) used in generating the security group name  [code docs..>](https://github.com/oneTakeda/terraform-aws-SecurityGroup/blob/main/variables.tf#:~:text=variable%20%22purpose%22)
+              default: null
+            security_group_rules:
+              type: array
+              description: 'A combination of port, protocol and source to create ingress Security Group Rules.  One must choose
+                between specifing a source of: `source_network_is_takeda` to `true` (preferred), `source_vpc_cidr` to a CIDR
+                block no includedd in the takeda-internal managed PL, `source_security_group_id` to an existing SG ID, or
+                set `self` to `true`.  [code docs..>](https://github.com/oneTakeda/terraform-aws-SecurityGroup/blob/main/variables.tf#:~:text=variable%20%22security_group_rules%22)'
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            vpc_id:
+              type: string
+              description: (Use only for very specific cases)   This is required only in TEC accounts with multiple / non-default
+                VPCs,   This VPC ID controls which non-default VPC the SGs is created within  [code docs..>](https://github.com/oneTakeda/terraform-aws-SecurityGroup/blob/main/variables.tf#:~:text=variable%20%22vpc_id%22)
+              default: ''
+
+      # terraform-aws-SecurityGroup definition ends
+
+      # terraform-aws-RDS definition begins
+      terraform-aws-RDS:
+        definition:
+          title: terraform-aws-RDS Terraform Building Block
+          type: object
+          description: "[Takeda Service Standard(s)](https://onetakeda.atlassian.net/wiki/search?text=RDS&spaces=CCE&ancestor=1765343338)
+            |[TFC Module](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/RDS/aws) | [Code](https://github.com/oneTakeda/terraform-aws-RDS/tree/v5.0.0)
+            | [v5.0.0](https://github.com/oneTakeda/terraform-aws-RDS/releases/tag/v5.0.0) | [Changelog](https://github.com/oneTakeda/terraform-aws-RDS/releases)
+            | [Inputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/RDS/aws/5.0.0?tab=inputs) | [Outputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/RDS/aws/5.0.0?tab=outputs)
+            | [Examples](https://github.com/oneTakeda/terraform-aws-RDS/tree/v5.0.0/examples) | [Github Issues](https://github.com/oneTakeda/terraform-aws-RDS/issues)
+            | [Usage](https://github.com/oneTakeda/terraform-aws-RDS/issues) | \n\n### Description \n#### AWS Relational Database
+            Service (RDS)\n\nAs per the [TEC RDS Standard](https://onetakeda.atlassian.net/l/cp/X1F3yvHQ) Multi-AZ deployments
+            are only enabled for Production Tier 1 and Tier 2 business applications. Enabling this in other environments is
+            not recommended for cost-optimization reasons.\n\nCross-Region replication is only enabled for Production Tier
+            1 bussiness applications.\n\nYou can call module many times as needed in one run but in such case always specify
+            depends_on = [module.rds] for non first instance, set is_first_instance to false and user_preferred_suffix accordingly.
+            Check #Calling module second time in one run\n\nSecurity group is going to be created only once and for other
+            instances will be re-used\n\nAdding instance(s) su... [more](https://github.com/oneTakeda/terraform-aws-RDS/tree/main/README.md)"
+          required:
+            - engine
+            - instance_class
+          properties:
+            allocated_storage:
+              type: number
+              description: (Optional) If application team requests specific initial storage size for RDS. If not specified,
+                default value of 100GB is used  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22allocated_storage%22)
+            allow_major_version_upgrade:
+              type:
+                - boolean
+                - string
+              description: (Optional) Indicates that major version upgrades are allowed. Changing this parameter does not
+                result in an outage and the change is asynchronously applied as soon as possible.  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22allow_major_version_upgrade%22)
+              default: false
+            character_set_name:
+              type: string
+              description: 'Should be defined during creation of RDS , if modified post creation  RDS will be re-created  Specify
+                the character set name for MSSQL and Oracle , If not set it will set to default MSSQL Default: SQL_Latin1_General_CP1_CI_AS
+                Oracle Default: AL32UTF8  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22character_set_name%22)'
+              default: null
+            custom_db_options:
+              type: array
+              description: A list of custom DB option to apply to the option group attached to the instance. The options supported
+                vary from RDS engine version to another, please refer to the documentation at https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_parameter_group
+                to determine supported options.  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22custom_db_options%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            custom_db_parameters:
+              type: array
+              description: A list of custom DB parameters to apply to the parameter group attached to the instance. The parameters
+                supported vary from RDS engine version to another, please refer to the documentation at https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_parameter_group
+                to determine supported parameters.  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22custom_db_parameters%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            custom_subnet_group:
+              type: string
+              description: Provide a value if there is a specific subnet group that needs to be attached to the RDS instance.
+                Must also set use_default_subnet_group to false  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22custom_subnet_group%22)
+              default: null
+            db_name:
+              type: string
+              description: Applicable to non MSSQL DB only,Should be defined during creation of RDS,if modified post creation
+                RDS will be re-created  Specify the db name which needs to be created during RDS creation and db name cannot
+                be set to master  The constraints of this variable differs according to the database engine you use Please
+                refer to this hashicrop document for more details https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance#db_name  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22db_name%22)
+              default: null
+            domain:
+              type: string
+              description: The ID of the Directory Service Active Directory domain to create the instance in. `domain` is
+                currently only supported by Microsoft SQL Server.  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22domain%22)
+              default: null
+            domain_iam_role_name:
+              type: string
+              description: (Required if `domain` is provided) The name of the IAM role to be used when making API calls to
+                the Directory Service  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22domain_iam_role_name%22)
+              default: null
+            dr_custom_subnet_group:
+              type: string
+              description: Provide a value if there is a specific subnet group that needs to be attached to the RDS instance
+                for the DR region. Must also set use_default_subnet_group to false  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22dr_custom_subnet_group%22)
+              default: null
+            dr_subnet_override:
+              type: array
+              description: Provide a list of subnets to be used in the DR region in case the subnet naming is non-standard  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22dr_subnet_override%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            engine:
+              type: string
+              description: 'The RDS database engine to use. One of `postgres`, `mariadb`, `mysql`, `oracle-se2-cdb`, `sqlserver-se`.
+                NOTE: If Enterprise Editions of Oracle or MS SQL Server are required, a technical justification must be provided
+                via an email to: SQL (dl.Takeda.Mssql.Dba@takeda.com), Oracle (dl.Takeda.Oracle.Dba@takeda.com)  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22engine%22)'
+              default: null
+              enum:
+                - ''
+                - mariadb
+                - mysql
+                - oracle-ee-cdb
+                - oracle-se2-cdb
+                - postgres
+                - sqlserver-ee
+                - sqlserver-se
+            engine_version:
+              type: string
+              description: '(Optional, Usage Discouraged) The value to override this building block''s calculation of engine_version.
+                The preferred way to use the building block is to leave this value empty and so allow the building block to
+                lookup the latest engine version currently endorsed by the Takeda DBCoE''s RDS Provisioning Standard. However,
+                in some Day2 scenarios, a major upgrade planned by this building block would be undesirable as it would cause
+                risk to standing RDS deployments and so this parameter allows the user to pin the instance to the desired
+                engine_version. For valid versions - refer to the EngineVersion parameter of [CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
+                NOTE: This value can be a version prefix e.g. `15` as opposed to `15.3` which has the effect of allowing minor
+                version upgrades  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22engine_version%22)'
+              default: null
+            instance_class:
+              type: string
+              description: The instance type of the RDS instance  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22instance_class%22)
+              default: null
+            iops:
+              type: number
+              description: The amount of provisioned IOPS. Setting this implies a storage_type of 'io1'  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22iops%22)
+            is_first_instance:
+              type:
+                - boolean
+                - string
+              description: Boolean vaule specifying if the RDS instance is first one going to be deployed with this RDS BB
+                for current APMS-ID  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22is_first_instance%22)
+              default: true
+            multi_az_override:
+              type:
+                - boolean
+                - string
+              description: Explicitly enable or disable Multi-AZ. If null, decision is made based on tags.  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22multi_az_override%22)
+              default: null
+            security_groups:
+              type: array
+              description: Additional security groups to be attached to the RDS. The default SG with DB port is created and
+                attached by default  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22security_groups%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            snapshot_identifier:
+              type: string
+              description: (Optional) The snapshot from which to create RDS instance (name or ARN when specifying a DB cluster
+                snapshot, ARN when specifying a DB snapshot).  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22snapshot_identifier%22)
+              default: null
+            storage_type:
+              type: string
+              description: The storage type to set for the instance storage volumes  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22storage_type%22)
+              default: gp3
+            subnet_override:
+              type: array
+              description: Provide a list of subnets to be used in the case subnet naming is non-standard  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22subnet_override%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            timezone:
+              type: string
+              description: Time zone of the DB instance. timezone is currently only supported by Microsoft SQL Server. The
+                timezone can only be set on creation. See [MSSQL User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_SQLServer.html#SQLServer.Concepts.General.TimeZone)
+                for more information  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22timezone%22)
+              default: UTC
+            use_default_subnet_group:
+              type:
+                - boolean
+                - string
+              description: Set to true to use the default a4c-migration subnet group, set to false to have a subnet group
+                created specifically for this deployment  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22use_default_subnet_group%22)
+              default: true
+            user_preferred_suffix:
+              type: number
+              description: A value suffixed for RDS identifier. This is needed to avoid name conflicts when calling this building
+                block as a child module more than once per Terraform plan/apply run  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22user_preferred_suffix%22)
+            username:
+              type: string
+              description: Username for the master DB user  [code docs..>](https://github.com/oneTakeda/terraform-aws-RDS/blob/main/variables.tf#:~:text=variable%20%22username%22)
+              default: null
+
+      # terraform-aws-RDS definition ends
+
+      # terraform-aws-IAMRole definition begins
+      terraform-aws-IAMRole:
+        definition:
+          title: terraform-aws-IAMRole Building Block
+          type: object
+          description: "[Module](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/IAMRole/aws) | [Code](https://github.com/oneTakeda/terraform-aws-IAMRole/tree/main)
+            | [v2.5.0](https://github.com/oneTakeda/terraform-aws-IAMRole/releases/tag/v2.5.0) | [Changelog](https://github.com/oneTakeda/terraform-aws-IAMRole/releases)
+            | [Inputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/IAMRole/aws/2.5.0?tab=inputs) |
+            [Outputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/IAMRole/aws/2.5.0?tab=outputs) |
+            [Github Issues](https://github.com/oneTakeda/terraform-aws-IAMRole/issues)[AWS Product Docs](https://aws.amazon.com/search/?searchQuery=IAMRole)\n\n###
+            Description \nSetup IAM Roles and related policies in accordance with the\n[Takeda Naming Standards for AWS IAM](https://onetakeda.atlassian.net/wiki/spaces/CCE/pages/3765075976/AWS+Services+Naming+Conventions#4.36--IAM-Roles)\n\n**References**\n\n-
+            AWS: [IAM Roles](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html)\n- Terraform: [`aws_iam_role`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role)\n...
+            [more](https://github.com/oneTakeda/terraform-aws-IAMRole/tree/main/README.md)"
+          required:
+            - purpose
+          properties:
+            app_name:
+              type: string
+              description: (Usage discouraged) short app_name that the role belongs to (2-8 characters, defaults to APMS ID)  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22app_name%22)
+              default: ''
+            assume_role_policy:
+              type: string
+              description: JSON encoded trust policy document. When var.create_instance_profile is set, this is automatically
+                setup to permit the EC2 service principal to assume the role  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22assume_role_policy%22)
+              default: null
+            create_instance_profile:
+              type:
+                - boolean
+                - string
+              description: Whether to create an EC2 instance profile for association with EC2 instances.  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22create_instance_profile%22)
+              default: false
+            customer_policy_arns:
+              type: array
+              description: List of ARNs of customer managed policies to attach to the IAM role  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22customer_policy_arns%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            description:
+              type: string
+              description: Description of the role  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22description%22)
+              default: ''
+            inline_policy:
+              type: object
+              description: Map of policy names to JSON encoded policy documents  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22inline_policy%22)
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+            managed_policy_arns:
+              type: array
+              description: List of ARNs of AWS managed policies (see https://docs.aws.amazon.com/aws-managed-policy/latest/reference/policy-list.html)
+                to attach to the IAM role  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22managed_policy_arns%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            max_session_duration:
+              type: number
+              description: Maximum session duration (in seconds) that you want to set for the specified role.  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22max_session_duration%22)
+            path:
+              type: string
+              description: Path to the role  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22path%22)
+              default: /
+            permissions_boundary:
+              type: string
+              description: ARN of the policy that is used to set the permissions boundary for the role  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22permissions_boundary%22)
+              default: null
+            purpose:
+              type: string
+              description: Purpose of the role (2-16 characters)  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22purpose%22)
+              default: null
+            trust_policy:
+              type: string
+              description: Alias for var.assume_role_policy  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-IAMRole/blob/main/variables.tf#:~:text=variable%20%22trust_policy%22)
+              default: null
+
+      # terraform-aws-IAMRole definition ends
+
+      # terraform-aws-NetworkLoadBalancer definition begins
+      terraform-aws-NetworkLoadBalancer:
+        definition:
+          title: terraform-aws-NetworkLoadBalancer Terraform Building Block
+          type: object
+          description: "[Takeda Service Standard(s)](https://onetakeda.atlassian.net/wiki/search?text=NetworkLoadBalancer&spaces=CCE&ancestor=1765343338)
+            |[TFC Module](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/NetworkLoadBalancer/aws) | [Code](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/tree/v1.4.0)
+            | [v1.4.0](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/releases/tag/v1.4.0) | [Changelog](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/releases)
+            | [Inputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/NetworkLoadBalancer/aws/1.4.0?tab=inputs)
+            | [Outputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/NetworkLoadBalancer/aws/1.4.0?tab=outputs)
+            | [Examples](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/tree/v1.4.0/examples) | [Github Issues](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/issues)
+            | [Usage](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/issues)\n\n### Description \n<!-- BEGIN_TF_DOCS
+            -->\n\n\n# Examples\n## internet-facing network load balancer\n```hcl\nmodule \"internet-facing-nlb\" {\n  source
+            = \"terraform-amer.takeda.com/DCEInternalDev/TakedaNetworkLoadBalancer/aws\"\n\n  providers = {\n    aws = aws.tec-sec-sec-prd\n
+            \ }\n\n  internal = false\n\n  target_groups_configuration = [\n    {\n      backend_protocol = \"TCP\"\n      backend_port
+            \    = 9000\n      target_type      = \"instance\"\n      targets          = [\"Palo Alto\"]\n    },\n    {\n
+            \     backend_protocol = \"TCP\"\n      backend_port     = 9001\n      target_type      = \"instance\"\n      targets
+            \         = [\"Palo Alto\"]\n    }\n  ]\n\n  # The objects order inside target_groups_configuration and listeners_configuration
+            is important.\n  # In our example, the NLB will listen on t... [more](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/tree/main/README.md)"
+          properties:
+            access_logging_bucket:
+              type: string
+              description: Optional. The S3 bucket in the account to use for [access logging]https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html).
+                If this is not specified, the default logging bucket (accesslogs) for the account is used (refer to the AVM).
+                Logs are prefixed with the NLB name to allow for multiple instances to log into the same logging bucket  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22access_logging_bucket%22)
+              default: null
+            enable_deletion_protection:
+              type:
+                - boolean
+                - string
+              description: Set the `enable_deletion_protection` attribute (to `true` by default) to prevent accidental deletion
+                of the NLB resources. This can be overridden and set to `false` to allow for the deletion of NLB resources
+                (in a follow-up run).  [code docs..>](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22enable_deletion_protection%22)
+              default: true
+            enable_logs:
+              type:
+                - boolean
+                - string
+              description: Enable or disable access logs  [code docs..>](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22enable_logs%22)
+              default: false
+            internal:
+              type:
+                - boolean
+                - string
+              description: Boolean determining if the load balancer is internal or internet-facing (allowed only in *tec-sec-sec-prd*)  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22internal%22)
+              default: false
+            lb_subnet:
+              type: string
+              description: '(Optional, Usage Discouraged): The subnet within which to deploy the load-balancer.   This is
+                required in TEC accounts where subnet names are non-standard that this building block is not able to auto-discover
+                and use.  [code docs..>](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22lb_subnet%22)'
+              default: ''
+            listeners_configuration:
+              type: array
+              description: Listeners configuration  [code docs..>](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22listeners_configuration%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: object
+                properties:
+                  listener_protocol:
+                    type: string
+                  listener_port:
+                    type: string
+                  certificate_arn:
+                    type: string
+            network_tier:
+              type: string
+              description: 'The network tier in which the NLB will be deployed, when **internal = true**. One of: `app`, `dat`,
+                `web`  [code docs..>](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22network_tier%22)'
+              default: app
+              enum:
+                - app
+                - dat
+                - web
+            security_group_ids:
+              type: array
+              description: The security group ID(s) to be attached to the NLB  [code docs..>](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22security_group_ids%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            target_groups_configuration:
+              type: array
+              description: Target Groups configuration  [code docs..>](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22target_groups_configuration%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: object
+                properties:
+                  backend_protocol:
+                    type: string
+                  backend_port:
+                    type: string
+                  target_type:
+                    type: string
+                  targets:
+                    type: array
+                    minItems: 0
+                    items:
+                      type: string
+            user_preferred_suffix:
+              type: number
+              description: A value to influence the ID suffixed to the NLB and the respective TG. This is needed to avoid
+                name conflicts when calling this building block as a child module more than once per Terraform plan/apply
+                run  [code docs..>](https://github.com/oneTakeda/terraform-aws-NetworkLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22user_preferred_suffix%22)
+
+      # terraform-aws-NetworkLoadBalancer definition ends
+
+      # terraform-aws-ApplicationLoadBalancer definition begins
+      terraform-aws-ApplicationLoadBalancer:
+        definition:
+          title: terraform-aws-ApplicationLoadBalancer Building Block
+          type: object
+          description: "[Module](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/ApplicationLoadBalancer/aws)
+            | [Code](https://github.com/oneTakeda/terraform-aws-ApplicationLoadBalancer/tree/main) | [v1.4.0](https://github.com/oneTakeda/terraform-aws-ApplicationLoadBalancer/releases/tag/v1.4.0)
+            | [Changelog](https://github.com/oneTakeda/terraform-aws-ApplicationLoadBalancer/releases) | [Inputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/ApplicationLoadBalancer/aws/1.4.0?tab=inputs)
+            | [Outputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/ApplicationLoadBalancer/aws/1.4.0?tab=outputs)
+            | [Github Issues](https://github.com/oneTakeda/terraform-aws-ApplicationLoadBalancer/issues)[AWS Product Docs](https://aws.amazon.com/search/?searchQuery=ApplicationLoadBalancer)\n\n###
+            Description \n<!-- BEGIN_TF_DOCS -->\n\n\n# Examples\n## Simple ALB with EC2(s) as targets\n```hcl\nmodule \"ALB\"
+            {\n  source = \"terraform-amer.takeda.com/DCEInternalDev/TakedaApplicationLoadBalancer/aws\"\n  listeners = {\n
+            \   nossl               = true # This will create the non-SSL listener\n    redirect_listener_1 = true\n    redirect_listener_2
+            = true\n  }\n  region = \"us-east-1\"\n  #number_of_instances      = 3\n  instance_ids             = [\"i-1234567890abcdef0\",
+            \"i-1234567890abcdef1\", \"i-1234567890abcdef2\"]\n  instance_tier            = \"app\"\n  application_alb_port
+            \    = 8088\n  application_alb_protocol = \"HTTP\"\n  healthcheck_url_path     = \"/index.html\"\n  security_group_ids
+            \      = [\"sg-0123456789abcdef\"]\n  # passing defualt redirect  actions\n  default_actions = {... [more](https://github.com/oneTakeda/terraform-aws-ApplicationLoadBalancer/tree/main/README.md)"
+          required:
+            - default_actions
+            - listeners
+          properties:
+            access_logging_bucket:
+              type: string
+              description: Optional. The S3 bucket in the account to use for [access logging]https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html).
+                If this is not specified, the default logging bucket (accesslogs) for the account is used (Refer to the AVM).
+                Logs are prefixed with the ALB name to allow for multiple instances to log into the same logging bucket.  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22access_logging_bucket%22)
+              default: null
+            application_alb_port:
+              type: number
+              description: The [port](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener#port)
+                to be exposed by the ALB  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22application_alb_port%22)
+            application_alb_protocol:
+              type: string
+              description: 'The [protocol](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener#protocol)
+                to be exposed by the ALB. One of: `HTTP` or `HTTPS`  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22application_alb_protocol%22)'
+              default: HTTP
+              enum:
+                - HTTP
+                - HTTPS
+            certificate_arn:
+              type: string
+              description: The ARN of the SSL certificate  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22certificate_arn%22)
+              default: null
+            default_actions:
+              type: object
+              description: A map of default action configurations for each listener  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22default_actions%22)
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+            enable_deletion_protection:
+              type:
+                - boolean
+                - string
+              description: Set the `enable_deletion_protection` attribute (to `true` by default) to prevent accidental deletion
+                of the ALB resources. This can be overridden and set to `false` to allow for the deletion of ALB resources
+                (in a follow-up run).  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22enable_deletion_protection%22)
+              default: true
+            enable_logs:
+              type:
+                - boolean
+                - string
+              description: Enable or disable access logs  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22enable_logs%22)
+              default: true
+            healthcheck_matcher:
+              type: string
+              description: The range of HTTP response codes returned by the target to signify healthy reponses  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22healthcheck_matcher%22)
+              default: 200-399
+            healthcheck_url_path:
+              type: string
+              description: The suffix to be appended when contructing the URL health check [path](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group#path)  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22healthcheck_url_path%22)
+              default: /
+            idle_timeout:
+              type: number
+              description: The [idle_timeout](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb#idle_timeout-1)
+                - Time in seconds that the connection is allowed to be idle.  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22idle_timeout%22)
+            instance_ids:
+              type: array
+              description: The EC2 instance ID(s) to be registered with the ALB  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22instance_ids%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            instance_tier:
+              type: string
+              description: 'The network tier in which the ALB will be deployed. One of: `app`, `dat`, `web`  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22instance_tier%22)'
+              default: app
+              enum:
+                - app
+                - dat
+                - web
+            listeners:
+              type:
+                - boolean
+                - string
+              description: A map of listener types and their statuses (e.g., ssl = true, nossl = false)  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22listeners%22)
+              default: null
+            override_health_check_port:
+              type: number
+              description: Use if the port for the health check is different from the port of the target group  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22override_health_check_port%22)
+            override_health_check_protocol:
+              type: string
+              description: Use if the health check protocol is different from the target group protocol  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22override_health_check_protocol%22)
+              default: null
+            region:
+              type: string
+              description: 'The AWS region. One of: `us-east-1`, `us-west-2`, `ap-northeast-1`, `ap-southeast-1`, `eu-central-1`,
+                `eu-west-1`  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22region%22)'
+              default: us-east-1
+              enum:
+                - ap-northeast-1
+                - ap-southeast-1
+                - eu-central-1
+                - eu-west-1
+                - us-east-1
+                - us-west-2
+            security_group_ids:
+              type: array
+              description: The security group ID(s) to be attached to the ALB  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22security_group_ids%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+            ssl_policy:
+              type: string
+              description: The security policy for the ALB HTTPS listener  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22ssl_policy%22)
+              default: ELBSecurityPolicy-TLS13-1-2-2021-06
+            stickiness:
+              type: object
+              description: Defines the stickiness settings for the ALB stickiness configuration block  [code docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22stickiness%22)
+              properties:
+                key:
+                  type: string
+                value:
+                  type: string
+            target_service_is_tls_enabled:
+              type:
+                - boolean
+                - string
+              description: Whether the application running on EC2(s) supports [TLS](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group#protocol)  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22target_service_is_tls_enabled%22)
+              default: false
+            target_service_port:
+              type: number
+              description: The [port](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group#port)
+                on which the application listens on the EC2(s). If not specified it will default to the `application_alb_port`  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22target_service_port%22)
+            user_preferred_suffix:
+              type: number
+              description: 'A value to influence the ID suffixed of alb and respective TG. This is needed to avoid name conflicts
+                when calling this building block as a child module more than once per Terraform plan/apply run. NOTE: This
+                actual ID set is dependant on the addition of this value and the next-highest available ID in the environment  [code
+                docs..>](https://github.com/oneTakeda/terraform-aws-terraform-aws-ApplicationLoadBalancer/blob/main/variables.tf#:~:text=variable%20%22user_preferred_suffix%22)'
+
+      # terraform-aws-ApplicationLoadBalancer definition ends
+
+      # terraform-aws-ACMCertificate definition begins
+      terraform-aws-ACMCertificate:
+        definition:
+          title: terraform-aws-ACMCertificate Terraform Building Block
+          type: object
+          description: "[Takeda Service Standard(s)](https://onetakeda.atlassian.net/wiki/search?text=ACMCertificate&spaces=CCE&ancestor=1765343338)
+            | [TFC Module](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/ACMCertificate/aws) | [Code](https://github.com/oneTakeda/terraform-aws-ACMCertificate/tree/v1.0.1)
+            | [v1.0.1](https://github.com/oneTakeda/terraform-aws-ACMCertificate/releases/tag/v1.0.1) | [Changelog](https://github.com/oneTakeda/terraform-aws-ACMCertificate/releases)
+            | [Inputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/ACMCertificate/aws/1.0.1?tab=inputs)
+            | [Outputs](https://app.terraform.io/app/Takeda/registry/modules/private/Takeda/ACMCertificate/aws/1.0.1?tab=outputs)
+            | [Examples](https://github.com/oneTakeda/terraform-aws-ACMCertificate/tree/v1.0.1/examples) | [Github Issues](https://github.com/oneTakeda/terraform-aws-ACMCertificate/issues)
+            | [Usage](https://github.com/oneTakeda/terraform-aws-ACMCertificate/issues)\n\n### Description \n#### Introduction\n\n>
+            The default and highly recommended public hosted zone for all Cloud applications is **takeda.io**. Work with other
+            public hosted zones only if it is necessary.\n> The domain name is a top level name of the domain that identifies
+            correct hosted zone in RT53. If the hosted zone ID can not be fetched, connect with Cloud staff to confirm its
+            existence.\n> The common name for the certificate must end in value provided in the domain name variable.\n\nPlease
+            note that it is not possible to export the private key of generated ACM public certificates. The certificates
+            can be used with [AWS Services which are integrated with AWS Certificate Manager](https://docs.aws.amazon.com/acm/latest/userguide/acm-services.html).\n\nThe
+            certificate... [more](https://github.com/oneTakeda/terraform-aws-ACMCertificate/tree/main/README.md)"
+          required:
+            - common_name
+            - domain_name
+          properties:
+            common_name:
+              type: string
+              description: The common name for the certificate. Must be of the specified top-level domain!  [code docs..>](https://github.com/oneTakeda/terraform-aws-ACMCertificate/blob/main/variables.tf#:~:text=variable%20%22common_name%22)
+              default: null
+            domain_name:
+              type: string
+              description: The name of top-level domain  [code docs..>](https://github.com/oneTakeda/terraform-aws-ACMCertificate/blob/main/variables.tf#:~:text=variable%20%22domain_name%22)
+              default: null
+            subject_alternative_names:
+              type: array
+              description: SANs for the certificate. Only the same top-level domain SANs are currently supported!  [code docs..>](https://github.com/oneTakeda/terraform-aws-ACMCertificate/blob/main/variables.tf#:~:text=variable%20%22subject_alternative_names%22)
+              uniqueItems: false
+              minItems: 0
+              items:
+                type: string
+
+      # terraform-aws-ACMCertificate definition ends
+
+      # terraform-aws-EC2InstanceType definition begins
+      terraform-aws-EC2InstanceType:
+        definition:
+          type: string
+          description: The size for the EC2(s) [help](https://github.com/oneTakeda/terraform-aws-EC2/blob/main/variables.tf#:~:text=variable%20%22instance_type%22)
+          default: m3.xlarge
+          enum:
+            - t3.2xlarge
+            - t3a.2xlarge
+            - t3a.large
+            - t3a.medium
+            - t3a.micro
+            - t3a.nano
+            - t3a.small
+            - t3a.xlarge
+            - t3.large
+            - t3.medium
+            - t3.micro
+            - t3.nano
+            - t3.small
+            - t3.xlarge
+            - m1.large
+            - m1.medium
+            - m1.small
+            - m1.xlarge
+            - m2.2xlarge
+            - m2.4xlarge
+            - m2.xlarge
+            - m3.2xlarge
+            - m3.large

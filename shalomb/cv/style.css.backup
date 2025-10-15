@@ -1,0 +1,528 @@
+@charset "utf-8";
+
+/* http://css.paperplaza.net/conferences/support/page.php */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css");
+
+@media all {
+
+  body, html {
+    margin :              0px auto;
+    font-style :          normal;
+    font-variant :        normal;
+    font-family :         "Liberation Sans", "Helvetica Neue", Helvetica, Arial, "Trebuchet MS", sans-serif;
+    font-size :           10pt;
+  }
+
+  html {
+    box-sizing :          border-box;
+    -webkit-box-sizing :  border-box;
+    -moz-box-sizing :     border-box;
+  }
+
+  *, *:before, *:after {
+    box-sizing :          inherit;
+    -webkit-box-sizing :  inherit;
+    -moz-box-sizing :     inherit;
+  }
+
+  body * {
+    text-align :  left;
+  }
+
+  /* Title                 16 pt */
+  .title, h1 {
+    font-size :    18pt;
+    text-align :   center;
+    font-weight :  bolder;
+  }
+
+  /* Author list           11 pt */
+  h2 {
+    font-size : 14pt;
+  }
+
+  .subtitle, .author {
+    font-size :    11pt;
+    font-weight :  normal;
+    text-align :   center;
+  }
+
+  p.abstract, p.abstract + p {
+    margin :      20px 20px;
+    text-indent : 20px;
+  }
+
+  /* Section titles        10 pt */
+  h3 {
+    text-transform :    uppercase;
+    font-size :         95%;
+    font-weight :       bolder;
+    margin-top :        2em;
+    margin-bottom :     -0.5em;
+    padding-top :       .25em;
+    padding-left :      0em;
+    /* background-color :  #efefef; */
+    border-bottom :     1px dotted lightgray;
+  }
+
+  /* Normal text           10 pt */
+  p, li, td, dt, dd, em, strong {
+    font-size : 10pt;
+  }
+
+  p, li, td, dd, em, strong {
+    text-align :    justify;
+    text-justify :  inter-word;
+  }
+
+  em, strong {
+    font-size : 90%;
+  }
+
+  a, a:hover, a:active {
+    text-decoration :  none;
+  }
+
+  a {
+    color : inherit;
+  }
+
+  a:hover, a:active {
+    color :  #006699;
+    text-decoration : underline;
+  }
+
+  strong>em,
+  em>strong,
+  b>i,
+  i>b {
+    font-style : normal;
+    font-weight : normal;
+    font-size : 105%;
+  }
+
+  blockquote, blockquote p {
+    width :         auto;
+    margin-left :   auto;
+    margin-right :  auto;
+    text-align :    center;
+  }
+
+  blockquote + blockquote {
+    margin-top : -10px;
+  }
+
+  dl, dl + p {
+    width : 98%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  dl {
+    overflow : hidden;
+    padding : 0;
+    margin-bottom : 0.5em;
+  }
+
+  /* Experience section styling - compact flowing layout */
+  h3#professional-experience ~ dl {
+    display: block;
+    margin-bottom: 1.5em;
+    overflow: visible;
+  }
+
+  /* Ensure ALL ul elements in experience section have no bullets and proper margins */
+  h3#professional-experience ~ dl ul {
+    list-style: none !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  /* Fix li elements in experience section - make them behave like regular paragraphs */
+  h3#professional-experience ~ dl ul li {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    text-indent: 0 !important;
+    display: block;
+    margin-bottom: 0.3em;
+  }
+
+  /* Remove bullet content for experience section li elements */
+  h3#professional-experience ~ dl ul li:before {
+    content: "" !important;
+    margin-left: 0 !important;
+    display: none !important;
+  }
+
+  /* Add margin to first role in each job section */
+  h3#professional-experience ~ p + dl {
+    margin-top: 1em;
+  }
+
+  h3#professional-experience ~ dl dt {
+    display: inline;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    font-weight: normal;
+    color: #666;
+    text-align: left;
+    font-size: 80%;
+    float: none;
+    border-right: none;
+  }
+
+  h3#professional-experience ~ dl dd {
+    display: block;
+    width: auto;
+    margin: 0 0 0.5em 0;
+    padding: 0;
+    font-size: 90%;
+    line-height: 140%;
+    float: none;
+  }
+
+  /* Date ranges - only style first date in each job for now */
+  h3#professional-experience ~ dl dt:first-child {
+    color: #006699;
+    font-weight: bold;
+    font-size: 90%;
+    border-right: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Reset Skills dt/dd to normal styling */
+  h3#professional-experience ~ dl dt:last-child {
+    color: #888 !important;
+    font-weight: normal !important;
+    font-size: 75% !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    display: none;
+  }
+
+  /* Add margin to subsequent roles (not the very first one) */
+  h3#professional-experience ~ dl + dl dt:first-child {
+    margin-top: 5em;
+  }
+
+  /* Job titles - only style first job title in each job for now */
+  h3#professional-experience ~ dl dt:first-child + dd {
+    display: inline-block;
+    font-weight: bold;
+    font-size: 95%;
+    color: #222;
+    margin: 0 0 0.8em 0.5em;
+  }
+
+  /* Reset Skills dd to normal styling */
+  h3#professional-experience ~ dl dt:last-child + dd {
+    font-weight: normal !important;
+    font-size: 85% !important;
+    color: #555 !important;
+    margin: 0.3em 0 0 0 !important;
+    display: block !important;
+    font-style: italic;
+  }
+
+  /* Responsibilities - make subtle and on its own line */
+  h3#professional-experience ~ dl dt:nth-child(3) {
+    display: block;
+    font-size: 75%;
+    color: #888;
+    font-weight: normal;
+    margin: 0.3em 0 0.2em 0;
+  }
+
+  h3#professional-experience ~ dl dt:nth-child(3) + dd {
+    display: block;
+    margin-bottom: 0.5em;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  h3#professional-experience ~ dl dt:nth-child(3) + dd ul {
+    list-style: none;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    display: block;
+    margin-top: 0.3em;
+  }
+
+  h3#professional-experience ~ dl dt:nth-child(3) + dd ul li {
+    margin-bottom: 0.3em;
+    padding-left: 0;
+  }
+
+  h3#professional-experience ~ dl dt:nth-child(3) + dd ul li:before {
+    content: "";
+  }
+
+  /* Skills - remove border, make more subtle */
+  h3#professional-experience ~ dl dt:last-child {
+    display: none;
+  }
+
+  h3#professional-experience ~ dl dt:last-child + dd {
+    font-size: 85%;
+    color: #555;
+    font-style: italic;
+    border-top: none;
+    padding-top: 0.3em;
+    margin-bottom: 0;
+  }
+
+  /* Better spacing for content sections */
+  h3#professional-experience ~ dl dd ul {
+    margin-top: 0.3em;
+    margin-bottom: 0.5em;
+  }
+
+  /* Fallback for other dl elements */
+  dt {
+    width : 21%;
+    margin : 0;
+    padding : 0;
+    font-weight : bolder;
+    color : #222;
+  }
+
+  dd {
+    width : 78%;
+  }
+
+  dt, dd {
+    float : left;
+    padding : 0;
+    padding-top : 3px;
+    padding-bottom : 3px;
+    margin : 0;
+    font-size : 90%;
+    line-height : 130%;
+  }
+
+  hr {
+    border : 0;
+    height : 1px;
+    background-image : linear-gradient(to right, rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.01));
+    margin-bottom : 0.3em;
+  }
+
+  dl + hr {
+    border: none !important;
+    background-image : linear-gradient(to right, rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.01));
+  }
+
+  dl + hr {
+    margin-top : 0.3em;
+  }
+
+  dd p {
+    line-height :        130%;
+  }
+
+  p {
+    padding : 0;
+    margin-top :         1em;
+    margin-bottom :      -8px;
+    line-height :        140%;
+    text-align :          justify;
+    text-justify :        inter-word;
+    page-break-after :   avoid;
+    page-break-inside :  avoid;
+  }
+
+  ul {
+    margin : 1.2em 0 0 0;
+    list-style :  none;
+  }
+
+  ul li {
+    line-height : 130%;
+    margin-left: -20px;
+  }
+
+  ul li:before {
+    margin-left :  -12px;
+    content : "✩ ";
+    color: lightgray;
+  }
+
+  ul li:not(:last-child) {
+    margin-bottom : 8px;
+  }
+
+  p strong {
+    font-size : 10pt;
+  }
+
+  p + dl dt {
+    font-weight: normal !important;
+    text-align: right;
+    padding-right: 0.5em;
+  }
+
+  dl dd {
+    padding-left: 0.5em;
+  }
+
+  p + dl dd {
+    border-left: none;
+  }
+
+  dd ul {
+    list-style: none !important;
+    margin-top: 0;
+    margin-left: 0 !important;
+  }
+
+  dd ul li {
+    font-size: 98%;
+    content : "";
+  }
+
+  dd ul li:before {
+    content : "‣\00a0";
+  }
+
+  #TOC > ul li:before{
+    content : "";
+  }
+
+  #TOC > ul li {
+    margin-bottom : 8px;
+  }
+
+  #TOC > ul li a {
+    margin-bottom : 8px;
+    color :  #006699;
+  }
+
+  h3#skills + dl dt,
+  h3#download + dl dt,
+  h3#personal-details + dl dt {
+    border-right: none;
+    width: 16%;
+  }
+
+  h3#technical-skills + dl dd,
+  h3#download + dl dd,
+  h3#personal-details + dl dd {
+    padding-left: 0.5em;
+  }
+}
+
+/* http://stackoverflow.com/questions/16649943/css-to-set-a4-paper-size */
+@media only screen {
+  html {
+    padding :           0;
+    margin :            0;
+    background-color :  #FAFAFA;
+  }
+
+  body {
+    background :     white;
+    border :         1px #d3d3d3 solid;
+    border-radius :  5px;
+    box-shadow :     0 0 0.25cm rgba(0, 0, 0, 0.25);
+  }
+
+  * {
+    box-sizing :       border-box;
+    -moz-box-sizing :  border-box;
+  }
+
+  #TOC {
+    display : none;
+  }
+
+  #TOC ul {
+    list-style : none;
+  }
+
+}
+
+@media (min-width: 1024px) {
+  body {
+    margin :         0.3cm auto;
+  }
+  #TOC {
+    display : block !important;
+    width :          16%;
+    max-width :      16%;
+    position :       fixed;
+    top :            20%;
+    right :          -1px;
+    border :         1px solid #ccc;
+    border-radius :  2px;
+    /* padding :     0.75em 0.5em 0 0em; */
+    background :     white;
+    font-size :      10pt;
+    font-weight :    600;
+  }
+
+  #TOC > ul {
+    margin-top :  1em !important;
+    padding :     0.5em !important;
+    list-style :  none;
+  }
+
+  #TOC ul,
+  #TOC li {
+    margin :       auto;
+    margin-left :  10px;
+    padding :      0;
+  }
+}
+
+@media (min-width: 768px) {
+  body {
+    width : 21cm;
+    padding : 2cm;
+  }
+}
+
+@media (max-width: 767px) {
+  body {
+    padding : 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding : 15px;
+  }
+}
+
+@media print {
+  @page {
+    size : auto;
+    margin : 2.5cm;
+  }
+
+  body {
+    margin :           0;
+    padding :          0;
+    border :           initial;
+    border-radius :    initial;
+    width :            initial;
+    min-height :       initial;
+    box-shadow :       initial;
+    background :       initial;
+    page-break-after : always;
+    /* width : 20cm; */
+  }
+
+  #TOC {
+    display : none !important;
+  }
+}
+
+/* http://codepen.io/rafaelcastrocouto/pen/LFAes/ */
+
+.LI-profile-badge {
+  margin-top : 2em;
+  position : relative;
+  width : 100% !important;
+}

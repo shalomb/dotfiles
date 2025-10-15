@@ -1,0 +1,14 @@
+/* TEAM */
+Your title: Shalom Bhooshi
+Site: https://shalomb.id/
+Twitter: @shalombhooshi
+Location: Bratislava, Slovakia
+
+/* THANKS */
+Name: All
+
+/* SITE */
+Last update: 2024-09-06
+Standards: HTML5, CSS3
+Components: markdown, make, inji, cloudflare pages, github actions
+Software: neovim, markdown

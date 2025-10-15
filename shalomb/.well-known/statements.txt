@@ -1,0 +1,5 @@
+Publishing domain: shalomb.id
+Author: Shalom Bhooshi
+Authorized signing representative: Shalom Bhooshi (Owner)
+Time: Thu, 06 Sep 2024 19:18:03 CET
+Statement content: This statement is only published under https://shalomb.id/.well-known/statements.txt

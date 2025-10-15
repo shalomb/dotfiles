@@ -1,0 +1,276 @@
+/* ===================================================================
+   CV Stylesheet - Clean, Maintainable Version
+   ================================================================= */
+
+/* Import fonts */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css");
+
+/* ===================================================================
+   1. BASE STYLES - Typography & Layout Fundamentals
+   ================================================================= */
+
+* {
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+body {
+  font-family: "Liberation Sans", "Helvetica Neue", Helvetica, Arial, "Trebuchet MS", sans-serif;
+  font-size: 10pt;
+  line-height: 1.4;
+  color: #222;
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+}
+
+/* ===================================================================
+   2. TYPOGRAPHY HIERARCHY
+   ================================================================= */
+
+/* Main title */
+h1.title {
+  font-size: 16pt;
+  font-weight: bold;
+  text-align: center;
+  margin: 0;
+  color: #222;
+}
+
+/* Author/contact info */
+h2.author {
+  font-size: 11pt;
+  font-weight: normal;
+  text-align: center;
+  margin: 0.5em 0 1em 0;
+  color: #666;
+}
+
+/* Abstract/summary */
+p.abstract {
+  margin: 20px;
+  text-indent: 20px;
+  font-size: 10pt;
+  text-align: justify;
+}
+
+/* Section headings */
+h3 {
+  text-transform: uppercase;
+  font-size: 95%;
+  font-weight: bolder;
+  margin: 2em 0 1em 0;
+  padding: 0.25em 0;
+  border-bottom: 1px dotted lightgray;
+  color: #222;
+}
+
+/* General text elements */
+p, li, td, dt, dd, em, strong {
+  font-size: 10pt;
+  line-height: 1.4;
+}
+
+p, li, td, dd, em, strong {
+  text-align: justify;
+}
+
+/* Links */
+a {
+  color: #006699;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ===================================================================
+   3. PROFESSIONAL EXPERIENCE SECTION - Simplified Approach
+   ================================================================= */
+
+/* All definition lists in experience section */
+#professional-experience ~ dl {
+  margin: 0 0 1.5em 0;
+  padding: 0;
+}
+
+/* Company separators - reduce spacing around hr elements */
+hr {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.01));
+  margin: 0.3em 0;
+}
+
+/* ===================================================================
+   4. JOB ENTRY STYLING - Clean, Predictable Pattern
+   ================================================================= */
+
+/* All dt elements (dates and labels) */
+#professional-experience ~ dl dt {
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+  color: #666;
+  font-size: 85%;
+}
+
+/* All dd elements (content) */
+#professional-experience ~ dl dd {
+  margin: 0 0 0.5em 0;
+  padding: 0;
+  font-size: 90%;
+}
+
+/* Date ranges - first dt in each group */
+#professional-experience ~ dl dt:first-child {
+  color: #006699;
+  font-weight: bold;
+  font-size: 90%;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline;
+}
+
+/* Job titles - first dd after date */
+#professional-experience ~ dl dt:first-child + dd {
+  display: inline;
+  font-weight: bold;
+  font-size: 95%;
+  color: #222;
+  margin-left: 0.5em;
+  margin-bottom: 0.8em;
+}
+
+/* Responsibilities labels - make subtle */
+#professional-experience ~ dl dt:nth-child(3) {
+  font-size: 75%;
+  color: #888;
+  margin: 0.3em 0 0.2em 0;
+}
+
+/* Responsibilities content */
+#professional-experience ~ dl dt:nth-child(3) + dd {
+  margin-bottom: 0.5em;
+}
+
+/* Skills labels - hide them */
+#professional-experience ~ dl dt:last-child {
+  display: none;
+}
+
+/* Skills content - make subtle and italic */
+#professional-experience ~ dl dt:last-child + dd {
+  font-size: 85%;
+  color: #555;
+  font-style: italic;
+  margin: 0.3em 0 0 0;
+  border-top: none;
+  padding-top: 0.3em;
+}
+
+/* ===================================================================
+   5. LIST HANDLING - Simple, Consistent
+   ================================================================= */
+
+/* Remove all bullets and fix margins for experience lists */
+#professional-experience ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#professional-experience li {
+  margin: 0 0 0.3em 0;
+  padding: 0;
+  display: block;
+}
+
+/* Remove any pseudo-element bullets */
+#professional-experience li:before {
+  display: none;
+}
+
+/* ===================================================================
+   6. OTHER SECTIONS - Keep Simple
+   ================================================================= */
+
+/* General lists (outside experience) */
+ul {
+  margin: 1.2em 0 0 0;
+  list-style: none;
+}
+
+ul li {
+  line-height: 130%;
+  margin-left: -20px;
+}
+
+ul li:before {
+  margin-left: -12px;
+  content: "✩ ";
+  color: lightgray;
+}
+
+ul li:not(:last-child) {
+  margin-bottom: 8px;
+}
+
+/* Table of contents */
+#TOC ul {
+  list-style: none;
+  margin: 0;
+}
+
+#TOC ul li {
+  margin-bottom: 8px;
+  margin-left: 0;
+}
+
+#TOC ul li:before {
+  content: "";
+}
+
+#TOC ul li a {
+  color: #006699;
+}
+
+/* ===================================================================
+   7. PRINT STYLES
+   ================================================================= */
+
+@media print {
+  body {
+    font-size: 9pt;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  h3 {
+    page-break-after: avoid;
+  }
+  
+  dl {
+    page-break-inside: avoid;
+  }
+}
+
+/* ===================================================================
+   8. UTILITY CLASSES
+   ================================================================= */
+
+.no-break {
+  page-break-inside: avoid;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-small {
+  font-size: 85%;
+}

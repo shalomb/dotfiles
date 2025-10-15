@@ -1,0 +1,114 @@
+{
+  "name": "Terraform Parser Workspace",
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "./.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+      "tests"
+    ],
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.ruffEnabled": true,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+      "--line-length=88"
+    ],
+    "files.associations": {
+      "*.tf": "terraform",
+      "*.yaml": "yaml",
+      "*.yml": "yaml"
+    },
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      ".pytest_cache": true,
+      "htmlcov": true,
+      ".coverage": true,
+      "*.egg-info": true,
+      ".venv": false
+    },
+    "search.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      ".pytest_cache": true,
+      "htmlcov": true,
+      ".venv": true
+    },
+    "github.copilot.chat.runCommand.enabled": true,
+    "github.copilot.chat.runCommand.alwaysPrompt": false
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.black-formatter",
+      "charliermarsh.ruff",
+      "hashicorp.terraform",
+      "redhat.vscode-yaml",
+      "github.copilot",
+      "github.copilot-chat"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Run Tests",
+        "type": "shell",
+        "command": "make test",
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": "$python"
+      },
+      {
+        "label": "Run Coverage",
+        "type": "shell",
+        "command": "make coverage",
+        "group": "test",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Format Code",
+        "type": "shell",
+        "command": "make format",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "silent",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Lint Code",
+        "type": "shell",
+        "command": "make lint",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      }
+    ]
+  }
+}

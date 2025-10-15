@@ -1,0 +1,9 @@
+Contact: mailto:shalom.bhooshi@gmail.com
+Expires: 2038-01-19T02:14:00.000Z
+Encryption: https://keybase.io/shalomb/pgp_keys.asc?fingerprint=6E58CBDB4D4FFAF09114729738495CCA2D2EF563
+Encryption: https://keys.openpgp.org/vks/v1/by-fingerprint/6E58CBDB4D4FFAF09114729738495CCA2D2EF563
+Encryption: http://keyserver.ubuntu.com:11371/pks/lookup?search=6E58CBDB4D4FFAF09114729738495CCA2D2EF563&fingerprint=on&op=index
+Preferred-Languages: en
+Canonical: https://shalomb.id/.well-known/security.txt
+Policy: https://shalomb.id/.well-known/security-policy.html
+Hiring: https://shalomb.id/cv
