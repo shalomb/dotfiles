@@ -9,7 +9,7 @@ if [ -z "${DISPLAY:-}" ]; then
 fi
 
 : ${BROWSER="$(/usr/bin/which x-www-browser)"}; export BROWSER;
-: ${XEDITOR="$(/usr/bin/which gvim)"};          export XEDITOR;
+XEDITOR="$EDITOR";                              export XEDITOR;
 
 # required by gnome-control-center > 1:3.28
 XDG_CURRENT_DESKTOP=GNOME-Classic:GNOME;  export XDG_CURRENT_DESKTOP;

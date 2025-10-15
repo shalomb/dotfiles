@@ -29,7 +29,7 @@ umask 022
 
 # Environment Variables
 
-: ${EDITOR="$(/usr/bin/which vi)"};             export EDITOR;
+EDITOR="vi";                                    export EDITOR;
 
 : ${VISUAL="$EDITOR"};                          export VISUAL;
 
