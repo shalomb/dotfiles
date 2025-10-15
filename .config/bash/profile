@@ -18,11 +18,16 @@
 #   - Fixes tmux new window PATH issues
 # ================================================
 
+# Source main profile first (contains core environment variables like EDITOR, VISUAL)
+if [[ -f ~/.config/profile ]]; then
+  . ~/.config/profile
+fi
+
 # Source profile.d files (POSIX compliant, portable)
 # This ensures environment variables are available across all shells (bash, sh, zsh, ksh, etc.)
-if [ -d ~/.config/profile.d ]; then
+if [[ -d ~/.config/profile.d ]]; then
   for i in ~/.config/profile.d/*.sh; do
-    if [ -r "$i" ]; then
+    if [[ -r "$i" ]]; then
       . "$i"
     fi
   done
