@@ -16,10 +16,7 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 [[ -z "$XDG_DATA_HOME" ]] && export XDG_DATA_HOME="$HOME/.local/share"
 [[ -z "$XDG_STATE_HOME" ]] && export XDG_STATE_HOME="$HOME/.local/state"
 
-# Source bash-specific profile (relative to this file's location)
-if [[ -f "${BASH_SOURCE[0]%/*}/profile.d/editor.sh" ]]; then
-  . "${BASH_SOURCE[0]%/*}/profile.d/editor.sh"
-fi
+# Editor variables are set in bash profile for all shells
 
 # SSH Agent Management is now handled via enabled/ directory loading
 
