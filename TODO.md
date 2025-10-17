@@ -178,6 +178,221 @@ This TODO item covers comprehensive BDD/spec testing for the dotfiles repository
 
 ---
 
+# 🚨 HIGH PRIORITY: SSH Agent Management System
+
+## 📋 **TODO: Implement robust shared SSH agent system**
+
+### **Goal**
+When launching any bash shell, ensure the shell has access to a shared SSH agent. If the agent is not available, create one and store state in a discoverable location for other shells to reuse when they start. When the agent disappears/dies/is unreachable, provide a mechanism to resurrect/recreate it so that other shells can benefit from reuse.
+
+### **Current State Analysis**
+- **Multiple conflicting definitions**: `fix-ssh-auth-sock` has 4 identical definitions (1 alias + 3 executables)
+- **Inconsistent ssh_init**: Two different definitions in different locations
+- **Modern bootstrap system exists**: `.config/bash/enabled/ssh-agent-bootstrap.sh` provides comprehensive agent management
+- **Legacy system still active**: Old `update_ssh_agent_info` script still referenced in aliases
+
+### **Requirements**
+1. **Auto-create on shell start**: Every bash shell gets access to a working SSH agent
+2. **Shared state storage**: Agent info stored in discoverable location (`~/.ssh/agent.info`)
+3. **Agent resurrection**: Mechanism to detect and fix dead/unreachable agents
+4. **Cross-shell reuse**: Multiple shells can share the same agent
+5. **Context awareness**: Handle interactive, non-interactive, tmux, and SSH contexts
+6. **Automatic key loading**: Load SSH keys when agent starts
+
+### **Implementation Plan**
+
+#### **Phase 1: Consolidation (IMMEDIATE)**
+- [ ] Remove 3 redundant `fix-ssh-auth-sock` executables
+- [ ] Fix inconsistent `ssh_init` alias definitions
+- [ ] Standardize on modern bootstrap system
+- [ ] Clean up legacy references
+
+#### **Phase 2: Enhanced Bootstrap System (HIGH PRIORITY)**
+- [ ] Improve agent discovery and validation
+- [ ] Add automatic resurrection for dead agents
+- [ ] Enhance context detection (tmux, SSH, non-interactive)
+- [ ] Add comprehensive error handling and recovery
+
+#### **Phase 3: Integration & Testing (MEDIUM PRIORITY)**
+- [ ] Integrate with shell startup process
+- [ ] Add comprehensive testing for all contexts
+- [ ] Create recovery commands for manual intervention
+- [ ] Document usage and troubleshooting
+
+### **Technical Details**
+
+#### **Agent State Management**
+```bash
+# Agent info file location
+SSH_AGENT_INFO_FILE="$HOME/.ssh/agent.info"
+
+# Contents:
+SSH_AGENT_PID='12345'; export SSH_AGENT_PID
+SSH_AUTH_SOCK='/tmp/ssh-XXXXXX/agent.12344'; export SSH_AUTH_SOCK
+```
+
+#### **Context Detection**
+- **Interactive**: Load keys automatically
+- **Non-interactive**: Skip key loading, just ensure agent available
+- **SSH**: Use forwarded agent if available, don't create new one
+- **Tmux**: Fix SSH_AUTH_SOCK from tmux environment
+
+#### **Recovery Mechanisms**
+- **Agent validation**: Check if PID exists and socket is accessible
+- **Agent discovery**: Find existing agents from other shells
+- **Agent resurrection**: Kill dead agents and start new ones
+- **Manual recovery**: Commands for user intervention when needed
+
+### **Success Criteria**
+- [ ] Every shell has working SSH agent on startup
+- [ ] Dead agents are automatically detected and fixed
+- [ ] Multiple shells share the same agent efficiently
+- [ ] Works in all contexts (interactive, tmux, SSH, non-interactive)
+- [ ] Clear error messages and recovery procedures
+- [ ] Comprehensive test coverage
+
+### **Priority**
+**HIGH** - Blocking git operations and daily workflow
+
+### **Reference**
+- Current system: `.config/bash/enabled/ssh-agent-bootstrap.sh`
+- Legacy system: `~/.local/bin/update_ssh_agent_info`
+- Related: GPG signing issues in SSH Agent & GPG Signing Issues section
+
+---
+
+# 🧪 SPECIFICATION-DRIVEN SSH Agent System
+
+## 📋 **TODO: Implement cleanroom SSH agent system using specification-driven development**
+
+### **Goal**
+Build a clean, maintainable SSH agent management system using a specification-first approach. Extract requirements from current implementation, write comprehensive BDD specs, implement tests, then build cleanroom implementation driven only by the specifications.
+
+### **Approach: Specification-Driven Development**
+
+#### **Phase 1: Analysis & Requirements Extraction**
+- [ ] **Study current implementation**: Analyze `.config/bash/enabled/ssh-agent-bootstrap.sh` and related systems
+- [ ] **Extract core concepts**: Identify the essential behaviors and requirements
+- [ ] **Document domain knowledge**: Capture what the system actually needs to do
+- [ ] **Identify pain points**: Understand current limitations and issues
+
+#### **Phase 2: Specification Writing**
+- [ ] **Write BDD feature files**: Define behavior in Gherkin format
+- [ ] **Create comprehensive specs**: Cover all contexts (interactive, non-interactive, tmux, SSH)
+- [ ] **Define success criteria**: Clear acceptance criteria for each feature
+- [ ] **Document edge cases**: Handle agent death, socket corruption, permission issues
+
+#### **Phase 3: Test Framework Setup**
+- [ ] **Choose BDD framework**: Select appropriate tooling (Behave, Cucumber, etc.)
+- [ ] **Set up test environment**: Create isolated testing infrastructure
+- [ ] **Implement step definitions**: Build test steps that validate behavior
+- [ ] **Create test fixtures**: Mock environments for different contexts
+
+#### **Phase 4: Cleanroom Implementation**
+- [ ] **TDD approach**: Write tests first, then implement
+- [ ] **No legacy code**: Build from scratch based only on specs
+- [ ] **Clean architecture**: Design for maintainability and clarity
+- [ ] **Comprehensive testing**: Ensure all specs pass
+
+### **Specification Areas**
+
+#### **Core Features**
+- **Agent Creation**: Auto-create SSH agent when none exists
+- **Agent Discovery**: Find and reuse existing agents from other shells
+- **Agent Validation**: Detect and handle dead/unreachable agents
+- **State Management**: Store agent info in discoverable location
+- **Key Loading**: Automatically load SSH keys when appropriate
+
+#### **Context Handling**
+- **Interactive Shells**: Full functionality with key loading
+- **Non-Interactive Shells**: Agent availability without key loading
+- **Tmux Sessions**: Fix SSH_AUTH_SOCK from tmux environment
+- **SSH Connections**: Use forwarded agent, don't create new ones
+- **Cursor-Agent**: Handle non-TTY contexts gracefully
+
+#### **Recovery Mechanisms**
+- **Agent Resurrection**: Detect dead agents and start new ones
+- **Socket Validation**: Verify SSH_AUTH_SOCK is accessible
+- **Permission Handling**: Deal with socket permission issues
+- **Manual Recovery**: Provide commands for user intervention
+
+### **BDD Feature Examples**
+
+#### **Feature: SSH Agent Bootstrap**
+```gherkin
+Scenario: Create new agent when none exists
+  Given no SSH agent is running
+  When I start a new shell
+  Then an SSH agent should be created
+  And agent info should be stored in ~/.ssh/agent.info
+  And SSH_AUTH_SOCK should be set correctly
+  And SSH_AGENT_PID should be set correctly
+
+Scenario: Reuse existing agent
+  Given an SSH agent is already running
+  When I start a new shell
+  Then the existing agent should be reused
+  And no new agent should be created
+  And agent info should be updated
+```
+
+#### **Feature: Agent Recovery**
+```gherkin
+Scenario: Detect and fix dead agent
+  Given an SSH agent info file points to a dead process
+  When I start a new shell
+  Then the dead agent should be detected
+  And a new agent should be created
+  And agent info should be updated
+  And I should be notified of the recovery
+```
+
+### **Technical Requirements**
+
+#### **Test Framework**
+- **BDD framework**: Behave (Python) or Cucumber
+- **Shell testing**: Use real bash environments for authentic testing
+- **Context isolation**: Test different shell contexts independently
+- **Mock capabilities**: Simulate agent states and failures
+
+#### **Implementation Standards**
+- **Clean architecture**: Clear separation of concerns
+- **Error handling**: Comprehensive error messages and recovery
+- **Documentation**: Clear usage and troubleshooting guides
+- **Performance**: Fast agent discovery and validation
+
+### **Success Criteria**
+- [ ] **All specs pass**: Comprehensive BDD test coverage
+- [ ] **Clean implementation**: No legacy code, built from specs only
+- [ ] **Context awareness**: Works in all shell contexts
+- [ ] **Recovery mechanisms**: Handles all failure modes gracefully
+- [ ] **Performance**: Fast agent discovery and validation
+- [ ] **Maintainability**: Clear, documented, testable code
+
+### **Deliverables**
+- **BDD feature files**: Complete specification of behavior
+- **Test suite**: Comprehensive test coverage
+- **Clean implementation**: New SSH agent system
+- **Documentation**: Usage guides and troubleshooting
+- **Migration plan**: How to replace current system
+
+### **Priority**
+**MEDIUM** - Important for system quality, but not blocking immediate work
+
+### **Timeline**
+- **Phase 1**: 1-2 days (analysis and requirements)
+- **Phase 2**: 2-3 days (specification writing)
+- **Phase 3**: 1-2 days (test framework setup)
+- **Phase 4**: 3-5 days (cleanroom implementation)
+
+### **Notes**
+- **No legacy refactoring**: This is a cleanroom implementation
+- **Specification-first**: All behavior defined in BDD specs
+- **Test-driven**: Implementation driven by tests, not existing code
+- **Quality focus**: Emphasis on maintainability and clarity
+
+---
+
 # Agent Context Documentation Implementation
 
 ## 📋 **TODO: Add agent context documentation to all key files**
