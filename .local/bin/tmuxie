@@ -17,9 +17,9 @@ if ! type -P tmux &> /dev/null; then
   exit 2
 fi
 
-# Simple README preview for fzf
+# Enhanced README preview for fzf using glow
 function get_preview_command() {
-  echo "if [[ -f {}/README.md ]]; then head -20 {}/README.md; elif [[ -f {}/README.rst ]]; then head -20 {}/README.rst; elif [[ -f {}/README.txt ]]; then head -20 {}/README.txt; else echo 'No README found'; fi"
+  echo "if [[ -f {}/README.md ]]; then glow {}/README.md --style dark; elif [[ -f {}/README.rst ]]; then head -20 {}/README.rst; elif [[ -f {}/README.txt ]]; then head -20 {}/README.txt; else echo 'No README found'; fi"
 }
 
 function in-tmux() {
@@ -73,7 +73,7 @@ function select_projects() {
   # Get projects and pipe to fzf with README preview
   gum projects --format simple | sed 's|~/||' | \
     fzf \
-      --height=70% \
+      --height=100% \
       --border \
       --reverse \
       --prompt="Select project (README): " \
@@ -86,7 +86,7 @@ function select_projects() {
 function select_sessions() {
   tmux ls | \
     fzf \
-      --height=70% \
+      --height=100% \
       --border \
       --reverse \
       --prompt="Select session: " \
