@@ -90,6 +90,41 @@ python-tools: ## Run python-tools installer
 workspace-tools: ## Run workspace-tools installer
 	.config/installers/INIT
 
+workspace-cleanup: ## Cleanup workspace-specific caches and temporary files
+	# Clean Python build artifacts
+	find . -name "__pycache__" -type d -exec rm -rf {} + || true
+	find . -name "*.pyc" -type f -delete || true
+	find . -name "*.pyo" -type f -delete || true
+	find . -name ".pytest_cache" -type d -exec rm -rf {} + || true
+	find . -name ".mypy_cache" -type d -exec rm -rf {} + || true
+	# Clean Go build artifacts
+	find . -name "*.exe" -type f -delete || true
+	find . -name "*.test" -type f -delete || true
+	find . -name "*.prof" -type f -delete || true
+	# Clean Node.js artifacts
+	find . -name "node_modules" -type d -exec rm -rf {} + || true
+	find . -name "package-lock.json" -type f -delete || true
+	# Clean Rust build artifacts
+	find . -name "target" -type d -exec rm -rf {} + || true
+	# Clean temporary files
+	find . -name "*.tmp" -type f -delete || true
+	find . -name "*.temp" -type f -delete || true
+	find . -name "*~" -type f -delete || true
+	find . -name "*.swp" -type f -delete || true
+	find . -name "*.swo" -type f -delete || true
+	# Clean editor backup files
+	find . -name ".#*" -type f -delete || true
+	find . -name "#*#" -type f -delete || true
+	# Clean test artifacts
+	find . -name ".coverage" -type f -delete || true
+	find . -name "coverage.xml" -type f -delete || true
+	find . -name "htmlcov" -type d -exec rm -rf {} + || true
+	find . -name ".tox" -type d -exec rm -rf {} + || true
+	# Clean documentation build artifacts
+	find . -name "_build" -type d -exec rm -rf {} + || true
+	find . -name "build" -type d -exec rm -rf {} + || true
+	find . -name "dist" -type d -exec rm -rf {} + || true
+
 python-cleanup: ## Cleanup the pip cache
 	find ~/.cache/pip/ ~/.cache/pypoetry/ -atime +30 -delete || true
 	command -v $(HOME)/.local/bin/uv || $(HOME)/.local/bin/uv cache clean
@@ -109,6 +144,29 @@ bfg-tools: ## Run bfg-tools installer
 
 bfg-cleanup: ## Cleanup BFG JAR files
 	rm -f ~/.local/share/bfg/bfg.jar
+
+.PHONY: system-cleanup
+system-cleanup: ## Cleanup system-wide caches and temporary files
+	# Clean bash history and cache
+	find ~/.cache/bash/ -type f -atime +30 -delete || true
+	# Clean gum cache
+	find ~/.cache/gum/ -type f -atime +30 -delete || true
+	# Clean terraform cache
+	find ~/.cache/terraform.d/ -type f -atime +30 -delete || true
+	# Clean general cache files older than 6 months
+	find ~/.cache/ -type f -atime +182 -delete || true
+	# Clean temporary files
+	find /tmp -user $$(whoami) -type f -atime +7 -delete || true
+	# Clean old log files
+	find ~/.local/state/ -name "*.log" -type f -atime +30 -delete || true
+	# Clean old backup files
+	find ~/.local/state/ -name "*~" -type f -atime +30 -delete || true
+	# Clean old swap files
+	find ~/.local/state/ -name "*.swp" -type f -atime +7 -delete || true
+	# Clean old temporary directories
+	find ~/.local/state/ -type d -name "tmp*" -atime +7 -exec rm -rf {} + || true
+	# Show disk usage after cleanup
+	df -hP
 
 .PHONY: rustup
 rustup: ## Configure rustup
@@ -158,7 +216,7 @@ update:  ## Update all components
 	make python-tools
 
 .PHONY: clean
-clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup apt-clean python-cleanup bfg-cleanup
+clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup
 
 .PHONY: test test-fast
 test: ## Run acceptance tests (usage: make test [FAST=1])
