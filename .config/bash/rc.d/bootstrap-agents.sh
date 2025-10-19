@@ -4,13 +4,8 @@
 # Modern bashisms, parameter expansions, proper error handling
 # Quality standards: greycat/greg approved
 
-# Colors using tput (portable, modern)
-readonly RED="$(tput setaf 1 2>/dev/null || echo '')"
-readonly GREEN="$(tput setaf 2 2>/dev/null || echo '')"
-readonly YELLOW="$(tput setaf 3 2>/dev/null || echo '')"
-readonly BLUE="$(tput setaf 4 2>/dev/null || echo '')"
-readonly BOLD="$(tput bold 2>/dev/null || echo '')"
-readonly RESET="$(tput sgr0 2>/dev/null || echo '')"
+# Source colors from rc.d/02-colours
+# Colors are already defined in rc.d/02-colours and loaded before this script
 
 # Configuration with proper parameter expansions
 readonly SSH_AGENT_INFO_FILE="$HOME/.ssh/agent.info"
@@ -215,16 +210,16 @@ show_agent_status() {
     fi
     
     # Display status
-    printf '%s🔐 Agent Status:%s %s | %s\n' "$BLUE" "$RESET" "$ssh_status" "$gpg_status"
+    printf '%s🔐 Agent Status:%s %s | %s\n' "$blue" "$reset" "$ssh_status" "$gpg_status"
 }
 
 # Function to show detailed agent information
 show_agent_keys() {
-    printf '%s🔐 Detailed Agent Information:%s\n' "$BLUE" "$RESET"
+    printf '%s🔐 Detailed Agent Information:%s\n' "$blue" "$reset"
     printf '\n'
     
     # SSH Agent Details
-    printf '%s🔑 SSH Agent:%s\n' "$GREEN" "$RESET"
+    printf '%s🔑 SSH Agent:%s\n' "$green" "$reset"
     if [[ -n "${SSH_AUTH_SOCK:-}" && -S "$SSH_AUTH_SOCK" ]]; then
         printf '  Socket: %s\n' "$SSH_AUTH_SOCK"
         printf '  Keys loaded:\n'
@@ -235,7 +230,7 @@ show_agent_keys() {
     printf '\n'
     
     # GPG Agent Details
-    printf '%s🔐 GPG Agent:%s\n' "$GREEN" "$RESET"
+    printf '%s🔐 GPG Agent:%s\n' "$green" "$reset"
     if [[ -n "${GPG_AGENT_INFO:-}" ]] && gpg-connect-agent 'keyinfo --list' /bye >/dev/null 2>&1; then
         printf '  Socket: %s\n' "$(gpgconf --list-dirs agent-socket 2>/dev/null)"
         printf '  GPG_TTY: %s\n' "${GPG_TTY:-not set}"
