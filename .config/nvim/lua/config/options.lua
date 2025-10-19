@@ -19,10 +19,11 @@ vim.opt.expandtab      = true
 -- vim.opt.foldmethod     = 'indent'
 vim.opt.foldcolumn     = '1' -- '0' is not bad
 vim.opt.foldenable     = true
-vim.opt.foldexpr       = 'v:lua.vim.treesitter.foldexpr()'
+-- Disabled treesitter folding to prevent "Index out of bounds" error with J command
+-- vim.opt.foldexpr       = 'v:lua.vim.treesitter.foldexpr()'
 vim.opt.foldlevel      = 20
 vim.opt.foldlevelstart = 20
-vim.opt.foldmethod     = 'expr'
+vim.opt.foldmethod     = 'indent'
 vim.opt.formatoptions:append('1') -- don't break lines after one-letter words
 vim.opt.formatoptions:append('c') -- auto-wrap comments on textwith
 vim.opt.formatoptions:append('j') -- remove comment leader when joining lines
