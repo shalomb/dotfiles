@@ -45,7 +45,7 @@ _cursor_gpg_check() {
 _cursor_agent_strict() {
     if ! _cursor_gpg_check; then
         echo "cursor-agent: GPG check failed - fix GPG setup before continuing" >&2
-        exit 1
+        return 1
     fi
     nice -n 15 /usr/bin/env cursor-agent "$@"
 }
