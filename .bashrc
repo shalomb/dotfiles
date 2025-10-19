@@ -132,8 +132,8 @@ fi
 
 # Simple reload function
 reload() {
-    # Source the repository version directly to avoid circular reference
-    source ~/.config/dotfiles/.config/bash/bashrc
+    # Source the home directory version to ensure proper file paths
+    source ~/.bashrc
 }
 
 # Check window size after each command
