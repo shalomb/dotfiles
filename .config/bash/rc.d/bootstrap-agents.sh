@@ -7,9 +7,9 @@
 # Source colors from rc.d/02-colours
 # Colors are already defined in rc.d/02-colours and loaded before this script
 
-# Configuration with proper parameter expansions
-readonly SSH_AGENT_INFO_FILE="$HOME/.ssh/agent.info"
-readonly GPG_AGENT_INFO_FILE="$HOME/.gnupg/gpg-agent.info"
+# Configuration with proper parameter expansions (only set if not already defined)
+[[ -z "${SSH_AGENT_INFO_FILE:-}" ]] && readonly SSH_AGENT_INFO_FILE="$HOME/.ssh/agent.info"
+[[ -z "${GPG_AGENT_INFO_FILE:-}" ]] && readonly GPG_AGENT_INFO_FILE="$HOME/.gnupg/gpg-agent.info"
 
 # Function to detect shell context
 detect_shell_context() {
