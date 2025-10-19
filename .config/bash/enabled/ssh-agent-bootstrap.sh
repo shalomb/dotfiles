@@ -10,8 +10,8 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-SSH_AGENT_INFO_FILE="$HOME/.ssh/agent.info"
+# Configuration (only set if not already defined)
+[[ -z "${SSH_AGENT_INFO_FILE:-}" ]] && SSH_AGENT_INFO_FILE="$HOME/.ssh/agent.info"
 SSH_AGENT_TIMEOUT=300  # 5 minutes
 
 # Function to detect shell context
