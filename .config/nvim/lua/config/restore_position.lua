@@ -16,6 +16,20 @@ autocmd('BufReadPost', {
   end
 })
 
+-- Also try BufWinEnter as a fallback
+autocmd('BufWinEnter', {
+  group = restore_group,
+  pattern = '*',
+  callback = function()
+    local ft = vim.opt_local.filetype:get()
+    if vim.fn.line("'\"") > 0 and vim.fn.line("'\"") <= vim.fn.line("$")
+        and not ft:match("commit") and not ft:match("^fugitive")
+    then
+      vim.fn.setpos('.', vim.fn.getpos("'\""))
+    end
+  end
+})
+
 autocmd('VimEnter', {
   group = restore_group,
   pattern = '*',
