@@ -81,26 +81,36 @@ _dotfiles_load() {
         return 1
     fi
     
-    local tool_file="$DOTFILES_ROOT/.config/bash/disabled/${tool}.sh"
+    # Check both enabled/ and disabled/ directories
+    local tool_file=""
+    local source_location=""
     
-    if [[ -f "$tool_file" ]]; then
-        if [[ -r "$tool_file" ]]; then
-            source "$tool_file"
-            # Test if the tool is actually available
-            if command -v "$tool" >/dev/null 2>&1; then
-                echo "✅ Loaded tool: $tool"
-            else
-                echo "⚠️  Tool file loaded but command not available: $tool" >&2
-                echo "   (Tool may not be installed or PATH not updated)" >&2
-            fi
-        else
-            echo "❌ Cannot read tool file: $tool_file" >&2
-            return 1
-        fi
+    # First check disabled/ directory (lazy-loaded tools)
+    if [[ -f "$DOTFILES_ROOT/.config/bash/disabled/${tool}.sh" ]]; then
+        tool_file="$DOTFILES_ROOT/.config/bash/disabled/${tool}.sh"
+        source_location="disabled"
+    # Then check enabled/ directory (currently loaded tools)
+    elif [[ -f "$DOTFILES_ROOT/.config/bash/enabled/${tool}.sh" ]]; then
+        tool_file="$DOTFILES_ROOT/.config/bash/enabled/${tool}.sh"
+        source_location="enabled"
     else
         echo "❌ Tool not found: $tool" >&2
         echo "Available tools:" >&2
         _dotfiles_list_tools
+        return 1
+    fi
+    
+    if [[ -r "$tool_file" ]]; then
+        source "$tool_file"
+        # Test if the tool is actually available
+        if command -v "$tool" >/dev/null 2>&1; then
+            echo "✅ Loaded tool: $tool (from $source_location/)"
+        else
+            echo "⚠️  Tool file loaded but command not available: $tool" >&2
+            echo "   (Tool may not be installed or PATH not updated)" >&2
+        fi
+    else
+        echo "❌ Cannot read tool file: $tool_file" >&2
         return 1
     fi
 }
