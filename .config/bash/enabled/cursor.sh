@@ -47,7 +47,10 @@ _cursor_agent_strict() {
         echo "cursor-agent: GPG check failed - fix GPG setup before continuing" >&2
         return 1
     fi
-    nice -n 15 /usr/bin/env cursor-agent "$@"
+    # Ensure GPG_TTY is unset to prevent terminal interaction
+    # Run cursor-agent in background and disown to prevent job control issues
+    (GPG_TTY=/dev/null nice -n 15 /usr/bin/env cursor-agent "$@") &
+    disown
 }
 
 # Create alias to the strict function
