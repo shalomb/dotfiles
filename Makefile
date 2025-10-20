@@ -25,14 +25,8 @@ cronjobs: ## Install our cronjobs using gum's sensible defaults
 	  | crontab -
 
 refresh:  ## refresh all dotfiles in $HOME with versions in repo
-	# Install all dotfiles into the home directory
-	find .* \
-	  \( -name ".git" -o -name "INIT" -o -name "*.sw?" -o -name "*~" \) -prune \
-	  -o -type f -exec env PYTHONPATH=src $(HOME)/.local/bin/uv run python -m dotfile_manager export {} +
-	# Clean up orphaned files that are no longer tracked
-	find .* \
-	  \( -name ".git" -o -name "INIT" -o -name "*.sw?" -o -name "*~" \) -prune \
-	  -o -type d -exec env PYTHONPATH=src $(HOME)/.local/bin/uv run python -m dotfile_manager cleanup {} \;
+	# Install all dotfiles into the home directory using glob patterns with cleanup
+	env PYTHONPATH=src $(HOME)/.local/bin/uv run python -m dotfile_manager export --cleanup ".*" ".config/*"
 
 .PHONY: apt apt-clean
 apt: .config/apt/INIT  ## Install apt packages
