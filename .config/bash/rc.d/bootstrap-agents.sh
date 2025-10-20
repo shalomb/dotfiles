@@ -108,9 +108,9 @@ bootstrap_ssh_agent() {
     
     # Save agent info
     {
-        printf 'SSH_AGENT_PID=%q; export SSH_AGENT_PID\n' "$pid"
-        printf 'SSH_AUTH_SOCK=%q; export SSH_AUTH_SOCK\n' "$socket"
-        printf 'SSH_AGENT_INFO_FILE=%q; export SSH_AGENT_INFO_FILE\n' "$SSH_AGENT_INFO_FILE"
+        printf 'SSH_AGENT_PID=%q\n' "$pid"
+        printf 'SSH_AUTH_SOCK=%q\n' "$socket"
+        printf 'SSH_AGENT_INFO_FILE=%q\n' "$SSH_AGENT_INFO_FILE"
     } > "$SSH_AGENT_INFO_FILE"
     
     # Export variables
@@ -163,10 +163,10 @@ bootstrap_gpg_agent() {
     if [[ -n "$socket" ]]; then
         # Save agent info
         {
-            printf 'GPG_AGENT_INFO=%q; export GPG_AGENT_INFO\n' "$socket:0:1"
-            printf 'GPG_TTY=%q; export GPG_TTY\n' "$GPG_TTY"
+            printf 'GPG_AGENT_INFO=%q\n' "$socket:0:1"
+            printf 'GPG_TTY=%q\n' "$GPG_TTY"
             if [[ -n "$ssh_socket" ]]; then
-                printf 'SSH_AUTH_SOCK=%q; export SSH_AUTH_SOCK\n' "$ssh_socket"
+                printf 'SSH_AUTH_SOCK=%q\n' "$ssh_socket"
             fi
         } > "$GPG_AGENT_INFO_FILE"
         

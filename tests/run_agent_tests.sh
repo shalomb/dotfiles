@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 # Test configuration
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$TEST_DIR/.." && pwd)"
-PYTHON_PATH="$PROJECT_ROOT/src:$PROTHONPATH"
+PYTHON_PATH="$PROJECT_ROOT/src:${PYTHONPATH:-}"
 
 # Logging functions
 log_info() {

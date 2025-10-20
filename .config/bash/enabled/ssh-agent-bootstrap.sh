@@ -100,9 +100,9 @@ start_ssh_agent() {
     
     # Save agent info
     {
-        echo "SSH_AGENT_PID='$pid'; export SSH_AGENT_PID"
-        echo "SSH_AUTH_SOCK='$socket'; export SSH_AUTH_SOCK"
-        echo "SSH_AGENT_INFO_FILE='$SSH_AGENT_INFO_FILE'; export SSH_AGENT_INFO_FILE"
+        printf 'SSH_AGENT_PID=%q\n' "$pid"
+        printf 'SSH_AUTH_SOCK=%q\n' "$socket"
+        printf 'SSH_AGENT_INFO_FILE=%q\n' "$SSH_AGENT_INFO_FILE"
     } > "$SSH_AGENT_INFO_FILE"
     
     # Export variables
@@ -141,9 +141,9 @@ bootstrap_ssh_agent() {
                 
                 # Update agent info
                 {
-                    echo "SSH_AGENT_PID='$pid'; export SSH_AGENT_PID"
-                    echo "SSH_AUTH_SOCK='$socket'; export SSH_AUTH_SOCK"
-                    echo "SSH_AGENT_INFO_FILE='$SSH_AGENT_INFO_FILE'; export SSH_AGENT_INFO_FILE"
+                    printf 'SSH_AGENT_PID=%q\n' "$pid"
+                    printf 'SSH_AUTH_SOCK=%q\n' "$socket"
+                    printf 'SSH_AGENT_INFO_FILE=%q\n' "$SSH_AGENT_INFO_FILE"
                 } > "$SSH_AGENT_INFO_FILE"
                 
                 export SSH_AGENT_PID="$pid"
@@ -172,9 +172,9 @@ bootstrap_ssh_agent() {
         
         # Update agent info
         {
-            echo "SSH_AGENT_PID='$pid'; export SSH_AGENT_PID"
-            echo "SSH_AUTH_SOCK='$socket'; export SSH_AUTH_SOCK"
-            echo "SSH_AGENT_INFO_FILE='$SSH_AGENT_INFO_FILE'; export SSH_AGENT_INFO_FILE"
+            printf 'SSH_AGENT_PID=%q\n' "$pid"
+            printf 'SSH_AUTH_SOCK=%q\n' "$socket"
+            printf 'SSH_AGENT_INFO_FILE=%q\n' "$SSH_AGENT_INFO_FILE"
         } > "$SSH_AGENT_INFO_FILE"
         
         export SSH_AGENT_PID="$pid"
