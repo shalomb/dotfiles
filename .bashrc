@@ -71,7 +71,7 @@ BASH_CONFIG_DIR="${BASHRC_DIR}/.config/bash"
 # These must be loaded FIRST as enabled/ tools depend on them
 if [[ -d "${BASH_CONFIG_DIR}/rc.d" ]]; then
     for script in "${BASH_CONFIG_DIR}"/rc.d/*; do
-        if [[ -f "$script" && -r "$script" ]]; then
+        if [[ -f "$script" && -r "$script" && "$script" != *.md ]]; then
             source "$script"
         fi
     done
@@ -83,7 +83,7 @@ fi
 # This happens AFTER rc.d functions are loaded so @has-cmd and other core functions are available
 if [[ -d "${BASH_CONFIG_DIR}/enabled" ]]; then
     for script in "${BASH_CONFIG_DIR}"/enabled/*.sh; do
-        if [[ -f "$script" && -r "$script" ]]; then
+        if [[ -f "$script" && -r "$script" && "$script" != *.md ]]; then
             source "$script"
         fi
     done
