@@ -48,9 +48,8 @@ _cursor_agent_strict() {
         return 1
     fi
     # Ensure GPG_TTY is unset to prevent terminal interaction
-    # Run cursor-agent in background and disown to prevent job control issues
-    (GPG_TTY=/dev/null nice -n 15 /usr/bin/env cursor-agent "$@") &
-    disown
+    # Run cursor-agent in foreground with proper environment
+    GPG_TTY=/dev/null nice -n 15 /usr/bin/env cursor-agent "$@"
 }
 
 # Create alias to the strict function
