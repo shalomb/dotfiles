@@ -1,7 +1,8 @@
 #!/bin/bash
 # Pre-commit GPG validation hook
-# Ensures GPG signing works before allowing commits
-# Prevents unsigned commits from being created
+# MANDATORY: All commits MUST be GPG signed - NO EXCEPTIONS
+# This hook ENFORCES GPG signing and BLOCKS any attempt to circumvent it
+# Agents MUST fix GPG issues, not work around them
 
 set -euo pipefail
 
@@ -9,75 +10,166 @@ set -euo pipefail
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Function to check GPG status
 check_gpg_status() {
     local exit_code=0
     local signing_key
+    local error_msg=""
     
     # Check if GPG signing is enabled
     if ! git config --get commit.gpgsign >/dev/null 2>&1; then
-        echo -e "${RED}❌ GPG signing is not configured${NC}"
-        return 1
+        error_msg="GPG signing is not configured"
+        exit_code=1
     elif [[ "$(git config --get commit.gpgsign)" != "true" ]]; then
-        echo -e "${RED}❌ GPG signing is disabled${NC}"
-        return 1
+        error_msg="GPG signing is disabled"
+        exit_code=1
     fi
     
     # Check if signing key is configured
-    signing_key=$(git config --get user.signingkey 2>/dev/null)
-    if [[ -z "$signing_key" ]]; then
-        echo -e "${RED}❌ No GPG signing key configured${NC}"
-        return 1
+    if [[ $exit_code -eq 0 ]]; then
+        signing_key=$(git config --get user.signingkey 2>/dev/null)
+        if [[ -z "$signing_key" ]]; then
+            error_msg="No GPG signing key configured"
+            exit_code=1
+        fi
     fi
     
     # Test GPG signing without prompts
-    if ! echo 'test' | gpg --clearsign --default-key "$signing_key" --batch --yes >/dev/null 2>&1; then
-        echo -e "${RED}❌ GPG signing test failed${NC}"
-        return 1
+    if [[ $exit_code -eq 0 ]]; then
+        if ! echo 'test' | gpg --clearsign --default-key "$signing_key" --batch --yes >/dev/null 2>&1; then
+            error_msg="GPG signing test failed - key may be locked or expired"
+            exit_code=1
+        fi
     fi
     
     # Check GPG agent status
-    if ! gpg-connect-agent 'keyinfo --list' /bye >/dev/null 2>&1; then
-        echo -e "${RED}❌ GPG agent not responsive${NC}"
-        return 1
+    if [[ $exit_code -eq 0 ]]; then
+        if ! gpg-connect-agent 'keyinfo --list' /bye >/dev/null 2>&1; then
+            error_msg="GPG agent not responsive"
+            exit_code=1
+        fi
     fi
     
-    return 0
+    if [[ $exit_code -ne 0 ]]; then
+        echo -e "${RED}❌ $error_msg${NC}"
+    fi
+    
+    return $exit_code
 }
 
 # Function to attempt GPG recovery
 attempt_gpg_recovery() {
-    echo -e "${YELLOW}🔄 Attempting GPG recovery...${NC}"
+    echo -e "${YELLOW}🔄 Attempting automatic GPG recovery...${NC}"
     
-    # Try to restart GPG agent
-    if command -v gpg-connect-agent >/dev/null 2>&1; then
-        echo "  - Restarting GPG agent..."
-        gpg-connect-agent /bye >/dev/null 2>&1 || true
-    fi
+    local recovery_attempts=0
+    local max_attempts=3
     
-    # Try to set GPG_TTY if not set
-    if [[ -z "${GPG_TTY:-}" ]]; then
-        echo "  - Setting GPG_TTY..."
-        if [[ -t 0 ]]; then
-            export GPG_TTY=$(tty)
-        else
-            export GPG_TTY="/dev/null"
+    while [[ $recovery_attempts -lt $max_attempts ]]; do
+        ((recovery_attempts++))
+        echo -e "${CYAN}  Attempt $recovery_attempts/$max_attempts:${NC}"
+        
+        # Try to restart GPG agent
+        if command -v gpg-connect-agent >/dev/null 2>&1; then
+            echo "    - Restarting GPG agent..."
+            gpg-connect-agent /bye >/dev/null 2>&1 || true
         fi
-    fi
+        
+        # Try to set GPG_TTY if not set
+        if [[ -z "${GPG_TTY:-}" ]]; then
+            echo "    - Setting GPG_TTY..."
+            if [[ -t 0 ]]; then
+                export GPG_TTY=$(tty)
+            else
+                export GPG_TTY="/dev/null"
+            fi
+        fi
+        
+        # Wait a moment for agent to stabilize
+        sleep 2
+        
+        # Test again
+        if check_gpg_status; then
+            echo -e "${GREEN}✅ GPG recovery successful${NC}"
+            return 0
+        else
+            echo -e "${YELLOW}    Recovery attempt $recovery_attempts failed, trying again...${NC}"
+        fi
+    done
     
-    # Wait a moment for agent to stabilize
-    sleep 1
+    echo -e "${RED}❌ Automatic GPG recovery failed after $max_attempts attempts${NC}"
+    return 1
+}
+
+# Function to provide interactive recovery options
+interactive_gpg_recovery() {
+    echo -e "${BLUE}🔧 Interactive GPG Recovery Options${NC}"
+    echo ""
+    echo -e "${RED}🚨 MANDATORY REQUIREMENT: GPG SIGNING IS REQUIRED FOR ALL COMMITS${NC}"
+    echo -e "${RED}   Agents MUST fix GPG issues - circumventing is NOT ALLOWED${NC}"
+    echo ""
+    echo -e "${CYAN}Choose a recovery option:${NC}"
+    echo "  1) Restart GPG agent and try again"
+    echo "  2) Unlock GPG key and try again" 
+    echo "  3) Show detailed GPG status and exit"
+    echo "  4) Cancel commit (RECOMMENDED if GPG cannot be fixed)"
+    echo ""
     
-    # Test again
-    if check_gpg_status; then
-        echo -e "${GREEN}✅ GPG recovery successful${NC}"
-        return 0
-    else
-        echo -e "${RED}❌ GPG recovery failed${NC}"
-        return 1
-    fi
+    while true; do
+        read -p "Enter your choice (1-4): " choice
+        case $choice in
+            1)
+                echo -e "${YELLOW}Restarting GPG agent...${NC}"
+                gpg-connect-agent /bye >/dev/null 2>&1 || true
+                sleep 2
+                if check_gpg_status; then
+                    echo -e "${GREEN}✅ GPG agent restarted successfully${NC}"
+                    return 0
+                else
+                    echo -e "${RED}❌ GPG agent restart failed${NC}"
+                fi
+                ;;
+            2)
+                local signing_key=$(git config --get user.signingkey 2>/dev/null)
+                if [[ -n "$signing_key" ]]; then
+                    echo -e "${YELLOW}Attempting to unlock GPG key: $signing_key${NC}"
+                    echo "test" | gpg --sign --default-key "$signing_key" --batch --yes >/dev/null 2>&1 || {
+                        echo -e "${YELLOW}Interactive unlock required. Please run:${NC}"
+                        echo "  gpg --sign --default-key $signing_key < /dev/null"
+                        echo "Then try the commit again."
+                        return 1
+                    }
+                    if check_gpg_status; then
+                        echo -e "${GREEN}✅ GPG key unlocked successfully${NC}"
+                        return 0
+                    fi
+                else
+                    echo -e "${RED}❌ No signing key configured${NC}"
+                fi
+                ;;
+            3)
+                echo -e "${BLUE}Detailed GPG Status:${NC}"
+                echo "Git config commit.gpgsign: $(git config --get commit.gpgsign 2>/dev/null || echo 'not set')"
+                echo "Git config user.signingkey: $(git config --get user.signingkey 2>/dev/null || echo 'not set')"
+                echo "GPG_TTY: ${GPG_TTY:-not set}"
+                echo "GPG agent status:"
+                gpg-connect-agent 'keyinfo --list' /bye 2>/dev/null || echo "  Agent not responsive"
+                echo ""
+                echo -e "${YELLOW}Please fix the issues above and try again.${NC}"
+                return 1
+                ;;
+            4)
+                echo -e "${YELLOW}Commit cancelled - GPG signing is mandatory${NC}"
+                return 1
+                ;;
+            *)
+                echo -e "${RED}Invalid choice. Please enter 1-4.${NC}"
+                ;;
+        esac
+    done
 }
 
 # Main validation
@@ -89,24 +181,40 @@ main() {
         exit 0
     fi
     
-    echo -e "${YELLOW}⚠️  GPG signing failed - attempting recovery...${NC}"
+    echo -e "${YELLOW}⚠️  GPG signing failed - attempting automatic recovery...${NC}"
     
     if attempt_gpg_recovery; then
         echo -e "${GREEN}✅ GPG recovered - proceeding with commit${NC}"
         exit 0
     fi
     
-    echo -e "${RED}❌ GPG signing cannot be restored${NC}"
-    echo -e "${RED}   Commit blocked to prevent unsigned commits${NC}"
+    echo -e "${RED}❌ Automatic GPG recovery failed${NC}"
     echo ""
-    echo -e "${YELLOW}Manual recovery steps:${NC}"
-    echo "  1. gpg-connect-agent /bye"
-    echo "  2. gpg --sign --default-key YOUR_KEY_ID < /dev/null"
-    echo "  3. export GPG_TTY=\$(tty)"
-    echo "  4. Try commit again"
-    echo ""
-    echo -e "${RED}Aborting commit to maintain GPG signing integrity${NC}"
-    exit 1
+    
+    # Check if we're in an interactive terminal
+    if [[ -t 0 && -t 1 ]]; then
+        echo -e "${BLUE}🔄 Interactive recovery available${NC}"
+        if interactive_gpg_recovery; then
+            echo -e "${GREEN}✅ GPG issue resolved - proceeding with commit${NC}"
+            exit 0
+        else
+            echo -e "${RED}❌ GPG recovery cancelled or failed${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}❌ GPG signing cannot be restored (non-interactive environment)${NC}"
+        echo -e "${RED}🚨 MANDATORY: GPG SIGNING IS REQUIRED FOR ALL COMMITS${NC}"
+        echo -e "${RED}   Agents MUST fix GPG issues before committing${NC}"
+        echo ""
+        echo -e "${YELLOW}Required recovery steps (agents must complete these):${NC}"
+        echo "  1. gpg-connect-agent /bye"
+        echo "  2. gpg --sign --default-key YOUR_KEY_ID < /dev/null"
+        echo "  3. export GPG_TTY=\$(tty)"
+        echo "  4. Try commit again"
+        echo ""
+        echo -e "${RED}❌ COMMIT BLOCKED: GPG signing is mandatory - no workarounds allowed${NC}"
+        exit 1
+    fi
 }
 
 # Run main function

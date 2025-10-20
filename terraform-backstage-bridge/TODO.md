@@ -1,8 +1,0 @@
-- [x] Normalize test_cases.yaml so there is consistency in the structure of each test case
-- [x] Ensure headers on all files
-- [x] Merge harness fixtures and test cases if possible at all
-- [x] Rename Makefile targets to be `test-<something>` not `<something>-test`
-- [ ] Alphabetically sort targets in Makefile
-- [ ] Pytest parallelization to speed up test execution
-- [ ] Support Complex defaults from variables being parsed and rendered by the harness formatter
-- [ ] Fix interpolated strings for the type field of terraform_input attributes
