@@ -1,0 +1,8 @@
+#!/bin/bash
+# Pass wrapper script with debug output
+# This script wraps the system pass command with debug tracing
+
+(
+  set -xv
+  /usr/bin/pass "$@"
+)
