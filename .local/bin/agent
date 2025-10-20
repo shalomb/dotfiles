@@ -1,0 +1,14 @@
+#!/bin/bash
+# Unified Agent Management System
+# Keychain-inspired architecture for SSH/GPG agent management
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Set up environment
+export HOME="${HOME:-/home/$(whoami)}"
+export PYTHONPATH="$PROJECT_ROOT/src:$PYTHONPATH"
+
+# Run the Python agent manager
+exec python3 "$PROJECT_ROOT/src/agent_management/agent.py" "$@"
