@@ -3,8 +3,16 @@
 # ARCHITECTURE: Bootstrap pattern with discovery and user interaction
 # DESIGN_PATTERN: Fail-safe with user guidance for agent unlocking
 
-# If not interactive, return
+# CRITICAL: Prevent agent process blocking
+# This script contains interactive prompts (read -r) that will cause AI agents
+# and non-interactive processes to hang indefinitely waiting for user input.
+# We must exit early in non-interactive environments to prevent this.
 [[ ${-//[!i]/} ]] || return
+
+# Additional safety check: ensure stdin is a terminal
+# This prevents the script from running in environments where stdin is not
+# connected to a terminal (pipes, redirects, background processes, etc.)
+[[ -t 0 ]] || return
 
 # Colors are already available from rc.d/02-colours (loaded by bashrc)
 

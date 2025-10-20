@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# CRITICAL: Prevent agent process blocking
+# This script contains interactive prompts (read -p) that will cause AI agents
+# and non-interactive processes to hang indefinitely waiting for user input.
+# We must exit early in non-interactive environments to prevent this.
+[[ ${-//[!i]/} ]] || return
+
+# Additional safety check: ensure stdin is a terminal
+# This prevents the script from running in environments where stdin is not
+# connected to a terminal (pipes, redirects, background processes, etc.)
+[[ -t 0 ]] || return
+
 # AWS CLI completion
 aws_completer=$(type -P aws_completer)
 if [[ $aws_completer ]]; then

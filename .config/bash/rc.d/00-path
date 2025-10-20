@@ -74,7 +74,7 @@ clean_path() {
     IFS=':' read -ra path_array <<< "$path_value"
     
     # Create associative array to track seen paths (declare at function scope)
-    local -A seen_paths
+    local -A seen_paths=()
     local cleaned_paths=()
     
     # Process each path component
@@ -93,7 +93,7 @@ clean_path() {
         fi
         
         # Skip if we've seen this path before
-        [[ -n "${seen_paths[$normalized_path]}" ]] && continue
+        [[ -n "${seen_paths[$normalized_path]:-}" ]] && continue
         
         # Skip if directory doesn't exist (for absolute paths only)
         if [[ "$normalized_path" == /* ]] && [[ ! -d "$normalized_path" ]]; then
