@@ -369,7 +369,6 @@ class DotfileManager:
         # Export files
         self.export(
             files,
-            force=force,
             dry_run=dry_run,
             working_dir=working_dir
         )
