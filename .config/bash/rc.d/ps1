@@ -30,7 +30,7 @@ else
 fi
 
 case "$TERM" in
-  @(screen|tmux)*)
+  screen*|tmux*)
     PS1='\[$dim\]'
     PS1+='${debian_chroot:+($debian_chroot)}'
     PS1+='\[$orange_166\]$(e=$?;echo $e)'
