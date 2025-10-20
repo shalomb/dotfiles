@@ -1,37 +1,41 @@
 #!/bin/bash
 # Cursor Agent GPG Integration
 # ===========================
-# This script provides a cursor-agent wrapper that ensures GPG signing works
-# properly in AI agent environments. It performs pre-flight validation and
-# sets up the correct environment to prevent interactive prompts.
+# MANDATORY: GPG signing is REQUIRED for all commits - NO EXCEPTIONS
+# This script provides a cursor-agent wrapper that ENFORCES GPG signing
+# and BLOCKS cursor-agent if GPG is not properly configured.
 #
+# Agents MUST fix GPG issues before using cursor-agent - circumventing is NOT ALLOWED
 # The cursor-agent function runs in FOREGROUND (not background) to maintain
 # proper job control and allow AI agents to interact correctly.
 
 _cursor_gpg_check() {
     local exit_code=0
     local signing_key
+    local error_msg=""
 
     # Check if GPG signing is enabled
     if ! git config --get commit.gpgsign >/dev/null 2>&1; then
-        echo "GPG signing is not properly configured"
+        error_msg="GPG signing is not configured - MANDATORY for all commits"
         exit_code=1
     elif [[ "$(git config --get commit.gpgsign)" != "true" ]]; then
-        echo "GPG signing is not properly configured"
+        error_msg="GPG signing is disabled - MANDATORY for all commits"
         exit_code=1
     fi
 
     # Check if signing key is configured
-    signing_key=$(git config --get user.signingkey 2>/dev/null)
-    if [[ -z "$signing_key" ]]; then
-        echo "No GPG signing key configured"
-        exit_code=1
+    if [[ $exit_code -eq 0 ]]; then
+        signing_key=$(git config --get user.signingkey 2>/dev/null)
+        if [[ -z "$signing_key" ]]; then
+            error_msg="No GPG signing key configured - MANDATORY for all commits"
+            exit_code=1
+        fi
     fi
 
     # Test GPG signing without prompts
     if [[ $exit_code -eq 0 ]]; then
         if ! echo 'test' | gpg --clearsign --default-key "$signing_key" --batch --yes >/dev/null 2>&1; then
-            echo "GPG signing requires interaction - cursor-agent will hang"
+            error_msg="GPG signing test failed - key may be locked or expired"
             exit_code=1
         fi
     fi
@@ -39,9 +43,15 @@ _cursor_gpg_check() {
     # Check GPG agent status
     if [[ $exit_code -eq 0 ]]; then
         if ! gpg-connect-agent 'keyinfo --list' /bye >/dev/null 2>&1; then
-            echo "GPG agent not responsive - run: gpg-connect-agent /bye"
+            error_msg="GPG agent not responsive - run: gpg-connect-agent /bye"
             exit_code=1
         fi
+    fi
+
+    if [[ $exit_code -ne 0 ]]; then
+        echo "❌ $error_msg"
+        echo "🚨 MANDATORY: GPG signing is REQUIRED - agents must fix this issue"
+        echo "   No workarounds or circumventions allowed"
     fi
 
     return $exit_code
@@ -64,10 +74,26 @@ _cursor_gpg_check() {
 # - Job control issues with disown cause problems
 # - Foreground execution allows proper error handling
 _cursor_agent_strict() {
+    echo "🔐 Validating GPG signing capability (MANDATORY)..."
+    
     if ! _cursor_gpg_check; then
-        echo "cursor-agent: GPG check failed - fix GPG setup before continuing" >&2
+        echo ""
+        echo "❌ cursor-agent: GPG validation FAILED" >&2
+        echo "🚨 MANDATORY REQUIREMENT: GPG signing is REQUIRED for all commits" >&2
+        echo "   Agents MUST fix GPG issues before using cursor-agent" >&2
+        echo "   No workarounds, circumventions, or bypasses allowed" >&2
+        echo ""
+        echo "Required steps to fix GPG:"
+        echo "  1. gpg-connect-agent /bye"
+        echo "  2. gpg --sign --default-key YOUR_KEY_ID < /dev/null"
+        echo "  3. export GPG_TTY=\$(tty)"
+        echo "  4. Try cursor-agent again"
+        echo ""
+        echo "❌ cursor-agent BLOCKED until GPG signing is properly configured"
         return 1
     fi
+    
+    echo "✅ GPG signing validated - starting cursor-agent"
     
     # Environment setup for cursor-agent
     # - Unset GPG_TTY to prevent terminal interaction prompts
@@ -82,10 +108,12 @@ alias cursor-agent='_cursor_agent_strict'
 # Export the function
 export -f _cursor_gpg_check
 
-# GPG Setup Instructions
-# ======================
-# Before using cursor-agent, ensure GPG is properly configured:
+# GPG Setup Instructions (MANDATORY)
+# ==================================
+# 🚨 CRITICAL: GPG signing is MANDATORY for all commits - NO EXCEPTIONS
+# Agents MUST ensure GPG is properly configured before using cursor-agent
 #
+# Required setup steps (agents must complete these):
 # 1. Start GPG agent:
 #    gpg-connect-agent /bye
 #
@@ -102,5 +130,6 @@ export -f _cursor_gpg_check
 # This ensures proper job control and allows AI agents to interact correctly.
 # Background execution (&) causes terminal control issues and should be avoided.
 #
-# If GPG check fails, cursor-agent will REFUSE TO START.
-# This ensures all commits are properly GPG signed.
+# 🚨 MANDATORY: If GPG check fails, cursor-agent will REFUSE TO START.
+# This ENFORCES that all commits are properly GPG signed.
+# Agents MUST fix GPG issues - circumventing is NOT ALLOWED.

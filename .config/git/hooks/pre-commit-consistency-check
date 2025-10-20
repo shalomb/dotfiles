@@ -1,6 +1,8 @@
 #!/bin/bash
 # Pre-commit consistency validation hook
-# Ensures home directory is consistent with repository state
+# MANDATORY: Ensures home directory is consistent with repository state
+# This hook ENFORCES dotfile consistency and BLOCKS commits if inconsistent
+# Agents MUST fix consistency issues, not work around them
 
 set -e
 
@@ -129,13 +131,16 @@ main() {
         echo -e "${RED}❌ Dotfile consistency validation failed${NC}"
         echo -e "${RED}   Found $total_errors consistency issues${NC}"
         echo ""
-        echo -e "${YELLOW}To fix consistency issues:${NC}"
+        echo -e "${RED}🚨 MANDATORY: Dotfile consistency is REQUIRED for all commits${NC}"
+        echo -e "${RED}   Agents MUST fix consistency issues - no workarounds allowed${NC}"
+        echo ""
+        echo -e "${YELLOW}Required steps to fix consistency issues:${NC}"
         echo "1. Use dotfile manager to deploy changes:"
         echo "   uv run python -m dotfile_manager export <files>"
         echo "2. Check for manual file operations in home directory"
         echo "3. Ensure all managed files are properly hardlinked"
         echo ""
-        echo -e "${RED}Commit blocked to maintain dotfile consistency${NC}"
+        echo -e "${RED}❌ COMMIT BLOCKED: Dotfile consistency is mandatory${NC}"
         return 1
     fi
 }
