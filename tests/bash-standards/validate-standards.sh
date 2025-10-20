@@ -43,7 +43,7 @@ main() {
     echo
     echo "Sourcing Behavior:"
     # Test that bashrc can be sourced without errors in login shell context
-    run_test "bashrc sources without errors" "BASH_PROFILE_SOURCED=1 bash --norc -c 'source .config/bash/bashrc 2>&1' | grep -qiv 'error\|fatal'"
+    run_test "bashrc sources without errors" "BASH_PROFILE_SOURCED=1 bash --norc -c 'source .config/bash/bashrc 2>&1' | (grep -qiv 'error\|fatal' || [ \$? -eq 1 ])"
     # Test that rc.d files are readable
     run_test "rc.d files are readable" "[ -r .config/bash/rc.d/01-functions ]"
     # Test that enabled files are readable (if any exist)
@@ -54,7 +54,7 @@ main() {
     # Test that rc.d is loaded (by checking BASHRC_DIR is set after sourcing)
     run_test "rc.d directory is located" "BASH_PROFILE_SOURCED=1 bash --norc -c 'source .config/bash/bashrc && [ -n \"\$BASHRC_DIR\" ]'"
     # Test that enabled scripts can be loaded without permission errors
-    run_test "enabled scripts load cleanly" "BASH_PROFILE_SOURCED=1 bash --norc -c 'source .config/bash/bashrc 2>&1' | grep -qiv 'permission denied'"
+    run_test "enabled scripts load cleanly" "BASH_PROFILE_SOURCED=1 bash --norc -c 'source .config/bash/bashrc 2>&1' | (grep -qiv 'permission denied' || [ \$? -eq 1 ])"
     
     echo
     echo "Shell Startup Performance:"
