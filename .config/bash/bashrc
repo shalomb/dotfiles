@@ -54,14 +54,18 @@ if [[ ! -e $HISTFILE ]]; then
 fi
 
 # Get the directory containing this bashrc file
-# Follow symlinks to get the real location
-if [[ -n "${BASH_SOURCE[0]}" ]]; then
-    BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
-else
-    # Fallback: BASH_SOURCE[0] is empty when sourcing files directly
-    # This happens during testing and when bashrc is sourced from other scripts
-    # Use the actual bashrc path to determine the directory location
-    BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]:-~/.bashrc}")")" && pwd)"
+# Since bashrc is a hard link, we need to find the dotfiles repository root
+# Use a simple approach: check if the dotfiles directory exists
+BASHRC_DIR="$HOME/.config/dotfiles/.config/bash"
+if [[ ! -d "$BASHRC_DIR" ]]; then
+    # Fallback: try to find it by looking for .git directory
+    BASHRC_DIR="$HOME/.config/dotfiles"
+    if [[ -d "$BASHRC_DIR/.git" ]]; then
+        BASHRC_DIR="${BASHRC_DIR}/.config/bash"
+    else
+        # Last resort: use the bashrc directory
+        BASHRC_DIR="$(cd "$(dirname "$(readlink -f ~/.bashrc)")" && pwd)"
+    fi
 fi
 
 # Load all core functions from rc.d directory
