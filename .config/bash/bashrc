@@ -55,13 +55,20 @@ fi
 
 # Get the directory containing this bashrc file
 # Follow symlinks to get the real location
-BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+if [[ -n "${BASH_SOURCE[0]}" ]]; then
+    BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+else
+    # Fallback: BASH_SOURCE[0] is empty when sourcing files directly
+    # This happens during testing and when bashrc is sourced from other scripts
+    # Use the actual bashrc path to determine the directory location
+    BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]:-~/.bashrc}")")" && pwd)"
+fi
 
 # Load all core functions from rc.d directory
 # These must be loaded FIRST as enabled/ tools depend on them
 if [[ -d "${BASHRC_DIR}/rc.d" ]]; then
     for script in "${BASHRC_DIR}"/rc.d/*; do
-        if [[ -f "$script" && -r "$script" ]]; then
+        if [[ -f "$script" && -r "$script" && ("$script" == *.sh || "$script" == *-* || "$script" == *[0-9]*) ]]; then
             source "$script"
         fi
     done
@@ -122,8 +129,8 @@ fi
 
 # Simple reload function
 reload() {
-    # Source the repository version directly to avoid circular reference
-    source ~/.config/dotfiles/.config/bash/bashrc
+    # Source the home directory version to avoid circular reference
+    source ~/.bashrc
 }
 
 # Check window size after each command
@@ -158,3 +165,10 @@ if ! shopt -oq posix; then
 fi
 
 export GPG_TTY=$(tty)
+
+# Safe PATH deduplication - run at the very end of bash initialization
+# This removes duplicates and non-existent directories from PATH
+if command -v clean_path >/dev/null 2>&1; then
+    clean_path PATH
+    export PATH
+fi

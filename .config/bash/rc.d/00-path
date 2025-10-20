@@ -62,6 +62,61 @@ if [[ -d "/usr/share/perl6/site/bin" ]]; then
     export PATH="/usr/share/perl6/site/bin:$PATH"
 fi
 
+# Safe PATH deduplication function
+clean_path() {
+    local var_name="$1"
+    local path_value="${!var_name}"
+    
+    # Return early if variable is empty or unset
+    [[ -z "$path_value" ]] && return 0
+    
+    # Split path by colons into array
+    IFS=':' read -ra path_array <<< "$path_value"
+    
+    # Create associative array to track seen paths (declare at function scope)
+    local -A seen_paths
+    local cleaned_paths=()
+    
+    # Process each path component
+    for path in "${path_array[@]}"; do
+        # Skip empty paths
+        [[ -z "$path" ]] && continue
+        
+        # Normalize path (remove trailing slash, resolve relative paths)
+        local normalized_path
+        if [[ "$path" == /* ]]; then
+            # Absolute path - resolve it
+            normalized_path="$(realpath "$path" 2>/dev/null || echo "$path")"
+        else
+            # Relative path - keep as is
+            normalized_path="$path"
+        fi
+        
+        # Skip if we've seen this path before
+        [[ -n "${seen_paths[$normalized_path]}" ]] && continue
+        
+        # Skip if directory doesn't exist (for absolute paths only)
+        if [[ "$normalized_path" == /* ]] && [[ ! -d "$normalized_path" ]]; then
+            continue
+        fi
+        
+        # Add to cleaned paths and mark as seen
+        cleaned_paths+=("$normalized_path")
+        seen_paths["$normalized_path"]=1
+    done
+    
+    # Join cleaned paths back together
+    local result
+    printf -v result '%s:' "${cleaned_paths[@]}"
+    result="${result%:}"  # Remove trailing colon
+    
+    # Set the variable
+    printf -v "$var_name" '%s' "$result"
+}
+
+# Clean PATH after all modifications
+clean_path PATH
+
 # Export PATH for subprocesses
 export PATH
 
