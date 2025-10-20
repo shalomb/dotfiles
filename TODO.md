@@ -1,3 +1,89 @@
+# 🚨 CRITICAL: Bash Configuration Issues
+
+## 📋 **TODO: Fix critical bash configuration errors blocking daily workflow**
+
+### **Current Critical Issues**
+- **Unbound variable error**: `seen_paths[$normalized_path]: unbound variable` in `00-path` (line 96)
+- **Missing commands**: `dotf` and `dotfiles` commands not found in fresh bash shell
+- **SSH connection failures**: Multiple SSH retry attempts failing with same bash error
+- **Path management broken**: Core path functionality not working properly
+
+### **Root Cause Analysis**
+- **Bash strict mode**: `set -u` enabled but `seen_paths` array not properly initialized
+- **Missing function definitions**: Core dotfiles functions not loaded in fresh shells
+- **Path resolution issues**: `00-path` script has unbound variable access
+- **Shell startup problems**: Fresh bash shells not loading complete configuration
+
+### **Immediate Actions Required**
+- [ ] **Fix unbound variable**: Initialize `seen_paths` array before use in `00-path`
+- [ ] **Restore dotfiles command**: Ensure `dotfiles` function is properly loaded
+- [ ] **Fix shell startup**: Verify all essential functions load in fresh shells
+- [ ] **Test SSH connections**: Ensure bash configuration works in SSH context
+- [ ] **Validate path management**: Test that path functions work correctly
+
+### **Priority**
+**CRITICAL** - Blocking daily workflow and SSH access
+
+---
+
+# 🚨 HIGH PRIORITY: Tmuxie Command Recovery
+
+## 📋 **TODO: Restore tmuxie command functionality**
+
+### **Current Issues**
+- **Command not found**: `tmuxie` command not available in fresh bash shells
+- **SSH retry failures**: Multiple attempts to run `tmuxie code` failing
+- **Session management broken**: Core tmux session functionality unavailable
+- **Workflow disruption**: Daily tmux workflows completely broken
+
+### **Root Cause Analysis**
+- **Missing function definition**: `tmuxie` function not loaded in shell startup
+- **Path issues**: Function may not be in expected location or not sourced
+- **Shell configuration incomplete**: Fresh shells not loading all essential functions
+- **Dependency chain broken**: Other functions may depend on tmuxie
+
+### **Immediate Actions Required**
+- [ ] **Locate tmuxie function**: Find where tmuxie should be defined
+- [ ] **Restore function loading**: Ensure tmuxie loads in fresh shells
+- [ ] **Test SSH context**: Verify tmuxie works in SSH sessions
+- [ ] **Validate session management**: Test core tmuxie functionality
+- [ ] **Fix dependency chain**: Ensure all related functions work together
+
+### **Priority**
+**HIGH** - Core functionality for daily workflow
+
+---
+
+# 🚨 HIGH PRIORITY: Shell Configuration Health Check
+
+## 📋 **TODO: Comprehensive shell configuration audit and repair**
+
+### **Current State**
+- **Multiple failures**: Bash errors, missing commands, SSH issues
+- **Fresh shell problems**: New bash shells not loading complete configuration
+- **SSH context broken**: Remote access failing due to shell issues
+- **Daily workflow disrupted**: Core functions and commands unavailable
+
+### **Required Actions**
+- [ ] **Run comprehensive audit**: Test all essential functions in fresh shell
+- [ ] **Fix shell startup sequence**: Ensure all components load correctly
+- [ ] **Validate SSH context**: Test shell configuration in SSH sessions
+- [ ] **Restore missing functions**: Identify and fix all missing commands
+- [ ] **Test end-to-end workflows**: Verify complete daily workflows work
+- [ ] **Create health check script**: Automated validation of shell configuration
+
+### **Success Criteria**
+- [ ] Fresh bash shell loads without errors
+- [ ] All essential commands available (`dotfiles`, `tmuxie`, etc.)
+- [ ] SSH connections work reliably
+- [ ] Path management functions correctly
+- [ ] Complete daily workflows functional
+
+### **Priority**
+**HIGH** - Foundation for all other work
+
+---
+
 # BDD/Spec Test Suite Implementation
 
 ## 📋 TODO: Implement comprehensive BDD/spec tests for dotfiles repository
