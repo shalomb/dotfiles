@@ -415,12 +415,18 @@ class AgentManager:
             status['ssh']['available'] = True
             status['ssh']['socket'] = os.environ.get('SSH_AUTH_SOCK')
             
-            # Get SSH agent PID and process info
-            ssh_pid = os.environ.get('SSH_AGENT_PID')
-            if ssh_pid:
-                status['ssh']['pid'] = ssh_pid
-                status['ssh']['process_status'] = self._check_process_status(ssh_pid)
+            # Check if using GPG agent SSH
+            if self._is_using_gpg_ssh():
+                status['ssh']['pid'] = "GPG Agent"
+                status['ssh']['process_status'] = "✅ Running (via GPG)"
                 status['ssh']['lifetime'] = self._get_ssh_agent_lifetime()
+            else:
+                # Get SSH agent PID and process info
+                ssh_pid = os.environ.get('SSH_AGENT_PID')
+                if ssh_pid:
+                    status['ssh']['pid'] = ssh_pid
+                    status['ssh']['process_status'] = self._check_process_status(ssh_pid)
+                    status['ssh']['lifetime'] = self._get_ssh_agent_lifetime()
             
             try:
                 result = subprocess.run(['ssh-add', '-l'], 
@@ -536,6 +542,10 @@ class AgentManager:
     def _get_ssh_agent_lifetime(self) -> str:
         """Get SSH agent lifetime information."""
         try:
+            # Check if using GPG agent's SSH functionality
+            if self._is_using_gpg_ssh():
+                return "GPG Agent SSH"
+            
             # Try to get lifetime from ssh-add -T
             result = subprocess.run(['ssh-add', '-T'], 
                                   capture_output=True, text=True, timeout=5)
@@ -548,6 +558,30 @@ class AgentManager:
             return "❓ Unknown"
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return "❓ Unknown"
+    
+    def _is_using_gpg_ssh(self) -> bool:
+        """Check if SSH is using GPG agent's SSH functionality."""
+        try:
+            # Check if SSH_AUTH_SOCK points to GPG agent's SSH socket
+            ssh_sock = os.environ.get('SSH_AUTH_SOCK')
+            if not ssh_sock:
+                return False
+            
+            # Check if it's a GPG agent SSH socket
+            if 'gnupg' in ssh_sock or 'S.gpg-agent.ssh' in ssh_sock:
+                return True
+            
+            # Check if there's no SSH_AGENT_PID but socket works
+            if not os.environ.get('SSH_AGENT_PID') and os.path.exists(ssh_sock):
+                # Test if it's actually GPG agent SSH
+                result = subprocess.run(['gpg-connect-agent', 'keyinfo --list', '/bye'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0 and 'S KEYINFO' in result.stdout:
+                    return True
+            
+            return False
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
     
     def _get_gpg_agent_pid(self) -> str:
         """Get GPG agent PID."""
