@@ -40,7 +40,8 @@ function _tmuxie_log() {
 function tmux-attach() {
   local session="$1"
   if in-tmux; then
-    tmux switch-client -t "$session"
+    # Force switch to the session
+    tmux switch-client -t "$session" 2>/dev/null || tmux attach-session -t "$session"
   else
     # Attach to the session (works in SSH contexts)
     exec tmux attach-session -t "$session"
@@ -57,8 +58,9 @@ function sessionize() {
     tmux-attach "$name"
   else
     if in-tmux; then
-      tmux new-session -d -s "$name" -c "$dir" "bash -l" \; \
-        switch-client -t "$name"
+      tmux new-session -d -s "$name" -c "$dir" "bash -l"
+      # Force switch to the new session
+      tmux switch-client -t "$name" 2>/dev/null || tmux attach-session -t "$name"
     else
       exec tmux -u -l -2 new-session -s "$name" -c "$dir"
     fi
