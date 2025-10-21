@@ -1,0 +1,15 @@
+#!/bin/bash
+# Simple GPG fix for cursor-agent
+# Just use loopback mode when GPG signing fails
+
+# Test GPG signing with loopback mode
+echo 'test' | gpg --pinentry-mode loopback --sign --batch --yes >/dev/null 2>&1
+
+if [[ $? -eq 0 ]]; then
+    echo "✅ GPG is working"
+    exit 0
+else
+    echo "❌ GPG needs unlock - run this in another terminal:"
+    echo "gpg --pinentry-mode loopback --sign < /dev/null"
+    exit 1
+fi

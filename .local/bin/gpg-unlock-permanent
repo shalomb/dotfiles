@@ -1,0 +1,71 @@
+#!/bin/bash
+# Permanent GPG Unlock for Cursor-Agent
+# This script ensures GPG works in non-interactive environments
+
+set -euo pipefail
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Function to test GPG signing with loopback mode
+test_gpg_signing() {
+    local key_id="${1:-}"
+    if [[ -n "$key_id" ]]; then
+        echo 'test' | gpg --pinentry-mode loopback --sign --default-key "$key_id" --batch --yes >/dev/null 2>&1
+    else
+        echo 'test' | gpg --pinentry-mode loopback --sign --batch --yes >/dev/null 2>&1
+    fi
+}
+
+# Function to unlock GPG using loopback mode
+unlock_gpg_loopback() {
+    local key_id="${1:-}"
+    echo -e "${BLUE}🔐 Unlocking GPG agent for cursor-agent...${NC}"
+    
+    # Set GPG_TTY
+    export GPG_TTY="${GPG_TTY:-$(tty 2>/dev/null || echo 'not a tty')}"
+    
+    # Test if already unlocked
+    if test_gpg_signing "$key_id"; then
+        echo -e "${GREEN}✅ GPG is already unlocked${NC}"
+        return 0
+    fi
+    
+    # Try to unlock using loopback mode
+    echo -e "${YELLOW}Please enter your GPG passphrase when prompted...${NC}"
+    
+    if [[ -n "$key_id" ]]; then
+        echo 'unlock' | gpg --pinentry-mode loopback --sign --default-key "$key_id" --batch --yes >/dev/null 2>&1 || true
+    else
+        echo 'unlock' | gpg --pinentry-mode loopback --sign --batch --yes >/dev/null 2>&1 || true
+    fi
+    
+    # Test if it worked
+    if test_gpg_signing "$key_id"; then
+        echo -e "${GREEN}✅ GPG unlocked successfully! Cursor-agent can now sign commits.${NC}"
+        return 0
+    else
+        echo -e "${YELLOW}⚠️  GPG unlock may require manual intervention${NC}"
+        echo -e "${YELLOW}Try running: gpg --pinentry-mode loopback --sign --default-key ${key_id:-'<your-key>'} < /dev/null${NC}"
+        return 1
+    fi
+}
+
+# Main function
+main() {
+    local key_id="${1:-$(git config --get user.signingkey 2>/dev/null || echo '')}"
+    
+    if [[ -z "$key_id" ]]; then
+        echo -e "${YELLOW}No signing key found. Using default key.${NC}"
+    else
+        echo -e "${BLUE}Using signing key: $key_id${NC}"
+    fi
+    
+    unlock_gpg_loopback "$key_id"
+}
+
+# Run main function
+main "$@"

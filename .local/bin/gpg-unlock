@@ -1,0 +1,155 @@
+#!/bin/bash
+# GPG Auto-Unlock Script
+# Automatically unlocks GPG keys for cursor-agent and non-interactive environments
+
+set -euo pipefail
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration
+GPG_TTY="${GPG_TTY:-$(tty 2>/dev/null || echo 'not a tty')}"
+GPG_AGENT_INFO="${GPG_AGENT_INFO:-}"
+SIGNING_KEY="${1:-$(git config --get user.signingkey 2>/dev/null || echo '')}"
+
+# Function to log with timestamp
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
+}
+
+# Function to check if GPG agent is working
+check_gpg_agent() {
+    gpg-connect-agent 'keyinfo --list' /bye >/dev/null 2>&1
+}
+
+# Function to test GPG signing
+test_gpg_signing() {
+    local key_id="${1:-}"
+    if [[ -n "$key_id" ]]; then
+        echo 'test' | gpg --clearsign --default-key "$key_id" --batch --yes >/dev/null 2>&1
+    else
+        echo 'test' | gpg --clearsign --batch --yes >/dev/null 2>&1
+    fi
+}
+
+# Function to unlock GPG using gpg-agent
+unlock_gpg_agent() {
+    local key_id="${1:-}"
+    log "Attempting to unlock GPG agent for key: ${key_id:-'default'}"
+    
+    # Set GPG_TTY
+    export GPG_TTY="$GPG_TTY"
+    
+    # Try to unlock using gpg-agent
+    if [[ -n "$key_id" ]]; then
+        # Try to unlock specific key
+        echo "unlock $key_id" | gpg-connect-agent >/dev/null 2>&1 || true
+    else
+        # Try to unlock all keys
+        echo "unlock" | gpg-connect-agent >/dev/null 2>&1 || true
+    fi
+    
+    # Wait a moment for unlock to complete
+    sleep 1
+    
+    # Test if signing works now
+    if test_gpg_signing "$key_id"; then
+        log "✅ GPG agent unlocked successfully"
+        return 0
+    else
+        log "❌ GPG agent unlock failed"
+        return 1
+    fi
+}
+
+# Function to try alternative unlock methods
+try_alternative_unlock() {
+    local key_id="${1:-}"
+    log "Trying alternative unlock methods"
+    
+    # Method 1: Try gpg --sign with batch mode
+    if [[ -n "$key_id" ]]; then
+        echo 'test' | timeout 10 gpg --sign --default-key "$key_id" --batch --yes --pinentry-mode loopback >/dev/null 2>&1 || true
+    else
+        echo 'test' | timeout 10 gpg --sign --batch --yes --pinentry-mode loopback >/dev/null 2>&1 || true
+    fi
+    
+    # Method 2: Try gpg-agent with different options
+    gpg-agent --daemon --enable-ssh-support --pinentry-program /usr/bin/pinentry-curses >/dev/null 2>&1 || true
+    
+    # Wait and test
+    sleep 2
+    if test_gpg_signing "$key_id"; then
+        log "✅ Alternative unlock method succeeded"
+        return 0
+    fi
+    
+    return 1
+}
+
+# Main unlock function
+unlock_gpg() {
+    local key_id="${1:-}"
+    
+    log "Starting GPG unlock process"
+    log "GPG_TTY: $GPG_TTY"
+    log "Signing key: ${key_id:-'default'}"
+    
+    # Check if GPG agent is running
+    if ! check_gpg_agent; then
+        log "❌ GPG agent is not running"
+        return 1
+    fi
+    
+    # Test if already unlocked
+    if test_gpg_signing "$key_id"; then
+        log "✅ GPG is already unlocked"
+        return 0
+    fi
+    
+    # Try primary unlock method
+    if unlock_gpg_agent "$key_id"; then
+        return 0
+    fi
+    
+    # Try alternative methods
+    if try_alternative_unlock "$key_id"; then
+        return 0
+    fi
+    
+    log "❌ All unlock methods failed"
+    return 1
+}
+
+# Main execution
+main() {
+    if [[ $# -gt 0 && "$1" == "--help" ]]; then
+        echo "Usage: $0 [KEY_ID]"
+        echo "Unlock GPG agent for signing"
+        echo ""
+        echo "Arguments:"
+        echo "  KEY_ID    Specific GPG key ID to unlock (optional)"
+        echo ""
+        echo "Environment:"
+        echo "  GPG_TTY   TTY for GPG agent (default: current tty)"
+        echo ""
+        exit 0
+    fi
+    
+    local key_id="${1:-}"
+    
+    if unlock_gpg "$key_id"; then
+        echo "✅ GPG unlock successful"
+        exit 0
+    else
+        echo "❌ GPG unlock failed"
+        exit 1
+    fi
+}
+
+# Run main function
+main "$@"
