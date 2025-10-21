@@ -611,7 +611,7 @@ def main():
                 print(f"Keys: {ssh_status['keys']}")
                 if ssh_status['socket']:
                     print(f"Socket: {ssh_status['socket']}")
-                if ssh_status['pid']:
+                if 'pid' in ssh_status and ssh_status['pid']:
                     print(f"PID: {ssh_status['pid']}")
             
             elif args.ssh_command == 'init':
@@ -660,7 +660,7 @@ def main():
                 print(f"Keys: {gpg_status['keys']}")
                 if gpg_status['socket']:
                     print(f"Socket: {gpg_status['socket']}")
-                if gpg_status['pid']:
+                if 'pid' in gpg_status and gpg_status['pid']:
                     print(f"PID: {gpg_status['pid']}")
             
             elif args.gpg_command == 'init':
