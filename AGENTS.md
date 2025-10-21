@@ -595,6 +595,18 @@ loadenv: Source secrets/vars for current dir from pass vaults
 - **Recovery mechanisms**: Automatic GPG agent recovery when signing fails
 - **Documentation**: Comprehensive GPG setup and troubleshooting documentation
 
+**CRITICAL: GPG Configuration Modification Policy**
+- **NO GPG CONFIG CHANGES**: If GPG key is locked/unavailable, agents MUST NOT modify `~/.gnupg/gpg.conf` or `~/.gnupg/gpg-agent.conf`
+- **STOP AND REQUEST UNLOCK**: When GPG signing fails, agents must STOP all work and request the user to unlock the key
+- **No workarounds**: Do not attempt to bypass GPG signing requirements or modify GPG configuration
+- **User responsibility**: Only the user can unlock GPG keys - agents cannot and must not try
+
+**CRITICAL: GPG Configuration Modification Policy**
+- **NO GPG CONFIG CHANGES**: If GPG key is locked/unavailable, agents MUST NOT modify `~/.gnupg/gpg.conf` or `~/.gnupg/gpg-agent.conf`
+- **STOP AND REQUEST UNLOCK**: When GPG signing fails, agents must STOP all work and request the user to unlock the key
+- **No workarounds**: Do not attempt to bypass GPG signing requirements or modify GPG configuration
+- **User responsibility**: Only the user can unlock GPG keys - agents cannot and must not try
+
 ### **Dotfile Manager Enforcement**
 **MANDATORY REQUIREMENT**: All file deployments MUST use the dotfile manager. No exceptions.
 
