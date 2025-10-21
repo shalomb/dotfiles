@@ -116,10 +116,21 @@ class AgentManager:
         
         # Check existing GPG agent
         if self.check_gpg_agent():
-            return True
+            # Test if GPG signing works (keys unlocked)
+            if self.test_gpg_signing():
+                return True
+            else:
+                self.logger.info("GPG agent running but keys locked, attempting unlock")
+                if self.unlock_gpg_agent():
+                    return True
         
         # Start new GPG agent
-        return self.start_gpg_agent()
+        if self.start_gpg_agent():
+            # Try to unlock after starting
+            self.unlock_gpg_agent()
+            return self.test_gpg_signing()
+        
+        return False
     
     def check_ssh_agent(self) -> bool:
         """Check if SSH agent is working."""
@@ -139,6 +150,25 @@ class AgentManager:
         try:
             result = subprocess.run(['gpg-connect-agent', 'keyinfo --list', '/bye'], 
                                   capture_output=True, text=True, timeout=5)
+            return result.returncode == 0
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
+    
+    def test_gpg_signing(self) -> bool:
+        """Test if GPG signing works (keys unlocked)."""
+        try:
+            result = subprocess.run(['gpg', '--pinentry-mode', 'loopback', '--sign', '--batch', '--yes'], 
+                                  input='test\n', capture_output=True, text=True, timeout=10)
+            return result.returncode == 0
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
+    
+    def unlock_gpg_agent(self) -> bool:
+        """Attempt to unlock GPG agent using loopback mode."""
+        try:
+            # Try to unlock using loopback mode
+            result = subprocess.run(['gpg', '--pinentry-mode', 'loopback', '--sign', '--batch', '--yes'], 
+                                  input='test\n', capture_output=True, text=True, timeout=10)
             return result.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
@@ -288,6 +318,76 @@ class AgentManager:
         }
         context_file.write_text(json.dumps(context_data, indent=2))
     
+    # SSH-specific methods
+    def recover_ssh_agent(self) -> bool:
+        """Recover SSH agent specifically."""
+        self.logger.info("Recovering SSH agent")
+        return self.init_ssh_agent()
+    
+    def restart_ssh_agent(self) -> bool:
+        """Restart SSH agent specifically."""
+        self.logger.info("Restarting SSH agent")
+        self.cleanup_ssh_agent()
+        return self.init_ssh_agent()
+    
+    def list_ssh_keys(self) -> List[str]:
+        """List SSH keys."""
+        try:
+            result = subprocess.run(['ssh-add', '-l'], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                return [line.strip() for line in result.stdout.split('\n') if line.strip()]
+            return []
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return []
+    
+    def cleanup_ssh_agent(self) -> bool:
+        """Clean up SSH agent."""
+        try:
+            subprocess.run(['ssh-add', '-D'], capture_output=True, timeout=5)
+            return True
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
+    
+    # GPG-specific methods
+    def recover_gpg_agent(self) -> bool:
+        """Recover GPG agent specifically."""
+        self.logger.info("Recovering GPG agent")
+        return self.init_gpg_agent()
+    
+    def restart_gpg_agent(self) -> bool:
+        """Restart GPG agent specifically."""
+        self.logger.info("Restarting GPG agent")
+        self.cleanup_gpg_agent()
+        return self.init_gpg_agent()
+    
+    def list_gpg_keys(self) -> List[str]:
+        """List GPG keys."""
+        try:
+            result = subprocess.run(['gpg', '--list-secret-keys', '--with-colons'], 
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                keys = []
+                for line in result.stdout.split('\n'):
+                    if line.startswith('sec:'):
+                        parts = line.split(':')
+                        if len(parts) > 4:
+                            key_id = parts[4]
+                            if len(key_id) > 8:
+                                keys.append(f"{key_id[-8:]} {parts[9] if len(parts) > 9 else 'Unknown'}")
+                return keys
+            return []
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return []
+    
+    def cleanup_gpg_agent(self) -> bool:
+        """Clean up GPG agent."""
+        try:
+            subprocess.run(['gpg-connect-agent', 'killagent', '/bye'], 
+                         capture_output=True, timeout=5)
+            return True
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
+    
     def status(self) -> Dict[str, any]:
         """Get current agent status."""
         status = {
@@ -409,26 +509,33 @@ def main():
     parser = argparse.ArgumentParser(description='Unified agent management system')
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
-    # init command
+    # Global commands
     subparsers.add_parser('init', help='Initialize agents for current context')
-    
-    # status command
     subparsers.add_parser('status', help='Show agent status and health')
-    
-    # restart command
     subparsers.add_parser('restart', help='Restart agents')
-    
-    # recover command
     subparsers.add_parser('recover', help='Recover from agent failures')
-    
-    # cleanup command
     subparsers.add_parser('cleanup', help='Clean up dead agents')
-    
-    # context command
     subparsers.add_parser('context', help='Show current context information')
-    
-    # share command
     subparsers.add_parser('share', help='Share agent state with other shells')
+    
+    # SSH-specific commands
+    ssh_parser = subparsers.add_parser('ssh', help='SSH agent management')
+    ssh_subparsers = ssh_parser.add_subparsers(dest='ssh_command', help='SSH commands')
+    ssh_subparsers.add_parser('status', help='Show SSH agent status')
+    ssh_subparsers.add_parser('init', help='Initialize SSH agent')
+    ssh_subparsers.add_parser('recover', help='Recover SSH agent')
+    ssh_subparsers.add_parser('keys', help='List SSH keys')
+    ssh_subparsers.add_parser('restart', help='Restart SSH agent')
+    
+    # GPG-specific commands
+    gpg_parser = subparsers.add_parser('gpg', help='GPG agent management')
+    gpg_subparsers = gpg_parser.add_subparsers(dest='gpg_command', help='GPG commands')
+    gpg_subparsers.add_parser('status', help='Show GPG agent status')
+    gpg_subparsers.add_parser('init', help='Initialize GPG agent')
+    gpg_subparsers.add_parser('recover', help='Recover GPG agent')
+    gpg_subparsers.add_parser('keys', help='List GPG keys')
+    gpg_subparsers.add_parser('unlock', help='Unlock GPG keys')
+    gpg_subparsers.add_parser('restart', help='Restart GPG agent')
     
     args = parser.parse_args()
     
@@ -439,6 +546,7 @@ def main():
     manager = AgentManager()
     
     try:
+        # Global commands
         if args.command == 'init':
             success = manager.init()
             if success:
@@ -489,6 +597,112 @@ def main():
         elif args.command == 'share':
             manager.share_agent_state()
             print("✅ Agent state shared")
+        
+        # SSH-specific commands
+        elif args.command == 'ssh':
+            if not args.ssh_command:
+                ssh_parser.print_help()
+                return 1
+            
+            if args.ssh_command == 'status':
+                status = manager.status()
+                ssh_status = status['ssh']
+                print(f"SSH Agent: {'✅' if ssh_status['available'] else '❌'}")
+                print(f"Keys: {ssh_status['keys']}")
+                if ssh_status['socket']:
+                    print(f"Socket: {ssh_status['socket']}")
+                if ssh_status['pid']:
+                    print(f"PID: {ssh_status['pid']}")
+            
+            elif args.ssh_command == 'init':
+                success = manager.init_ssh_agent()
+                if success:
+                    print("✅ SSH agent initialized successfully")
+                else:
+                    print("❌ Failed to initialize SSH agent")
+                    return 1
+            
+            elif args.ssh_command == 'recover':
+                success = manager.recover_ssh_agent()
+                if success:
+                    print("✅ SSH agent recovered successfully")
+                else:
+                    print("❌ Failed to recover SSH agent")
+                    return 1
+            
+            elif args.ssh_command == 'keys':
+                keys = manager.list_ssh_keys()
+                if keys:
+                    print("SSH Keys:")
+                    for key in keys:
+                        print(f"  {key}")
+                else:
+                    print("No SSH keys found")
+            
+            elif args.ssh_command == 'restart':
+                success = manager.restart_ssh_agent()
+                if success:
+                    print("✅ SSH agent restarted successfully")
+                else:
+                    print("❌ Failed to restart SSH agent")
+                    return 1
+        
+        # GPG-specific commands
+        elif args.command == 'gpg':
+            if not args.gpg_command:
+                gpg_parser.print_help()
+                return 1
+            
+            if args.gpg_command == 'status':
+                status = manager.status()
+                gpg_status = status['gpg']
+                print(f"GPG Agent: {'✅' if gpg_status['available'] else '❌'}")
+                print(f"Keys: {gpg_status['keys']}")
+                if gpg_status['socket']:
+                    print(f"Socket: {gpg_status['socket']}")
+                if gpg_status['pid']:
+                    print(f"PID: {gpg_status['pid']}")
+            
+            elif args.gpg_command == 'init':
+                success = manager.init_gpg_agent()
+                if success:
+                    print("✅ GPG agent initialized successfully")
+                else:
+                    print("❌ Failed to initialize GPG agent")
+                    return 1
+            
+            elif args.gpg_command == 'recover':
+                success = manager.recover_gpg_agent()
+                if success:
+                    print("✅ GPG agent recovered successfully")
+                else:
+                    print("❌ Failed to recover GPG agent")
+                    return 1
+            
+            elif args.gpg_command == 'keys':
+                keys = manager.list_gpg_keys()
+                if keys:
+                    print("GPG Keys:")
+                    for key in keys:
+                        print(f"  {key}")
+                else:
+                    print("No GPG keys found")
+            
+            elif args.gpg_command == 'unlock':
+                success = manager.unlock_gpg_agent()
+                if success:
+                    print("✅ GPG keys unlocked successfully")
+                else:
+                    print("❌ Failed to unlock GPG keys")
+                    return 1
+            
+            elif args.gpg_command == 'restart':
+                success = manager.restart_gpg_agent()
+                if success:
+                    print("✅ GPG agent restarted successfully")
+                else:
+                    print("❌ Failed to restart GPG agent")
+                    return 1
         
         return 0
     

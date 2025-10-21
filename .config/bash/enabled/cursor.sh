@@ -40,10 +40,10 @@ _cursor_gpg_check() {
         fi
     fi
 
-    # Check GPG agent status
+    # Check GPG agent status using unified agent command
     if [[ $exit_code -eq 0 ]]; then
-        if ! gpg-connect-agent 'keyinfo --list' /bye >/dev/null 2>&1; then
-            error_msg="GPG agent not responsive - run: gpg-connect-agent /bye"
+        if ! agent gpg status >/dev/null 2>&1; then
+            error_msg="GPG agent not responsive - run: agent gpg recover"
             exit_code=1
         fi
     fi
