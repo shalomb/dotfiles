@@ -180,6 +180,10 @@ if [[ -n "${session_name:-}" ]]; then
   # Check if session already exists first
   if command tmux has-session -t "$session_name" 2>/dev/null; then
     tmux-attach "$session_name"
+  # Check if it's a full project path
+  elif [[ -d "$session_name" ]]; then
+    # It's a directory path, use it directly
+    sessionize "$session_name"
   # Check if it's a project name
   elif gum projects --format simple | grep -q "^${session_name}$"; then
     # It's a project name, use it directly
