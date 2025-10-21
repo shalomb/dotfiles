@@ -395,12 +395,18 @@ class AgentManager:
             'ssh': {
                 'available': False,
                 'socket': None,
-                'keys': 0
+                'keys': 0,
+                'pid': None,
+                'lifetime': None,
+                'process_status': None
             },
             'gpg': {
                 'available': False,
                 'socket': None,
-                'keys': 0
+                'keys': 0,
+                'pid': None,
+                'lifetime': None,
+                'process_status': None
             }
         }
         
@@ -408,6 +414,14 @@ class AgentManager:
         if self.check_ssh_agent():
             status['ssh']['available'] = True
             status['ssh']['socket'] = os.environ.get('SSH_AUTH_SOCK')
+            
+            # Get SSH agent PID and process info
+            ssh_pid = os.environ.get('SSH_AGENT_PID')
+            if ssh_pid:
+                status['ssh']['pid'] = ssh_pid
+                status['ssh']['process_status'] = self._check_process_status(ssh_pid)
+                status['ssh']['lifetime'] = self._get_ssh_agent_lifetime()
+            
             try:
                 result = subprocess.run(['ssh-add', '-l'], 
                                       capture_output=True, text=True, timeout=5)
@@ -426,6 +440,13 @@ class AgentManager:
                     status['gpg']['socket'] = socket_result.stdout.strip()
             except (subprocess.TimeoutExpired, FileNotFoundError):
                 pass
+            
+            # Get GPG agent PID and process info
+            gpg_pid = self._get_gpg_agent_pid()
+            if gpg_pid:
+                status['gpg']['pid'] = gpg_pid
+                status['gpg']['process_status'] = self._check_process_status(gpg_pid)
+                status['gpg']['lifetime'] = self._get_gpg_agent_lifetime()
             
             try:
                 result = subprocess.run(['gpg-connect-agent', 'keyinfo --list', '/bye'], 
@@ -502,6 +523,66 @@ class AgentManager:
             'is_cursor_agent': bool(os.environ.get('CURSOR_AGENT')),
             'tty': os.ttyname(sys.stdin.fileno()) if sys.stdin.isatty() else None
         }
+    
+    def _check_process_status(self, pid: str) -> str:
+        """Check if a process is running using kill -0."""
+        try:
+            result = subprocess.run(['kill', '-0', pid], 
+                                  capture_output=True, text=True, timeout=2)
+            return "✅ Running" if result.returncode == 0 else "❌ Not running"
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return "❓ Unknown"
+    
+    def _get_ssh_agent_lifetime(self) -> str:
+        """Get SSH agent lifetime information."""
+        try:
+            # Try to get lifetime from ssh-add -T
+            result = subprocess.run(['ssh-add', '-T'], 
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                # Parse lifetime from output (format: "Lifetime set to 3600 seconds")
+                for line in result.stdout.split('\n'):
+                    if 'Lifetime set to' in line:
+                        seconds = line.split('Lifetime set to')[1].split('seconds')[0].strip()
+                        return f"{seconds}s"
+            return "❓ Unknown"
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return "❓ Unknown"
+    
+    def _get_gpg_agent_pid(self) -> str:
+        """Get GPG agent PID."""
+        try:
+            result = subprocess.run(['gpgconf', '--list-dirs', 'agent-socket'], 
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                socket_path = result.stdout.strip()
+                # Try to get PID from socket file or process list
+                result = subprocess.run(['pgrep', '-f', 'gpg-agent'], 
+                                      capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    pids = result.stdout.strip().split('\n')
+                    return pids[0] if pids else None
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+        return None
+    
+    def _get_gpg_agent_lifetime(self) -> str:
+        """Get GPG agent lifetime information."""
+        try:
+            # Try to get cache TTL from gpgconf
+            result = subprocess.run(['gpgconf', '--list-options', 'gpg-agent'], 
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                for line in result.stdout.split('\n'):
+                    if 'default-cache-ttl' in line:
+                        seconds = line.split('default-cache-ttl')[1].split()[0]
+                        return f"{seconds}s"
+                    elif 'max-cache-ttl' in line:
+                        seconds = line.split('max-cache-ttl')[1].split()[0]
+                        return f"{seconds}s"
+            return "❓ Unknown"
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return "❓ Unknown"
 
 
 def main():
@@ -611,8 +692,12 @@ def main():
                 print(f"Keys: {ssh_status['keys']}")
                 if ssh_status['socket']:
                     print(f"Socket: {ssh_status['socket']}")
-                if 'pid' in ssh_status and ssh_status['pid']:
+                if ssh_status['pid']:
                     print(f"PID: {ssh_status['pid']}")
+                if ssh_status['process_status']:
+                    print(f"Process: {ssh_status['process_status']}")
+                if ssh_status['lifetime']:
+                    print(f"Lifetime: {ssh_status['lifetime']}")
             
             elif args.ssh_command == 'init':
                 success = manager.init_ssh_agent()
@@ -660,8 +745,12 @@ def main():
                 print(f"Keys: {gpg_status['keys']}")
                 if gpg_status['socket']:
                     print(f"Socket: {gpg_status['socket']}")
-                if 'pid' in gpg_status and gpg_status['pid']:
+                if gpg_status['pid']:
                     print(f"PID: {gpg_status['pid']}")
+                if gpg_status['process_status']:
+                    print(f"Process: {gpg_status['process_status']}")
+                if gpg_status['lifetime']:
+                    print(f"Lifetime: {gpg_status['lifetime']}")
             
             elif args.gpg_command == 'init':
                 success = manager.init_gpg_agent()
