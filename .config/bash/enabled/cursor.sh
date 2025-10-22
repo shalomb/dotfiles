@@ -68,14 +68,14 @@ _cursor_gpg_check() {
 # - Runs in foreground (not background) for proper job control
 # - Uses nice priority to prevent system impact
 #
-# Why not background (&): 
+# Why not background (&):
 # - Background processes lose terminal control
 # - AI agents need interactive capabilities
 # - Job control issues with disown cause problems
 # - Foreground execution allows proper error handling
-_cursor_agent_strict() {
+cursor-agent() {
     echo "🔐 Validating GPG signing capability (MANDATORY)..."
-    
+
     if ! _cursor_gpg_check; then
         echo ""
         echo "❌ cursor-agent: GPG validation FAILED" >&2
@@ -92,20 +92,19 @@ _cursor_agent_strict() {
         echo "❌ cursor-agent BLOCKED until GPG signing is properly configured"
         return 1
     fi
-    
+
     echo "✅ GPG signing validated - starting cursor-agent"
-    
+
     # Environment setup for cursor-agent
     # - Unset GPG_TTY to prevent terminal interaction prompts
     # - Use nice to reduce system priority
     # - Run in foreground for proper job control and error handling
-    GPG_TTY=/dev/null nice -n 15 /usr/bin/env cursor-agent "$@"
+    # - Use absolute path to prevent any possibility of alias recursion/fork-bomb
+    GPG_TTY=/dev/null nice -n 15 "$HOME/.local/bin/cursor-agent" "$@"
 }
 
-# Create alias to the strict function
-alias cursor-agent='_cursor_agent_strict'
-
-# Export the function
+# Export functions for subshells
+export -f cursor-agent
 export -f _cursor_gpg_check
 
 # GPG Setup Instructions (MANDATORY)
