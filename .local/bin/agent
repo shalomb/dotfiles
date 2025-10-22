@@ -1,13 +1,5 @@
-#!/bin/bash
-# Unified Agent Management System
-# Keychain-inspired architecture for SSH/GPG agent management
+#!/bin/sh
+set -eu
 
-# Use absolute path to dotfiles repository
-DOTFILES_ROOT="/home/unop/.config/dotfiles"
-
-# Set up environment
-export HOME="${HOME:-/home/$(whoami)}"
-export PYTHONPATH="$DOTFILES_ROOT/src:$PYTHONPATH"
-
-# Run the Python agent manager
-exec python3 "$DOTFILES_ROOT/src/agent_management/agent.py" "$@"
+# agent alias just calls cursor-agent
+exec "$HOME/.local/bin/cursor-agent" "$@"
