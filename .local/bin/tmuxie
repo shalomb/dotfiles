@@ -7,6 +7,19 @@ set -eu
 
 shopt -s nocasematch
 
+# Observability setup
+TMUXIE_LOG="${TMUXIE_LOG:-/tmp/tmuxie-debug.log}"
+mkdir -p "$(dirname "$TMUXIE_LOG")" 2>/dev/null || true
+
+_tmuxie_log() {
+  local message="$1"
+  local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  echo "[$timestamp] tmuxie: $message" >> "$TMUXIE_LOG"
+  echo "[$timestamp] tmuxie: $message" >&2
+}
+
+_tmuxie_log "=== tmuxie started with args: $* ==="
+
 # Ensure PATH is properly set for popup environment
 if [[ -f ~/.config/bash/rc.d/00-path ]]; then
     source ~/.config/bash/rc.d/00-path
@@ -17,9 +30,9 @@ if ! type -P tmux &> /dev/null; then
   exit 2
 fi
 
-# Enhanced README preview for fzf using glow
+# Simple README preview for fzf
 function get_preview_command() {
-  echo "if [[ -f {}/README.md ]]; then glow {}/README.md --style dark; elif [[ -f {}/README.rst ]]; then head -20 {}/README.rst; elif [[ -f {}/README.txt ]]; then head -20 {}/README.txt; else echo 'No README found'; fi"
+  echo "if [[ -f {}/README.md ]]; then head -20 {}/README.md; elif [[ -f {}/README.rst ]]; then head -20 {}/README.rst; elif [[ -f {}/README.txt ]]; then head -20 {}/README.txt; else echo 'No README found'; fi"
 }
 
 function in-tmux() {
@@ -30,19 +43,17 @@ function in-tmux() {
   fi
 }
 
-function _tmuxie_log() {
-  local message="$1"
-  if [[ -n "${TMUXIE_LOG:-}" ]]; then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') tmuxie: $message" >> "$TMUXIE_LOG"
-  fi
-}
-
 function tmux-attach() {
   local session="$1"
+  _tmuxie_log "tmux-attach: session='$session', in-tmux=$(in-tmux && echo 'true' || echo 'false')"
+  
   if in-tmux; then
-    # Force switch to the session
-    tmux switch-client -t "$session" 2>/dev/null || tmux attach-session -t "$session"
+    _tmuxie_log "tmux-attach: using switch-client to switch to '$session'"
+    # Use switch-client to switch the parent tmux session
+    tmux switch-client -t "$session"
+    _tmuxie_log "tmux-attach: switched parent session to '$session'"
   else
+    _tmuxie_log "tmux-attach: calling attach-session to '$session'"
     # Attach to the session (works in SSH contexts)
     exec tmux attach-session -t "$session"
   fi
@@ -58,9 +69,8 @@ function sessionize() {
     tmux-attach "$name"
   else
     if in-tmux; then
-      tmux new-session -d -s "$name" -c "$dir" "bash -l"
-      # Force switch to the new session
-      tmux switch-client -t "$name" 2>/dev/null || tmux attach-session -t "$name"
+      tmux new-session -d -s "$name" -c "$dir" "bash -l" \; \
+        switch-client -t "$name"
     else
       exec tmux -u -l -2 new-session -s "$name" -c "$dir"
     fi
@@ -75,7 +85,7 @@ function select_projects() {
   # Get projects and pipe to fzf with README preview
   gum projects --format simple | sed 's|~/||' | \
     fzf \
-      --height=100% \
+      --height=70% \
       --border \
       --reverse \
       --prompt="Select project (README): " \
@@ -88,7 +98,7 @@ function select_projects() {
 function select_sessions() {
   tmux ls | \
     fzf \
-      --height=100% \
+      --height=70% \
       --border \
       --reverse \
       --prompt="Select session: " \
@@ -113,25 +123,17 @@ case "${1-}" in
     exit $?
     ;;
   -i|--interactive)
-    _tmuxie_log "mode=interactive"
-    choice=$(echo -e 'sessions\nprojects' | \
+    echo -e 'sessions\nprojects' | \
       fzf \
         --height=30% \
         --border \
         --reverse \
-        --prompt="Select type: ")
-    case "$choice" in
-      sessions)
-        exec "$0" -l
-        ;;
-      projects)
-        exec "$0" -s
-        ;;
-      *)
-        echo "No selection made" >&2
-        exit 1
-        ;;
-    esac
+        --prompt="Select type: " | \
+      xargs -I {} sh -c 'case {} in 
+        sessions) tmuxie -l ;; 
+        projects) tmuxie -s ;; 
+      esac'
+    exit $?
     ;;
   -h|--help)
     cat << EOF
@@ -180,10 +182,6 @@ if [[ -n "${session_name:-}" ]]; then
   # Check if session already exists first
   if command tmux has-session -t "$session_name" 2>/dev/null; then
     tmux-attach "$session_name"
-  # Check if it's a full project path
-  elif [[ -d "$session_name" ]]; then
-    # It's a directory path, use it directly
-    sessionize "$session_name"
   # Check if it's a project name
   elif gum projects --format simple | grep -q "^${session_name}$"; then
     # It's a project name, use it directly
