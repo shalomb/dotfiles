@@ -18,7 +18,23 @@ agentctl() {
     trap "rm -f '$temp_file'" RETURN
 
     # Call the Python implementation with --shell flag for automatic state restoration
-    if uv run python -m agent_management.agentctl --shell "$@" > "$temp_file" 2>&1; then
+    # Use absolute path to dotfiles directory to ensure module can be found
+    local dotfiles_dir
+    dotfiles_dir="${DOTFILES_DIR:-$HOME/.config/dotfiles}"
+    
+    # Validate dotfiles directory exists and contains the required module
+    if [[ ! -d "$dotfiles_dir" ]]; then
+        echo "Error: DOTFILES_DIR '$dotfiles_dir' does not exist" >&2
+        return 1
+    fi
+    
+    if [[ ! -f "$dotfiles_dir/src/agent_management/agentctl.py" ]]; then
+        echo "Error: agentctl.py not found in '$dotfiles_dir/src/agent_management/'" >&2
+        return 1
+    fi
+    
+    # Change to dotfiles directory and run agentctl
+    if (cd "$dotfiles_dir" && uv run python -m agent_management.agentctl --shell "$@") > "$temp_file" 2>&1; then
         exit_code=0
     else
         exit_code=$?
