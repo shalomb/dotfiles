@@ -14,6 +14,12 @@ _cursor_gpg_check() {
     local signing_key
     local error_msg=""
 
+    # DEBUG: Log GPG check
+    {
+        echo ">>> _cursor_gpg_check called at $(date '+%H:%M:%S')"
+        echo "    Parent: $(ps -p $PPID -o comm= 2>/dev/null || echo 'unknown')"
+    } >> /tmp/cursor-agent-calls.log 2>&1
+
     # Check if GPG signing is enabled
     if ! git config --get commit.gpgsign >/dev/null 2>&1; then
         error_msg="GPG signing is not configured - MANDATORY for all commits"
@@ -74,6 +80,19 @@ _cursor_gpg_check() {
 # - Job control issues with disown cause problems
 # - Foreground execution allows proper error handling
 cursor-agent() {
+    # DEBUG: Log all invocations with context
+    {
+        echo "=== cursor-agent invoked at $(date '+%Y-%m-%d %H:%M:%S.%N' | cut -c1-23) ==="
+        echo "PPID: $PPID ($(ps -p $PPID -o comm= 2>/dev/null || echo 'unknown'))"
+        echo "PWD: $PWD"
+        echo "Args: $@"
+        echo "Parent process: $(ps -p $PPID -o cmd= 2>/dev/null || echo 'unknown')"
+        echo "Grandparent: $(ps -p $(ps -p $PPID -o ppid= 2>/dev/null) -o cmd= 2>/dev/null || echo 'unknown')"
+        echo "Environment markers:"
+        env | grep -i "cursor\|marker\|state" || echo "  (none found)"
+        echo ""
+    } >> /tmp/cursor-agent-calls.log 2>&1
+
     echo "🔐 Validating GPG signing capability (MANDATORY)..."
 
     if ! _cursor_gpg_check; then
