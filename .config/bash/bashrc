@@ -68,6 +68,9 @@ if [[ ! -d "$BASHRC_DIR" ]]; then
     fi
 fi
 
+# Set DOTFILES_DIR for use by agentctl and other tools
+export DOTFILES_DIR="${BASHRC_DIR%/.config/bash}"
+
 # Load all core functions from lib directory
 # These must be loaded FIRST as enabled/ tools depend on them
 if [[ -d "${BASHRC_DIR}/lib" ]]; then
