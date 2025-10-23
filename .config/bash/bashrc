@@ -72,10 +72,10 @@ done
 
 # Use robust resolution if function is available, otherwise fallback
 if command -v resolve_bashrc_dir >/dev/null 2>&1; then
-    BASHRC_DIR=$(resolve_bashrc_dir)
+    export BASHRC_DIR=$(resolve_bashrc_dir)
 else
     # Fallback to simple resolution
-    BASHRC_DIR="$(cd "$(dirname "$(readlink -f ~/.bashrc)")" && pwd)"
+    export BASHRC_DIR="$(cd "$(dirname "$(readlink -f ~/.bashrc)")" && pwd)"
 fi
 
 # Set DOTFILES_DIR for use by agentctl and other tools
