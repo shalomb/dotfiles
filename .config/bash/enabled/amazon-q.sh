@@ -4,8 +4,6 @@
 # ARCHITECTURE: Source Amazon Q provided integration hooks
 # DESIGN_PATTERN: Conditional loading based on command availability
 
-# Only run in interactive shells
-[[ ${-//[!i]/} ]] || return
 
 # Source Amazon Q shell integration if available
 if command -v q >/dev/null 2>&1; then
