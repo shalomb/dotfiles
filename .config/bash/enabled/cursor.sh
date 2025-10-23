@@ -46,11 +46,25 @@ _cursor_gpg_check() {
         fi
     fi
 
-    # Check GPG agent status using unified agent command
+    # Check GPG agent status and attempt auto-recovery
     if [[ $exit_code -eq 0 ]]; then
         if ! agent gpg status >/dev/null 2>&1; then
-            error_msg="GPG agent not responsive - run: agent gpg recover"
-            exit_code=1
+            echo "⚠️  GPG agent not responsive - attempting auto-recovery..."
+
+            # Attempt to recover GPG agent
+            if agent gpg recover 2>/dev/null; then
+                echo "✅ GPG agent recovered successfully"
+                # Re-test GPG signing after recovery
+                if echo 'test' | gpg --clearsign --default-key "$signing_key" --batch --yes >/dev/null 2>&1; then
+                    exit_code=0
+                else
+                    error_msg="GPG agent recovered but signing still fails"
+                    exit_code=1
+                fi
+            else
+                error_msg="GPG agent recovery failed - manual intervention required"
+                exit_code=1
+            fi
         fi
     fi
 
@@ -58,6 +72,11 @@ _cursor_gpg_check() {
         echo "❌ $error_msg"
         echo "🚨 MANDATORY: GPG signing is REQUIRED - agents must fix this issue"
         echo "   No workarounds or circumventions allowed"
+        echo ""
+        echo "Manual recovery steps:"
+        echo "  1. agent gpg recover"
+        echo "  2. export GPG_TTY=\$(tty)"
+        echo "  3. Try cursor-agent again"
     fi
 
     return $exit_code
