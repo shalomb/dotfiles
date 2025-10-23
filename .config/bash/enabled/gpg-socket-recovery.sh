@@ -9,7 +9,7 @@ gpg_manual_recovery() {
     echo "1. gpg-connect-agent /bye"
     echo "2. gpg-agent --daemon"
     echo "3. export GPG_AGENT_INFO=\$(gpgconf --list-dirs agent-socket):0:1"
-    echo "4. Try: agent gpg status"
+    echo "4. Try: agentctl gpg status"
 }
 
 # Function to show GPG socket troubleshooting info
@@ -19,8 +19,8 @@ gpg_socket_troubleshoot() {
     echo "GPG TTY: ${GPG_TTY:-Not set}"
     echo "GPG Socket: $(gpgconf --list-dirs agent-socket 2>/dev/null || echo 'Not found')"
     echo ""
-    echo "Use 'agent gpg status' for current status"
-    echo "Use 'agent gpg recover' to recover agent"
+    echo "Use 'agentctl gpg status' for current status"
+    echo "Use 'agentctl gpg recover' to recover agent"
 }
 
 # Main function for direct execution

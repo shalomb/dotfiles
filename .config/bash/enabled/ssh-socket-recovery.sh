@@ -8,7 +8,7 @@ ssh_manual_recovery() {
     echo "📋 Manual SSH recovery steps:"
     echo "1. eval \$(ssh-agent)"
     echo "2. ssh-add ~/.ssh/id_ed25519"
-    echo "3. Try: agent ssh status"
+    echo "3. Try: agentctl ssh status"
 }
 
 # Function to show SSH troubleshooting info
@@ -18,9 +18,9 @@ ssh_troubleshoot() {
     echo "SSH Agent PID: ${SSH_AGENT_PID:-Not set}"
     echo "SSH Keys: $(ssh-add -l 2>/dev/null | wc -l) loaded"
     echo ""
-    echo "Use 'agent ssh status' for current status"
-    echo "Use 'agent ssh recover' to recover agent"
-    echo "Use 'agent ssh keys' to list keys"
+    echo "Use 'agentctl ssh status' for current status"
+    echo "Use 'agentctl ssh recover' to recover agent"
+    echo "Use 'agentctl ssh keys' to list keys"
 }
 
 # Main function for direct execution
