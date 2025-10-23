@@ -81,7 +81,7 @@ else
 fi
 
 # Load enabled tools from enabled directory
-# This happens AFTER rc.d functions are loaded so @has-cmd and other core functions are available
+# This happens AFTER lib functions are loaded so @has-cmd and other core functions are available
 if [[ -d "${BASHRC_DIR}/enabled" ]]; then
     for script in "${BASHRC_DIR}"/enabled/*.sh; do
         if [[ -f "$script" && -r "$script" && "$script" != *.md ]]; then

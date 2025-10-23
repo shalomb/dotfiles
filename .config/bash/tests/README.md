@@ -61,7 +61,7 @@ export -f bootstrap_ssh_agent
 ## Test Categories
 
 ### Functionality Tests
-- **Core functions**: Test utility functions from rc.d/
+- **Core functions**: Test utility functions from lib/
 - **Tool integration**: Verify enabled/ scripts work correctly
 - **Environment setup**: Check PATH, variables, aliases
 

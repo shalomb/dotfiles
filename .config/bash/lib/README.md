@@ -1,4 +1,4 @@
-# rc.d/ - Bash Library Functions
+# lib/ - Bash Library Functions
 
 ## Purpose
 This directory contains **library functions** that are loaded during bash startup and provide reusable functionality for scripts in the `enabled/` directory.
@@ -36,13 +36,13 @@ Files in this directory are loaded **first** during bash startup, before any `en
 
 ### For Agent Development
 - **Dependencies**: Check what functions are available before using them
-- **Loading order**: Remember that rc.d loads before enabled/
+- **Loading order**: Remember that lib loads before enabled/
 - **Testing**: Test functions in isolation before integrating
 
 ## Example Usage
 ```bash
 # In an enabled/ script
-source "${BASHRC_DIR}/rc.d/bootstrap-agents.sh"
+source "${BASHRC_DIR}/lib/bootstrap-agents.sh"
 bootstrap_agents  # Function now available
 ```
 

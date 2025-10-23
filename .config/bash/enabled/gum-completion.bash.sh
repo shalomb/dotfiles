@@ -1,6 +1,6 @@
 #!/bin/bash
 # AGENT_CONTEXT: gum bash completion script
-# ARCHITECTURE: enabled/ -> symlinks -> rc.d/ or tools/
+# ARCHITECTURE: enabled/ -> symlinks -> lib/ or tools/
 # DESIGN_PATTERN: Completion script for gum CLI tool
 
 # Enable gum bash completion
