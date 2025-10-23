@@ -68,16 +68,16 @@ if [[ ! -d "$BASHRC_DIR" ]]; then
     fi
 fi
 
-# Load all core functions from rc.d directory
+# Load all core functions from lib directory
 # These must be loaded FIRST as enabled/ tools depend on them
-if [[ -d "${BASHRC_DIR}/rc.d" ]]; then
-    for script in "${BASHRC_DIR}"/rc.d/*; do
+if [[ -d "${BASHRC_DIR}/lib" ]]; then
+    for script in "${BASHRC_DIR}"/lib/*; do
         if [[ -f "$script" && -r "$script" && ("$script" == *.sh || "$script" == *-* || "$script" == *[0-9]*) && "$script" != *.md ]]; then
             source "$script"
         fi
     done
 else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: rc.d directory missing" >&2
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: lib directory missing" >&2
 fi
 
 # Load enabled tools from enabled directory
