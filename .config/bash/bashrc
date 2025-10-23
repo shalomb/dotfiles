@@ -1,64 +1,35 @@
 #!/bin/bash
 
-# Enable tracing if BASHRC_TRACE_SOURCING is set
+# =============================================================================
+# ARRANGE: Set up environment and variables
+# =============================================================================
+
+# Enable tracing if requested
 if [[ -n ${BASHRC_TRACE_SOURCING:-} ]]; then set -xv; fi
 
-# SOURCING: ~/.bashrc (symlink), interactive bash shells
-# SOURCES: rc.d/*, aliases, enabled/*.sh
-# DOES NOT SOURCE: profile (prevents infinite loops)
-
-# XDG Base Directory specification (set before interactive check)
+# Set up XDG directories first
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
-# Ensure XDG variables are properly set (handle case where they're set to empty)
+# Ensure XDG variables are properly set
 [[ -z "$XDG_CACHE_HOME" ]] && export XDG_CACHE_HOME="$HOME/.cache"
 [[ -z "$XDG_CONFIG_HOME" ]] && export XDG_CONFIG_HOME="$HOME/.config"
 [[ -z "$XDG_DATA_HOME" ]] && export XDG_DATA_HOME="$HOME/.local/share"
 [[ -z "$XDG_STATE_HOME" ]] && export XDG_STATE_HOME="$HOME/.local/state"
 
-# Editor variables are set in bash profile for all shells
-
-# SSH Agent Management is now handled via enabled/ directory loading
-
-# Interactive vs Non-Interactive Shell Handling
-# We want to load functions in both cases, but with different behavior
+# Determine shell mode
 case $- in
-    *i*) 
-        # Interactive shell - load everything
-        INTERACTIVE_MODE=1
-        ;;
-      *) 
-        # Non-interactive shell - load functions but skip interactive-only features
-        INTERACTIVE_MODE=0
-        ;;
+    *i*) INTERACTIVE_MODE=1 ;;
+    *)   INTERACTIVE_MODE=0 ;;
 esac
 
-# Shell options
-set -o ignoreeof  # Prevent Ctrl+D from exiting bash (use 'exit' instead)
+# =============================================================================
+# ACT: Load core functionality
+# =============================================================================
 
-# History configuration
-shopt -s histappend
-export HISTCONTROL=ignoredups
-export HISTFILE="$XDG_CACHE_HOME/bash/history"
-export HISTFILESIZE="32768"
-export HISTIGNORE='&:ls: ls *:[bf]g'
-export HISTSIZE="$HISTFILESIZE"
-export HISTTIMEFORMAT='%FT%T'$'\t'
-
-# Create history file and symlink if it doesn't exist
-if [[ ! -e $HISTFILE ]]; then
-  mkdir -p "${HISTFILE%/*}"
-  ln -svf "$HISTFILE" ~/.bash_history
-fi
-
-# Get the directory containing this bashrc file
-# Use robust resolution that works in all deployment scenarios
-
-# First, try to load the resolve function if available
-# Try multiple possible locations
+# Load resolve function first
 for resolve_script in \
     "$HOME/.config/dotfiles/.config/bash/lib/resolve-bashrc-dir.sh" \
     "$(dirname ~/.bashrc)/lib/resolve-bashrc-dir.sh" \
@@ -70,38 +41,32 @@ do
     fi
 done
 
-# Use robust resolution if function is available, otherwise fallback
+# Set BASHRC_DIR using robust resolution
 if command -v resolve_bashrc_dir >/dev/null 2>&1; then
     BASHRC_DIR=$(resolve_bashrc_dir)
     export BASHRC_DIR
 else
-    # Fallback to simple resolution
     BASHRC_DIR="$(cd "$(dirname "$(readlink -f ~/.bashrc)")" && pwd)"
     export BASHRC_DIR
 fi
 
-# Set DOTFILES_DIR for use by agentctl and other tools
-# If BASHRC_DIR is in home directory, use the dotfiles repository
+# Set DOTFILES_DIR
 if [[ "$BASHRC_DIR" == "$HOME/.config/bash" ]]; then
     export DOTFILES_DIR="$HOME/.config/dotfiles"
 else
     export DOTFILES_DIR="${BASHRC_DIR%/.config/bash}"
 fi
 
-# Load all core functions from lib directory
-# These must be loaded FIRST as enabled/ tools depend on them
+# Load core functions from lib directory
 if [[ -d "${BASHRC_DIR}/lib" ]]; then
     for script in "${BASHRC_DIR}"/lib/*; do
         if [[ -f "$script" && -r "$script" && ("$script" == *.sh || "$script" == *-* || "$script" == *[0-9]*) && "$script" != *.md ]]; then
             source "$script"
         fi
     done
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: lib directory missing" >&2
 fi
 
-# Load enabled tools from enabled directory (interactive only)
-# This happens AFTER lib functions are loaded so @has-cmd and other core functions are available
+# Load enabled tools (interactive only)
 if [[ $INTERACTIVE_MODE -eq 1 ]]; then
     for script in "${BASHRC_DIR}"/enabled/*.sh; do
         if [[ -f "$script" && -r "$script" && "$script" != *.md ]]; then
@@ -115,89 +80,109 @@ if [[ -f ~/.config/bash/aliases ]]; then
     source ~/.config/bash/aliases
 fi
 
-# Enable programmable completion
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
+# =============================================================================
+# ASSERT: Verify critical variables are set
+# =============================================================================
+
+# Validate critical variables
+if [[ -z "$BASHRC_DIR" ]]; then
+    echo "Error: BASHRC_DIR not set" >&2
+    return 1
 fi
 
-# Set up ghostship prompt (interactive only)
+if [[ -z "$DOTFILES_DIR" ]]; then
+    echo "Error: DOTFILES_DIR not set" >&2
+    return 1
+fi
+
+# =============================================================================
+# CONFIGURE: Set up shell behavior
+# =============================================================================
+
+# Shell options
+set -o ignoreeof
+
+# History configuration
+shopt -s histappend
+export HISTCONTROL=ignoredups
+export HISTFILE="$XDG_CACHE_HOME/bash/history"
+export HISTFILESIZE="32768"
+export HISTIGNORE='&:ls: ls *:[bf]g'
+export HISTSIZE="$HISTFILESIZE"
+export HISTTIMEFORMAT='%FT%T'$'\t'
+
+# Create history file if it doesn't exist
+if [[ ! -e $HISTFILE ]]; then
+    mkdir -p "${HISTFILE%/*}"
+    ln -svf "$HISTFILE" ~/.bash_history
+fi
+
+# Load bash completion
+if ! shopt -oq posix; then
+    if [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+    elif [ -f /etc/bash_completion ]; then
+        . /etc/bash_completion
+    fi
+fi
+
+# Load additional aliases
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# Set up GPG
+export GPG_TTY=$(tty)
+
+# Clean PATH
+if command -v clean_path >/dev/null 2>&1; then
+    clean_path PATH
+    export PATH
+fi
+
+# =============================================================================
+# INTERACTIVE: Interactive-only features
+# =============================================================================
+
 if [[ $INTERACTIVE_MODE -eq 1 ]]; then
+    # Set up ghostship prompt
     if command -v ghostship >/dev/null 2>&1; then
-        # Define the missing 'defined' function that ghostship init depends on
         defined() {
             type "$1" &>/dev/null
         }
-        
-        # Ensure COLUMNS is set to prevent ghostship hang
         export COLUMNS="${COLUMNS:-80}"
-        
-        # Try to initialize ghostship, but handle errors gracefully
         if source <(ghostship init bash) 2>/dev/null; then
-            # Ghostship initialized successfully
             [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init succeeded" >&2
         else
             [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init failed, using fallback prompt" >&2
-            # Simple fallback prompt
             PS1='\u@\h:\w\$ '
         fi
     else
         [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship not available, using fallback prompt" >&2
-        # Simple fallback prompt
         PS1='\u@\h:\w\$ '
     fi
-fi
 
-# Interactive-only features
-if [[ $INTERACTIVE_MODE -eq 1 ]]; then
-    # Simple reload function
+    # Interactive functions
     reload() {
-        # Source the home directory version to avoid circular reference
         source ~/.bashrc
     }
 
-    # Check window size after each command
+    # Check window size
     shopt -s checkwinsize
 
-    # Set debian chroot if available
+    # Set debian chroot
     if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
         debian_chroot=$(cat /etc/debian_chroot)
     fi
 
-    # Simple prompt (fallback if ghostship didn't set one)
+    # Fallback prompt
     if [[ -z "${PS1:-}" ]]; then
         PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
     fi
 fi
 
-# Enable color support of ls
+# Enable color support
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
     alias ls='ls --color=auto'
-fi
-
-# Load bash aliases if they exist
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
-
-# Enable programmable completion (consolidated)
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
-fi
-
-export GPG_TTY=$(tty)
-
-# Safe PATH deduplication - run at the very end of bash initialization
-# This removes duplicates and non-existent directories from PATH
-if command -v clean_path >/dev/null 2>&1; then
-    clean_path PATH
-    export PATH
 fi
