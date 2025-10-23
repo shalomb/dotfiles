@@ -3,9 +3,6 @@
 # ARCHITECTURE: Bash wrapper around Python agentctl implementation
 # DESIGN_PATTERN: Function wrapper with automatic state restoration
 
-# Only run in interactive shells
-[[ ${-//[!i]/} ]] || return
-
 # Bash wrapper function for agentctl
 # Automatically restores shell state when Python outputs export statements
 agentctl() {

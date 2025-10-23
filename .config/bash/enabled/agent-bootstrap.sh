@@ -6,8 +6,6 @@
 # This replaces all the fragmented agent scripts with one unified system
 # See AGENTS-refactor.md for the full vision
 
-# Only run in interactive shells
-[[ ${-//[!i]/} ]] || return
 
 # Note: agentctl is now a bash function defined in enabled/agentctl-integration.sh
 # It will be loaded before this lib script runs
