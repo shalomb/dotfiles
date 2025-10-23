@@ -584,6 +584,62 @@ loadenv: Source secrets/vars for current dir from pass vaults
 - ✅ `ob: Fix unbound variable error when no arguments provided`
 - ✅ `bash: Implement enabled/disabled directory system`
 
+### **Atomic Commits Policy**
+**MANDATORY REQUIREMENT**: All commits MUST be atomic and focused on a single concern.
+
+#### **What Makes a Commit Atomic:**
+- **Single Purpose**: Each commit addresses exactly one logical change
+- **Complete Change**: The commit fully implements or fixes one specific thing
+- **Self-Contained**: The commit can be understood, reviewed, and reverted independently
+- **Minimal Scope**: Includes only the files necessary for that specific change
+
+#### **Atomic Commit Examples:**
+```bash
+# ✅ GOOD: Single focused change
+bash: Remove individual interactive checks from enabled scripts
+test: Add comprehensive bash function loading tests
+make: Integrate bash function loading tests
+
+# ❌ BAD: Multiple concerns mixed together
+bash: Fix interactive checks and add tests and update makefile
+```
+
+#### **When to Split Commits:**
+- **Different Components**: Changes to bash, nvim, tmux, etc. should be separate
+- **Different Concerns**: Bug fix vs feature addition vs cleanup
+- **Different Files**: Changes to unrelated files should be separate
+- **Different Purposes**: Implementation vs testing vs documentation
+
+#### **Commit Splitting Workflow:**
+```bash
+# 1. Make all changes
+git add .
+
+# 2. Reset and commit atomically
+git reset
+git add .config/bash/enabled/agentctl-integration.sh
+git commit -m "bash: Remove interactive check from agentctl script"
+
+git add .config/bash/bashrc
+git commit -m "bash: Centralize interactive logic in bashrc"
+
+git add tests/bash-function-loading.sh
+git commit -m "test: Add comprehensive bash function loading tests"
+```
+
+#### **Benefits of Atomic Commits:**
+- **Clear History**: Each commit has a single, focused purpose
+- **Easy Review**: Changes can be reviewed individually
+- **Safe Rollback**: Can revert specific changes without affecting others
+- **Better Debugging**: Can bisect to find which change caused issues
+- **Cleaner Git Log**: Each commit message clearly describes what changed
+
+#### **Anti-Patterns to Avoid:**
+- ❌ **Massive Commits**: "Fix everything and add tests and update docs"
+- ❌ **Mixed Concerns**: "Fix bug in bash and add nvim plugin"
+- ❌ **Unrelated Changes**: "Update tmux config and fix typo in README"
+- ❌ **Incomplete Changes**: "Start implementing feature" (without finishing)
+
 ## Agent Preferences
 
 ### **GPG Signing Policy**
