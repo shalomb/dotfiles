@@ -48,11 +48,11 @@ _cursor_gpg_check() {
 
     # Check GPG agent status and attempt auto-recovery
     if [[ $exit_code -eq 0 ]]; then
-        if ! agent gpg status >/dev/null 2>&1; then
+        if ! agentctl gpg status >/dev/null 2>&1; then
             echo "⚠️  GPG agent not responsive - attempting auto-recovery..."
 
             # Attempt to recover GPG agent
-            if agent gpg recover 2>/dev/null; then
+            if agentctl gpg recover 2>/dev/null; then
                 echo "✅ GPG agent recovered successfully"
                 # Re-test GPG signing after recovery
                 if echo 'test' | gpg --clearsign --default-key "$signing_key" --batch --yes >/dev/null 2>&1; then
@@ -74,7 +74,7 @@ _cursor_gpg_check() {
         echo "   No workarounds or circumventions allowed"
         echo ""
         echo "Manual recovery steps:"
-        echo "  1. agent gpg recover"
+        echo "  1. agentctl gpg recover"
         echo "  2. export GPG_TTY=\$(tty)"
         echo "  3. Try cursor-agent again"
     fi
