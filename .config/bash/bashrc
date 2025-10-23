@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Enable tracing if BASHRC_TRACE_SOURCING is set
+if [[ -n ${BASHRC_TRACE_SOURCING:-} ]]; then set -xv; fi
+
 # SOURCING: ~/.bashrc (symlink), interactive bash shells
 # SOURCES: rc.d/*, aliases, enabled/*.sh
 # DOES NOT SOURCE: profile (prevents infinite loops)
