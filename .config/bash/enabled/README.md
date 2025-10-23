@@ -1,35 +1,33 @@
-# enabled/ - Bash Startup Scripts
+# enabled/ - User-Facing Functions
 
 ## Purpose
-This directory contains **startup scripts** that run during bash initialization to set up tools, environments, and functionality for the current shell session.
+This directory contains **user-facing functions** that are exported and available to the user's shell environment.
 
 ## Loading Order
 Scripts in this directory are loaded **after** `lib/` functions, ensuring core utilities are available when these scripts run.
 
 ## File Types
 
-### Tool Integration Scripts
-- **`aws.sh`**: AWS CLI configuration and aliases
-- **`git.sh`**: Git configuration and aliases
-- **`kubectl.sh`**: Kubernetes CLI setup
-- **`terraform.sh`**: Terraform configuration
+### Agent Management Functions
+- **`agent-bootstrap.sh`**: Agent status display
+- **`agentctl-integration.sh`**: Unified agent management function
+- **`ai-workflow-helpers.sh`**: Agent workflow commands (`next`, `agent-status`)
 
-### Agent Management Scripts
-- **`ssh-agent-bootstrap.sh`**: SSH agent startup and management
-- **`fix-ssh-auth-sock.sh`**: SSH socket recovery function
-- **`fix-gpg-auth-sock.sh`**: GPG socket recovery function
-- **`gpg-recovery.sh`**: GPG agent recovery tools
+### Tool Functions
+- **`aws.sh`**: AWS functions (`aws-login`, `aws-console`, `aws-whoami`)
+- **`git.sh`**: Git functions (`gitignore`, `__my_git_ps1`)
+- **`fzf.sh`**: FZF functions (`install-fzf`)
+- **`gh.sh`**: GitHub CLI functions (`install-gh`, `suggest`, `explain`)
 
-### Development Environment Scripts
-- **`python.sh`**: Python environment setup
-- **`go.sh`**: Go environment configuration
-- **`rustup.sh`**: Rust toolchain setup
-- **`nvm.sh`**: Node.js version management
+### Development Functions
+- **`venv.sh`**: Python virtual environment functions (`mkvenv`, `activate`)
+- **`rustup.sh`**: Rust functions (`gen-rustup-completions`)
+- **`delta.sh`**: Delta functions (`test-delta`)
+- **`npm.sh`**: Node.js functions (`npm-install`)
 
-### Shell Enhancement Scripts
-- **`fzf.sh`**: Fuzzy finder integration
-- **`ranger.sh`**: File manager configuration
-- **`cursor.sh`**: Cursor editor integration with GPG pre-flight checks
+### Utility Functions
+- **`loadenv.sh`**: Environment loading function
+- **`vim.sh`**: Vim functions (`clear-swapfile`, `gvdiff`)
 
 ## Naming Convention
 - **Tool scripts**: `toolname.sh` (e.g., `aws.sh`, `git.sh`)

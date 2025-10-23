@@ -1,7 +1,7 @@
-# lib/ - Bash Library Functions
+# lib/ - Bash Library Functions and Tool Setup
 
 ## Purpose
-This directory contains **library functions** that are loaded during bash startup and provide reusable functionality for scripts in the `enabled/` directory.
+This directory contains **library functions and tool setup** that are loaded during bash startup and provide reusable functionality for scripts in the `enabled/` directory.
 
 ## Loading Order
 Files in this directory are loaded **first** during bash startup, before any `enabled/` scripts. This ensures core functions are available when enabled scripts run.
@@ -16,6 +16,12 @@ Files in this directory are loaded **first** during bash startup, before any `en
 - **`00-path`**: Sets up PATH environment variable
 - **`01-functions`**: Core utility functions (`@has-cmd`, `@is-enabled`, etc.)
 - **`02-colours`**: Color definitions and terminal styling
+
+### Tool Setup
+- **`cargo.sh`**: Rust tool setup (PATH, environment)
+- **`coreutils.sh`**: Core utilities aliases
+- **`history.sh`**: Bash history configuration
+- **`tz.sh`**: Timezone environment variables
 
 ### Agent Management
 - **`bootstrap-agents.sh`**: SSH and GPG agent bootstrap and discovery functions
