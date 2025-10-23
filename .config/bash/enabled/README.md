@@ -4,7 +4,7 @@
 This directory contains **startup scripts** that run during bash initialization to set up tools, environments, and functionality for the current shell session.
 
 ## Loading Order
-Scripts in this directory are loaded **after** `rc.d/` functions, ensuring core utilities are available when these scripts run.
+Scripts in this directory are loaded **after** `lib/` functions, ensuring core utilities are available when these scripts run.
 
 ## File Types
 
@@ -83,7 +83,7 @@ alias tool='tool --option'
 ## Agent Development Guidelines
 
 ### Adding New Scripts
-1. **Check dependencies**: Ensure required rc.d functions are available
+1. **Check dependencies**: Ensure required lib functions are available
 2. **Follow naming convention**: Use descriptive names with .sh extension
 3. **Include interactive check**: Prevent non-interactive execution
 4. **Test thoroughly**: Verify script works in various contexts

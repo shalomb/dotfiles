@@ -10,7 +10,7 @@
 [[ ${-//[!i]/} ]] || return
 
 # Note: agentctl is now a bash function defined in enabled/agentctl-integration.sh
-# It will be loaded before this rc.d script runs
+# It will be loaded before this lib script runs
 
 # Show status if in interactive mode
 if [[ -t 0 ]] && type agentctl &>/dev/null; then

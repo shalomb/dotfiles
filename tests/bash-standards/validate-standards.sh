@@ -36,7 +36,7 @@ main() {
     # Architecture Tests - File structure exists
     echo "Architecture:"
     run_test "bashrc file exists" "[ -f .config/bash/bashrc ]"
-    run_test "rc.d directory exists" "[ -d .config/bash/rc.d ]"
+    run_test "lib directory exists" "[ -d .config/bash/lib ]"
     run_test "enabled directory exists" "[ -d .config/bash/enabled ]"
     run_test "disabled directory exists" "[ -d .config/bash/disabled ]"
     
@@ -44,15 +44,15 @@ main() {
     echo "Sourcing Behavior:"
     # Test that bashrc can be sourced without errors in login shell context
     run_test "bashrc sources without errors" "BASH_PROFILE_SOURCED=1 bash --norc -c 'source .config/bash/bashrc 2>&1' | (grep -qiv 'error\|fatal' || [ \$? -eq 1 ])"
-    # Test that rc.d files are readable
-    run_test "rc.d files are readable" "[ -r .config/bash/rc.d/01-functions ]"
+    # Test that lib files are readable
+    run_test "lib files are readable" "[ -r .config/bash/lib/01-functions ]"
     # Test that enabled files are readable (if any exist)
     run_test "enabled files are readable" "[ ! -d .config/bash/enabled ] || [ -z \"\$(ls -A .config/bash/enabled 2>/dev/null)\" ] || find .config/bash/enabled -name '*.sh' -type f ! -readable | wc -l | grep -q '^0$'"
     
     echo
     echo "Loading Behavior:"
-    # Test that rc.d is loaded (by checking BASHRC_DIR is set after sourcing)
-    run_test "rc.d directory is located" "BASH_PROFILE_SOURCED=1 bash --norc -c 'source .config/bash/bashrc && [ -n \"\$BASHRC_DIR\" ]'"
+    # Test that lib is loaded (by checking BASHRC_DIR is set after sourcing)
+    run_test "lib directory is located" "BASH_PROFILE_SOURCED=1 bash --norc -c 'source .config/bash/bashrc && [ -n \"\$BASHRC_DIR\" ]'"
     # Test that enabled scripts can be loaded without permission errors
     run_test "enabled scripts load cleanly" "BASH_PROFILE_SOURCED=1 bash --norc -c 'source .config/bash/bashrc 2>&1' | (grep -qiv 'permission denied' || [ \$? -eq 1 ])"
     

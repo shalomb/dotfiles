@@ -2,7 +2,7 @@
 # Test-specific AWS functions that use mocks
 
 # Source the consolidated AWS functions
-source .config/bash/rc.d/aws
+source .config/bash/lib/aws
 
 # Override aws-sso with our mock
 aws-sso() {
