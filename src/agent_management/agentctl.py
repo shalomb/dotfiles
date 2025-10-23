@@ -317,7 +317,25 @@ class AgentManager:
             'gpg_tty': os.environ.get('GPG_TTY')
         }
         context_file.write_text(json.dumps(context_data, indent=2))
-    
+
+    def output_shell_exports(self):
+        """Output shell export statements for current agent state."""
+        exports = []
+
+        # SSH agent exports
+        if os.environ.get('SSH_AUTH_SOCK'):
+            exports.append(f"export SSH_AUTH_SOCK='{os.environ['SSH_AUTH_SOCK']}'")
+        if os.environ.get('SSH_AGENT_PID'):
+            exports.append(f"export SSH_AGENT_PID='{os.environ['SSH_AGENT_PID']}'")
+
+        # GPG agent exports
+        if os.environ.get('GPG_AGENT_INFO'):
+            exports.append(f"export GPG_AGENT_INFO='{os.environ['GPG_AGENT_INFO']}'")
+        if os.environ.get('GPG_TTY'):
+            exports.append(f"export GPG_TTY='{os.environ['GPG_TTY']}'")
+
+        return '\n'.join(exports) if exports else ''
+
     # SSH-specific methods
     def recover_ssh_agent(self) -> bool:
         """Recover SSH agent specifically."""
@@ -622,8 +640,10 @@ class AgentManager:
 def main():
     """Main entry point for the agent command."""
     parser = argparse.ArgumentParser(description='Unified agent management system')
+    parser.add_argument('--shell', action='store_true',
+                       help='Output shell export statements for environment restoration')
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
-    
+
     # Global commands
     subparsers.add_parser('init', help='Initialize agents for current context')
     subparsers.add_parser('status', help='Show agent status and health')
@@ -665,29 +685,38 @@ def main():
         if args.command == 'init':
             success = manager.init()
             if success:
-                print("✅ Agents initialized successfully")
+                if args.shell:
+                    print(manager.output_shell_exports())
+                else:
+                    print("✅ Agents initialized successfully")
             else:
                 print("❌ Failed to initialize some agents")
                 return 1
-        
+
         elif args.command == 'status':
             status = manager.status()
             print(f"Context: {status['context']}")
             print(f"SSH: {'✅' if status['ssh']['available'] else '❌'} ({status['ssh']['keys']} keys)")
             print(f"GPG: {'✅' if status['gpg']['available'] else '❌'} ({status['gpg']['keys']} keys)")
-        
+
         elif args.command == 'restart':
             success = manager.restart()
             if success:
-                print("✅ Agents restarted successfully")
+                if args.shell:
+                    print(manager.output_shell_exports())
+                else:
+                    print("✅ Agents restarted successfully")
             else:
                 print("❌ Failed to restart agents")
                 return 1
-        
+
         elif args.command == 'recover':
             success = manager.recover()
             if success:
-                print("✅ Agents recovered successfully")
+                if args.shell:
+                    print(manager.output_shell_exports())
+                else:
+                    print("✅ Agents recovered successfully")
             else:
                 print("❌ Failed to recover agents")
                 return 1
@@ -736,19 +765,25 @@ def main():
             elif args.ssh_command == 'init':
                 success = manager.init_ssh_agent()
                 if success:
-                    print("✅ SSH agent initialized successfully")
+                    if args.shell:
+                        print(manager.output_shell_exports())
+                    else:
+                        print("✅ SSH agent initialized successfully")
                 else:
                     print("❌ Failed to initialize SSH agent")
                     return 1
-            
+
             elif args.ssh_command == 'recover':
                 success = manager.recover_ssh_agent()
                 if success:
-                    print("✅ SSH agent recovered successfully")
+                    if args.shell:
+                        print(manager.output_shell_exports())
+                    else:
+                        print("✅ SSH agent recovered successfully")
                 else:
                     print("❌ Failed to recover SSH agent")
                     return 1
-            
+
             elif args.ssh_command == 'keys':
                 keys = manager.list_ssh_keys()
                 if keys:
@@ -757,11 +792,14 @@ def main():
                         print(f"  {key}")
                 else:
                     print("No SSH keys found")
-            
+
             elif args.ssh_command == 'restart':
                 success = manager.restart_ssh_agent()
                 if success:
-                    print("✅ SSH agent restarted successfully")
+                    if args.shell:
+                        print(manager.output_shell_exports())
+                    else:
+                        print("✅ SSH agent restarted successfully")
                 else:
                     print("❌ Failed to restart SSH agent")
                     return 1
@@ -789,19 +827,25 @@ def main():
             elif args.gpg_command == 'init':
                 success = manager.init_gpg_agent()
                 if success:
-                    print("✅ GPG agent initialized successfully")
+                    if args.shell:
+                        print(manager.output_shell_exports())
+                    else:
+                        print("✅ GPG agent initialized successfully")
                 else:
                     print("❌ Failed to initialize GPG agent")
                     return 1
-            
+
             elif args.gpg_command == 'recover':
                 success = manager.recover_gpg_agent()
                 if success:
-                    print("✅ GPG agent recovered successfully")
+                    if args.shell:
+                        print(manager.output_shell_exports())
+                    else:
+                        print("✅ GPG agent recovered successfully")
                 else:
                     print("❌ Failed to recover GPG agent")
                     return 1
-            
+
             elif args.gpg_command == 'keys':
                 keys = manager.list_gpg_keys()
                 if keys:
@@ -810,19 +854,25 @@ def main():
                         print(f"  {key}")
                 else:
                     print("No GPG keys found")
-            
+
             elif args.gpg_command == 'unlock':
                 success = manager.unlock_gpg_agent()
                 if success:
-                    print("✅ GPG keys unlocked successfully")
+                    if args.shell:
+                        print(manager.output_shell_exports())
+                    else:
+                        print("✅ GPG keys unlocked successfully")
                 else:
                     print("❌ Failed to unlock GPG keys")
                     return 1
-            
+
             elif args.gpg_command == 'restart':
                 success = manager.restart_gpg_agent()
                 if success:
-                    print("✅ GPG agent restarted successfully")
+                    if args.shell:
+                        print(manager.output_shell_exports())
+                    else:
+                        print("✅ GPG agent restarted successfully")
                 else:
                     print("❌ Failed to restart GPG agent")
                     return 1
