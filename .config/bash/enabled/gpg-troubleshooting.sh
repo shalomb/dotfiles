@@ -16,7 +16,7 @@ gpg_manual_recovery() {
     echo "1. gpg-connect-agent /bye"
     echo "2. gpg --pinentry-mode loopback --sign < /dev/null"
     echo "3. export GPG_TTY=\$(tty)"
-    echo "4. Try: agent gpg status"
+    echo "4. Try: agentctl gpg status"
 }
 
 # Function to show GPG troubleshooting info
@@ -26,9 +26,9 @@ gpg_troubleshoot() {
     echo "GPG TTY: ${GPG_TTY:-Not set}"
     echo "GPG Config: ~/.gnupg/gpg-agent.conf"
     echo ""
-    echo "Use 'agent gpg status' for current status"
-    echo "Use 'agent gpg unlock' to unlock keys"
-    echo "Use 'agent gpg recover' to recover agent"
+    echo "Use 'agentctl gpg status' for current status"
+    echo "Use 'agentctl gpg unlock' to unlock keys"
+    echo "Use 'agentctl gpg recover' to recover agent"
 }
 
 # Main function for direct execution
