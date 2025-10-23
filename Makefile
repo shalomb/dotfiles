@@ -218,6 +218,8 @@ test: ## Run acceptance tests (usage: make test [FAST=1])
 	@tests/bash-standards/validate-standards.sh
 	@echo "Running shellcheck validation..."
 	@tests/bash-standards/run-shellcheck.sh
+	@echo "Running bash function loading tests..."
+	@tests/bash-function-loading.sh
 	@echo "Running Python tests..."
 	@if [ "$(FAST)" = "1" ]; then \
 		echo "Running fast tests..."; \
@@ -232,6 +234,8 @@ test-bash: ## Run bash validation only (standards + shellcheck)
 	@tests/bash-standards/validate-standards.sh
 	@echo "Running shellcheck validation..."
 	@tests/bash-standards/run-shellcheck.sh
+	@echo "Running bash function loading tests..."
+	@tests/bash-function-loading.sh
 	@echo "✅ Bash validation complete"
 
 test-fast: ## Run fast tests only (environment + deployment)
