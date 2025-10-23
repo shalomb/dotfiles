@@ -55,22 +55,36 @@ if [[ ! -e $HISTFILE ]]; then
 fi
 
 # Get the directory containing this bashrc file
-# Since bashrc is a hard link, we need to find the dotfiles repository root
-# Use a simple approach: check if the dotfiles directory exists
-BASHRC_DIR="$HOME/.config/dotfiles/.config/bash"
-if [[ ! -d "$BASHRC_DIR" ]]; then
-    # Fallback: try to find it by looking for .git directory
-    BASHRC_DIR="$HOME/.config/dotfiles"
-    if [[ -d "$BASHRC_DIR/.git" ]]; then
-        BASHRC_DIR="${BASHRC_DIR}/.config/bash"
-    else
-        # Last resort: use the bashrc directory
-        BASHRC_DIR="$(cd "$(dirname "$(readlink -f ~/.bashrc)")" && pwd)"
+# Use robust resolution that works in all deployment scenarios
+
+# First, try to load the resolve function if available
+# Try multiple possible locations
+for resolve_script in \
+    "$HOME/.config/dotfiles/.config/bash/lib/resolve-bashrc-dir.sh" \
+    "$(dirname ~/.bashrc)/lib/resolve-bashrc-dir.sh" \
+    "$HOME/.config/bash/lib/resolve-bashrc-dir.sh"
+do
+    if [[ -f "$resolve_script" ]]; then
+        source "$resolve_script"
+        break
     fi
+done
+
+# Use robust resolution if function is available, otherwise fallback
+if command -v resolve_bashrc_dir >/dev/null 2>&1; then
+    BASHRC_DIR=$(resolve_bashrc_dir)
+else
+    # Fallback to simple resolution
+    BASHRC_DIR="$(cd "$(dirname "$(readlink -f ~/.bashrc)")" && pwd)"
 fi
 
 # Set DOTFILES_DIR for use by agentctl and other tools
-export DOTFILES_DIR="${BASHRC_DIR%/.config/bash}"
+# If BASHRC_DIR is in home directory, use the dotfiles repository
+if [[ "$BASHRC_DIR" == "$HOME/.config/bash" ]]; then
+    export DOTFILES_DIR="$HOME/.config/dotfiles"
+else
+    export DOTFILES_DIR="${BASHRC_DIR%/.config/bash}"
+fi
 
 # Load all core functions from lib directory
 # These must be loaded FIRST as enabled/ tools depend on them
@@ -84,16 +98,14 @@ else
     [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: lib directory missing" >&2
 fi
 
-# Load enabled tools from enabled directory
+# Load enabled tools from enabled directory (interactive only)
 # This happens AFTER lib functions are loaded so @has-cmd and other core functions are available
-if [[ -d "${BASHRC_DIR}/enabled" ]]; then
+if [[ $INTERACTIVE_MODE -eq 1 ]]; then
     for script in "${BASHRC_DIR}"/enabled/*.sh; do
         if [[ -f "$script" && -r "$script" && "$script" != *.md ]]; then
             source "$script"
         fi
     done
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Enabled tools directory missing" >&2
 fi
 
 # Load aliases
