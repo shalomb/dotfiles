@@ -20,18 +20,16 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
 # SSH Agent Management is now handled via enabled/ directory loading
 
-# If not running interactively, don't do anything
-# Exception: Allow sourcing from bash_profile for login shells
+# Interactive vs Non-Interactive Shell Handling
+# We want to load functions in both cases, but with different behavior
 case $- in
-    *i*) ;;
+    *i*) 
+        # Interactive shell - load everything
+        INTERACTIVE_MODE=1
+        ;;
       *) 
-        # Check if we're being sourced from bash_profile (login shell context)
-        if [ -n "${BASH_PROFILE_SOURCED:-}" ]; then
-            # Allow sourcing even in non-interactive mode for login shells
-            :
-        else
-            return 0
-        fi
+        # Non-interactive shell - load functions but skip interactive-only features
+        INTERACTIVE_MODE=0
         ;;
 esac
 
@@ -109,47 +107,54 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# Set up ghostship prompt
-if command -v ghostship >/dev/null 2>&1; then
-    # Define the missing 'defined' function that ghostship init depends on
-    defined() {
-        type "$1" &>/dev/null
-    }
-    
-    # Ensure COLUMNS is set to prevent ghostship hang
-    export COLUMNS="${COLUMNS:-80}"
-    
-    # Try to initialize ghostship, but handle errors gracefully
-    if source <(ghostship init bash) 2>/dev/null; then
-        # Ghostship initialized successfully
-        [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init succeeded" >&2
+# Set up ghostship prompt (interactive only)
+if [[ $INTERACTIVE_MODE -eq 1 ]]; then
+    if command -v ghostship >/dev/null 2>&1; then
+        # Define the missing 'defined' function that ghostship init depends on
+        defined() {
+            type "$1" &>/dev/null
+        }
+        
+        # Ensure COLUMNS is set to prevent ghostship hang
+        export COLUMNS="${COLUMNS:-80}"
+        
+        # Try to initialize ghostship, but handle errors gracefully
+        if source <(ghostship init bash) 2>/dev/null; then
+            # Ghostship initialized successfully
+            [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init succeeded" >&2
+        else
+            [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init failed, using fallback prompt" >&2
+            # Simple fallback prompt
+            PS1='\u@\h:\w\$ '
+        fi
     else
-        [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init failed, using fallback prompt" >&2
+        [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship not available, using fallback prompt" >&2
         # Simple fallback prompt
         PS1='\u@\h:\w\$ '
     fi
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship not available, using fallback prompt" >&2
-    # Simple fallback prompt
-    PS1='\u@\h:\w\$ '
 fi
 
-# Simple reload function
-reload() {
-    # Source the home directory version to avoid circular reference
-    source ~/.bashrc
-}
+# Interactive-only features
+if [[ $INTERACTIVE_MODE -eq 1 ]]; then
+    # Simple reload function
+    reload() {
+        # Source the home directory version to avoid circular reference
+        source ~/.bashrc
+    }
 
-# Check window size after each command
-shopt -s checkwinsize
+    # Check window size after each command
+    shopt -s checkwinsize
 
-# Set debian chroot if available
-if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-    debian_chroot=$(cat /etc/debian_chroot)
+    # Set debian chroot if available
+    if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+        debian_chroot=$(cat /etc/debian_chroot)
+    fi
+
+    # Simple prompt (fallback if ghostship didn't set one)
+    if [[ -z "${PS1:-}" ]]; then
+        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    fi
 fi
-
-# Simple prompt
-PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 
 # Enable color support of ls
 if [ -x /usr/bin/dircolors ]; then
