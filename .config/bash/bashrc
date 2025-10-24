@@ -1,33 +1,33 @@
 #!/bin/bash
-# Clean, simple bashrc - no symlink dependencies, no complex conditionals
-# Works regardless of deployment method
+# bashrc - Minimal bash shell initialization
+# Incremental rebuild: Start small, test thoroughly, add incrementally
 
 # =============================================================================
 # PHASE 0: Bootstrap
 # =============================================================================
 
-# Enable tracing if requested
-[[ -n ${BASHRC_TRACE_SOURCING:-} ]] && set -xv
-
 # Detect interactive mode
 case $- in
-    *i*) export INTERACTIVE_MODE=1 ;;
-    *)   export INTERACTIVE_MODE=0 ;;
+    *i*) INTERACTIVE_MODE=1 ;;
+    *)   INTERACTIVE_MODE=0 ;;
 esac
 
-# Simple, robust directory resolution using BASH_SOURCE
+# Determine BASHRC_DIR using BASH_SOURCE (most reliable)
 if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
-    export BASHRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    BASHRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 else
-    export BASHRC_DIR="$HOME/.config/bash"
+    BASHRC_DIR="$HOME/.config/bash"
 fi
 
 # Derive DOTFILES_DIR from BASHRC_DIR
-if [[ "$BASHRC_DIR" == *"/.config/dotfiles/.config/bash" ]]; then
-    export DOTFILES_DIR="${BASHRC_DIR%/.config/bash}"
+if [[ "$BASHRC_DIR" == "$HOME/.config/bash" ]]; then
+    DOTFILES_DIR="$HOME/.config/dotfiles"
 else
-    export DOTFILES_DIR="$HOME/.config/dotfiles"
+    DOTFILES_DIR="${BASHRC_DIR%/.config/bash}"
 fi
+
+# Export bootstrap variables
+export BASHRC_DIR DOTFILES_DIR INTERACTIVE_MODE
 
 # Validate bootstrap succeeded
 if [[ ! -d "$BASHRC_DIR" ]]; then
@@ -36,71 +36,12 @@ if [[ ! -d "$BASHRC_DIR" ]]; then
 fi
 
 # =============================================================================
-# PHASE 1: Environment Setup
-# =============================================================================
-
-# XDG directories
-export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
-export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
-
-# Basic PATH setup - ensure essential paths are available early
-export PATH="$HOME/.local/bin:$HOME/.config/bin:$PATH"
-
-# Load lib scripts VERY early - before any other functionality
-if [[ -d "$BASHRC_DIR/lib" ]]; then
-    for script in "$BASHRC_DIR"/lib/*; do
-        if [[ -f "$script" && -r "$script" && "$script" != *.md ]]; then
-            [[ -n "$BASHRC_TRACE_SOURCING" ]] && echo "[bashrc] Loading: $script" >&2
-            if ! source "$script"; then
-                echo "ERROR: Failed to source $script" >&2
-                return 1
-            fi
-        fi
-    done
-fi
-
-# =============================================================================
-# PHASE 2: Core Functions
-# =============================================================================
-
-# Guard function for defensive loading
-guard() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# Check if command exists
-has-cmd() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# =============================================================================
-# PHASE 3: Load Configuration
-# =============================================================================
-
-# Lib scripts already loaded in Phase 1
-
-# Load enabled scripts (interactive only)
-if [[ $INTERACTIVE_MODE -eq 1 && -d "$BASHRC_DIR/enabled" ]]; then
-    for script in "$BASHRC_DIR"/enabled/*.sh; do
-        [[ -f "$script" && -r "$script" ]] && source "$script"
-    done
-fi
-
-# =============================================================================
-# PHASE 4: Interactive Features
+# Minimal Success Message (for testing)
 # =============================================================================
 
 if [[ $INTERACTIVE_MODE -eq 1 ]]; then
-    # Set up prompt
-    PS1='\u@\h:\w\$ '
-    
-    # Define reload function
-    reload() {
-        echo "Reloading bashrc..."
-        source ~/.bashrc
-    }
+    echo "✅ Minimal bashrc loaded"
+    echo "   BASHRC_DIR=$BASHRC_DIR"
+    echo "   DOTFILES_DIR=$DOTFILES_DIR"
+    echo "   INTERACTIVE_MODE=$INTERACTIVE_MODE"
 fi
-
-[[ -n "$BASHRC_TRACE_SOURCING" ]] && echo "[bashrc] Initialization complete" >&2
