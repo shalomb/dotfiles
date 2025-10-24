@@ -57,17 +57,9 @@ if [[ ! -e $HISTFILE ]]; then
   ln -svf "$HISTFILE" ~/.bash_history
 fi
 
-# Get the directory containing this bashrc file
-# Follow symlinks to get the real location
-if [[ -n "${BASH_SOURCE[0]}" ]]; then
-    BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
-else
-    # Fallback: assume we're in the dotfiles directory
-    BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]:-~/.bashrc}")")" && pwd)"
-fi
-
-# Set the bash configuration directory
-BASH_CONFIG_DIR="${BASHRC_DIR}/.config/bash"
+# Set directories - hardlink system ensures bashrc is always at ~/.bashrc
+BASHRC_DIR="$HOME"
+BASH_CONFIG_DIR="$HOME/.config/bash"
 
 # Load all core functions from rc.d directory
 # These must be loaded FIRST as enabled/ tools depend on them
