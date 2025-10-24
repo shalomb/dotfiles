@@ -149,12 +149,5 @@ if [[ $INTERACTIVE_MODE -eq 1 ]]; then
 fi
 
 # =============================================================================
-# Minimal Success Message (for testing)
+# Silent startup - no verbose output
 # =============================================================================
-
-if [[ $INTERACTIVE_MODE -eq 1 ]]; then
-    echo "✅ Minimal bashrc loaded (Phase 0-4)"
-    echo "   BASHRC_DIR=$BASHRC_DIR"
-    echo "   Functions: has-cmd=$(type -t has-cmd) defined=$(type -t defined)"
-    echo "   Dotfiles: $(type -t dotfiles 2>/dev/null || echo 'not loaded')"
-fi
