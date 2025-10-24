@@ -1,0 +1,62 @@
+# Comprehensive Goss bash testing - all contexts with extended timeouts
+
+file:
+  /home/unop/.bashrc:
+    exists: true
+  /home/unop/.config/bash/aliases:
+    exists: true
+  /home/unop/.config/bash/lib:
+    exists: true
+    filetype: directory
+
+command:
+  # === UNIVERSAL FUNCTIONS (non-interactive) ===
+  "env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.bashrc && type has-cmd'":
+    exit-status: 0
+    timeout: 15000  # 15 seconds
+    
+  "env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.bashrc && type defined'":
+    exit-status: 0
+    timeout: 15000
+    
+  "env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.bashrc && type @has-cmd'":
+    exit-status: 0
+    timeout: 15000
+    
+  # === INTERACTIVE FUNCTIONS ===
+  "bash -i -c 'source ~/.bashrc && type reload'":
+    exit-status: 0
+    timeout: 20000  # 20 seconds for interactive
+    
+  # === ALIAS LOADING ===
+  "bash -i -c 'source ~/.bashrc && test $(alias | wc -l) -gt 50'":
+    exit-status: 0
+    timeout: 20000
+    
+  # === SSH CONTEXT ===
+  "SSH_CLIENT=test bash -c 'source ~/.bashrc && type reload'":
+    exit-status: 0
+    timeout: 20000
+    
+  # === NON-INTERACTIVE SHOULD NOT HAVE RELOAD ===
+  "env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.bashrc && type reload 2>/dev/null'":
+    exit-status: 1
+    timeout: 15000
+    
+  # === ESSENTIAL COMMANDS ===
+  "which delta":
+    exit-status: 0
+    timeout: 5000
+    
+  "which gum":
+    exit-status: 0
+    timeout: 5000
+    
+  "which rustup":
+    exit-status: 0
+    timeout: 5000
+    
+  # === PERFORMANCE (relaxed) ===
+  "timeout 10s bash -c 'source ~/.bashrc'":
+    exit-status: 0
+    timeout: 12000
