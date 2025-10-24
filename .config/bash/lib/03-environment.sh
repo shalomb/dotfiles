@@ -6,11 +6,4 @@
 # Set up GPG
 export GPG_TTY=$(tty)
 
-# Set up history file location (XDG-compliant)
-export HISTFILE="$XDG_STATE_HOME/bash/history"
-
-# Create history file if it doesn't exist
-if [[ ! -e $HISTFILE ]]; then
-    mkdir -p "${HISTFILE%/*}"
-    ln -svf "$HISTFILE" ~/.bash_history
-fi
+# History file setup is handled in main bashrc
