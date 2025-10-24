@@ -236,6 +236,8 @@ test-bash: ## Run bash validation only (standards + shellcheck)
 	@tests/bash-standards/run-shellcheck.sh
 	@echo "Running bash function loading tests..."
 	@tests/bash-function-loading.sh
+	@echo "Running shell context audit..."
+	@tests/shell-context-audit.sh
 	@echo "✅ Bash validation complete"
 
 test-fast: ## Run fast tests only (environment + deployment)
