@@ -1,27 +1,94 @@
-# ✅ RESOLVED: Bash Configuration Issues
+# 🎯 **CURRENT PRIORITY: Bashrc Interactive/Login Shell Refactoring**
 
-## 📋 **COMPLETED: Critical bash configuration errors have been resolved**
+## 📋 **TODO: Simplify bashrc interactive shell detection**
 
-### **Issues Resolved by Bashrc Restructuring**
-- ✅ **Unbound variable error**: Fixed - `seen_paths` array properly initialized
-- ✅ **Missing commands**: `dotfiles` command now working in fresh bash shells
-- ✅ **SSH connection failures**: Resolved - bash configuration works in SSH context
-- ✅ **Path management**: Core path functionality working properly
-- ✅ **Shell startup**: Fresh bash shells load complete configuration
-- ✅ **Tmuxie command**: Available and working in all contexts
+### **Current Issues**
+- **Complex INTERACTIVE_MODE variable**: Fragile detection logic using `$-` flags
+- **Scattered conditional checks**: Every interactive feature needs `if [[ $INTERACTIVE_MODE -eq 1 ]]`
+- **Tmux context failures**: Interactive detection fails in tmux panes (reload function missing)
+- **Over-engineered approach**: Maintaining state variable instead of simple early return
 
-### **Status: All Critical Issues Resolved**
-**COMPLETED** - Daily workflow restored and SSH access working
+### **Proposed Solution: Clean Universal/Interactive Split**
+
+**Architecture:**
+```bash
+#!/bin/bash
+# bashrc - Clean bash initialization
+
+# =============================================================================
+# UNIVERSAL SECTION (Always runs - all shell types)
+# =============================================================================
+
+# Environment setup (only if not from login shell)
+if [[ -z "$BASH_PROFILE_SOURCED" ]]; then
+    export PATH="$HOME/.local/bin:$PATH"
+    # Basic environment for non-login shells
+fi
+
+# Core functions that work everywhere
+has-cmd() { command -v "$1" >/dev/null 2>&1; }
+defined() { declare -F "$1" >/dev/null; }
+
+# Essential variables
+export DOTFILES_ROOT="$HOME/.config/dotfiles"
+
+# =============================================================================
+# INTERACTIVE-ONLY SECTION (Everything below here is interactive-only)
+# =============================================================================
+
+# Simple, bulletproof check - exit early if not interactive
+# Allow SSH contexts to continue (they may become interactive)
+[[ $- != *i* ]] && [[ -z "$SSH_CLIENT" ]] && [[ -z "$SSH_TTY" ]] && return
+
+# Everything below runs ONLY in interactive shells
+# No more INTERACTIVE_MODE checks needed!
+
+# Load aliases
+[[ -f "$BASHRC_DIR/aliases" ]] && source "$BASHRC_DIR/aliases"
+
+# Load enabled scripts
+for script in "$BASHRC_DIR"/enabled/*.sh; do
+    [[ -f "$script" ]] && source "$script"
+done
+
+# Define interactive functions
+reload() {
+    echo "🔄 Reloading bashrc..."
+    source ~/.bashrc
+}
+```
+
+### **Benefits**
+1. **Simpler**: One check instead of scattered conditionals
+2. **Bulletproof**: `[[ $- != *i* ]] && return` is the standard bash idiom
+3. **Cleaner**: No INTERACTIVE_MODE variable to maintain
+4. **Obvious**: Clear separation between universal and interactive sections
+5. **Maintainable**: Add interactive features without thinking about checks
+6. **SSH-aware**: Handles SSH contexts properly
+
+### **Implementation Tasks**
+- [ ] **Refactor bashrc structure**: Split into universal/interactive sections
+- [ ] **Remove INTERACTIVE_MODE variable**: Replace with early return pattern
+- [ ] **Remove scattered conditionals**: All interactive code goes in interactive section
+- [ ] **Test login shell compatibility**: Ensure .bash_profile integration works
+- [ ] **Test SSH contexts**: Verify SSH sessions work correctly
+- [ ] **Test tmux contexts**: Ensure tmux panes get interactive features
+- [ ] **Validate all functions load**: reload, dotfiles, aliases, etc.
+
+### **Success Criteria**
+- [ ] **reload function works in tmux panes**
+- [ ] **All aliases load in interactive shells**
+- [ ] **dotfiles command fully functional**
+- [ ] **SSH sessions work correctly**
+- [ ] **Login shells get proper environment**
+- [ ] **Non-interactive shells exit cleanly**
+
+### **Priority**
+**HIGH** - Fixes current function audit failures and simplifies architecture
 
 ---
 
-# 🎯 **Next Highest Priority Task**
-
-### **Comprehensive Function & Alias Audit**
-
-**Goal**: Verify all essential functions and aliases are working correctly
-
-**End-State Alignment**: This task moves us toward end-state v4.0 (comprehensive function coverage + performance benchmarks)
+# ✅ RESOLVED: Bash Configuration Issues
 
 ### **Priority**
 **HIGH** - Core functionality for daily workflow
