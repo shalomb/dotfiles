@@ -61,16 +61,16 @@ fi
 BASHRC_DIR="$HOME"
 BASH_CONFIG_DIR="$HOME/.config/bash"
 
-# Load all core functions from rc.d directory
+# Load all core functions from lib directory
 # These must be loaded FIRST as enabled/ tools depend on them
-if [[ -d "${BASH_CONFIG_DIR}/rc.d" ]]; then
-    for script in "${BASH_CONFIG_DIR}"/rc.d/*; do
+if [[ -d "${BASH_CONFIG_DIR}/lib" ]]; then
+    for script in "${BASH_CONFIG_DIR}"/lib/*; do
         if [[ -f "$script" && -r "$script" && "$script" != *.md ]]; then
             source "$script"
         fi
     done
 else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: rc.d directory missing" >&2
+    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: lib directory missing" >&2
 fi
 
 # Load enabled tools from enabled directory
