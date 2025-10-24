@@ -1,0 +1,55 @@
+# Fast Goss configuration for bash testing
+# Focus on file structure and basic functionality
+
+file:
+  # Core bash files must exist
+  /home/unop/.bashrc:
+    exists: true
+    
+  /home/unop/.config/dotfiles/.config/bash/bashrc:
+    exists: true
+    
+  /home/unop/.config/bash/aliases:
+    exists: true
+    
+  # Directory structure
+  /home/unop/.config/bash/lib:
+    exists: true
+    filetype: directory
+    
+  /home/unop/.config/bash/enabled:
+    exists: true
+    filetype: directory
+
+command:
+  # Essential commands availability (no bashrc sourcing)
+  "which delta":
+    exit-status: 0
+    timeout: 2000  # 2 seconds
+    
+  "which gum":
+    exit-status: 0
+    timeout: 2000
+    
+  "which rustup":
+    exit-status: 0
+    timeout: 2000
+    
+  # SSH Agent functionality
+  "ssh-add -l":
+    exit-status: 0
+    timeout: 2000
+    stdout:
+      - "256 SHA256"
+      
+  # GPG functionality  
+  "gpg --version":
+    exit-status: 0
+    timeout: 2000
+    stdout:
+      - "GnuPG"
+      
+  # Quick bash syntax check
+  "bash -n ~/.bashrc":
+    exit-status: 0
+    timeout: 2000

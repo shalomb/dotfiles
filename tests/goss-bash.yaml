@@ -1,0 +1,84 @@
+# Goss configuration for bash testing
+# Fast, declarative validation of bash configuration
+
+file:
+  # Core bash files must exist
+  /home/unop/.bashrc:
+    exists: true
+    mode: "0755"  # Fixed: bashrc is executable
+    
+  /home/unop/.config/dotfiles/.config/bash/bashrc:
+    exists: true
+    mode: "0644"
+    
+  /home/unop/.config/bash/aliases:
+    exists: true
+    
+  # Lib directory structure
+  /home/unop/.config/bash/lib:
+    exists: true
+    filetype: directory
+    
+  /home/unop/.config/bash/enabled:
+    exists: true
+    filetype: directory
+
+command:
+  # Universal functions (available in non-interactive shells)
+  "bash -c 'source ~/.bashrc && type has-cmd'":
+    exit-status: 0
+    
+  "bash -c 'source ~/.bashrc && type defined'":
+    exit-status: 0
+    
+  "bash -c 'source ~/.bashrc && type @has-cmd'":
+    exit-status: 0
+    
+  "bash -c 'source ~/.bashrc && type dotfiles'":
+    exit-status: 0
+    
+  # Interactive functions (only in interactive shells)
+  "bash -i -c 'source ~/.bashrc && type reload'":
+    exit-status: 0
+    
+  # Essential commands availability
+  "which delta":
+    exit-status: 0
+    
+  "which gum":
+    exit-status: 0
+    
+  "which rustup":
+    exit-status: 0
+    
+  # Alias loading in interactive shells
+  "bash -i -c 'source ~/.bashrc && alias | wc -l'":
+    exit-status: 0
+    stdout:
+      - "/^[5-9][0-9]|[1-9][0-9][0-9]+$/"  # At least 50 aliases
+      
+  # Non-interactive shells should NOT have reload
+  "bash -c 'source ~/.bashrc && type reload 2>/dev/null'":
+    exit-status: 1
+    
+  # Performance test - startup under 1 second
+  "timeout 1s bash -c 'source ~/.bashrc'":
+    exit-status: 0
+    
+  # Dotfiles functionality
+  "bash -i -c 'source ~/.bashrc && dotfiles --help'":
+    exit-status: 0
+    stdout:
+      - "dotfiles - Lazy-loading dotfiles management"
+      
+  # SSH Agent functionality
+  "ssh-add -l":
+    exit-status: 0
+    stdout:
+      - "256 SHA256"  # Should show SSH key
+      
+  # GPG functionality  
+  "gpg --version":
+    exit-status: 0
+    stdout:
+      - "GnuPG"

@@ -229,6 +229,11 @@ test: ## Run acceptance tests (usage: make test [FAST=1])
 		uv run pytest tests/test_environment.py tests/test_shell_integration.py tests/test_tmux.py tests/test_dotfile_deployment.py -v --tb=short; \
 	fi
 
+test-bash-goss: ## Run fast Goss-based bash validation
+	@echo "Running Goss bash validation..."
+	@cd tests && goss -g goss-bash-fast.yaml validate --format documentation
+	@echo "✅ Goss bash validation complete"
+
 test-bash: ## Run bash validation only (standards + shellcheck)
 	@echo "Running bash standards validation..."
 	@tests/bash-standards/validate-standards.sh
