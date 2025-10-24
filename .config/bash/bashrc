@@ -58,14 +58,40 @@ PATH="$PATH:/bin"                 # Essential binaries
 export PATH
 
 # =============================================================================
+# PHASE 2: Core Functions
+# =============================================================================
+
+# Check if command exists
+has-cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Compatibility alias for old scripts
+@has-cmd() {
+    has-cmd "$@"
+}
+
+# Check if function is defined
+defined() {
+    declare -F "$1" >/dev/null 2>&1
+}
+
+# Check if running in interactive shell
+@is-interactive() {
+    [[ ${-//[!i]/} ]]
+}
+
+# Call function if it's defined
+call-if-defined() {
+    defined "$1" && "$@"
+}
+
+# =============================================================================
 # Minimal Success Message (for testing)
 # =============================================================================
 
 if [[ $INTERACTIVE_MODE -eq 1 ]]; then
-    echo "✅ Minimal bashrc loaded (Phase 0-1)"
+    echo "✅ Minimal bashrc loaded (Phase 0-2)"
     echo "   BASHRC_DIR=$BASHRC_DIR"
-    echo "   DOTFILES_DIR=$DOTFILES_DIR"
-    echo "   INTERACTIVE_MODE=$INTERACTIVE_MODE"
-    echo "   XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
-    echo "   PATH (first 3)=$(echo "$PATH" | cut -d: -f1-3)"
+    echo "   Functions: has-cmd=$(type -t has-cmd) defined=$(type -t defined)"
 fi
