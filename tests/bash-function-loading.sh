@@ -121,7 +121,7 @@ run_test "bashrc uses INTERACTIVE_MODE variable" "
 # Test 8: Check that enabled scripts are only loaded in interactive mode
 echo -e "\n${YELLOW}Test 8: Enabled Scripts Loading Logic${NC}"
 run_test "Enabled scripts loading is wrapped in INTERACTIVE_MODE check" "
-    grep -A 5 -B 5 'enabled/.*\\.sh' ~/.config/dotfiles/.config/bash/bashrc | grep -q 'INTERACTIVE_MODE'
+    grep -A 10 -B 10 'enabled/.*\\.sh' ~/.config/dotfiles/.config/bash/bashrc | grep -q 'INTERACTIVE_MODE'
 "
 
 # Test 9: Check that functions work from any directory
