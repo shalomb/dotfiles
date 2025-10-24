@@ -1,6 +1,7 @@
 #!/bin/bash
 # Test script for agentctl directory independence
 # Ensures agentctl works from any directory, not just dotfiles root
+# TESTS REPO VERSION, NOT LIVE CONFIG
 
 set -euo pipefail
 
@@ -61,7 +62,7 @@ check_agentctl_function() {
     
     run_test "$test_name" "
         cd '$test_dir' && 
-        source ~/.bashrc && 
+        source ~/.config/dotfiles/.config/bash/bashrc && 
         type agentctl >/dev/null 2>&1
     "
 }
@@ -73,7 +74,7 @@ check_agentctl_execution() {
     
     run_test "$test_name" "
         cd '$test_dir' && 
-        source ~/.bashrc && 
+        source ~/.config/dotfiles/.config/bash/bashrc && 
         agentctl --help >/dev/null 2>&1
     "
 }
@@ -85,7 +86,7 @@ check_agentctl_module_import() {
     
     run_test "$test_name" "
         cd '$test_dir' && 
-        source ~/.bashrc && 
+        source ~/.config/dotfiles/.config/bash/bashrc && 
         agentctl init >/dev/null 2>&1
     "
 }
@@ -97,7 +98,7 @@ check_dotfiles_dir() {
     
     run_test "$test_name" "
         cd '$test_dir' && 
-        source ~/.bashrc && 
+        source ~/.config/dotfiles/.config/bash/bashrc && 
         [[ -n \"\$DOTFILES_DIR\" ]] && 
         [[ -d \"\$DOTFILES_DIR\" ]] && 
         [[ -f \"\$DOTFILES_DIR/src/agent_management/agentctl.py\" ]]
@@ -143,7 +144,7 @@ done
 echo -e "\n${YELLOW}Test 5: Edge Cases${NC}"
 run_test "agentctl works from non-existent directory" "
     cd /nonexistent 2>/dev/null || true && 
-    source ~/.bashrc && 
+    source ~/.config/dotfiles/.config/bash/bashrc && 
     agentctl --help >/dev/null 2>&1
 "
 
@@ -152,7 +153,7 @@ echo -e "\n${YELLOW}Test 6: Directory with Spaces${NC}"
 mkdir -p "/tmp/test dir with spaces"
 run_test "agentctl works from directory with spaces" "
     cd '/tmp/test dir with spaces' && 
-    source ~/.bashrc && 
+    source ~/.config/dotfiles/.config/bash/bashrc && 
     agentctl --help >/dev/null 2>&1
 "
 rm -rf "/tmp/test dir with spaces"
@@ -162,7 +163,7 @@ echo -e "\n${YELLOW}Test 7: Symlinked Directory${NC}"
 ln -sf /tmp /tmp/symlinked_dir
 run_test "agentctl works from symlinked directory" "
     cd /tmp/symlinked_dir && 
-    source ~/.bashrc && 
+    source ~/.config/dotfiles/.config/bash/bashrc && 
     agentctl --help >/dev/null 2>&1
 "
 rm -f /tmp/symlinked_dir

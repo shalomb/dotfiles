@@ -14,8 +14,10 @@ if [[ -t 1 ]]; then
     underline=$(tput sgr 0 1)
 
     function setaf {
-        if (( $(tput colors) > 8 )); then
-            tput setaf "$1"
+        local colors
+        colors=$(tput colors 2>/dev/null || echo "8")
+        if (( colors > 8 )); then
+            tput setaf "$1" 2>/dev/null || echo -ne "\e[38;5;$1m"
         else
             echo -ne "\e[38;5;$1m"
         fi

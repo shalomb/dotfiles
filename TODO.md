@@ -931,3 +931,168 @@ Identify scripts that can be converted from sourced functions to standalone comm
 ### **Priority**
 **MEDIUM** - Performance and maintainability improvement
 
+---
+
+# 🚨 HIGH PRIORITY: GPG Agent Recovery UTF-8 Encoding Issue
+
+## 📋 **TODO: Fix agentctl gpg recover UTF-8 decoding error**
+
+### **Current Issue**
+- **Error**: `'utf-8' codec can't decode byte 0xa3 in position 0: invalid start byte`
+- **Command**: `agentctl gpg recover` failing with encoding error
+- **Impact**: GPG agent recovery not working, blocking git operations
+
+### **Root Cause Analysis**
+- **UTF-8 decoding failure**: Python agentctl trying to decode non-UTF-8 data
+- **Byte 0xa3**: Invalid start byte suggests non-UTF-8 encoding (possibly Latin-1 or Windows-1252)
+- **GPG output**: GPG commands may be outputting in different encoding than expected
+- **Python subprocess**: `uv run python -m agent_management.agentctl` not handling encoding properly
+
+### **Investigation Needed**
+- [ ] **Check agentctl implementation**: Review `src/agent_management/agentctl.py` for encoding handling
+- [ ] **Test GPG output encoding**: Determine what encoding GPG commands actually use
+- [ ] **Review subprocess calls**: Check how Python handles GPG command output
+- [ ] **Test in different environments**: Verify encoding behavior across systems
+
+### **Potential Fixes**
+- [ ] **Explicit encoding handling**: Set `encoding='utf-8'` or `encoding='latin-1'` in subprocess calls
+- [ ] **Error handling**: Add fallback encoding detection and conversion
+- [ ] **GPG configuration**: Ensure GPG outputs in UTF-8 encoding
+- [ ] **Python subprocess**: Use `text=True` with proper encoding parameter
+
+### **Immediate Actions Required**
+- [ ] **Locate agentctl source**: Find the actual Python implementation
+- [ ] **Reproduce error**: Test `agentctl gpg recover` to see full error context
+- [ ] **Check GPG output**: Test what encoding GPG commands actually produce
+- [ ] **Fix encoding handling**: Update Python code to handle encoding properly
+- [ ] **Test recovery**: Verify GPG agent recovery works after fix
+
+### **Priority**
+**HIGH** - Blocking GPG operations and git commits
+
+---
+
+# 🚨 HIGH PRIORITY: Missing Essential Commands
+
+## 📋 **TODO: Fix missing essential commands blocking daily workflow**
+
+### **Current Issues**
+- **delta: command not found** - Git diff enhancement tool missing
+- **gum: command not found** - Interactive shell prompts tool missing  
+- **@has-cmd: command not found** - Command availability checker missing
+- **rustup: command not found** - Rust toolchain manager missing (may be expected if not installed)
+
+### **Root Cause Analysis**
+- **Missing package installations**: Essential tools not installed on system
+- **PATH issues**: Commands may be installed but not in PATH
+- **Incomplete dotfiles setup**: Package installation scripts may not have run
+- **Dependency chain broken**: Missing tools prevent other functionality from working
+- **⚠️ NOTE**: `rustup.sh` script runs `rustup completions bash` at shell startup - this may be expected behavior if rustup isn't installed
+
+### **Impact Assessment**
+- **Git operations**: `delta` provides enhanced diff output
+- **Interactive prompts**: `gum` used for shell prompts and user interaction
+- **Command detection**: `@has-cmd` used for conditional command execution
+- **Rust development**: `rustup` needed for Rust toolchain management
+- **Daily workflow**: Multiple essential tools unavailable
+
+### **Immediate Actions Required**
+- [ ] **Check package installation**: Verify if tools are installed but not in PATH
+- [ ] **Run package installation**: Execute `make apt` and language-specific tool installs
+- [ ] **Verify PATH configuration**: Ensure `~/.local/bin` and other paths are correct
+- [ ] **Test tool availability**: Verify each command works after installation
+- [ ] **Check dotfiles setup**: Ensure complete dotfiles installation was run
+- [ ] **Optional: Fix rustup.sh script**: Add command existence check if rustup errors are problematic
+
+### **Package Installation Commands**
+```bash
+# Install system packages
+make apt
+
+# Install language-specific tools
+make python-tools
+make go-tools  
+make rust-tools
+make npm-tools
+
+# Install specific tools
+sudo apt install delta
+go install github.com/charmbracelet/gum@latest
+```
+
+### **Verification Steps**
+- [ ] **Test delta**: `git log --oneline | head -5` (should show enhanced output)
+- [ ] **Test gum**: `gum --version` (should show version info)
+- [ ] **Test @has-cmd**: `@has-cmd git` (should return 0 if git exists)
+- [ ] **Test rustup**: `rustup --version` (should show Rust toolchain version)
+
+### **Priority**
+**HIGH** - Essential tools missing, blocking daily workflow
+
+---
+
+# 🚨 MEDIUM PRIORITY: Shell Reload and Prompt Ordering Issues
+
+## 📋 **TODO: Fix shell reload and prompt rendering ordering problems**
+
+### **Current Behavior**
+- **reload function works**: Eventually sources ghostship and other components
+- **Prompt renders correctly**: After reload, prompt shows properly (☆232217!unop ψ)
+- **Ordering problem**: Components not loading in correct sequence during initial shell startup
+- **Missing commands persist**: delta, @has-cmd, rustup still not found after reload
+
+### **Root Cause Analysis**
+- **Initial startup sequence**: Shell startup doesn't load all components in correct order
+- **Lazy loading issues**: Some components may not be loading during initial startup
+- **Dependency chain**: Prompt components depend on other tools that aren't available initially
+- **Reload fixes ordering**: Manual reload corrects the sequence but shouldn't be necessary
+
+### **Evidence**
+```bash
+# Initial shell startup
+bash: delta: command not found
+bash: @has-cmd: command not found  
+bash: rustup: command not found
+☆unop@idun:~$  # Basic prompt, no ghostship
+
+# After source ~/.bashrc (reload)
+🔐 Agent Status:
+Context: ssh
+SSH: ✅ (1 keys)
+GPG: ✅ (8 keys)
+bash: delta: command not found  # Still missing
+bash: @has-cmd: command not found  # Still missing
+bash: rustup: command not found  # Still missing
+☆232217!unop ψ  # Enhanced prompt with ghostship
+```
+
+### **Issues Identified**
+1. **Prompt loading order**: Ghostship and prompt components not loading on initial startup
+2. **Command availability**: Missing commands persist even after reload
+3. **Startup sequence**: Shell startup doesn't complete full initialization
+4. **Dependency resolution**: Components not waiting for dependencies to be available
+
+### **Investigation Needed**
+- [ ] **Check bashrc loading sequence**: Review order of component loading in ~/.bashrc
+- [ ] **Verify lazy loading**: Ensure lazy loading system works during initial startup
+- [ ] **Test component dependencies**: Check if prompt components wait for required tools
+- [ ] **Review reload function**: Understand why reload fixes the ordering
+- [ ] **Check tool installation**: Verify if missing commands are actually installed
+
+### **Potential Fixes**
+- [ ] **Fix startup sequence**: Ensure all components load in correct order during initial startup
+- [ ] **Install missing tools**: Address the missing command issues
+- [ ] **Improve dependency handling**: Make components wait for dependencies
+- [ ] **Optimize reload function**: Make initial startup work like reload does
+- [ ] **Add startup validation**: Verify all components loaded correctly
+
+### **Success Criteria**
+- [ ] **Initial startup works**: Shell starts with full functionality without manual reload
+- [ ] **All commands available**: delta, @has-cmd, rustup work from initial startup
+- [ ] **Prompt renders correctly**: Ghostship prompt shows immediately
+- [ ] **No manual intervention**: No need to run `source ~/.bashrc` manually
+- [ ] **Consistent behavior**: Startup and reload produce same result
+
+### **Priority**
+**MEDIUM** - Functionality works after reload, but startup sequence needs improvement
+

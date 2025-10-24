@@ -1,6 +1,7 @@
 #!/bin/bash
 # Test script for bash function loading in interactive and non-interactive shells
 # Ensures functions load correctly and interactive checks don't break sourcing
+# TESTS REPO VERSION, NOT LIVE CONFIG
 
 set -euo pipefail
 
@@ -52,7 +53,7 @@ check_function_content() {
     local test_name="$3"
     
     run_test "$test_name" "
-        bash -c 'source ~/.bashrc && declare -f $function_name' | grep -q '$expected_content'
+        bash -i -c 'source .config/bash/bashrc && declare -f $function_name' | grep -q '$expected_content'
     "
 }
 
@@ -62,7 +63,7 @@ check_function_exists() {
     local test_name="$2"
     
     run_test "$test_name" "
-        bash -c 'source ~/.bashrc && type $function_name >/dev/null 2>&1'
+        bash -i -c 'source .config/bash/bashrc && type $function_name >/dev/null 2>&1'
     "
 }
 
@@ -73,7 +74,7 @@ check_function_works() {
     local test_name="$3"
     
     run_test "$test_name" "
-        bash -c 'source ~/.bashrc && $function_name $test_command >/dev/null 2>&1'
+        bash -i -c 'source .config/bash/bashrc && $function_name $test_command >/dev/null 2>&1'
     "
 }
 
@@ -93,44 +94,44 @@ check_function_content "agentctl" "DOTFILES_DIR" "agentctl uses DOTFILES_DIR var
 echo -e "\n${YELLOW}Test 3: Function Execution${NC}"
 check_function_works "agentctl" "--help" "agentctl --help works"
 
-# Test 4: Check that functions load in non-interactive shells
-echo -e "\n${YELLOW}Test 4: Non-Interactive Shell Loading${NC}"
-run_test "Functions load in non-interactive shell" "
-    bash -c 'source ~/.bashrc && type agentctl >/dev/null 2>&1'
+# Test 4: Check that functions load in interactive shells
+echo -e "\n${YELLOW}Test 4: Interactive Shell Loading${NC}"
+run_test "Functions load in interactive shell" "
+    bash -i -c 'source .config/bash/bashrc && type agentctl >/dev/null 2>&1'
 "
 
 # Test 5: Check that functions load from different directories
 echo -e "\n${YELLOW}Test 5: Directory Independence${NC}"
 run_test "Functions load from /tmp" "
-    cd /tmp && bash -c 'source ~/.bashrc && type agentctl >/dev/null 2>&1'
+    cd /tmp && bash -i -c 'source ~/.config/dotfiles/.config/bash/bashrc && type agentctl >/dev/null 2>&1'
 "
 
 # Test 6: Check that enabled scripts don't have individual interactive checks
 echo -e "\n${YELLOW}Test 6: No Individual Interactive Checks${NC}"
 run_test "No individual interactive checks in enabled scripts" "
-    ! grep -r '\[\[ \${-//\[!i\]/} \]\] || return' ~/.config/bash/enabled/ 2>/dev/null || true
+    ! grep -r '\\[\\[ \\${-//\\[!i\\]/} \\]\\] || return' .config/bash/enabled/ 2>/dev/null || true
 "
 
 # Test 7: Check that bashrc uses INTERACTIVE_MODE variable
 echo -e "\n${YELLOW}Test 7: Centralized Interactive Check${NC}"
 run_test "bashrc uses INTERACTIVE_MODE variable" "
-    grep -q 'INTERACTIVE_MODE' ~/.config/bash/bashrc
+    grep -q 'INTERACTIVE_MODE' ~/.config/dotfiles/.config/bash/bashrc
 "
 
 # Test 8: Check that enabled scripts are only loaded in interactive mode
 echo -e "\n${YELLOW}Test 8: Enabled Scripts Loading Logic${NC}"
 run_test "Enabled scripts loading is wrapped in INTERACTIVE_MODE check" "
-    grep -A 5 -B 5 'enabled/\*\.sh' ~/.config/bash/bashrc | grep -q 'INTERACTIVE_MODE'
+    grep -A 5 -B 5 'enabled/.*\\.sh' ~/.config/dotfiles/.config/bash/bashrc | grep -q 'INTERACTIVE_MODE'
 "
 
 # Test 9: Check that functions work from any directory
 echo -e "\n${YELLOW}Test 9: Directory Independence${NC}"
 run_test "agentctl works from /tmp" "
-    cd /tmp && bash -c 'source ~/.bashrc && agentctl --help >/dev/null 2>&1'
+    cd /tmp && bash -i -c 'source ~/.config/dotfiles/.config/bash/bashrc && agentctl --help >/dev/null 2>&1'
 "
 
 run_test "agentctl works from /var/tmp" "
-    cd /var/tmp && bash -c 'source ~/.bashrc && agentctl --help >/dev/null 2>&1'
+    cd /var/tmp && bash -i -c 'source ~/.config/dotfiles/.config/bash/bashrc && agentctl --help >/dev/null 2>&1'
 "
 
 # Test 10: Check that no functions are exported as environment variables
