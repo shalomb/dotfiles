@@ -53,6 +53,10 @@ echo -e "\n${YELLOW}Non-Interactive Shell Context${NC}"
 echo "-----------------------------"
 
 # Test universal functions (should work)
+run_test "@has-cmd function available" "
+    env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.config/dotfiles/.config/bash/bashrc && type @has-cmd >/dev/null'
+"
+
 run_test "has-cmd function available" "
     env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.config/dotfiles/.config/bash/bashrc && type has-cmd >/dev/null'
 "
@@ -83,6 +87,10 @@ echo -e "\n${YELLOW}Interactive Shell Context${NC}"
 echo "-------------------------"
 
 # Test universal functions (should work)
+run_test "@has-cmd function available" "
+    bash -i -c 'source ~/.config/dotfiles/.config/bash/bashrc && type @has-cmd >/dev/null'
+"
+
 run_test "has-cmd function available" "
     bash -i -c 'source ~/.config/dotfiles/.config/bash/bashrc && type has-cmd >/dev/null'
 "
@@ -104,8 +112,8 @@ run_test "dotfiles helpers available" "
     bash -i -c 'source ~/.config/dotfiles/.config/bash/bashrc && type _dotfiles_help >/dev/null'
 "
 
-run_test "dotfiles --help works" "
-    bash -i -c 'source ~/.config/dotfiles/.config/bash/bashrc && dotfiles --help >/dev/null'
+run_test "essential commands available" "
+    bash -i -c 'source ~/.config/dotfiles/.config/bash/bashrc && which delta >/dev/null && which gum >/dev/null && which rustup >/dev/null'
 "
 
 # =============================================================================
