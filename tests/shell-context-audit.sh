@@ -60,7 +60,8 @@ run_test "reload function NOT available" "
 "
 
 run_test "aliases NOT loaded" "
-    test \$(env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.config/dotfiles/.config/bash/bashrc && alias | wc -l') -eq 0
+    alias_count=\$(env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.config/dotfiles/.config/bash/bashrc; alias | wc -l')
+    test \"\$alias_count\" -eq 0
 "
 
 # =============================================================================
@@ -113,7 +114,7 @@ run_test "login shell has interactive features" "
 "
 
 run_test "login shell has aliases" "
-    bash -l -c 'alias_count=\$(alias | wc -l); test \$alias_count -gt 50'
+    bash -l -i -c 'alias_count=\$(alias | wc -l); test \$alias_count -gt 50'
 "
 
 run_test "PATH set correctly in login shell" "
@@ -133,7 +134,7 @@ run_test "SSH non-interactive loads interactive features" "
 "
 
 run_test "SSH context has aliases" "
-    SSH_CLIENT='test' bash -c 'source ~/.config/dotfiles/.config/bash/bashrc; alias_count=\$(alias | wc -l); test \$alias_count -gt 50'
+    SSH_CLIENT='test' bash -i -c 'source ~/.config/dotfiles/.config/bash/bashrc; alias_count=\$(alias | wc -l); test \$alias_count -gt 50'
 "
 
 # =============================================================================
