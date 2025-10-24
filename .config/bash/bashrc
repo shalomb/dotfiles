@@ -36,12 +36,36 @@ if [[ ! -d "$BASHRC_DIR" ]]; then
 fi
 
 # =============================================================================
+# PHASE 1: Environment Setup
+# =============================================================================
+
+# XDG Base Directory specification
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+
+# PATH setup - standard user directories
+# Priority order (first = highest priority)
+PATH="$HOME/.local/bin"           # User scripts/binaries
+PATH="$PATH:$HOME/.config/bin"    # Config-managed binaries
+PATH="$PATH:$HOME/.cargo/bin"     # Rust toolchain
+PATH="$PATH:$HOME/go/bin"         # Go binaries
+PATH="$PATH:$XDG_DATA_HOME/go/bin" # XDG-compliant Go binaries
+PATH="$PATH:/usr/local/bin"       # System-local binaries
+PATH="$PATH:/usr/bin"             # System binaries
+PATH="$PATH:/bin"                 # Essential binaries
+export PATH
+
+# =============================================================================
 # Minimal Success Message (for testing)
 # =============================================================================
 
 if [[ $INTERACTIVE_MODE -eq 1 ]]; then
-    echo "✅ Minimal bashrc loaded"
+    echo "✅ Minimal bashrc loaded (Phase 0-1)"
     echo "   BASHRC_DIR=$BASHRC_DIR"
     echo "   DOTFILES_DIR=$DOTFILES_DIR"
     echo "   INTERACTIVE_MODE=$INTERACTIVE_MODE"
+    echo "   XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
+    echo "   PATH (first 3)=$(echo "$PATH" | cut -d: -f1-3)"
 fi
