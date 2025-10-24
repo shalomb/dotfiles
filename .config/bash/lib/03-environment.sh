@@ -6,8 +6,8 @@
 # Set up GPG
 export GPG_TTY=$(tty)
 
-# Set up history file location
-export HISTFILE="$XDG_CACHE_HOME/bash/history"
+# Set up history file location (XDG-compliant)
+export HISTFILE="$XDG_STATE_HOME/bash/history"
 
 # Create history file if it doesn't exist
 if [[ ! -e $HISTFILE ]]; then
