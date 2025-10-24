@@ -90,6 +90,10 @@ done
 # =============================================================================
 
 if [[ $INTERACTIVE_MODE -eq 1 ]]; then
+    # Load aliases
+    [[ -f "$BASHRC_DIR/aliases" ]] && source "$BASHRC_DIR/aliases"
+    [[ -f ~/.bash_aliases ]] && source ~/.bash_aliases
+
     # Load enabled tools from enabled directory
     for script in "$BASHRC_DIR"/enabled/*.sh; do
         [[ -f "$script" && "$script" != *.md ]] && source "$script"
