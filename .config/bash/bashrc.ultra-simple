@@ -1,0 +1,11 @@
+#!/bin/bash
+# Ultra-simple bashrc - just test basic functionality
+
+export BASHRC_DIR="/home/unop/.config/dotfiles/.config/bash"
+export DOTFILES_DIR="/home/unop/.config/dotfiles"
+export INTERACTIVE_MODE=0
+
+echo "Ultra-simple bashrc loaded"
+echo "BASHRC_DIR: $BASHRC_DIR"
+echo "DOTFILES_DIR: $DOTFILES_DIR"
+echo "INTERACTIVE_MODE: $INTERACTIVE_MODE"

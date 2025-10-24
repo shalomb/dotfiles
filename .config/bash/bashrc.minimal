@@ -1,0 +1,10 @@
+#!/bin/bash
+# Minimal bashrc - just the basics
+
+# Set basic variables
+export BASHRC_DIR="/home/unop/.config/dotfiles/.config/bash"
+export DOTFILES_DIR="/home/unop/.config/dotfiles"
+export INTERACTIVE_MODE=0
+
+# Test that it works
+echo "Minimal bashrc loaded successfully"

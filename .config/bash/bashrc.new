@@ -1,0 +1,173 @@
+#!/bin/bash
+# bashrc - Pure orchestrator for bash shell initialization
+# Coordinates loading of shell configuration in strict phases
+# Does NOT do work itself - delegates to specialized scripts
+
+# =============================================================================
+# PHASE 0: Bootstrap
+# =============================================================================
+
+# Enable tracing if requested (for debugging)
+[[ -n ${BASHRC_TRACE_SOURCING:-} ]] && set -xv
+
+# Detect interactive mode
+case $- in
+    *i*) export INTERACTIVE_MODE=1 ;;
+    *)   export INTERACTIVE_MODE=0 ;;
+esac
+
+# Robust directory resolution with multiple fallbacks (ADR-006)
+resolve_bashrc_dir() {
+    local bashrc_path
+    local bashrc_dir
+    local dotfiles_root
+    
+    # Primary: Use actual location of bashrc file
+    if [[ -L "$HOME/.bashrc" ]]; then
+        # Symlink: follow to actual location
+        bashrc_path=$(readlink -f "$HOME/.bashrc")
+    else
+        # Regular file: use its location
+        bashrc_path="$HOME/.bashrc"
+    fi
+    
+    bashrc_dir=$(dirname "$bashrc_path")
+    
+    # Fallback 1: Check if we're in a dotfiles repository
+    if [[ -d "$bashrc_dir/.git" ]] && [[ -f "$bashrc_dir/.git/config" ]]; then
+        # We're in the repository, use standard structure
+        echo "$bashrc_dir"
+        return 0
+    fi
+    
+    # Fallback 2: Check if we're in a dotfiles subdirectory
+    dotfiles_root=$(find "$bashrc_dir" -maxdepth 3 -name ".git" -type d 2>/dev/null | head -1)
+    if [[ -n "$dotfiles_root" ]]; then
+        dotfiles_root=$(dirname "$dotfiles_root")
+        if [[ -d "$dotfiles_root/.config/bash" ]]; then
+            echo "$dotfiles_root/.config/bash"
+            return 0
+        fi
+    fi
+    
+    # Fallback 3: Use XDG standard
+    if [[ -d "$HOME/.config/bash" ]]; then
+        echo "$HOME/.config/bash"
+        return 0
+    fi
+    
+    # Fallback 4: Use bashrc directory (last resort)
+    echo "$bashrc_dir"
+}
+
+# Set directories using robust resolution
+export BASHRC_DIR=$(resolve_bashrc_dir)
+
+# Derive DOTFILES_DIR from BASHRC_DIR
+if [[ "$BASHRC_DIR" == "$HOME/.config/bash" ]]; then
+    export DOTFILES_DIR="$HOME/.config/dotfiles"
+else
+    export DOTFILES_DIR="${BASHRC_DIR%/.config/bash}"
+fi
+
+# Validate bootstrap succeeded
+if [[ ! -d "$BASHRC_DIR" ]]; then
+    echo "ERROR: BASHRC_DIR not found: $BASHRC_DIR" >&2
+    return 1
+fi
+
+# Define guard() helper for defensive script loading
+# Usage: guard command-name || return 0
+guard() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Define source_phase() for organized loading with error handling
+source_phase() {
+    local phase_name="$1"
+    local phase_dir="$2"
+    local pattern="${3:-*.sh}"
+
+    [[ -n "$BASHRC_TRACE_SOURCING" ]] && echo "[bashrc] Loading phase: $phase_name" >&2
+
+    if [[ ! -d "$phase_dir" ]]; then
+        [[ -n "$BASHRC_TRACE_SOURCING" ]] && echo "[bashrc] Phase directory not found: $phase_dir" >&2
+        return 0
+    fi
+
+    # Source scripts in explicit order (numerically sorted)
+    for script in "$phase_dir"/$pattern; do
+        [[ ! -f "$script" ]] && continue
+        [[ ! -r "$script" ]] && continue
+
+        [[ -n "$BASHRC_TRACE_SOURCING" ]] && echo "[bashrc] Sourcing: $script" >&2
+
+        if ! source "$script"; then
+            echo "ERROR: Failed to source $script" >&2
+            return 1
+        fi
+    done
+}
+
+# =============================================================================
+# PHASE 1: Environment Setup
+# =============================================================================
+
+source_phase "Environment" "$BASHRC_DIR/lib/env"
+
+# Validate critical environment variables are set
+if [[ -z "$PATH" ]]; then
+    echo "ERROR: PATH not set after environment phase" >&2
+    return 1
+fi
+
+# =============================================================================
+# PHASE 2: Core Functions
+# =============================================================================
+
+source_phase "Functions" "$BASHRC_DIR/lib/functions"
+
+# Validate critical functions are available
+if ! guard has-cmd; then
+    echo "ERROR: has-cmd function not available after functions phase" >&2
+    return 1
+fi
+
+# =============================================================================
+# PHASE 3: Shell Configuration
+# =============================================================================
+
+source_phase "Configuration" "$BASHRC_DIR/lib/config"
+
+# =============================================================================
+# PHASE 4: Features (Interactive Only)
+# =============================================================================
+
+if [[ $INTERACTIVE_MODE -eq 1 ]]; then
+    source_phase "Features" "$BASHRC_DIR/enabled"
+
+    # Load aliases if available
+    [[ -f ~/.config/bash/aliases ]] && source ~/.config/bash/aliases
+    [[ -f ~/.bash_aliases ]] && source ~/.bash_aliases
+
+    # Define reload function for interactive shells
+    reload() {
+        echo "Reloading bashrc..."
+        source ~/.bashrc
+    }
+fi
+
+# =============================================================================
+# PHASE 5: Post-Load Cleanup
+# =============================================================================
+
+# Clean up PATH to remove duplicates
+if guard clean_path; then
+    clean_path PATH
+    export PATH
+fi
+
+# Export GPG_TTY for interactive shells
+[[ $INTERACTIVE_MODE -eq 1 ]] && export GPG_TTY=$(tty)
+
+[[ -n "$BASHRC_TRACE_SOURCING" ]] && echo "[bashrc] Initialization complete" >&2
