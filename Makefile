@@ -231,7 +231,7 @@ test: ## Run acceptance tests (usage: make test [FAST=1])
 
 test-bash: ## Run comprehensive bash validation with Goss
 	@echo "Running comprehensive bash validation with Goss..."
-	@cd tests && goss -g goss-bash-comprehensive.yaml validate --format documentation
+	@cd tests && goss -g goss-bash-safe.yaml validate --format documentation
 	@echo "✅ Bash validation complete"
 
 test-fast: ## Run fast tests only (environment + deployment)
