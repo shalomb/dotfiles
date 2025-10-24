@@ -6,7 +6,7 @@ shopt -s histappend
 HISTCONTROL=ignoredups
 HISTFILE="$XDG_STATE_HOME/bash/history"
 HISTFILESIZE="32768"
-HISTIGNORE='&:ls: ls *:[bf]g'
+HISTIGNORE="&:ls: ls *:[bf]g:set +o *:set -o *:shopt *:dump_bash_state*"
 HISTSIZE="$HISTFILESIZE"
 HISTTIMEFORMAT='%FT%T'$'\t'
 HISTCONTROL=ignoredups

@@ -9,6 +9,6 @@ shopt -s histappend
 # History settings
 export HISTCONTROL=ignoredups
 export HISTFILESIZE="32768"
-export HISTIGNORE='&:ls: ls *:[bf]g'
+export HISTIGNORE="&:ls: ls *:[bf]g:set +o *:set -o *:shopt *:dump_bash_state*"
 export HISTSIZE="$HISTFILESIZE"
 export HISTTIMEFORMAT='%FT%T'$'\t'
