@@ -4,7 +4,7 @@ shopt -s histappend
 
 # append history entries to ~/.config/bash/bash_history
 HISTCONTROL=ignoredups
-HISTFILE="$XDG_CACHE_HOME/bash/history"
+HISTFILE="$XDG_STATE_HOME/bash/history"
 HISTFILESIZE="32768"
 HISTIGNORE='&:ls: ls *:[bf]g'
 HISTSIZE="$HISTFILESIZE"
