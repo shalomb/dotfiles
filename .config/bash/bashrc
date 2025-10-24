@@ -77,7 +77,48 @@ call-if-defined() {
 }
 
 # =============================================================================
-# PHASE 3: Library Functions
+# PHASE 3: Shell Configuration
+# =============================================================================
+
+# History configuration (XDG-compliant, multi-session safe)
+export HISTFILE="$XDG_STATE_HOME/bash/history"
+export HISTSIZE=50000           # In-memory history size
+export HISTFILESIZE=50000       # On-disk history size
+export HISTCONTROL="ignoreboth:erasedups"  # Ignore duplicates and spaces
+export HISTTIMEFORMAT='%F %T '  # ISO-8601 timestamps
+
+# Create history directory if it doesn't exist
+mkdir -p "$(dirname "$HISTFILE")"
+
+# Shell options for multi-session history
+shopt -s histappend        # Append to history, don't overwrite (CRITICAL for multi-session)
+shopt -s checkwinsize      # Update LINES and COLUMNS after each command
+shopt -s cmdhist           # Save multi-line commands as one entry
+shopt -s globstar          # ** matches all files/directories recursively
+shopt -s dotglob           # Include dotfiles in pathname expansion
+shopt -s extglob           # Extended pattern matching
+shopt -s nocaseglob        # Case-insensitive pathname expansion
+
+# Set options
+set -o ignoreeof           # Prevent Ctrl+D from exiting (need 10 presses)
+
+# Bash completion (only in interactive shells)
+if [[ $INTERACTIVE_MODE -eq 1 ]]; then
+    # Load system bash completion if available
+    if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+        source /usr/share/bash-completion/bash_completion
+    elif [[ -f /etc/bash_completion ]]; then
+        source /etc/bash_completion
+    fi
+
+    # Enable programmable completion features
+    if ! shopt -oq posix; then
+        shopt -s progcomp
+    fi
+fi
+
+# =============================================================================
+# PHASE 3.5: Library Functions
 # =============================================================================
 
 # Load all core functions from lib directory
