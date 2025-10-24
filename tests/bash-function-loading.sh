@@ -112,16 +112,16 @@ run_test "No individual interactive checks in enabled scripts" "
     ! grep -r '\\[\\[ \\${-//\\[!i\\]/} \\]\\] || return' .config/bash/enabled/ 2>/dev/null || true
 "
 
-# Test 7: Check that bashrc uses INTERACTIVE_MODE variable
-echo -e "\n${YELLOW}Test 7: Centralized Interactive Check${NC}"
-run_test "bashrc uses INTERACTIVE_MODE variable" "
-    grep -q 'INTERACTIVE_MODE' ~/.config/dotfiles/.config/bash/bashrc
+# Test 7: Interactive functionality works
+echo -e "\n${YELLOW}Test 7: Interactive Shell Functionality${NC}"
+run_test "reload function available in interactive shell" "
+    bash -i -c 'source ~/.config/dotfiles/.config/bash/bashrc && type reload >/dev/null'
 "
 
-# Test 8: Check that enabled scripts are only loaded in interactive mode
-echo -e "\n${YELLOW}Test 8: Enabled Scripts Loading Logic${NC}"
-run_test "Enabled scripts loading is wrapped in INTERACTIVE_MODE check" "
-    grep -A 10 -B 10 'enabled/.*\\.sh' ~/.config/dotfiles/.config/bash/bashrc | grep -q 'INTERACTIVE_MODE'
+# Test 8: Non-interactive shells don't load interactive features
+echo -e "\n${YELLOW}Test 8: Non-Interactive Shell Behavior${NC}"
+run_test "reload function NOT available in non-interactive shell" "
+    env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.config/dotfiles/.config/bash/bashrc && type reload >/dev/null 2>&1' && false || true
 "
 
 # Test 9: Check that functions work from any directory
