@@ -98,6 +98,12 @@ if [[ $INTERACTIVE_MODE -eq 1 ]]; then
     for script in "$BASHRC_DIR"/enabled/*.sh; do
         [[ -f "$script" && "$script" != *.md ]] && source "$script"
     done
+
+    # Define reload function for interactive shells
+    reload() {
+        echo "🔄 Reloading bashrc..."
+        source ~/.bashrc
+    }
 fi
 
 # =============================================================================
