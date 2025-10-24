@@ -4,6 +4,8 @@
 # SOURCES: rc.d/*, aliases, enabled/*.sh
 # DOES NOT SOURCE: profile (prevents infinite loops)
 
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
 # XDG Base Directory specification (set before interactive check)
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
@@ -17,7 +19,7 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 [[ -z "$XDG_STATE_HOME" ]] && export XDG_STATE_HOME="$HOME/.local/state"
 
 # Set default editor if not already set
-export EDITOR="${EDITOR:-$(command -v vim 2>/dev/null || command -v nano 2>/dev/null || command -v vi 2>/dev/null || echo 'vi')}"
+export EDITOR="${EDITOR:-$(command -v vi 2>/dev/null || command -v nvim 2>/dev/null || command -v vim 2>/dev/null || echo 'vi')}"
 export FCEDIT="$EDITOR"
 
 # SSH Agent Management is now handled via enabled/ directory loading
@@ -26,7 +28,7 @@ export FCEDIT="$EDITOR"
 # Exception: Allow sourcing from bash_profile for login shells
 case $- in
     *i*) ;;
-      *) 
+      *)
         # Check if we're being sourced from bash_profile (login shell context)
         if [ -n "${BASH_PROFILE_SOURCED:-}" ]; then
             # Allow sourcing even in non-interactive mode for login shells
@@ -96,25 +98,16 @@ if [[ -f ~/.config/bash/aliases ]]; then
     source ~/.config/bash/aliases
 fi
 
-# Enable programmable completion
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
-fi
-
 # Set up ghostship prompt
 if command -v ghostship >/dev/null 2>&1; then
     # Define the missing 'defined' function that ghostship init depends on
     defined() {
         type "$1" &>/dev/null
     }
-    
+
     # Ensure COLUMNS is set to prevent ghostship hang
     export COLUMNS="${COLUMNS:-80}"
-    
+
     # Try to initialize ghostship, but handle errors gracefully
     if source <(ghostship init bash) 2>/dev/null; then
         # Ghostship initialized successfully
