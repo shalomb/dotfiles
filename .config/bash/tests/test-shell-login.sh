@@ -56,10 +56,8 @@ mkdir -p "$HOME/.gnupg"
 touch "$HOME/.config/bash/enabled/dummy.sh"
 cat > "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh" << 'INNER_EOF'
 #!/usr/bin/env bash
-bootstrap_ssh_agent() {
     echo "Mock SSH agent bootstrap"
 }
-export -f bootstrap_ssh_agent
 INNER_EOF
 chmod +x "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh"
 
@@ -108,8 +106,6 @@ mkdir -p "$HOME/.gnupg"
 touch "$HOME/.config/bash/enabled/dummy.sh"
 cat > "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh" << 'INNER_EOF'
 #!/usr/bin/env bash
-bootstrap_ssh_agent() { echo "Mock SSH agent bootstrap"; }
-export -f bootstrap_ssh_agent
 INNER_EOF
 chmod +x "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh"
 
@@ -164,8 +160,6 @@ mkdir -p "$HOME/.gnupg"
 touch "$HOME/.config/bash/enabled/dummy.sh"
 cat > "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh" << 'INNER_EOF'
 #!/usr/bin/env bash
-bootstrap_ssh_agent() { echo "Mock SSH agent bootstrap"; }
-export -f bootstrap_ssh_agent
 INNER_EOF
 chmod +x "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh"
 
@@ -219,8 +213,6 @@ mkdir -p "$HOME/.gnupg"
 touch "$HOME/.config/bash/enabled/dummy.sh"
 cat > "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh" << 'INNER_EOF'
 #!/usr/bin/env bash
-bootstrap_ssh_agent() { echo "Mock SSH agent bootstrap"; }
-export -f bootstrap_ssh_agent
 INNER_EOF
 chmod +x "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh"
 
@@ -269,8 +261,6 @@ mkdir -p "$HOME/.gnupg"
 touch "$HOME/.config/bash/enabled/dummy.sh"
 cat > "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh" << 'INNER_EOF'
 #!/usr/bin/env bash
-bootstrap_ssh_agent() { echo "Mock SSH agent bootstrap"; }
-export -f bootstrap_ssh_agent
 INNER_EOF
 chmod +x "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh"
 
@@ -319,8 +309,6 @@ mkdir -p "$HOME/.gnupg"
 touch "$HOME/.config/bash/enabled/dummy.sh"
 cat > "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh" << 'INNER_EOF'
 #!/usr/bin/env bash
-bootstrap_ssh_agent() { echo "Mock SSH agent bootstrap"; }
-export -f bootstrap_ssh_agent
 INNER_EOF
 chmod +x "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh"
 
@@ -375,8 +363,6 @@ mkdir -p "$HOME/.gnupg"
 touch "$HOME/.config/bash/enabled/dummy.sh"
 cat > "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh" << 'INNER_EOF'
 #!/usr/bin/env bash
-bootstrap_ssh_agent() { echo "Mock SSH agent bootstrap"; }
-export -f bootstrap_ssh_agent
 INNER_EOF
 chmod +x "$HOME/.config/bash/tools/ssh-agent-bootstrap.sh"
 

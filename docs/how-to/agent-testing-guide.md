@@ -11,7 +11,6 @@ This guide provides comprehensive testing procedures for the SSH and GPG agent b
 #### SSH Agent Bootstrap
 ```bash
 # Test SSH agent discovery and connection
-bash -i -c 'source .config/bash/rc.d/bootstrap-agents.sh && bootstrap_ssh_agent'
 
 # Expected: No errors, SSH agent discovered and connected
 ```

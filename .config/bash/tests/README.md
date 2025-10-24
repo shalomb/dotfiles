@@ -49,8 +49,6 @@ done
 Tests may include mock functions for external dependencies:
 ```bash
 # Mock external commands
-bootstrap_ssh_agent() { echo "Mock SSH agent bootstrap"; }
-export -f bootstrap_ssh_agent
 ```
 
 ### Test Data

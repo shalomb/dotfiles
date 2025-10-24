@@ -53,7 +53,6 @@ ls -la /run/user/*/gnupg/S.gpg-agent
 eval "$(ssh-agent -s)"
 
 # Or use bootstrap function
-bootstrap_ssh_agent
 ```
 
 #### Stale SSH Agent Socket
