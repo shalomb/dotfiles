@@ -12,19 +12,9 @@ case $- in
     *)   INTERACTIVE_MODE=0 ;;
 esac
 
-# Determine BASHRC_DIR using BASH_SOURCE (most reliable)
-if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
-    BASHRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-else
-    BASHRC_DIR="$HOME/.config/bash"
-fi
-
-# Derive DOTFILES_DIR from BASHRC_DIR
-if [[ "$BASHRC_DIR" == "$HOME/.config/bash" ]]; then
-    DOTFILES_DIR="$HOME/.config/dotfiles"
-else
-    DOTFILES_DIR="${BASHRC_DIR%/.config/bash}"
-fi
+# Set fixed paths
+BASHRC_DIR="$HOME/.config/bash"
+DOTFILES_DIR="$HOME/.config/dotfiles"
 
 # Export bootstrap variables
 export BASHRC_DIR DOTFILES_DIR INTERACTIVE_MODE
@@ -87,11 +77,32 @@ call-if-defined() {
 }
 
 # =============================================================================
+# PHASE 3: Library Functions
+# =============================================================================
+
+# Load all core functions from lib directory
+for script in "$BASHRC_DIR"/lib/*; do
+    [[ -f "$script" && "$script" != *.md ]] && source "$script"
+done
+
+# =============================================================================
+# PHASE 4: Enabled Tools (Interactive Only)
+# =============================================================================
+
+if [[ $INTERACTIVE_MODE -eq 1 ]]; then
+    # Load enabled tools from enabled directory
+    for script in "$BASHRC_DIR"/enabled/*.sh; do
+        [[ -f "$script" && "$script" != *.md ]] && source "$script"
+    done
+fi
+
+# =============================================================================
 # Minimal Success Message (for testing)
 # =============================================================================
 
 if [[ $INTERACTIVE_MODE -eq 1 ]]; then
-    echo "✅ Minimal bashrc loaded (Phase 0-2)"
+    echo "✅ Minimal bashrc loaded (Phase 0-4)"
     echo "   BASHRC_DIR=$BASHRC_DIR"
     echo "   Functions: has-cmd=$(type -t has-cmd) defined=$(type -t defined)"
+    echo "   Dotfiles: $(type -t dotfiles 2>/dev/null || echo 'not loaded')"
 fi
