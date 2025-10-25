@@ -1,0 +1,86 @@
+# Bash bootstrap and environment variable testing
+# Tests BASHRC_DIR, DOTFILES_DIR, XDG variables, PATH setup, and INTERACTIVE_MODE
+# These tests ensure the bashrc correctly initializes regardless of sourcing context
+
+file:
+  # Bootstrap files must exist
+  /home/unop/.config/bash/bashrc:
+    exists: true
+  /home/unop/.config/bash/lib:
+    exists: true
+    filetype: directory
+
+command:
+  # === BASHRC_DIR RESOLUTION ===
+
+  # BASHRC_DIR should resolve to .config/bash
+  "bash -c 'source ~/.bashrc && echo $BASHRC_DIR'":
+    exit-status: 0
+    stdout:
+      - "/.config/bash"
+    timeout: 5000
+
+  # DOTFILES_DIR should derive from BASHRC_DIR
+  "bash -c 'source ~/.bashrc && echo $DOTFILES_DIR'":
+    exit-status: 0
+    stdout:
+      - "/dotfiles"
+    timeout: 5000
+
+  # === XDG BASE DIRECTORIES ===
+
+  # XDG_CONFIG_HOME must be set
+  "bash -c 'source ~/.bashrc && echo $XDG_CONFIG_HOME'":
+    exit-status: 0
+    stdout:
+      - "/.config"
+    timeout: 5000
+
+  # XDG_CACHE_HOME must be set
+  "bash -c 'source ~/.bashrc && echo $XDG_CACHE_HOME'":
+    exit-status: 0
+    stdout:
+      - "/.cache"
+    timeout: 5000
+
+  # XDG_DATA_HOME must be set
+  "bash -c 'source ~/.bashrc && echo $XDG_DATA_HOME'":
+    exit-status: 0
+    stdout:
+      - "/.local/share"
+    timeout: 5000
+
+  # XDG_STATE_HOME must be set
+  "bash -c 'source ~/.bashrc && echo $XDG_STATE_HOME'":
+    exit-status: 0
+    stdout:
+      - "/.local/state"
+    timeout: 5000
+
+  # === PATH SETUP ===
+  # Single test checking all required PATH components
+
+  "bash -c 'source ~/.bashrc >/dev/null 2>&1 && echo $PATH'":
+    exit-status: 0
+    stdout:
+      - "/.local/bin"
+      - "/.cargo/bin"
+      - "/go/bin"
+      - "/usr/bin"
+    timeout: 5000
+
+  # === DIRECTORY INDEPENDENCE ===
+
+  # Bashrc should source correctly from /tmp
+  "cd /tmp && bash -c 'source ~/.bashrc && echo $BASHRC_DIR'":
+    exit-status: 0
+    stdout:
+      - "/.config/bash"
+    timeout: 5000
+
+  # Bashrc should source correctly from any directory
+  "cd /var/tmp && bash -c 'source ~/.bashrc && echo $BASHRC_DIR'":
+    exit-status: 0
+    stdout:
+      - "/.config/bash"
+    timeout: 5000
