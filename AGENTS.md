@@ -377,35 +377,106 @@ tmux list-keys | grep "bind-key.*r"  # Check reload binding
 
 ## Core Development Principles
 
-### **MANDATORY: Test Before Export (ADR-005)**
+### **MANDATORY: Test-Driven Development for Bash Changes (ADR-005)**
 
-**REQUIREMENT**: Before ANY export of bash configuration files:
+**STRICT REQUIREMENT**: All bash configuration changes MUST follow TDD (Test-Driven Development):
 
-1. **Run `make test-bash`** - Always, no exceptions
-2. **Wait for completion** - Don't skip this step
-3. **Check results** - Tests must pass (exit code 0)
-4. **ONLY if tests pass** - Proceed with export
-5. **If tests fail** - Fix the issue, don't skip testing
+#### **Red-Green-Refactor Workflow**
 
-**Files requiring bash testing:**
+1. **RED**: Write/update tests first, see them fail
+   ```bash
+   # Add test to appropriate goss file in tests/
+   vim tests/goss-bash-*.yaml
+   make test-bash  # Verify test fails (RED)
+   ```
+
+2. **GREEN**: Make minimal change to pass test
+   ```bash
+   # Edit bash configuration
+   vim .config/bash/bashrc
+   make test-bash  # Verify test passes (GREEN)
+   ```
+
+3. **REFACTOR**: Clean up while keeping tests passing
+   ```bash
+   # Improve implementation
+   vim .config/bash/bashrc
+   make test-bash  # Verify tests still pass
+   ```
+
+4. **EXPORT**: Only after all tests pass
+   ```bash
+   make test-bash && uv run python -m dotfile_manager export .config/bash/
+   ```
+
+#### **Goss Test Suites**
+
+Bash testing uses **goss** (YAML-based infrastructure testing). All tests in `tests/`:
+
+- **`goss-bash-safe.yaml`** (16 tests) - Syntax validation and essential commands
+  - File existence checks (bashrc, lib/, aliases)
+  - Command availability (delta, gum, rustup, gpg)
+  - SSH/GPG agent validation
+  - Core function availability (defined, has-cmd)
+
+- **`goss-bash-contexts.yaml`** (21 tests) - Shell context behavior
+  - Non-interactive vs interactive mode detection
+  - Function availability by context
+  - Alias loading based on mode
+  - SSH context detection
+  - Login shell behavior
+  - Interactive functions (reload, _dotfiles_help)
+
+- **`goss-bash-bootstrap.yaml`** (21 tests) - Environment and paths
+  - BASHRC_DIR/DOTFILES_DIR resolution
+  - XDG variables (CONFIG, CACHE, DATA, STATE)
+  - PATH components (local/bin, cargo/bin, go/bin, /usr/bin)
+  - Directory independence (works from any pwd)
+
+- **`goss-bash-functions.yaml`** (8 tests) - Core function testing
+  - has-cmd / @has-cmd functionality
+  - defined function testing
+  - dotfiles / @is-interactive / call-if-defined
+  - Function availability from different directories
+
+- **`goss-bash-comprehensive.yaml`** (15 tests) - Integration testing
+  - Complete environment setup
+  - Interactive features
+  - SSH context behavior
+
+**Total: 81 tests** - All must pass before export
+
+#### **Testing Best Practices**
+
+**DO:**
+- ✅ Use goss's native `stdout` matcher (supports multiple patterns)
+- ✅ Suppress bashrc output: `source ~/.bashrc >/dev/null 2>&1 && echo $VAR`
+- ✅ Use `setsid bash -i -c '...' </dev/null 2>&1` for interactive bash tests
+- ✅ Test multiple patterns in one command (consolidate tests)
+- ✅ Write tests BEFORE changing bash config
+
+**DON'T:**
+- ❌ Pipe to grep unnecessarily - use goss stdout matchers
+- ❌ Use command substitution `$(...)` - causes timeouts with bashrc
+- ❌ Run `bash -i` without `setsid </dev/null` - causes TTY stops
+- ❌ Make bash changes without writing/updating tests first
+
+#### **Files Requiring Bash Testing**
+
 - `.config/bash/bashrc`
 - `.config/bash/profile`
-- `.config/bash/rc.d/*`
+- `.config/bash/lib/*`
 - `.config/bash/enabled/*`
 - `.config/bash/aliases`
+- Any bash-related configuration
 
-**Workflow:**
-```bash
-make test-bash                # MANDATORY first step
-make test-bash && uv run python -m dotfile_manager export .config/bash/
-```
+#### **MANDATORY EXPORT PROTOCOL**
 
-**MANDATORY EXPORT PROTOCOL**:
 - **ALWAYS export the entire `.config/bash/` directory** (not individual files)
-- This ensures all bash components are synchronized: bashrc, rc.d/, enabled/, disabled/, aliases, profile
-- Prevents issues where rc.d/ functions are missing in home directory
+- This ensures all bash components are synchronized: bashrc, lib/, enabled/, disabled/, aliases, profile
+- Prevents issues where lib/ functions are missing in home directory
 
-**NO EXCEPTIONS**: This is not optional. This is not a suggestion. This is a **REQUIREMENT**.
+**NO EXCEPTIONS**: TDD for bash is not optional. This is a **REQUIREMENT**.
 
 See `docs/architecture/ADR-005-mandatory-testing-before-export.md` for full details.
 
