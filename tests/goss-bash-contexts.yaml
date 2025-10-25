@@ -74,12 +74,19 @@ command:
     timeout: 5000
     
   # === SSH CONTEXT TESTS ===
-  
+
   # SSH context should load interactive features even in non-interactive mode
   "SSH_CLIENT='test' bash -c 'source ~/.bashrc && type reload'":
     exit-status: 0
     timeout: 5000
-    
+
+  # === AGENT STATUS DISPLAY ===
+
+  # Agent status code should be present in bashrc
+  "grep -q 'agentctl status' ~/.bashrc":
+    exit-status: 0
+    timeout: 1000
+
   # === ESSENTIAL COMMANDS ===
   
   "which delta":
