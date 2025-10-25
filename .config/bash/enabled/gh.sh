@@ -1,12 +1,6 @@
 #!bin/bash
 
-# CRITICAL: Prevent agent process blocking
-# This script contains interactive prompts (read -p) that will cause AI agents
 
-# Additional safety check: ensure stdin is a terminal
-# This prevents the script from running in environments where stdin is not
-# connected to a terminal (pipes, redirects, background processes, etc.)
-[[ -t 0 ]] || return
 
 # GH_DEBUG=1 | GH_DEBUG=api
 
@@ -96,7 +90,32 @@ copilot-handler() {
 suggest() { copilot-handler 'suggest' "$@"; }
 explain() { copilot-handler 'explain' "$@"; }
 
-# Only set up copilot aliases if copilot is available
-if gh extension list | grep -q "github/gh-copilot"; then
-  eval "$(gh copilot alias -- bash 2>/dev/null)" || true
-fi
+_lazy_load_gh_copilot() {
+  # Prevent this function from running again in the current shell
+  unset -f _lazy_load_gh_copilot
+  unset -f ghcs
+  unset -f ghce
+
+  # Run the original, expensive setup
+  if command -v gh >/dev/null && gh extension list | grep -q "github/gh-copilot"; then
+    eval "$(gh copilot alias -- bash 2>/dev/null)" || true
+  else
+    # If gh or the extension isn't installed, create dummy functions
+    # to prevent repeated checks.
+    ghcs() { echo "gh copilot extension not installed." >&2; }
+    ghce() { echo "gh copilot extension not installed." >&2; }
+  fi
+}
+
+# Define lightweight wrapper functions. These will be the first point of contact.
+# When called, they trigger the lazy-load mechanism and then execute the
+# real command which has now been defined by the eval.
+ghcs() {
+  _lazy_load_gh_copilot
+  ghcs "$@"
+}
+
+ghce() {
+  _lazy_load_gh_copilot
+  ghce "$@"
+}

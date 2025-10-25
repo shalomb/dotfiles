@@ -525,13 +525,6 @@ This is the **fundamental principle** for all development and testing in this re
 - **Architecture tests**: Symlink/hardlink integrity maintained
 - **Performance tests**: Shell startup and function execution times
 
-**Documentation Standards:**
-- **Diataxis framework**: Proper categorization by user need
-- **Agent context**: Prevent misunderstandings with clear headers
-- **Accurate references**: All links and references must work
-- **Consistency**: Follow established patterns and conventions
-- **Regression tests**: Prevent breaking existing functionality
-
 ### **Component-Specific Workflows**
 
 Each component has its own established workflow:
@@ -810,3 +803,29 @@ command - shell command with window shortcuts
 - **Compact format** with minimal vertical space
 - **Consistent indentation** for readability
 - **Include only essential sections**: NAME, SYNOPSIS, COMMANDS, DESCRIPTION, EXPLICATION
+
+# Agent Development Protocol
+
+This document outlines the best practices for agent-driven development in this repository.
+
+## Testing Protocol
+
+A rigorous testing protocol is essential for maintaining stability and ensuring changes are safe and effective.
+
+-   **Test Environment:** All development and testing should be conducted within a `tmux` session.
+-   **Isolated Tests:** Each test or task should be executed in a new, temporary `tmux` pane. This ensures a "clean room" environment for every test.
+-   **Pane Lifecycle:** Test panes should be destroyed after each test run to prevent state leakage.
+-   **Readiness Polling:** Before interacting with a process or shell in a test pane (e.g., sending commands), the agent must first ensure the process is ready. This is typically done by polling the pane's output for an expected prompt or ready signal.
+-   **Polling Timeout:** Polling should have a reasonable timeout (e.g., 5 seconds) to prevent indefinite hangs.
+-   **Real-World Scenarios:** Some tests will require deployment and execution in a real-world environment, such as running a configuration inside a `podman` container launched via `tmux`.
+
+## Commit Strategy
+
+A clean and meaningful git history is crucial for maintainability.
+
+-   **Atomic Commits:** Each commit should represent a single, complete, logical change.
+-   **Conventional Commits:** All commit messages must adhere to the [Conventional Commits specification](https://www.conventionalcommits.org/).
+-   **Work-In-Progress (WIP) Commits:**
+    -   During exploration or complex tasks, agents should make frequent, small commits to save breakthroughs or significant steps. These can have less formal messages (e.g., `WIP: Refactor rustup.sh caching`).
+    -   Once the overall task is complete and verified, these WIP commits **must be squashed** into a single, well-documented, atomic commit that follows the Conventional Commits standard.
+-   **Pre-Commit Testing:** No code should be committed without passing relevant tests. This includes both automated tests and, where necessary, the real-world scenario tests described in the testing protocol.

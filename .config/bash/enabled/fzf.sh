@@ -33,10 +33,25 @@ install-fzf() {
   fzf --version
 }
 
-if [[ $- == *i* ]]; then
   fzf_overlay_dir="${fzf_install_dir}-overlay"
 
-  source "$fzf_install_dir/shell/completion.bash"   2> /dev/null
+  # --- FZF Completion Caching ---
+  _cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/bash_completions"
+  _completion_file="${_cache_dir}/fzf-completion.bash"
+  _fzf_completion_source="${fzf_install_dir}/shell/completion.bash"
+
+  # Ensure the source file exists before proceeding
+  if [[ -f "$_fzf_completion_source" ]]; then
+    mkdir -p "$_cache_dir"
+    # If the cache file doesn't exist, or if the source is newer, regenerate it.
+    if [[ ! -f "$_completion_file" || "$_fzf_completion_source" -nt "$_completion_file" ]]; then
+      cp "$_fzf_completion_source" "$_completion_file"
+    fi
+    # Source the cached file.
+    source "$_completion_file"
+  fi
+  # --- End Caching ---
+
   source "$fzf_install_dir/shell/key-bindings.bash" 2> /dev/null
 
   if [[ -d $fzf_overlay_dir ]]; then
@@ -44,4 +59,3 @@ if [[ $- == *i* ]]; then
       source "$overlay"
     done
   fi
-fi

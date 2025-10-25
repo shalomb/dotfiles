@@ -2,35 +2,73 @@
 
 # https://github.com/ankitpokhrel/jira-cli
 
-# Jira function with hierarchical config resolution
+# Jira function with hierarchical config resolution and overlay merging
 jira() {
   local current_dir="$PWD"
-  local project_config=""
   local base_config="$HOME/.config/.jira/.config.yml"
-  local config_file=""
+  local config_files=()
+  local merged_config=""
+  local temp_config=""
   
-  # Walk up directory tree looking for .jira/config.yaml
+  # Start with base config if it exists
+  if [[ -f "$base_config" ]]; then
+    config_files+=("$base_config")
+  fi
+  
+  # Walk up directory tree collecting all .jira/config files
+  # (most specific first, so they override parent configs)
+  local collected_configs=()
   while [[ "$current_dir" != "/" ]]; do
-    if [[ -f "$current_dir/.jira/config.yaml" ]]; then
-      project_config="$current_dir/.jira/config.yaml"
-      break
+    # Look for both .config.yml and config.yaml
+    if [[ -f "$current_dir/.jira/.config.yml" ]]; then
+      collected_configs+=("$current_dir/.jira/.config.yml")
+    elif [[ -f "$current_dir/.jira/config.yaml" ]]; then
+      collected_configs+=("$current_dir/.jira/config.yaml")
     fi
     current_dir="$(dirname "$current_dir")"
   done
   
-  # Use project config if found, otherwise base config
-  config_file="${project_config:-$base_config}"
+  # Reverse the collected configs so base comes first, most specific last
+  for ((i=${#collected_configs[@]}-1; i>=0; i--)); do
+    config_files+=("${collected_configs[i]}")
+  done
+  
+  # If we have multiple configs, merge them using Python
+  if [[ ${#config_files[@]} -gt 1 ]]; then
+    # Create temporary merged config
+    temp_config="$(mktemp --suffix=.yaml)"
+    
+    # Use uvx to run Python script with PyYAML dependency
+    uvx --with pyyaml python "$HOME/.config/dotfiles/.config/bash/tools/merge_jira_configs.py" "${config_files[@]}" > "$temp_config"
+    merged_config="$temp_config"
+  elif [[ ${#config_files[@]} -eq 1 ]]; then
+    merged_config="${config_files[0]}"
+  else
+    echo "jira: Error: No configuration files found" >&2
+    return 1
+  fi
   
   # Show debug output
-  if [[ -n "$project_config" ]]; then
-    echo "jira: Using project config: $project_config"
+  echo "jira: Config files found: ${config_files[*]}"
+  if [[ -n "$temp_config" ]]; then
+    echo "jira: Using merged config: $temp_config"
   else
-    echo "jira: Using base config: $base_config"
+    echo "jira: Using config: $merged_config"
   fi
-  echo "jira: Full command: JIRA_CONFIG_FILE='$config_file' command jira $*"
+  echo "jira: Full command: JIRA_CONFIG_FILE='$merged_config' command jira $*"
   
-  # Run jira with the resolved config
-  JIRA_CONFIG_FILE="$config_file" command jira "$@"
+  # Set JIRA_API_TOKEN from token file and run jira with the resolved config
+  local jira_token=""
+  if [[ -f "$HOME/.config/.jira/.token.env" ]]; then
+    # Read the last JIRA_API_TOKEN from the file
+    jira_token=$(grep "^JIRA_API_TOKEN=" "$HOME/.config/.jira/.token.env" | tail -1 | cut -d'=' -f2- | tr -d "'\"")
+  fi
+  
+  # Run jira with environment variables set only for this command
+  JIRA_API_TOKEN="$jira_token" JIRA_CONFIG_FILE="$merged_config" command jira "$@"
+  
+  # Clean up temporary file
+  [[ -n "$temp_config" && -f "$temp_config" ]] && rm -f "$temp_config"
 }
 
 # Bash completion setup

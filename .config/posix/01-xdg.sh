@@ -1,10 +1,10 @@
-#!/bin/bash
-# XDG Base Directory setup
+#!/bin/sh
+# XDG Base Directory setup (POSIX compliant)
 # PHASE: env
 # DEPENDENCIES: none
 
 # Ensure HOME is set before proceeding
-if [[ -z "${HOME:-}" ]]; then
+if [ -z "${HOME:-}" ]; then
     echo "Warning: HOME not set, skipping XDG directory setup" >&2
     return 0
 fi
@@ -18,6 +18,6 @@ fi
 export XDG_CONFIG_HOME XDG_CACHE_HOME XDG_DATA_HOME XDG_STATE_HOME
 
 # Create directories if they don't exist (only if HOME is valid)
-if [[ -n "$HOME" && "$HOME" != "/" ]]; then
+if [ -n "$HOME" ] && [ "$HOME" != "/" ]; then
     mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" 2>/dev/null || true
 fi

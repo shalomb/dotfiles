@@ -5,30 +5,14 @@
 # UNIVERSAL SECTION (Always runs - all shell types)
 # =============================================================================
 
-# Environment setup (only if not from login shell)
-if [[ -z "$BASH_PROFILE_SOURCED" ]]; then
-    # XDG Base Directory specification
-    export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-    export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
-    export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-    export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
-
-    # PATH setup - standard user directories
-    PATH="$HOME/.local/bin"           # User scripts/binaries
-    PATH="$PATH:$HOME/.config/bin"    # Config-managed binaries
-    PATH="$PATH:$HOME/.cargo/bin"     # Rust toolchain
-    PATH="$PATH:$HOME/go/bin"         # Go binaries
-    PATH="$PATH:$XDG_DATA_HOME/go/bin" # XDG-compliant Go binaries
-    PATH="$PATH:/usr/local/bin"       # System-local binaries
-    PATH="$PATH:/usr/bin"             # System binaries
-    PATH="$PATH:/bin"                 # Essential binaries
-    export PATH
-fi
+# Environment setup (handled by .profile for login shells, or directly for non-login interactive shells)
 
 # Set fixed paths
 BASHRC_DIR="$HOME/.config/bash"
 DOTFILES_DIR="$HOME/.config/dotfiles"
 export BASHRC_DIR DOTFILES_DIR
+
+
 
 # Validate bootstrap succeeded
 if [[ ! -d "$BASHRC_DIR" ]]; then
@@ -36,30 +20,6 @@ if [[ ! -d "$BASHRC_DIR" ]]; then
     return 1
 fi
 
-# Core functions that work everywhere
-has-cmd() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# Compatibility alias for old scripts
-@has-cmd() {
-    has-cmd "$@"
-}
-
-# Check if function is defined
-defined() {
-    declare -F "$1" >/dev/null 2>&1
-}
-
-# Check if running in interactive shell
-@is-interactive() {
-    [[ ${-//[!i]/} ]]
-}
-
-# Call function if it's defined
-call-if-defined() {
-    defined "$1" && "$@"
-}
 
 # Load all core functions from lib directory
 for script in "$BASHRC_DIR"/lib/*; do
@@ -71,8 +31,7 @@ done
 # =============================================================================
 
 # Simple, bulletproof check - exit early if not interactive
-# Allow SSH contexts to continue (they may become interactive)
-[[ $- != *i* ]] && [[ -z "$SSH_CLIENT" ]] && [[ -z "$SSH_TTY" ]] && return
+[[ $- != *i* ]] && return
 
 # Everything below runs ONLY in interactive shells
 # No more INTERACTIVE_MODE checks needed!

@@ -34,8 +34,9 @@ command:
     timeout: 20000
     
   # === SSH CONTEXT ===
-  "SSH_CLIENT=test bash -c 'source ~/.bashrc && type reload'":
-    exit-status: 0
+  # SSH context in non-interactive mode should NOT load interactive features
+  "SSH_CLIENT=test bash -c 'source ~/.bashrc && type reload 2>/dev/null'":
+    exit-status: 1
     timeout: 20000
     
   # === NON-INTERACTIVE SHOULD NOT HAVE RELOAD ===

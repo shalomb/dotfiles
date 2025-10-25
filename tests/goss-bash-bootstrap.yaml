@@ -57,6 +57,15 @@ command:
       - "/.local/state"
     timeout: 5000
 
+  # === HISTORY CONFIGURATION ===
+
+  # HISTFILE should be in XDG_STATE_HOME
+  "bash -i -c 'echo $HISTFILE'":
+    exit-status: 0
+    stdout:
+      - "/.local/state/bash/history"
+    timeout: 5000
+
   # === PATH SETUP ===
   # Single test checking all required PATH components
 

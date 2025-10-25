@@ -25,8 +25,15 @@ class TestOrphanCleanup:
         self.repo_dir.mkdir()
         self.home_dir.mkdir()
         
-        # Create config
-        self.config = DotfileConfig(self.temp_dir / ".dotfiles.toml")
+        # Create config with no exclusions for test
+        config_file = self.temp_dir / ".dotfiles.toml"
+        config_file.write_text("""
+[exclusions]
+patterns = []
+exclude_directories = []
+exclude_files = []
+""")
+        self.config = DotfileConfig(config_file)
         self.file_ops = FileOperations(debug=True, config=self.config)
         
         # Change to repo directory for testing
@@ -224,29 +231,83 @@ class TestOrphanCleanup:
         src_dir.mkdir()
         (src_dir / "file1.txt").write_text("content1")
         (src_dir / "file2.txt").write_text("content2")
-        
+
         # Create destination with orphans
         dst_dir = self.home_dir / "config"
         dst_dir.mkdir()
         (dst_dir / "file1.txt").write_text("content1")
         (dst_dir / "file2.txt").write_text("content2")
         (dst_dir / "orphan.txt").write_text("orphan")
-        
+
         # Export with cleanup (dry run)
         self.file_ops.export_directory_with_cleanup(
             src_dir, dst_dir, cleanup=True, dry_run=True
         )
-        
+
         # Orphan should still exist (dry run)
         assert (dst_dir / "orphan.txt").exists()
-        
+
         # Export with cleanup (real)
         self.file_ops.export_directory_with_cleanup(
             src_dir, dst_dir, cleanup=True, dry_run=False, interactive=False
         )
-        
-        # Orphan should still exist (non-interactive mode just logs)
+
+        # Orphan should be deleted (non-interactive mode auto-deletes when git is source of truth)
+        # Note: This orphan was never in the registry, so it's an untracked file that appeared
+        # The current behavior is to NOT delete untracked files, only previously-managed files
         assert (dst_dir / "orphan.txt").exists()
+
+    def test_orphan_cleanup_previously_managed_file(self):
+        """Test that files previously managed but deleted from git are cleaned up.
+
+        This tests the real-world scenario:
+        1. Deploy files from git (file1, file2, file3) - registry tracks them
+        2. Delete file3 from git
+        3. Run refresh - file3 should be auto-deleted (git is source of truth)
+        """
+        # Setup source with 3 files initially (use non-excluded extension)
+        src_dir = self.repo_dir / "config"
+        src_dir.mkdir()
+        (src_dir / ".bashrc").write_text("content1")
+        (src_dir / ".vimrc").write_text("content2")
+        (src_dir / ".profile").write_text("content3")
+
+        # Setup destination with all 3 files (simulating initial deployment)
+        dst_dir = self.home_dir / "config"
+        dst_dir.mkdir()
+        (dst_dir / ".bashrc").write_text("content1")
+        (dst_dir / ".vimrc").write_text("content2")
+        (dst_dir / ".profile").write_text("content3")
+
+        # Simulate initial registry: all 3 files were managed
+        initial_managed_files = {
+            Path(".bashrc"),
+            Path(".vimrc"),
+            Path(".profile")
+        }
+        self.file_ops._update_registry(initial_managed_files)
+
+        # Verify initial state
+        assert (dst_dir / ".bashrc").exists()
+        assert (dst_dir / ".vimrc").exists()
+        assert (dst_dir / ".profile").exists()
+        assert self.file_ops.registry_file.exists()
+
+        # Simulate git deletion: remove .profile from source
+        (src_dir / ".profile").unlink()
+
+        # Run cleanup: .profile should be deleted
+        self.file_ops.export_directory_with_cleanup(
+            src_dir, dst_dir, force=True, cleanup=True, dry_run=False, interactive=False
+        )
+
+        # .bashrc and .vimrc should still exist
+        assert (dst_dir / ".bashrc").exists()
+        assert (dst_dir / ".vimrc").exists()
+
+        # .profile should be DELETED (it was managed before, but deleted from git)
+        assert not (dst_dir / ".profile").exists(), \
+            "Previously managed file deleted from git should be auto-cleaned up"
 
 
 if __name__ == "__main__":

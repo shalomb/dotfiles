@@ -75,9 +75,9 @@ command:
     
   # === SSH CONTEXT TESTS ===
 
-  # SSH context should load interactive features even in non-interactive mode
-  "SSH_CLIENT='test' bash -c 'source ~/.bashrc && type reload'":
-    exit-status: 0
+  # SSH context in non-interactive mode should NOT load interactive features
+  "SSH_CLIENT='test' bash -c 'source ~/.bashrc && type reload 2>/dev/null'":
+    exit-status: 1
     timeout: 5000
 
   # === AGENT STATUS DISPLAY ===

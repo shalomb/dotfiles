@@ -1,4 +1,82 @@
-# 🎯 **CURRENT PRIORITY: Bashrc Interactive/Login Shell Refactoring**
+# ✅ COMPLETED: Holistic Bash Startup Refactoring
+
+## Goal
+
+To refactor the entire Bash startup process (`.profile`, `.bash_profile`, `.bashrc`) for speed, portability, and maintainability, with a clear distinction between login, interactive, and context-specific (e.g., desktop vs. container) configurations.
+
+## Testing Protocol
+
+All work under this plan will adhere to the following protocol:
+- **Test Environment:** A dedicated `tmux` window will be used.
+- **Test Execution:** All tests will be run in a new, temporary `tmux` pane which will be destroyed after the test.
+- **Readiness Polling:** A polling mechanism will be used to ensure the shell is ready before sending commands, with a timeout of 5 seconds.
+
+## Execution Plan
+
+### Phase 1: Analysis and Mapping
+
+- [x] Read and map the execution flow of `.profile`, `.bash_profile`, and `.bashrc`.
+- [x] Identify and categorize all settings:
+    - [x] Login-Only (e.g., initial `PATH` setup).
+    - [x] Interactive-Only (e.g., aliases, prompt).
+    - [x] Context-Specific (e.g., GUI/desktop tools).
+
+### Phase 2: Refactoring
+
+- [x] **Isolate Login Logic:** Consolidate one-time environment setup into `.profile` and/or `.bash_profile`.
+- [x] **Isolate Interactive Logic:** Ensure `.bashrc` contains only logic necessary for interactive shells.
+- [x] **Implement Context Detection:** Add a mechanism (e.g., an environment variable in the `Containerfile`) to detect the container environment and conditionally load configurations.
+
+### Phase 3: Continued Optimization
+
+- [x] Continue the lazy-loading and caching optimizations for the remaining scripts in the `enabled/` directory within the new, structured framework.
+
+---
+
+# ✅ COMPLETED: Bash Startup Optimization
+
+## Goal
+
+To refactor the Bash configuration to be faster and more maintainable by eliminating unnecessary work done at shell startup. The configuration should fail explicitly if required tools are not present in the known environment.
+
+## Optimization Strategies
+
+1.  **Lazy-Load Initializers:** For tools that run a one-time `init` command at startup (e.g., `amazon-q`), this logic will be deferred. A wrapper function will be created that, on the first invocation of the tool, runs the initialization step and then calls the real executable.
+
+2.  **Cache Expensive Completions:** For tools with slow command-line completion generation (e.g., `rustup completions bash`), the generated script will be cached in `$XDG_CACHE_HOME/bash_completions/`. On shell startup, the cached script will be sourced directly, avoiding the expensive generation process. The cache will be regenerated only if the tool's binary is newer than the cached file.
+
+## Execution Plan
+
+The following tasks will be executed in order to implement the optimization strategies.
+
+### Priority 1: Implement Completion Caching
+
+1.  **Refactor `rustup.sh`:**
+    *   [x] Modify the script to check for a cached completion file (`$XDG_CACHE_HOME/bash_completions/rustup`).
+    *   [x] If the cache is missing or stale (by comparing modification times with the `rustup` binary), regenerate it using `rustup completions bash`.
+    *   [x] Source the cached completion script.
+
+2.  **Audit and Refactor Other Completion Scripts:**
+    *   [x] Investigated `gh.sh`, `npm.sh`, `go.sh`, `aws.sh`, `git.sh`, `gum-completion.bash.sh`, `fzf.sh`.
+    *   [x] Refactored `gh.sh` to lazy-load copilot aliases.
+    *   [x] Refactored `gum-completion.bash.sh` to use the caching pattern.
+    *   [x] Refactored `fzf.sh` to cache its completion script.
+    *   [x] **Next:** Continue auditing remaining scripts in `enabled/`.
+
+### Priority 2: Implement Lazy-Loading for Initializers
+
+1.  **Refactor `amazon-q.sh`:**
+    *   [x] Create a wrapper function `q()`.
+    *   [x] The function will run the one-time `init` logic from the `bashrc.pre.bash` script on its first execution.
+    *   [x] After the first run, it will call the real `q` command directly.
+
+2.  **Audit and Refactor Other Initializers:**
+    *   [x] Investigate other scripts in `enabled/` to see if they perform similar one-time initializations that can be deferred.
+    *   [x] Apply the lazy-loading pattern where appropriate.
+
+---
+
+# ✅ COMPLETED: Bashrc Interactive/Login Shell Refactoring
 
 ## 📋 **TODO: Simplify bashrc interactive shell detection**
 
@@ -48,7 +126,7 @@ export DOTFILES_ROOT="$HOME/.config/dotfiles"
 
 # Load enabled scripts
 for script in "$BASHRC_DIR"/enabled/*.sh; do
-    [[ -f "$script" ]] && source "$script"
+    [[ -f "$script" && "$script" != *.md ]] && source "$script"
 done
 
 # Define interactive functions
@@ -67,13 +145,13 @@ reload() {
 6. **SSH-aware**: Handles SSH contexts properly
 
 ### **Implementation Tasks**
-- [ ] **Refactor bashrc structure**: Split into universal/interactive sections
-- [ ] **Remove INTERACTIVE_MODE variable**: Replace with early return pattern
-- [ ] **Remove scattered conditionals**: All interactive code goes in interactive section
-- [ ] **Test login shell compatibility**: Ensure .bash_profile integration works
-- [ ] **Test SSH contexts**: Verify SSH sessions work correctly
-- [ ] **Test tmux contexts**: Ensure tmux panes get interactive features
-- [ ] **Validate all functions load**: reload, dotfiles, aliases, etc.
+- [x] **Refactor bashrc structure**: Split into universal/interactive sections
+- [x] **Remove INTERACTIVE_MODE variable**: Replace with early return pattern
+- [x] **Remove scattered conditionals**: All interactive code goes in interactive section
+- [x] **Test login shell compatibility**: Ensure .bash_profile integration works
+- [x] **Test SSH contexts**: Verify SSH sessions work correctly
+- [x] **Test tmux contexts**: Ensure tmux panes get interactive features
+- [x] **Validate all functions load**: reload, dotfiles, aliases, etc.
 
 ### **Success Criteria**
 - [ ] **reload function works in tmux panes**
@@ -688,8 +766,6 @@ time tmuxie -l
 ✅ **Agentctl Integration**: Reports all systems healthy
 ✅ **Git Integration**: GPG signing works in git commits
 
-**Root Cause**: Issues described in TODO appear to have been resolved by previous agentctl implementation and bash restructuring work.
-
 **Verification**: Tested in tmux/SSH context - all functionality working as expected.
 
 ---
@@ -1171,4 +1247,3 @@ bash: rustup: command not found  # Still missing
 
 ### **Priority**
 **MEDIUM** - Functionality works after reload, but startup sequence needs improvement
-

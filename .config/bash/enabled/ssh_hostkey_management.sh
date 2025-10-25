@@ -1,12 +1,6 @@
 #!/bin/bash
 
-# CRITICAL: Prevent agent process blocking
-# This script contains interactive prompts (read -p) that will cause AI agents
 
-# Additional safety check: ensure stdin is a terminal
-# This prevents the script from running in environments where stdin is not
-# connected to a terminal (pipes, redirects, background processes, etc.)
-[[ -t 0 ]] || return
 
 function resolve_host {
   local hostname=
