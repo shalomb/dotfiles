@@ -377,9 +377,11 @@ tmux list-keys | grep "bind-key.*r"  # Check reload binding
 
 ## Core Development Principles
 
-### **MANDATORY: Test-Driven Development for Bash Changes (ADR-005)**
+### **MANDATORY: Test-Driven Development for Bash Changes (ADR-005, ADR-008)**
 
 **STRICT REQUIREMENT**: All bash configuration changes MUST follow TDD (Test-Driven Development):
+
+**Testing Framework**: Uses **Goss** for infrastructure testing (See ADR-008 for rationale and best practices)
 
 #### **Red-Green-Refactor Workflow**
 
@@ -478,7 +480,9 @@ Bash testing uses **goss** (YAML-based infrastructure testing). All tests in `te
 
 **NO EXCEPTIONS**: TDD for bash is not optional. This is a **REQUIREMENT**.
 
-See `docs/architecture/ADR-005-mandatory-testing-before-export.md` for full details.
+**References**:
+- `docs/architecture/ADR-005-mandatory-testing-before-export.md` - TDD workflow requirement
+- `docs/architecture/ADR-008-goss-infrastructure-testing.md` - Goss testing framework (retrospective ADR)
 
 ### **Use Correct Conventions, Processes, and Interfaces**
 
