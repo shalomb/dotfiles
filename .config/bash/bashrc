@@ -127,6 +127,8 @@ reload() {
     source ~/.bashrc
 }
 
-# =============================================================================
-# Silent startup - no verbose output
-# =============================================================================
+# Show agent status at end of interactive shell startup
+if type agentctl &>/dev/null; then
+    echo "🔐 Agent Status:"
+    agentctl status 2>/dev/null || true
+fi
