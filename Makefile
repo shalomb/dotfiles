@@ -229,6 +229,14 @@ test: ## Run acceptance tests (usage: make test [FAST=1])
 		uv run pytest tests/test_environment.py tests/test_shell_integration.py tests/test_tmux.py tests/test_dotfile_deployment.py -v --tb=short; \
 	fi
 
+test-bash-container: ## Test bash config in OS-matched container with tmux
+	@if [ -z "$$TMUX" ]; then \
+		echo "❌ This target requires tmux. Start tmux first: tmux"; \
+		exit 1; \
+	fi
+	@echo "🐳 Testing bash config in container (OS-matched)..."
+	@./scripts/test-bash-in-container-tmux.sh
+
 test-bash: ## Run all bash test suites with goss
 	@echo "Running bash validation tests..."
 	@goss -g tests/goss-bash-safe.yaml validate --format documentation

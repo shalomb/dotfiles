@@ -1,5 +1,10 @@
-# Use the official Debian Trixie image as a base
-FROM debian:trixie
+# AGENT_CONTEXT: OS-matched container for bash config testing
+# ARCHITECTURE: Parameterized base image selection
+# DESIGN_PATTERN: ARG for build-time image selection
+
+# Use base image matching host OS (set via --build-arg BASE_IMAGE=...)
+ARG BASE_IMAGE=debian:trixie
+FROM ${BASE_IMAGE}
 
 # Install all necessary system-level dependencies
 RUN apt-get update && apt-get install -y \
