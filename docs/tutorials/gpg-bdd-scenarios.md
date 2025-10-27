@@ -46,19 +46,72 @@ Scenario: Cursor-agent signs commits without user intervention
   And the commit should be verified as signed
 ```
 
-### Scenario: GPG Agent Recovery
+### Scenario: GPG Agent Recovery - Agent Not Responding
 
 ```gherkin
-Scenario: Automatic GPG agent recovery when signing fails
+Scenario: Automatic GPG agent recovery when agent not responding
   Given GPG agent is not responding
   And cursor-agent needs to make a commit
   And GPG recovery tools are available
-  
+
   When cursor-agent attempts to sign a commit
   Then GPG recovery should be triggered automatically
   And GPG agent should be restarted
   And the commit should be signed successfully
   And recovery should complete within 5 seconds
+```
+
+### Scenario: GPG Agent Recovery - Keys Cached
+
+```gherkin
+Scenario: Recovery succeeds immediately when keys already cached
+  Given GPG agent is running
+  And GPG keys are unlocked (passphrase cached)
+  And agentctl is available
+
+  When I run "agentctl gpg recover"
+  Then command should complete within 1 second
+  And command should exit with status 0
+  And output should contain "GPG agent recovered successfully"
+  And output should not contain bash errors
+  And output should not contain "command not found"
+  And logging should appear on stderr
+  And results should appear on stdout
+  And no pinentry prompt should appear
+```
+
+### Scenario: GPG Agent Recovery - Keys Not Cached (Interactive)
+
+```gherkin
+Scenario: Recovery prompts for passphrase when keys not cached
+  Given GPG agent is running
+  And GPG keys are locked (passphrase not cached)
+  And I am in an interactive terminal with TTY
+  And agentctl is available
+
+  When I run "agentctl gpg recover"
+  Then pinentry should appear prompting for passphrase
+  And I enter the correct passphrase
+  And command should exit with status 0
+  And output should contain "GPG agent recovered successfully"
+  And subsequent signing operations should not require passphrase
+  And recovery should complete within 60 seconds
+```
+
+### Scenario: GPG Agent Recovery - Keys Not Cached (Non-Interactive)
+
+```gherkin
+Scenario: Recovery fails gracefully without TTY
+  Given GPG agent is running
+  And GPG keys are locked (passphrase not cached)
+  And no TTY is available (non-interactive context)
+  And agentctl is available
+
+  When I run "agentctl gpg recover"
+  Then command should exit with status 1
+  And output should contain "Failed to recover GPG agent"
+  And error message should indicate "No TTY available"
+  And no hanging processes should remain
 ```
 
 ### Scenario: SSH Environment GPG Signing
@@ -100,12 +153,61 @@ Scenario: GPG agent starts with correct configuration
 Scenario: GPG agent health monitoring
   Given GPG agent is running
   And health check tools are available
-  
+
   When I check GPG agent health
   Then agent should respond to keyinfo requests
   And agent should have active keys loaded
   And agent should be using correct pinentry
   And agent should report healthy status
+```
+
+### Scenario: GPG Keys Unlock - Interactive
+
+```gherkin
+Scenario: Unlock GPG keys interactively
+  Given GPG agent is running
+  And GPG keys are locked (passphrase not cached)
+  And I am in an interactive terminal with TTY
+  And GPG_TTY environment variable is set correctly
+
+  When I run "agentctl gpg unlock"
+  Then pinentry should appear within 2 seconds
+  And pinentry should prompt for passphrase
+  And I enter the correct passphrase
+  And command should exit with status 0
+  And passphrase should be cached in GPG agent
+  And subsequent signing operations should succeed without passphrase
+```
+
+### Scenario: GPG Keys Unlock - Already Unlocked
+
+```gherkin
+Scenario: Unlock succeeds immediately if keys already unlocked
+  Given GPG agent is running
+  And GPG keys are already unlocked (passphrase cached)
+  And agentctl is available
+
+  When I run "agentctl gpg unlock"
+  Then command should complete within 1 second
+  And command should exit with status 0
+  And output should contain "unlocked successfully"
+  And no pinentry prompt should appear
+```
+
+### Scenario: GPG Keys Unlock - No TTY Available
+
+```gherkin
+Scenario: Unlock fails gracefully without TTY
+  Given GPG agent is running
+  And GPG keys are locked (passphrase not cached)
+  And no TTY is available (non-interactive context)
+
+  When I run "agentctl gpg unlock"
+  Then command should exit with status 1
+  And output should contain "Cannot unlock keys"
+  And error message should indicate "No TTY available"
+  And no pinentry prompt should appear
+  And no hanging processes should remain
 ```
 
 ## Feature: Pinentry Management

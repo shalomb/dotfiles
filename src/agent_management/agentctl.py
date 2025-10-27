@@ -164,13 +164,37 @@ class AgentManager:
             return False
     
     def unlock_gpg_agent(self) -> bool:
-        """Attempt to unlock GPG agent using loopback mode."""
+        """Trigger pinentry to cache GPG key passphrase."""
+        # Check if we have a TTY available
+        gpg_tty = os.environ.get('GPG_TTY', '')
+        if not gpg_tty or gpg_tty == 'not a tty':
+            self.logger.error("Cannot unlock keys: No TTY available")
+            return False
+
+        self.logger.info("Triggering pinentry to unlock keys")
         try:
-            # Try to unlock using loopback mode
-            result = subprocess.run(['gpg', '--pinentry-mode', 'loopback', '--sign', '--batch', '--yes'], 
-                                  input=b'test\n', capture_output=True, timeout=10)
-            return result.returncode == 0
-        except (subprocess.TimeoutExpired, FileNotFoundError):
+            # Trigger pinentry by attempting a sign operation
+            # Do NOT use --batch or --pinentry-mode loopback
+            # This allows pinentry to prompt interactively
+            result = subprocess.run(
+                ['gpg', '--sign', '--armor'],
+                input=b'test\n',
+                timeout=60,  # Allow time for passphrase entry
+                env={**os.environ, 'GPG_TTY': gpg_tty}
+            )
+
+            if result.returncode == 0:
+                self.logger.info("Keys unlocked successfully")
+                return True
+            else:
+                self.logger.error("Failed to unlock keys")
+                return False
+
+        except subprocess.TimeoutExpired:
+            self.logger.error("Timeout waiting for passphrase entry")
+            return False
+        except FileNotFoundError:
+            self.logger.error("gpg command not found")
             return False
     
     def check_gpg_ssh_socket(self) -> bool:
@@ -370,9 +394,37 @@ class AgentManager:
     
     # GPG-specific methods
     def recover_gpg_agent(self) -> bool:
-        """Recover GPG agent specifically."""
+        """
+        Recover GPG agent by ensuring signing capability is available.
+
+        Decision tree:
+        1. Check if agent is responding
+           - If not: restart agent
+        2. Check if keys are unlocked (can sign)
+           - If yes: success
+           - If no: attempt to unlock
+        3. If unlock fails, try restarting agent
+        """
         self.logger.info("Recovering GPG agent")
-        return self.init_gpg_agent()
+
+        # Step 1: Check if GPG agent is responding
+        if not self.check_gpg_agent():
+            self.logger.info("GPG agent not responding, restarting")
+            return self.restart_gpg_agent()
+
+        # Step 2: Check if keys are unlocked (can sign)
+        if self.test_gpg_signing():
+            self.logger.info("GPG agent healthy, keys unlocked")
+            return True
+
+        # Step 3: Keys are locked, attempt to unlock
+        self.logger.info("GPG agent running but keys locked, attempting unlock")
+        if self.unlock_gpg_agent():
+            return True
+
+        # Step 4: If unlock failed, try restarting as last resort
+        self.logger.info("Unlock failed, attempting restart")
+        return self.restart_gpg_agent()
     
     def restart_gpg_agent(self) -> bool:
         """Restart GPG agent specifically."""
