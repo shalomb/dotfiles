@@ -224,6 +224,44 @@ def test_gpg_signing(self) -> bool:
 
 **Critical**: stderr must NOT be redirected to stdout in bash wrapper (fixes `2>&1` bug)
 
+### Shell Integration Mode (`--shell` flag)
+
+When `--shell` flag is used, agentctl outputs shell export statements for bash wrapper to eval:
+
+**Output separation with `--shell` flag**:
+
+1. **stdout**: Shell export statements (for `eval` in bash wrapper)
+   ```bash
+   export SSH_AUTH_SOCK='/tmp/ssh-abc123/agent.1234'
+   export GPG_TTY='/dev/pts/0'
+   ```
+
+2. **stderr**: Both logging AND success/error messages
+   ```
+   2025-10-28 19:21:01,299 - INFO - Recovering GPG agent
+   2025-10-28 19:21:01,469 - INFO - GPG agent healthy, keys unlocked
+   ✅ GPG agent recovered successfully
+   ```
+
+**Why this design?**:
+- stdout contains ONLY exports → clean for bash `eval`
+- stderr contains everything else → visible to user but not eval'd
+- Success messages on stderr prevent them from being suppressed when exports are empty
+- Logs and success messages appear together for better UX
+
+**Bash wrapper behavior**:
+```bash
+# Capture stdout only (for exports)
+output=$(agentctl --shell gpg recover 2>&1 >/tmp/file)
+
+# Check if output has exports
+if grep -q '^export ' /tmp/file; then
+    eval "$(cat /tmp/file)"  # Only eval exports
+fi
+
+# stderr (logs + success messages) visible to user automatically
+```
+
 ### Environment Requirements
 
 1. **GPG_TTY**: Must be set to actual TTY path (not "not a tty")

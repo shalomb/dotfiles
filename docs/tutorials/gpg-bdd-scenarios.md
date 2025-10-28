@@ -80,6 +80,28 @@ Scenario: Recovery succeeds immediately when keys already cached
   And no pinentry prompt should appear
 ```
 
+### Scenario: GPG Agent Recovery - Shell Integration Mode
+
+```gherkin
+Scenario: Recovery with --shell flag outputs exports and success messages
+  Given GPG agent is running
+  And GPG keys are unlocked (passphrase cached)
+  And agentctl is available
+  And bash wrapper uses --shell flag
+
+  When I run "agentctl --shell gpg recover"
+  Then command should exit with status 0
+  And stdout should contain shell export statements
+  And stdout should contain "export SSH_AUTH_SOCK" or "export GPG_TTY"
+  And stderr should contain logging timestamps
+  And stderr should contain "INFO - Recovering GPG agent"
+  And stderr should contain "✅ GPG agent recovered successfully"
+  And success message should be visible to user on stderr
+  And bash wrapper should eval exports from stdout
+  And bash wrapper should not eval log messages
+  And no "command not found" errors should occur
+```
+
 ### Scenario: GPG Agent Recovery - Keys Not Cached (Interactive)
 
 ```gherkin
