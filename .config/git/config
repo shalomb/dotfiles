@@ -158,6 +158,9 @@
   email = s.bhooshi@gmail.com
   signingkey = 6E58CBDB4D4FFAF09114729738495CCA2D2EF563
 
+[includeIf "gitdir:~/oneTakeda/"]
+  path = ~/.config/git/config.work
+
 [alias]
   ammend  = commit --amend -C HEAD
   base    = !echo ${BASE:-$(git rev-parse --abbrev-ref HEAD)}
