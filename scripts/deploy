@@ -1,0 +1,10 @@
+#!/bin/bash
+# Routine deployment script - always fixes hardlinks automatically
+
+set -euo pipefail
+
+# Always use option 4 (commit changes first) for dotfile manager
+echo "🔄 Deploying with automatic hardlink fix..."
+echo "4" | uv run python -m dotfile_manager export "$@"
+
+echo "✅ Deployment complete with hardlinks fixed"

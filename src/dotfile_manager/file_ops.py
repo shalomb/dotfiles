@@ -165,20 +165,24 @@ class FileOperations:
         
         return sorted(orphans)
     
-    def _is_in_registry(self, file_path: Path) -> bool:
-        """Check if file is in the managed files registry."""
+    def _load_registry(self) -> Set[Path]:
+        """Load the managed files registry and return set of managed files."""
         if not self.registry_file.exists():
-            return False
-        
+            return set()
+
         try:
             with open(self.registry_file, 'r') as f:
                 registry = json.load(f)
-            
-            # Convert to Path objects for comparison
-            managed_paths = {Path(p) for p in registry.get('managed_files', [])}
-            return file_path in managed_paths
+
+            # Convert to Path objects
+            return {Path(p) for p in registry.get('managed_files', [])}
         except (json.JSONDecodeError, KeyError):
-            return False
+            return set()
+
+    def _is_in_registry(self, file_path: Path) -> bool:
+        """Check if file is in the managed files registry."""
+        managed_paths = self._load_registry()
+        return file_path in managed_paths
     
     def _update_registry(self, managed_files: Set[Path]) -> None:
         """Update the managed files registry."""
@@ -277,46 +281,53 @@ class FileOperations:
         
         print(f"✅ Cleaned up {deleted_count} orphaned files.")
     
-    def export_directory_with_cleanup(self, src_path: Path, dst_path: Path, 
+    def export_directory_with_cleanup(self, src_path: Path, dst_path: Path,
                                     force: bool = False, cleanup: bool = False,
                                     dry_run: bool = False, interactive: bool = False,
                                     create_backup: bool = False) -> None:
         """Export directory with optional orphan cleanup."""
+        # Load OLD registry BEFORE any updates (for orphan detection)
+        old_managed_files = self._load_registry() if cleanup else set()
+
         # First, do normal export
         self.export_directory(src_path, dst_path, force=force)
-        
+
         if not cleanup:
             return
-        
-        # Get list of files that should be managed
-        managed_files = set()
+
+        # Get list of files that SHOULD be managed (current git files)
+        current_managed_files = set()
         for root, dirs, files in os.walk(src_path):
             root_path = Path(root)
             rel_path = root_path.relative_to(src_path)
             dst_dir = dst_path / rel_path
-            
+
             for file_name in files:
                 src_file = root_path / file_name
                 if not self._should_skip_file(src_file):
                     rel_file_path = dst_dir / file_name
-                    managed_files.add(rel_file_path.relative_to(dst_path))
-        
-        # Update registry with current managed files
-        self._update_registry(managed_files)
-        
-        # Detect orphans
-        orphans = self.detect_orphans(dst_path, managed_files)
+                    current_managed_files.add(rel_file_path.relative_to(dst_path))
+
+        # Detect orphans: files that WERE managed but are NO LONGER in git
+        orphans = []
+        for old_file_rel_path in old_managed_files:
+            old_file_abs_path = dst_path / old_file_rel_path
+            if old_file_rel_path not in current_managed_files and old_file_abs_path.exists():
+                orphans.append(old_file_abs_path)
+
+        # Update registry with current managed files for next run
+        self._update_registry(current_managed_files)
         
         if not orphans:
             print("✅ No orphaned files found.")
             return
-        
+
         # Create backup if requested
         backup_dir = None
         if create_backup and not dry_run:
             backup_dir = self.create_backup(dst_path)
             print(f"📦 Backup created: {backup_dir}")
-        
+
         # Handle cleanup based on mode
         if dry_run:
             self.cleanup_orphans(orphans, dry_run=True)
@@ -324,7 +335,6 @@ class FileOperations:
             if self.bulk_review_orphans(orphans, dst_path):
                 self.cleanup_orphans(orphans, dry_run=False)
         else:
-            # Non-interactive mode - just log what would be cleaned
-            logger.info(f"Found {len(orphans)} orphaned files (use --interactive to review)")
-            for orphan in orphans:
-                logger.info(f"  Orphaned: {orphan}")
+            # Non-interactive mode - auto-delete orphaned tracked files (git is source of truth)
+            logger.info(f"Auto-cleaning {len(orphans)} orphaned tracked files")
+            self.cleanup_orphans(orphans, dry_run=False)

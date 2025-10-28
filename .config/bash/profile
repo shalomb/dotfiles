@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # SOURCING: ~/.profile, ~/.bash_profile (symlinks)
-# SOURCES: profile.d/*.sh, 00-path, ~/.local/bin/env
+# SOURCES: profile.d/*.sh, lib/00-path
 # DOES NOT SOURCE: bashrc (prevents infinite loops)
 
 # ADR-001: Environment Variables in Login Shells
@@ -29,13 +29,12 @@ if [[ -d ~/.config/profile.d ]]; then
   unset i
 fi
 
+# Load XDG Base Directory variables
+. ~/.config/posix/01-xdg.sh
+
 # Load environment variables (PATH, MANPATH, etc.) for all shell types
 # This ensures login shells, non-terminal shells, and interactive shells all get proper environment
-if [ -f ~/.config/bash/rc.d/00-path ]; then
-    . ~/.config/bash/rc.d/00-path
-else
-    [ -n "${DOTFILES_DEBUG:-}" ] && echo "debug: PATH configuration file missing" >&2
-fi
+. ~/.config/posix/00-path.sh
 
 # Note: Removed BASH_RC_SOURCED check as it was causing circular dependency
 # The bashrc has its own interactive check to prevent issues
@@ -66,9 +65,7 @@ export VISUAL="$EDITOR"
 # Source bashrc for interactive shells (standard bash convention)
 # This ensures tmux new windows and login shells get full bash configuration
 if [ -f ~/.bashrc ]; then
-    export BASH_PROFILE_SOURCED=1
     . ~/.bashrc
-    unset BASH_PROFILE_SOURCED
 fi
 
 if [ "${TTY:-$(tty)}" = '/dev/tty1' ]; then
@@ -77,5 +74,3 @@ if [ "${TTY:-$(tty)}" = '/dev/tty1' ]; then
   TMOUT=120
   clear
 fi
-
-. "$HOME/.local/bin/env"

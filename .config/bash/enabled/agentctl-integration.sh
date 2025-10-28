@@ -31,7 +31,11 @@ agentctl() {
     fi
     
     # Change to dotfiles directory and run agentctl
-    if (cd "$dotfiles_dir" && uv run python -m agent_management.agentctl --shell "$@") > "$temp_file" 2>&1; then
+    # Note: Do NOT redirect stderr to stdout (2>&1) because:
+    # - stdout contains results and shell exports (for eval)
+    # - stderr contains logging (timestamps, INFO/ERROR messages)
+    # - Mixing them causes bash to try to eval log lines, resulting in "command not found" errors
+    if (cd "$dotfiles_dir" && uv run python -m agent_management.agentctl --shell "$@") > "$temp_file"; then
         exit_code=0
     else
         exit_code=$?

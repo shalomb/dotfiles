@@ -12,9 +12,9 @@ class TestShellIntegration:
         # Create a clean environment for testing
         clean_env = {k: v for k, v in test_env.items() if not k.startswith('BASH_')}
         
-        # Create a test script that sources bash_profile
+        # Create a test script that sources bash_profile from repo
         test_script = '''
-        source ~/.bash_profile
+        source .config/bash/profile
         echo "BASH_RC_SOURCED: $BASH_RC_SOURCED"
         echo "PATH: $PATH"
         '''
@@ -31,9 +31,9 @@ class TestShellIntegration:
         # Create a clean environment for testing
         clean_env = {k: v for k, v in test_env.items() if not k.startswith('BASH_')}
         
-        # Create a test script that sources bashrc
+        # Create a test script that sources bashrc from repo
         test_script = '''
-        source ~/.config/bash/bashrc
+        source .config/bash/bashrc
         echo "PATH: $PATH"
         '''
         
@@ -91,7 +91,7 @@ class TestShellIntegration:
         clean_env = {k: v for k, v in test_env.items() if not k.startswith('BASH_')}
         
         # Test that functions from bashrc are available
-        result = cmd('bash -c "source ~/.config/bash/bashrc && type -t path-debug"', env=clean_env)
+        result = cmd('bash -c "source .config/bash/bashrc && type -t path-debug"', env=clean_env)
         if not result['success']:
             pytest.skip("path-debug function not available (may not be defined)")
         assert 'function' in result['stdout'], "path-debug function not defined"
@@ -99,6 +99,6 @@ class TestShellIntegration:
     def test_shell_aliases_available(self, cmd, test_env):
         """Test that shell aliases are available."""
         # Test that aliases from bashrc are available
-        result = cmd('bash -c "source ~/.config/bash/bashrc && alias | grep -q ll"', env=test_env)
+        result = cmd('bash -c "source .config/bash/bashrc && alias | grep -q ll"', env=test_env)
         # This might not have aliases, so we just check it doesn't crash
         assert result['returncode'] in [0, 1], f"Shell aliases test failed: {result['stderr']}"

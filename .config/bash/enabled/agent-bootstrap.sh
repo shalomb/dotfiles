@@ -8,10 +8,6 @@
 
 
 # Note: agentctl is now a bash function defined in enabled/agentctl-integration.sh
-# It will be loaded before this lib script runs
+# It will be loaded before this script runs
 
-# Show status if in interactive mode
-if [[ -t 0 ]] && type agentctl &>/dev/null; then
-    echo "🔐 Agent Status:"
-    agentctl status 2>/dev/null || true
-fi
+# Agent status display happens at the end of bashrc

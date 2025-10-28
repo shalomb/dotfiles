@@ -1,16 +1,19 @@
 #!/bin/bash
-# AGENT_CONTEXT: gum bash completion script
-# ARCHITECTURE: enabled/ -> symlinks -> lib/ or tools/
-# DESIGN_PATTERN: Completion script for gum CLI tool
+#!/bin/bash
 
-# Enable gum bash completion
-if command -v gum >/dev/null 2>&1; then
-    # Source gum completion if available
-    if gum completion bash >/dev/null 2>&1; then
-        source <(gum completion bash)
-    else
-        echo "Warning: gum completion not available" >&2
-    fi
-else
-    echo "Warning: gum command not found" >&2
+
+
+_cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/bash_completions"
+_completion_file="${_cache_dir}/gum"
+
+# Create the cache directory if it doesn't exist.
+mkdir -p "$_cache_dir"
+
+# If the completion file doesn't exist, or if the gum binary is
+# newer than the completion file, regenerate it.
+if [[ ! -f "$_completion_file" || "$(command -v gum)" -nt "$_completion_file" ]]; then
+  gum completion bash > "$_completion_file"
 fi
+
+# Source the completion file.
+source "$_completion_file"

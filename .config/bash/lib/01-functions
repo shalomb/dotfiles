@@ -2,12 +2,19 @@
 
 # shared functions
 
+# Check if running in interactive shell
 @is-interactive() {
   [[ ${-//[!i]/} ]]
 }
 
+# Check if a command exists
+has-cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Compatibility alias for old scripts
 @has-cmd() {
-  type -P "$1" &>/dev/null
+    has-cmd "$@"
 }
 
 warn() {
@@ -42,8 +49,9 @@ function bell-alert() {
   fi
 }
 
+# Check if function is defined
 function defined() {
-  type "$1" &>/dev/null
+  declare -F "$1" >/dev/null 2>&1
 }
 
 function call-if-defined() {

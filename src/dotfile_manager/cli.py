@@ -38,7 +38,7 @@ def export(ctx: click.Context, files: List[str], cleanup: bool,
     
     # Validate options
     if cleanup and not interactive and not dry_run:
-        console.print("[yellow]Warning: --cleanup without --interactive or --dry-run will only log orphaned files[/yellow]")
+        console.print("[yellow]Note: --cleanup will auto-delete previously-managed files deleted from git (git is source of truth)[/yellow]")
     
     if dry_run:
         console.print("[blue]DRY RUN MODE - No changes will be made[/blue]")

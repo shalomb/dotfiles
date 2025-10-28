@@ -1,6 +1,7 @@
 #!/bin/bash
 # Test script for robust bashrc directory resolution
 # Tests all deployment scenarios to ensure BASHRC_DIR works correctly
+# TESTS REPO VERSION, NOT LIVE CONFIG
 
 set -euo pipefail
 
@@ -18,7 +19,7 @@ TESTS_FAILED=0
 
 # Test directories
 TEST_DIR="/tmp/bashrc-test-$$"
-ORIGINAL_BASHRC="$HOME/.bashrc"
+REPO_BASHRC=".config/bash/bashrc"
 
 # Function to run a test
 run_test() {
@@ -63,10 +64,6 @@ setup_test_env() {
 cleanup_test_env() {
     cd /
     rm -rf "$TEST_DIR"
-    # Restore original bashrc if it was modified
-    if [[ -L "$ORIGINAL_BASHRC" ]]; then
-        rm -f "$ORIGINAL_BASHRC"
-    fi
 }
 
 # Function to create test bashrc
@@ -76,8 +73,8 @@ create_test_bashrc() {
 # Test bashrc for directory resolution testing
 
 # Source the resolve function
-if [[ -f "$HOME/.config/dotfiles/.config/bash/lib/resolve-bashrc-dir.sh" ]]; then
-    source "$HOME/.config/dotfiles/.config/bash/lib/resolve-bashrc-dir.sh"
+if [[ -f ".config/bash/lib/resolve-bashrc-dir.sh" ]]; then
+    source ".config/bash/lib/resolve-bashrc-dir.sh"
 fi
 
 # Set BASHRC_DIR using robust resolution
@@ -100,40 +97,32 @@ echo "========================================"
 setup_test_env
 create_test_bashrc
 
-# Test 1: Symlink scenario
-echo -e "\n${YELLOW}Test 1: Symlink Deployment${NC}"
-ln -sf "$TEST_DIR/test-bashrc" "$ORIGINAL_BASHRC"
-run_test "Symlink deployment" "bash -c 'source ~/.bashrc'" "$TEST_DIR"
+# Test 1: Repository development (normal case)
+echo -e "\n${YELLOW}Test 1: Repository Development${NC}"
+run_test "Repository development" "bash -c 'source .config/bash/bashrc'" "$(pwd)/.config/bash"
 
-# Test 2: Regular file scenario
-echo -e "\n${YELLOW}Test 2: Regular File Deployment${NC}"
-cp "$TEST_DIR/test-bashrc" "$ORIGINAL_BASHRC"
-run_test "Regular file deployment" "bash -c 'source ~/.bashrc'" "$TEST_DIR"
+# Test 2: Non-interactive shell
+echo -e "\n${YELLOW}Test 2: Non-Interactive Shell${NC}"
+run_test "Non-interactive shell" "bash -c 'source .config/bash/bashrc'" "$(pwd)/.config/bash"
 
-# Test 3: Repository scenario
-echo -e "\n${YELLOW}Test 3: Repository Development${NC}"
-cd "$HOME/.config/dotfiles"
-run_test "Repository development" "bash -c 'source .config/bash/bashrc'" "$HOME/.config/dotfiles/.config/bash"
+# Test 3: Interactive shell
+echo -e "\n${YELLOW}Test 3: Interactive Shell${NC}"
+run_test "Interactive shell" "bash -i -c 'source .config/bash/bashrc'" "$(pwd)/.config/bash"
 
-# Test 4: Non-interactive shell
-echo -e "\n${YELLOW}Test 4: Non-Interactive Shell${NC}"
-run_test "Non-interactive shell" "bash -c 'source ~/.bashrc'" "$TEST_DIR"
-
-# Test 5: Interactive shell
-echo -e "\n${YELLOW}Test 5: Interactive Shell${NC}"
-run_test "Interactive shell" "bash -i -c 'source ~/.bashrc'" "$TEST_DIR"
-
-# Test 6: Different working directory
-echo -e "\n${YELLOW}Test 6: Different Working Directory${NC}"
+# Test 4: Different working directory
+echo -e "\n${YELLOW}Test 4: Different Working Directory${NC}"
 cd /tmp
-run_test "Different working directory" "bash -c 'source ~/.bashrc'" "$TEST_DIR"
+run_test "Different working directory" "bash -c 'source .config/bash/bashrc'" "$(pwd)/.config/bash"
 
-# Test 7: XDG fallback
-echo -e "\n${YELLOW}Test 7: XDG Fallback${NC}"
-# Create a scenario where only XDG path exists
-rm -f "$ORIGINAL_BASHRC"
-ln -sf "$HOME/.config/bash/bashrc" "$ORIGINAL_BASHRC"
-run_test "XDG fallback" "bash -c 'source ~/.bashrc'" "$HOME/.config/bash"
+# Test 5: From /var/tmp
+echo -e "\n${YELLOW}Test 5: From /var/tmp${NC}"
+cd /var/tmp
+run_test "From /var/tmp" "bash -c 'source .config/bash/bashrc'" "$(pwd)/.config/bash"
+
+# Test 6: From home directory
+echo -e "\n${YELLOW}Test 6: From Home Directory${NC}"
+cd ~
+run_test "From home directory" "bash -c 'source .config/bash/bashrc'" "$(pwd)/.config/bash"
 
 # Summary
 echo -e "\n${YELLOW}Test Summary${NC}"

@@ -140,7 +140,7 @@ class AgentManager:
         
         try:
             result = subprocess.run(['ssh-add', '-l'], 
-                                  capture_output=True, text=True, timeout=5)
+                                  capture_output=True, timeout=5)
             return result.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
@@ -149,7 +149,7 @@ class AgentManager:
         """Check if GPG agent is working."""
         try:
             result = subprocess.run(['gpg-connect-agent', 'keyinfo --list', '/bye'], 
-                                  capture_output=True, text=True, timeout=5)
+                                  capture_output=True, timeout=5)
             return result.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
@@ -158,30 +158,54 @@ class AgentManager:
         """Test if GPG signing works (keys unlocked)."""
         try:
             result = subprocess.run(['gpg', '--pinentry-mode', 'loopback', '--sign', '--batch', '--yes'], 
-                                  input='test\n', capture_output=True, text=True, timeout=10)
+                                  input=b'test\n', capture_output=True, timeout=10)
             return result.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
     
     def unlock_gpg_agent(self) -> bool:
-        """Attempt to unlock GPG agent using loopback mode."""
+        """Trigger pinentry to cache GPG key passphrase."""
+        # Check if we have a TTY available
+        gpg_tty = os.environ.get('GPG_TTY', '')
+        if not gpg_tty or gpg_tty == 'not a tty':
+            self.logger.error("Cannot unlock keys: No TTY available")
+            return False
+
+        self.logger.info("Triggering pinentry to unlock keys")
         try:
-            # Try to unlock using loopback mode
-            result = subprocess.run(['gpg', '--pinentry-mode', 'loopback', '--sign', '--batch', '--yes'], 
-                                  input='test\n', capture_output=True, text=True, timeout=10)
-            return result.returncode == 0
-        except (subprocess.TimeoutExpired, FileNotFoundError):
+            # Trigger pinentry by attempting a sign operation
+            # Do NOT use --batch or --pinentry-mode loopback
+            # This allows pinentry to prompt interactively
+            result = subprocess.run(
+                ['gpg', '--sign', '--armor'],
+                input=b'test\n',
+                timeout=60,  # Allow time for passphrase entry
+                env={**os.environ, 'GPG_TTY': gpg_tty}
+            )
+
+            if result.returncode == 0:
+                self.logger.info("Keys unlocked successfully")
+                return True
+            else:
+                self.logger.error("Failed to unlock keys")
+                return False
+
+        except subprocess.TimeoutExpired:
+            self.logger.error("Timeout waiting for passphrase entry")
+            return False
+        except FileNotFoundError:
+            self.logger.error("gpg command not found")
             return False
     
     def check_gpg_ssh_socket(self) -> bool:
         """Check if GPG agent provides SSH functionality."""
         try:
             result = subprocess.run(['gpgconf', '--list-dirs', 'agent-ssh-socket'], 
-                                  capture_output=True, text=True, timeout=5)
+                                  capture_output=True, timeout=5)
             if result.returncode != 0:
                 return False
             
-            ssh_socket = result.stdout.strip()
+            ssh_socket = result.stdout.decode('utf-8', errors='replace').strip()
             if not ssh_socket or not os.path.exists(ssh_socket):
                 return False
             
@@ -190,7 +214,7 @@ class AgentManager:
             env['SSH_AUTH_SOCK'] = ssh_socket
             
             test_result = subprocess.run(['ssh-add', '-l'], 
-                                       capture_output=True, text=True, timeout=5, env=env)
+                                       capture_output=True, timeout=5, env=env)
             if test_result.returncode == 0:
                 os.environ['SSH_AUTH_SOCK'] = ssh_socket
                 self.logger.info("Using GPG agent's SSH functionality")
@@ -205,12 +229,13 @@ class AgentManager:
         """Start a new SSH agent."""
         try:
             result = subprocess.run(['ssh-agent', '-s'], 
-                                  capture_output=True, text=True, timeout=10)
+                                  capture_output=True, timeout=10)
             if result.returncode != 0:
                 return False
             
             # Parse agent output
-            lines = result.stdout.strip().split('\n')
+            output = result.stdout.decode('utf-8', errors='replace')
+            lines = output.strip().split('\n')
             ssh_agent_pid = None
             ssh_auth_sock = None
             
@@ -244,7 +269,7 @@ class AgentManager:
             
             # Start GPG agent
             result = subprocess.run(['gpg-agent', '--daemon', '--enable-ssh-support'], 
-                                  capture_output=True, text=True, timeout=10)
+                                  capture_output=True, timeout=10)
             if result.returncode != 0:
                 return False
             
@@ -252,11 +277,11 @@ class AgentManager:
             
             # Get agent info
             socket_result = subprocess.run(['gpgconf', '--list-dirs', 'agent-socket'], 
-                                         capture_output=True, text=True, timeout=5)
+                                         capture_output=True, timeout=5)
             if socket_result.returncode != 0:
                 return False
             
-            socket = socket_result.stdout.strip()
+            socket = socket_result.stdout.decode('utf-8', errors='replace').strip()
             if socket and os.path.exists(socket):
                 os.environ['GPG_AGENT_INFO'] = f"{socket}:0:1"
                 
@@ -351,9 +376,10 @@ class AgentManager:
     def list_ssh_keys(self) -> List[str]:
         """List SSH keys."""
         try:
-            result = subprocess.run(['ssh-add', '-l'], capture_output=True, text=True, timeout=5)
+            result = subprocess.run(['ssh-add', '-l'], capture_output=True, timeout=5)
             if result.returncode == 0:
-                return [line.strip() for line in result.stdout.split('\n') if line.strip()]
+                output = result.stdout.decode('utf-8', errors='replace')
+                return [line.strip() for line in output.split('\n') if line.strip()]
             return []
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return []
@@ -368,9 +394,37 @@ class AgentManager:
     
     # GPG-specific methods
     def recover_gpg_agent(self) -> bool:
-        """Recover GPG agent specifically."""
+        """
+        Recover GPG agent by ensuring signing capability is available.
+
+        Decision tree:
+        1. Check if agent is responding
+           - If not: restart agent
+        2. Check if keys are unlocked (can sign)
+           - If yes: success
+           - If no: attempt to unlock
+        3. If unlock fails, try restarting agent
+        """
         self.logger.info("Recovering GPG agent")
-        return self.init_gpg_agent()
+
+        # Step 1: Check if GPG agent is responding
+        if not self.check_gpg_agent():
+            self.logger.info("GPG agent not responding, restarting")
+            return self.restart_gpg_agent()
+
+        # Step 2: Check if keys are unlocked (can sign)
+        if self.test_gpg_signing():
+            self.logger.info("GPG agent healthy, keys unlocked")
+            return True
+
+        # Step 3: Keys are locked, attempt to unlock
+        self.logger.info("GPG agent running but keys locked, attempting unlock")
+        if self.unlock_gpg_agent():
+            return True
+
+        # Step 4: If unlock failed, try restarting as last resort
+        self.logger.info("Unlock failed, attempting restart")
+        return self.restart_gpg_agent()
     
     def restart_gpg_agent(self) -> bool:
         """Restart GPG agent specifically."""
@@ -382,10 +436,11 @@ class AgentManager:
         """List GPG keys."""
         try:
             result = subprocess.run(['gpg', '--list-secret-keys', '--with-colons'], 
-                                  capture_output=True, text=True, timeout=5)
+                                  capture_output=True, timeout=5)
             if result.returncode == 0:
+                output = result.stdout.decode('utf-8', errors='replace')
                 keys = []
-                for line in result.stdout.split('\n'):
+                for line in output.split('\n'):
                     if line.startswith('sec:'):
                         parts = line.split(':')
                         if len(parts) > 4:
@@ -448,9 +503,10 @@ class AgentManager:
             
             try:
                 result = subprocess.run(['ssh-add', '-l'], 
-                                      capture_output=True, text=True, timeout=5)
+                                      capture_output=True, timeout=5)
                 if result.returncode == 0:
-                    status['ssh']['keys'] = len(result.stdout.strip().split('\n'))
+                    output = result.stdout.decode('utf-8', errors='replace')
+                    status['ssh']['keys'] = len(output.strip().split('\n'))
             except (subprocess.TimeoutExpired, FileNotFoundError):
                 pass
         
@@ -459,9 +515,10 @@ class AgentManager:
             status['gpg']['available'] = True
             try:
                 socket_result = subprocess.run(['gpgconf', '--list-dirs', 'agent-socket'], 
-                                             capture_output=True, text=True, timeout=5)
+                                             capture_output=True, timeout=5)
                 if socket_result.returncode == 0:
-                    status['gpg']['socket'] = socket_result.stdout.strip()
+                    output = socket_result.stdout.decode('utf-8', errors='replace')
+                    status['gpg']['socket'] = output.strip()
             except (subprocess.TimeoutExpired, FileNotFoundError):
                 pass
             
@@ -474,9 +531,10 @@ class AgentManager:
             
             try:
                 result = subprocess.run(['gpg-connect-agent', 'keyinfo --list', '/bye'], 
-                                      capture_output=True, text=True, timeout=5)
+                                      capture_output=True, timeout=5)
                 if result.returncode == 0:
-                    status['gpg']['keys'] = len([line for line in result.stdout.split('\n') if line.startswith('S')])
+                    output = result.stdout.decode('utf-8', errors='replace')
+                    status['gpg']['keys'] = len([line for line in output.split('\n') if line.startswith('S')])
             except (subprocess.TimeoutExpired, FileNotFoundError):
                 pass
         
@@ -552,7 +610,7 @@ class AgentManager:
         """Check if a process is running using kill -0."""
         try:
             result = subprocess.run(['kill', '-0', pid], 
-                                  capture_output=True, text=True, timeout=2)
+                                  capture_output=True, timeout=2)
             return "✅ Running" if result.returncode == 0 else "❌ Not running"
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return "❓ Unknown"
@@ -566,10 +624,11 @@ class AgentManager:
             
             # Try to get lifetime from ssh-add -T
             result = subprocess.run(['ssh-add', '-T'], 
-                                  capture_output=True, text=True, timeout=5)
+                                  capture_output=True, timeout=5)
             if result.returncode == 0:
+                output = result.stdout.decode('utf-8', errors='replace')
                 # Parse lifetime from output (format: "Lifetime set to 3600 seconds")
-                for line in result.stdout.split('\n'):
+                for line in output.split('\n'):
                     if 'Lifetime set to' in line:
                         seconds = line.split('Lifetime set to')[1].split('seconds')[0].strip()
                         return f"{seconds}s"
@@ -593,8 +652,9 @@ class AgentManager:
             if not os.environ.get('SSH_AGENT_PID') and os.path.exists(ssh_sock):
                 # Test if it's actually GPG agent SSH
                 result = subprocess.run(['gpg-connect-agent', 'keyinfo --list', '/bye'], 
-                                      capture_output=True, text=True, timeout=5)
-                if result.returncode == 0 and 'S KEYINFO' in result.stdout:
+                                      capture_output=True, timeout=5)
+                output = result.stdout.decode('utf-8', errors='replace')
+                if result.returncode == 0 and 'S KEYINFO' in output:
                     return True
             
             return False
@@ -605,14 +665,16 @@ class AgentManager:
         """Get GPG agent PID."""
         try:
             result = subprocess.run(['gpgconf', '--list-dirs', 'agent-socket'], 
-                                  capture_output=True, text=True, timeout=5)
+                                  capture_output=True, timeout=5)
             if result.returncode == 0:
-                socket_path = result.stdout.strip()
+                output = result.stdout.decode('utf-8', errors='replace')
+                socket_path = output.strip()
                 # Try to get PID from socket file or process list
                 result = subprocess.run(['pgrep', '-f', 'gpg-agent'], 
-                                      capture_output=True, text=True, timeout=5)
+                                      capture_output=True, timeout=5)
                 if result.returncode == 0:
-                    pids = result.stdout.strip().split('\n')
+                    output = result.stdout.decode('utf-8', errors='replace')
+                    pids = output.strip().split('\n')
                     return pids[0] if pids else None
         except (subprocess.TimeoutExpired, FileNotFoundError):
             pass
@@ -623,9 +685,10 @@ class AgentManager:
         try:
             # Try to get cache TTL from gpgconf
             result = subprocess.run(['gpgconf', '--list-options', 'gpg-agent'], 
-                                  capture_output=True, text=True, timeout=5)
+                                  capture_output=True, timeout=5)
             if result.returncode == 0:
-                for line in result.stdout.split('\n'):
+                output = result.stdout.decode('utf-8', errors='replace')
+                for line in output.split('\n'):
                     if 'default-cache-ttl' in line:
                         seconds = line.split('default-cache-ttl')[1].split()[0]
                         return f"{seconds}s"
@@ -686,7 +749,10 @@ def main():
             success = manager.init()
             if success:
                 if args.shell:
-                    print(manager.output_shell_exports())
+                    exports = manager.output_shell_exports()
+                    if exports:
+                        print(exports)  # stdout for eval
+                    print("✅ Agents initialized successfully", file=sys.stderr)  # stderr for user
                 else:
                     print("✅ Agents initialized successfully")
             else:
@@ -703,7 +769,10 @@ def main():
             success = manager.restart()
             if success:
                 if args.shell:
-                    print(manager.output_shell_exports())
+                    exports = manager.output_shell_exports()
+                    if exports:
+                        print(exports)  # stdout for eval
+                    print("✅ Agents restarted successfully", file=sys.stderr)  # stderr for user
                 else:
                     print("✅ Agents restarted successfully")
             else:
@@ -714,7 +783,10 @@ def main():
             success = manager.recover()
             if success:
                 if args.shell:
-                    print(manager.output_shell_exports())
+                    exports = manager.output_shell_exports()
+                    if exports:
+                        print(exports)  # stdout for eval
+                    print("✅ Agents recovered successfully", file=sys.stderr)  # stderr for user
                 else:
                     print("✅ Agents recovered successfully")
             else:
@@ -766,7 +838,10 @@ def main():
                 success = manager.init_ssh_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ SSH agent initialized successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ SSH agent initialized successfully")
                 else:
@@ -777,7 +852,10 @@ def main():
                 success = manager.recover_ssh_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ SSH agent recovered successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ SSH agent recovered successfully")
                 else:
@@ -797,7 +875,10 @@ def main():
                 success = manager.restart_ssh_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ SSH agent restarted successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ SSH agent restarted successfully")
                 else:
@@ -828,7 +909,10 @@ def main():
                 success = manager.init_gpg_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ GPG agent initialized successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ GPG agent initialized successfully")
                 else:
@@ -839,7 +923,10 @@ def main():
                 success = manager.recover_gpg_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ GPG agent recovered successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ GPG agent recovered successfully")
                 else:
@@ -859,7 +946,10 @@ def main():
                 success = manager.unlock_gpg_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ GPG keys unlocked successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ GPG keys unlocked successfully")
                 else:
@@ -870,7 +960,10 @@ def main():
                 success = manager.restart_gpg_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ GPG agent restarted successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ GPG agent restarted successfully")
                 else:

@@ -1,170 +1,132 @@
 #!/bin/bash
+# bashrc - Clean bash initialization with universal/interactive split
 
-# SOURCING: ~/.bashrc (symlink), interactive bash shells
-# SOURCES: rc.d/*, aliases, enabled/*.sh
-# DOES NOT SOURCE: profile (prevents infinite loops)
+# =============================================================================
+# UNIVERSAL SECTION (Always runs - all shell types)
+# =============================================================================
 
-# XDG Base Directory specification (set before interactive check)
-export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
-export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+# Environment setup (only if not from login shell)
+if [[ -z "$BASH_PROFILE_SOURCED" ]]; then
+    # XDG Base Directory specification
+    export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+    export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+    export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+    export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
-# Ensure XDG variables are properly set (handle case where they're set to empty)
-[[ -z "$XDG_CACHE_HOME" ]] && export XDG_CACHE_HOME="$HOME/.cache"
-[[ -z "$XDG_CONFIG_HOME" ]] && export XDG_CONFIG_HOME="$HOME/.config"
-[[ -z "$XDG_DATA_HOME" ]] && export XDG_DATA_HOME="$HOME/.local/share"
-[[ -z "$XDG_STATE_HOME" ]] && export XDG_STATE_HOME="$HOME/.local/state"
-
-# Set default editor if not already set
-export EDITOR="${EDITOR:-$(command -v vim 2>/dev/null || command -v nano 2>/dev/null || command -v vi 2>/dev/null || echo 'vi')}"
-export FCEDIT="$EDITOR"
-
-# SSH Agent Management is now handled via enabled/ directory loading
-
-# If not running interactively, don't do anything
-# Exception: Allow sourcing from bash_profile for login shells
-case $- in
-    *i*) ;;
-      *) 
-        # Check if we're being sourced from bash_profile (login shell context)
-        if [ -n "${BASH_PROFILE_SOURCED:-}" ]; then
-            # Allow sourcing even in non-interactive mode for login shells
-            :
-        else
-            return 0
-        fi
-        ;;
-esac
-
-# Shell options
-set -o ignoreeof  # Prevent Ctrl+D from exiting bash (use 'exit' instead)
-
-# History configuration
-shopt -s histappend
-export HISTCONTROL=ignoredups
-export HISTFILE="$XDG_CACHE_HOME/bash/history"
-export HISTFILESIZE="32768"
-export HISTIGNORE='&:ls: ls *:[bf]g'
-export HISTSIZE="$HISTFILESIZE"
-export HISTTIMEFORMAT='%FT%T'$'\t'
-
-# Create history file and symlink if it doesn't exist
-if [[ ! -e $HISTFILE ]]; then
-  mkdir -p "${HISTFILE%/*}"
-  ln -svf "$HISTFILE" ~/.bash_history
+    # PATH setup - standard user directories
+    PATH="$HOME/.local/bin"           # User scripts/binaries
+    PATH="$PATH:$HOME/.config/bin"    # Config-managed binaries
+    PATH="$PATH:$HOME/.cargo/bin"     # Rust toolchain
+    PATH="$PATH:$HOME/go/bin"         # Go binaries
+    PATH="$PATH:$XDG_DATA_HOME/go/bin" # XDG-compliant Go binaries
+    PATH="$PATH:/usr/local/bin"       # System-local binaries
+    PATH="$PATH:/usr/bin"             # System binaries
+    PATH="$PATH:/bin"                 # Essential binaries
+    export PATH
 fi
 
-# Get the directory containing this bashrc file
-# Follow symlinks to get the real location
-if [[ -n "${BASH_SOURCE[0]}" ]]; then
-    BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
-else
-    # Fallback: assume we're in the dotfiles directory
-    BASHRC_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]:-~/.bashrc}")")" && pwd)"
+# Set fixed paths
+BASHRC_DIR="$HOME/.config/bash"
+DOTFILES_DIR="$HOME/.config/dotfiles"
+export BASHRC_DIR DOTFILES_DIR
+
+# Validate bootstrap succeeded
+if [[ ! -d "$BASHRC_DIR" ]]; then
+    echo "ERROR: BASHRC_DIR not found: $BASHRC_DIR" >&2
+    return 1
 fi
 
-# Set the bash configuration directory
-BASH_CONFIG_DIR="${BASHRC_DIR}/.config/bash"
+# Core functions that work everywhere
+has-cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
 
-# Load all core functions from rc.d directory
-# These must be loaded FIRST as enabled/ tools depend on them
-if [[ -d "${BASH_CONFIG_DIR}/rc.d" ]]; then
-    for script in "${BASH_CONFIG_DIR}"/rc.d/*; do
-        if [[ -f "$script" && -r "$script" && "$script" != *.md ]]; then
-            source "$script"
-        fi
-    done
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: rc.d directory missing" >&2
+# Compatibility alias for old scripts
+@has-cmd() {
+    has-cmd "$@"
+}
+
+# Check if function is defined
+defined() {
+    declare -F "$1" >/dev/null 2>&1
+}
+
+# Check if running in interactive shell
+@is-interactive() {
+    [[ ${-//[!i]/} ]]
+}
+
+# Call function if it's defined
+call-if-defined() {
+    defined "$1" && "$@"
+}
+
+# Load all core functions from lib directory
+for script in "$BASHRC_DIR"/lib/*; do
+    [[ -f "$script" && "$script" != *.md ]] && source "$script"
+done
+
+# =============================================================================
+# INTERACTIVE-ONLY SECTION (Everything below here is interactive-only)
+# =============================================================================
+
+# Simple, bulletproof check - exit early if not interactive
+# Allow SSH contexts to continue (they may become interactive)
+[[ $- != *i* ]] && [[ -z "$SSH_CLIENT" ]] && [[ -z "$SSH_TTY" ]] && return
+
+# Everything below runs ONLY in interactive shells
+# No more INTERACTIVE_MODE checks needed!
+
+# History configuration (XDG-compliant, multi-session safe)
+export HISTFILE="$XDG_STATE_HOME/bash/history"
+export HISTSIZE=50000           # In-memory history size
+export HISTFILESIZE=50000       # On-disk history size
+export HISTCONTROL="ignoreboth:erasedups"  # Ignore duplicates and spaces
+export HISTTIMEFORMAT='%F %T '  # ISO-8601 timestamps
+export HISTIGNORE="&:ls:ls *:[bf]g:exit:set +o:set -o:shopt -s:shopt -u:dump_bash_state"  # Filter out common noise
+
+# Create history directory if it doesn't exist
+mkdir -p "$(dirname "$HISTFILE")"
+
+# Shell options for multi-session history
+shopt -s histappend        # Append to history, don't overwrite (CRITICAL for multi-session)
+shopt -s checkwinsize      # Update LINES and COLUMNS after each command
+shopt -s cmdhist           # Save multi-line commands as one entry
+shopt -s globstar          # ** matches all files/directories recursively
+shopt -s dotglob           # Include dotfiles in pathname expansion
+shopt -s extglob           # Extended pattern matching
+shopt -s nocaseglob        # Case-insensitive pathname expansion
+
+# Set options
+set -o ignoreeof           # Prevent Ctrl+D from exiting (need 10 presses)
+
+# Bash completion
+if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+    source /usr/share/bash-completion/bash_completion
+elif [[ -f /etc/bash_completion ]]; then
+    source /etc/bash_completion
 fi
 
-# Load enabled tools from enabled directory
-# This happens AFTER rc.d functions are loaded so @has-cmd and other core functions are available
-if [[ -d "${BASH_CONFIG_DIR}/enabled" ]]; then
-    for script in "${BASH_CONFIG_DIR}"/enabled/*.sh; do
-        if [[ -f "$script" && -r "$script" && "$script" != *.md ]]; then
-            source "$script"
-        fi
-    done
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: Enabled tools directory missing" >&2
+# Enable programmable completion features
+if ! shopt -oq posix; then
+    shopt -s progcomp
 fi
 
 # Load aliases
-if [[ -f ~/.config/bash/aliases ]]; then
-    source ~/.config/bash/aliases
-fi
+[[ -f "$BASHRC_DIR/aliases" ]] && source "$BASHRC_DIR/aliases"
+[[ -f ~/.bash_aliases ]] && source ~/.bash_aliases
 
-# Enable programmable completion
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
-fi
+# Load enabled tools from enabled directory
+for script in "$BASHRC_DIR"/enabled/*.sh; do
+    [[ -f "$script" && "$script" != *.md ]] && source "$script"
+done
 
-# Set up ghostship prompt
-if command -v ghostship >/dev/null 2>&1; then
-    # Define the missing 'defined' function that ghostship init depends on
-    defined() {
-        type "$1" &>/dev/null
-    }
-    
-    # Ensure COLUMNS is set to prevent ghostship hang
-    export COLUMNS="${COLUMNS:-80}"
-    
-    # Try to initialize ghostship, but handle errors gracefully
-    if source <(ghostship init bash) 2>/dev/null; then
-        # Ghostship initialized successfully
-        [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init succeeded" >&2
-    else
-        [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship init failed, using fallback prompt" >&2
-        # Simple fallback prompt
-        PS1='\u@\h:\w\$ '
-    fi
-else
-    [[ -n "$DOTFILES_DEBUG" ]] && echo "debug: ghostship not available, using fallback prompt" >&2
-    # Simple fallback prompt
-    PS1='\u@\h:\w\$ '
-fi
-
-# Simple reload function
+# Define interactive functions
 reload() {
-    # Source the home directory version to ensure proper file paths
+    echo "🔄 Reloading bashrc..."
     source ~/.bashrc
 }
 
-# Check window size after each command
-shopt -s checkwinsize
-
-# Set debian chroot if available
-if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-    debian_chroot=$(cat /etc/debian_chroot)
-fi
-
-# Simple prompt
-PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
-
-# Enable color support of ls
-if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=auto'
-fi
-
-# Load bash aliases if they exist
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
-
-# Enable programmable completion (consolidated)
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
-fi
-
-export GPG_TTY=$(tty)
+# =============================================================================
+# Silent startup - no verbose output
+# =============================================================================

@@ -1,0 +1,52 @@
+# Bash function loading and core utility functions
+# Tests that essential functions are defined and work correctly
+# Covers has-cmd, @has-cmd, defined, @is-interactive, call-if-defined
+# NOTE: Avoid command substitution $(...) as it causes timeouts with bashrc sourcing
+
+command:
+  # === CORE FUNCTION EXISTENCE ===
+  # These tests verify functions exist by calling them (not checking type)
+
+  # has-cmd should detect existing commands
+  "bash -c 'source ~/.bashrc && has-cmd bash'":
+    exit-status: 0
+    timeout: 5000
+
+  # @has-cmd compatibility alias should work
+  "bash -c 'source ~/.bashrc && @has-cmd ls'":
+    exit-status: 0
+    timeout: 5000
+
+  # defined should detect existing functions
+  "bash -c 'source ~/.bashrc && defined has-cmd'":
+    exit-status: 0
+    timeout: 5000
+
+  # dotfiles function should exist and be callable
+  "bash -c 'source ~/.bashrc && type dotfiles >/dev/null'":
+    exit-status: 0
+    timeout: 5000
+
+  # @is-interactive should exist
+  "bash -c 'source ~/.bashrc && type @is-interactive >/dev/null'":
+    exit-status: 0
+    timeout: 5000
+
+  # call-if-defined should exist
+  "bash -c 'source ~/.bashrc && type call-if-defined >/dev/null'":
+    exit-status: 0
+    timeout: 5000
+
+  # === NOTE: Interactive function tests (reload, _dotfiles_help) are covered in goss-bash-contexts.yaml ===
+
+  # === FUNCTION AVAILABILITY FROM DIFFERENT DIRECTORIES ===
+
+  # Functions should work from /tmp
+  "cd /tmp && bash -c 'source ~/.bashrc && has-cmd bash'":
+    exit-status: 0
+    timeout: 5000
+
+  # Functions should work from /var/tmp
+  "cd /var/tmp && bash -c 'source ~/.bashrc && defined has-cmd'":
+    exit-status: 0
+    timeout: 5000

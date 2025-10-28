@@ -377,37 +377,112 @@ tmux list-keys | grep "bind-key.*r"  # Check reload binding
 
 ## Core Development Principles
 
-### **MANDATORY: Test Before Export (ADR-005)**
+### **MANDATORY: Test-Driven Development for Bash Changes (ADR-005, ADR-008)**
 
-**REQUIREMENT**: Before ANY export of bash configuration files:
+**STRICT REQUIREMENT**: All bash configuration changes MUST follow TDD (Test-Driven Development):
 
-1. **Run `make test-bash`** - Always, no exceptions
-2. **Wait for completion** - Don't skip this step
-3. **Check results** - Tests must pass (exit code 0)
-4. **ONLY if tests pass** - Proceed with export
-5. **If tests fail** - Fix the issue, don't skip testing
+**Testing Framework**: Uses **Goss** for infrastructure testing (See ADR-008 for rationale and best practices)
 
-**Files requiring bash testing:**
+#### **Red-Green-Refactor Workflow**
+
+1. **RED**: Write/update tests first, see them fail
+   ```bash
+   # Add test to appropriate goss file in tests/
+   vim tests/goss-bash-*.yaml
+   make test-bash  # Verify test fails (RED)
+   ```
+
+2. **GREEN**: Make minimal change to pass test
+   ```bash
+   # Edit bash configuration
+   vim .config/bash/bashrc
+   make test-bash  # Verify test passes (GREEN)
+   ```
+
+3. **REFACTOR**: Clean up while keeping tests passing
+   ```bash
+   # Improve implementation
+   vim .config/bash/bashrc
+   make test-bash  # Verify tests still pass
+   ```
+
+4. **EXPORT**: Only after all tests pass
+   ```bash
+   make test-bash && uv run python -m dotfile_manager export .config/bash/
+   ```
+
+#### **Goss Test Suites**
+
+Bash testing uses **goss** (YAML-based infrastructure testing). All tests in `tests/`:
+
+- **`goss-bash-safe.yaml`** (16 tests) - Syntax validation and essential commands
+  - File existence checks (bashrc, lib/, aliases)
+  - Command availability (delta, gum, rustup, gpg)
+  - SSH/GPG agent validation
+  - Core function availability (defined, has-cmd)
+
+- **`goss-bash-contexts.yaml`** (21 tests) - Shell context behavior
+  - Non-interactive vs interactive mode detection
+  - Function availability by context
+  - Alias loading based on mode
+  - SSH context detection
+  - Login shell behavior
+  - Interactive functions (reload, _dotfiles_help)
+
+- **`goss-bash-bootstrap.yaml`** (21 tests) - Environment and paths
+  - BASHRC_DIR/DOTFILES_DIR resolution
+  - XDG variables (CONFIG, CACHE, DATA, STATE)
+  - PATH components (local/bin, cargo/bin, go/bin, /usr/bin)
+  - Directory independence (works from any pwd)
+
+- **`goss-bash-functions.yaml`** (8 tests) - Core function testing
+  - has-cmd / @has-cmd functionality
+  - defined function testing
+  - dotfiles / @is-interactive / call-if-defined
+  - Function availability from different directories
+
+- **`goss-bash-comprehensive.yaml`** (15 tests) - Integration testing
+  - Complete environment setup
+  - Interactive features
+  - SSH context behavior
+
+**Total: 81 tests** - All must pass before export
+
+#### **Testing Best Practices**
+
+**DO:**
+- ✅ Use goss's native `stdout` matcher (supports multiple patterns)
+- ✅ Suppress bashrc output: `source ~/.bashrc >/dev/null 2>&1 && echo $VAR`
+- ✅ Use `setsid bash -i -c '...' </dev/null 2>&1` for interactive bash tests
+- ✅ Test multiple patterns in one command (consolidate tests)
+- ✅ Write tests BEFORE changing bash config
+
+**DON'T:**
+- ❌ Pipe to grep unnecessarily - use goss stdout matchers
+- ❌ Use command substitution `$(...)` - causes timeouts with bashrc
+- ❌ Run `bash -i` without `setsid </dev/null` - causes TTY stops
+- ❌ Make bash changes without writing/updating tests first
+
+#### **Files Requiring Bash Testing**
+
 - `.config/bash/bashrc`
 - `.config/bash/profile`
-- `.config/bash/rc.d/*`
+- `.config/bash/lib/*`
 - `.config/bash/enabled/*`
 - `.config/bash/aliases`
+- Any bash-related configuration
 
-**Workflow:**
-```bash
-make test-bash                # MANDATORY first step
-make test-bash && uv run python -m dotfile_manager export .config/bash/
-```
+#### **MANDATORY EXPORT PROTOCOL**
 
-**MANDATORY EXPORT PROTOCOL**:
 - **ALWAYS export the entire `.config/bash/` directory** (not individual files)
-- This ensures all bash components are synchronized: bashrc, rc.d/, enabled/, disabled/, aliases, profile
-- Prevents issues where rc.d/ functions are missing in home directory
+- This ensures all bash components are synchronized: bashrc, lib/, enabled/, disabled/, aliases, profile
+- Prevents issues where lib/ functions are missing in home directory
 
-**NO EXCEPTIONS**: This is not optional. This is not a suggestion. This is a **REQUIREMENT**.
+**NO EXCEPTIONS**: TDD for bash is not optional. This is a **REQUIREMENT**.
 
-See `docs/architecture/ADR-005-mandatory-testing-before-export.md` for full details.
+**References**:
+- `docs/architecture/ADR-005-mandatory-testing-before-export.md` - TDD workflow requirement
+- `docs/architecture/ADR-008-goss-infrastructure-testing.md` - Goss testing framework (retrospective ADR)
 
 ### **Use Correct Conventions, Processes, and Interfaces**
 
@@ -449,13 +524,6 @@ This is the **fundamental principle** for all development and testing in this re
 - **Functionality tests**: Core functions must work as expected
 - **Architecture tests**: Symlink/hardlink integrity maintained
 - **Performance tests**: Shell startup and function execution times
-
-**Documentation Standards:**
-- **Diataxis framework**: Proper categorization by user need
-- **Agent context**: Prevent misunderstandings with clear headers
-- **Accurate references**: All links and references must work
-- **Consistency**: Follow established patterns and conventions
-- **Regression tests**: Prevent breaking existing functionality
 
 ### **Component-Specific Workflows**
 
@@ -735,3 +803,29 @@ command - shell command with window shortcuts
 - **Compact format** with minimal vertical space
 - **Consistent indentation** for readability
 - **Include only essential sections**: NAME, SYNOPSIS, COMMANDS, DESCRIPTION, EXPLICATION
+
+# Agent Development Protocol
+
+This document outlines the best practices for agent-driven development in this repository.
+
+## Testing Protocol
+
+A rigorous testing protocol is essential for maintaining stability and ensuring changes are safe and effective.
+
+-   **Test Environment:** All development and testing should be conducted within a `tmux` session.
+-   **Isolated Tests:** Each test or task should be executed in a new, temporary `tmux` pane. This ensures a "clean room" environment for every test.
+-   **Pane Lifecycle:** Test panes should be destroyed after each test run to prevent state leakage.
+-   **Readiness Polling:** Before interacting with a process or shell in a test pane (e.g., sending commands), the agent must first ensure the process is ready. This is typically done by polling the pane's output for an expected prompt or ready signal.
+-   **Polling Timeout:** Polling should have a reasonable timeout (e.g., 5 seconds) to prevent indefinite hangs.
+-   **Real-World Scenarios:** Some tests will require deployment and execution in a real-world environment, such as running a configuration inside a `podman` container launched via `tmux`.
+
+## Commit Strategy
+
+A clean and meaningful git history is crucial for maintainability.
+
+-   **Atomic Commits:** Each commit should represent a single, complete, logical change.
+-   **Conventional Commits:** All commit messages must adhere to the [Conventional Commits specification](https://www.conventionalcommits.org/).
+-   **Work-In-Progress (WIP) Commits:**
+    -   During exploration or complex tasks, agents should make frequent, small commits to save breakthroughs or significant steps. These can have less formal messages (e.g., `WIP: Refactor rustup.sh caching`).
+    -   Once the overall task is complete and verified, these WIP commits **must be squashed** into a single, well-documented, atomic commit that follows the Conventional Commits standard.
+-   **Pre-Commit Testing:** No code should be committed without passing relevant tests. This includes both automated tests and, where necessary, the real-world scenario tests described in the testing protocol.

@@ -1,0 +1,102 @@
+# Comprehensive Goss bash testing with different shell contexts
+# Goss runs from one context but tests different bash contexts
+
+file:
+  # File structure validation
+  /home/unop/.bashrc:
+    exists: true
+  /home/unop/.config/bash/aliases:
+    exists: true
+  /home/unop/.config/bash/lib:
+    exists: true
+    filetype: directory
+  /home/unop/.config/bash/enabled:
+    exists: true
+    filetype: directory
+
+command:
+  # === NON-INTERACTIVE CONTEXT TESTS ===
+  
+  # Universal functions should be available in non-interactive shells
+  "env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.bashrc && type has-cmd'":
+    exit-status: 0
+    timeout: 3000
+    
+  "env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.bashrc && type @has-cmd'":
+    exit-status: 0
+    timeout: 3000
+    
+  "env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.bashrc && type defined'":
+    exit-status: 0
+    timeout: 3000
+    
+  "env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.bashrc && type dotfiles'":
+    exit-status: 0
+    timeout: 3000
+    
+  # reload function should NOT be available in non-interactive shells
+  "env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.bashrc && type reload 2>/dev/null'":
+    exit-status: 1
+    timeout: 3000
+    
+  # Aliases should NOT be loaded in non-interactive shells (< 10 aliases)
+  "env -u SSH_CLIENT -u SSH_TTY bash -c 'source ~/.bashrc >/dev/null 2>&1; test $(alias | wc -l) -lt 10'":
+    exit-status: 0
+    timeout: 3000
+      
+  # === INTERACTIVE CONTEXT TESTS ===
+
+  # reload function should be available in interactive shells
+  "setsid bash -i -c 'source ~/.bashrc && type reload' </dev/null 2>&1":
+    exit-status: 0
+    timeout: 5000
+
+  # Aliases should be loaded in interactive shells (50+ aliases)
+  "setsid bash -i -c 'source ~/.bashrc && test $(alias | wc -l) -gt 50' </dev/null 2>&1":
+    exit-status: 0
+    timeout: 5000
+
+  # dotfiles helpers should be available
+  "setsid bash -i -c 'source ~/.bashrc && type _dotfiles_help' </dev/null 2>&1":
+    exit-status: 0
+    timeout: 5000
+
+  # === LOGIN SHELL CONTEXT TESTS ===
+
+  # Login shells should have interactive features
+  "setsid bash -l -i -c 'type reload' </dev/null 2>&1":
+    exit-status: 0
+    timeout: 5000
+
+  # PATH should be set correctly in login shells
+  "bash -l -c 'echo $PATH | grep -q $HOME/.local/bin'":
+    exit-status: 0
+    timeout: 5000
+    
+  # === SSH CONTEXT TESTS ===
+
+  # SSH context in non-interactive mode should NOT load interactive features
+  "SSH_CLIENT='test' bash -c 'source ~/.bashrc && type reload 2>/dev/null'":
+    exit-status: 1
+    timeout: 5000
+
+  # === AGENT STATUS DISPLAY ===
+
+  # Agent status code should be present in bashrc
+  "grep -q 'agentctl status' ~/.bashrc":
+    exit-status: 0
+    timeout: 1000
+
+  # === ESSENTIAL COMMANDS ===
+  
+  "which delta":
+    exit-status: 0
+    timeout: 1000
+    
+  "which gum":
+    exit-status: 0
+    timeout: 1000
+    
+  "which rustup":
+    exit-status: 0
+    timeout: 1000
