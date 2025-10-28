@@ -749,7 +749,10 @@ def main():
             success = manager.init()
             if success:
                 if args.shell:
-                    print(manager.output_shell_exports())
+                    exports = manager.output_shell_exports()
+                    if exports:
+                        print(exports)  # stdout for eval
+                    print("✅ Agents initialized successfully", file=sys.stderr)  # stderr for user
                 else:
                     print("✅ Agents initialized successfully")
             else:
@@ -766,7 +769,10 @@ def main():
             success = manager.restart()
             if success:
                 if args.shell:
-                    print(manager.output_shell_exports())
+                    exports = manager.output_shell_exports()
+                    if exports:
+                        print(exports)  # stdout for eval
+                    print("✅ Agents restarted successfully", file=sys.stderr)  # stderr for user
                 else:
                     print("✅ Agents restarted successfully")
             else:
@@ -777,7 +783,10 @@ def main():
             success = manager.recover()
             if success:
                 if args.shell:
-                    print(manager.output_shell_exports())
+                    exports = manager.output_shell_exports()
+                    if exports:
+                        print(exports)  # stdout for eval
+                    print("✅ Agents recovered successfully", file=sys.stderr)  # stderr for user
                 else:
                     print("✅ Agents recovered successfully")
             else:
@@ -829,7 +838,10 @@ def main():
                 success = manager.init_ssh_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ SSH agent initialized successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ SSH agent initialized successfully")
                 else:
@@ -840,7 +852,10 @@ def main():
                 success = manager.recover_ssh_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ SSH agent recovered successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ SSH agent recovered successfully")
                 else:
@@ -860,7 +875,10 @@ def main():
                 success = manager.restart_ssh_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ SSH agent restarted successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ SSH agent restarted successfully")
                 else:
@@ -891,7 +909,10 @@ def main():
                 success = manager.init_gpg_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ GPG agent initialized successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ GPG agent initialized successfully")
                 else:
@@ -902,7 +923,10 @@ def main():
                 success = manager.recover_gpg_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ GPG agent recovered successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ GPG agent recovered successfully")
                 else:
@@ -922,7 +946,10 @@ def main():
                 success = manager.unlock_gpg_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ GPG keys unlocked successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ GPG keys unlocked successfully")
                 else:
@@ -933,7 +960,10 @@ def main():
                 success = manager.restart_gpg_agent()
                 if success:
                     if args.shell:
-                        print(manager.output_shell_exports())
+                        exports = manager.output_shell_exports()
+                        if exports:
+                            print(exports)  # stdout for eval
+                        print("✅ GPG agent restarted successfully", file=sys.stderr)  # stderr for user
                     else:
                         print("✅ GPG agent restarted successfully")
                 else:
