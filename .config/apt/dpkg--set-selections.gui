@@ -62,3 +62,7 @@ xfonts-base                install
 xfsprogs                   install
 xosd-bin                   install
 xsel                       install
+fontconfig-config          install
+fonts-lato                 install
+libdbus-glib-1-dev         install
+libxcb-xfixes0-dev         install

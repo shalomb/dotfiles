@@ -58,7 +58,7 @@ aws-sso-profile() {
     fi
   fi
 
-  profile=$(aws-sso list | awk -v account="$account" '$0 ~ account{ print $7 }')
+  profile=$(aws-sso list 2>&1 | grep "$account" | awk -F'|' '{print $4}' | sed 's/^ *//;s/ *$//')
 
   if (($(wc -l <<<"$profile") > 1)); then
     echo >&2 "WARNING: Multiple profiles found for '$account'"
@@ -113,10 +113,12 @@ aws-login() {
   # Perform SSO authentication with proper browser control
   if [[ $console -eq 1 ]]; then
     # Allow browser for console access
-    aws-sso eval -p "$profile" >"$AWS_SSO_CACHE"
+    aws-sso eval -p "$profile" 2>&1 | grep -v "^+" >"$AWS_SSO_CACHE"
   else
     # Prevent browser launch by using print action
-    aws-sso eval -p "$profile" --url-action=print >"$AWS_SSO_CACHE"
+    # Get credentials and show any SSO URL if needed
+    echo "Getting AWS SSO credentials..." >&2
+    aws-sso eval -p "$profile" 2>&1 | grep -v "^+" >"$AWS_SSO_CACHE"
   fi
   
   source "$AWS_SSO_CACHE"

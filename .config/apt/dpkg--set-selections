@@ -57,12 +57,8 @@ exuberant-ctags            install
 fakeroot                   install
 fd-find                    install
 fdisk                      install
-ffmpeg                     install
 file                       install
 findutils                  install
-fontconfig                 install
-fontconfig-config          install
-fonts-lato                 install
 fortune-mod                install
 fortunes                   install
 fortunes-bofh-excuses      install
@@ -97,7 +93,6 @@ gzip                       install
 highlight                  install
 hostname                   install
 ifupdown                   install
-imagemagick                install
 init                       install
 init-system-helpers        install
 iproute2                   install
@@ -117,11 +112,8 @@ libc-bin                   install
 libc-dev-bin               install
 libc-l10n                  install
 libfile-which-perl         install
-libdbus-glib-1-dev         deinstall
-libglib2.0-bin             deinstall
 libkrb5-dev                install
 libssl-dev                 install
-libxcb-xfixes0-dev         install
 localepurge                install
 locales                    install
 login                      install
@@ -195,7 +187,6 @@ python3-dev                install
 python3-dill               install
 python3-distlib            install
 python3-distro-info        install
-python3-distutils          install
 python3-dnspython          install
 python3-dput               install
 python3-entrypoints        install
