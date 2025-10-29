@@ -40,14 +40,21 @@ BZIP2="-9v";                                    export BZIP2;
 
 : ${USER=$(id -un)};                            export USER
 
-# # Redirect $TMP to ~/.tmp
-: ${TMP=/tmp/$USER};                            export TMP
-TEMP="$TMP";                                    export   TEMP;
-TMPDIR="$TMP";                                  export TMPDIR;
-
-mkdir -p "$TMP"
-chown "$USER:$USER" "$TMP/"
-chmod 1770 "$TMP/"
+# Redirect $TMP to ~/.tmp for user isolation and convenience
+TMP="/tmp/$USER"
+PRIVATE_TMP="$HOME/.tmp"
+[ ! -e "$TMP" ] && (umask 027; mkdir -p "$TMP")
+if [ "$(readlink -f "$PRIVATE_TMP" 2>/dev/null)" != "$TMP" ]; then
+  rm -f "$PRIVATE_TMP"
+  ln -sf "$TMP/" "$PRIVATE_TMP"
+fi
+TMP="$PRIVATE_TMP"
+export TMP
+TEMP="$TMP"
+export TEMP
+TMPDIR="$TMP"
+export TMPDIR
+unset PRIVATE_TMP
 
 for file in ~/.config/profile.d/*.sh; do
   . "$file"
