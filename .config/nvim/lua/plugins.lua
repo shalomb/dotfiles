@@ -269,7 +269,7 @@ return {
       vim.g.copilot_tab_fallback = ""
       
       -- Key mappings
-      vim.keymap.set("i", "<C-J>", 'copilot#Accept("\\<CR>")', {
+      vim.keymap.set("i", "<C-l>", 'copilot#Accept("\\<CR>")', {
         expr = true,
         replace_keycodes = false,
         desc = "Accept Copilot suggestion"
