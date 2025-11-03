@@ -62,6 +62,7 @@ vim.opt.splitright     = true
 vim.opt.swapfile       = true
 vim.opt.syntax         = "on"
 vim.opt.tabstop        = 2
+vim.opt.conceallevel   = 2   -- Required for Obsidian.nvim UI features (checkboxes, bullets, etc.)
 vim.opt.termguicolors  = true
 vim.opt.textwidth      = 100 -- linux kernel
 vim.opt.title          = true
