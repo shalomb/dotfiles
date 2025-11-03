@@ -113,11 +113,13 @@ aws-login() {
   # Perform SSO authentication with proper browser control
   if [[ $console -eq 1 ]]; then
     # Allow browser for console access
+    aws-sso login --url-action=open
     aws-sso eval -p "$profile" 2>&1 | grep -v "^+" >"$AWS_SSO_CACHE"
   else
     # Prevent browser launch by using print action
     # Get credentials and show any SSO URL if needed
     echo "Getting AWS SSO credentials..." >&2
+    aws-sso login --url-action=print
     aws-sso eval -p "$profile" 2>&1 | grep -v "^+" >"$AWS_SSO_CACHE"
   fi
   
