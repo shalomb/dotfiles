@@ -48,10 +48,10 @@ function tmux-attach() {
   _tmuxie_log "tmux-attach: session='$session', in-tmux=$(in-tmux && echo 'true' || echo 'false')"
   
   if in-tmux; then
-    _tmuxie_log "tmux-attach: using switch-client to switch to '$session'"
-    # Use switch-client to switch the parent tmux session
-    tmux switch-client -t "$session"
-    _tmuxie_log "tmux-attach: switched parent session to '$session'"
+    _tmuxie_log "tmux-attach: using run-shell with delay to defer switch after popup closes"
+    # Use run-shell with background flag and small delay to execute after popup closes
+    tmux run-shell -b "sleep 0.2; tmux switch-client -t '$session'"
+    _tmuxie_log "tmux-attach: queued switch-client via run-shell -b with 0.2s delay"
   else
     _tmuxie_log "tmux-attach: calling attach-session to '$session'"
     # Attach to the session (works in SSH contexts)
@@ -74,10 +74,12 @@ function sessionize() {
   else
     _tmuxie_log "sessionize: session '$name' does not exist, creating"
     if in-tmux; then
-      _tmuxie_log "sessionize: in-tmux=true, creating detached session and switching"
-      tmux new-session -d -s "$name" -c "$dir" "bash -l" \; \
-        switch-client -t "$name"
-      _tmuxie_log "sessionize: new-session + switch-client commands completed"
+      _tmuxie_log "sessionize: in-tmux=true, creating detached session"
+      tmux new-session -d -s "$name" -c "$dir" "bash -l"
+      _tmuxie_log "sessionize: session created, using run-shell to defer switch"
+      # Use run-shell with background flag and small delay to switch after popup closes
+      tmux run-shell -b "sleep 0.2; tmux switch-client -t '$name'"
+      _tmuxie_log "sessionize: queued switch-client via run-shell -b with 0.2s delay"
     else
       _tmuxie_log "sessionize: not in-tmux, exec-ing new session"
       exec tmux -u -l -2 new-session -s "$name" -c "$dir"
