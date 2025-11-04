@@ -61,20 +61,29 @@ function tmux-attach() {
 
 function sessionize() {
   local session="$1"
+  _tmuxie_log "sessionize: called with session='$session'"
+  
   local dir="${session%[ 	]*}"
   dir=$(eval echo "$dir")  # Expand tilde
   local name=${dir##*/}
+  _tmuxie_log "sessionize: parsed dir='$dir', name='$name'"
   
   if command tmux has-session -t "$name" 2>/dev/null; then
+    _tmuxie_log "sessionize: session '$name' exists, attaching"
     tmux-attach "$name"
   else
+    _tmuxie_log "sessionize: session '$name' does not exist, creating"
     if in-tmux; then
+      _tmuxie_log "sessionize: in-tmux=true, creating detached session and switching"
       tmux new-session -d -s "$name" -c "$dir" "bash -l" \; \
         switch-client -t "$name"
+      _tmuxie_log "sessionize: new-session + switch-client commands completed"
     else
+      _tmuxie_log "sessionize: not in-tmux, exec-ing new session"
       exec tmux -u -l -2 new-session -s "$name" -c "$dir"
     fi
   fi
+  _tmuxie_log "sessionize: function completed"
 }
 
 function select_projects() {
