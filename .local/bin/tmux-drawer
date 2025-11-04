@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# Name
-
-# Description
-
-# Usage
+# Name: tmux-drawer
+# Description: Creates a tmux drawer session with a popup for git tools
+# Usage: tmux-drawer [command] [width] [height]
 
 set -o errexit -o nounset -o pipefail
 shopt -s extglob nullglob globstar
 
 # [[ ${DEBUG-} != 0 ]] && set -xv
 
+# First arg is optional command (default: vim with git)
+COMMAND="${1:-}"
 width=${2:-80%}
-height=${2:-80%}
+height=${3:-80%}
 
 session=$(tmux display-message -p -F "#{session_name}")
 
@@ -23,12 +23,17 @@ else
   CWD=$(tmux display-message -p -F "#{pane_current_path}" -t0)
 
   if ! tmux has -t "drawer" 2>/dev/null; then
-    session_id="$(tmux new-session -dP -s 'drawer' -c "$CWD" -F '#{session_id}' "vi -c ':Git' -c ':only' -c ':vsp' -c ':Git log'")"
-    sleep 0.9 && tmux send-keys -t "$session_id" 'clear;  tput cup "$(tput lines)"' C-m &
+    # If command provided, use it; otherwise default to vim with git
+    if [ -n "$COMMAND" ]; then
+      session_id="$(tmux new-session -dP -s 'drawer' -c "$CWD" -F '#{session_id}' "$COMMAND")"
+    else
+      session_id="$(tmux new-session -dP -s 'drawer' -c "$CWD" -F '#{session_id}' "vi -c ':Git' -c ':only' -c ':vsp' -c ':Git log'")"
+      sleep 0.9 && tmux send-keys -t "$session_id" 'clear;  tput cup "$(tput lines)"' C-m &
+      tmux splitw -t "$session_id" -c "$CWD" -vl 10
+    fi
     # tmux set-option -s -t "$session_id" key-table popup
     tmux set-option -s -t "$session_id" status off
     # tmux set-option -s -t "$session_id" prefix None
-    tmux splitw -t "$session_id" -c "$CWD" -vl 10
     session="$session_id"
   fi
 
