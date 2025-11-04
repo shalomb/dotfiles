@@ -11,8 +11,8 @@ shopt -s extglob nullglob globstar
 
 # First arg is optional command (default: vim with git)
 COMMAND="${1:-}"
-width=${2:-80%}
-height=${3:-80%}
+width=${2:-90%}
+height=${3:-90%}
 
 session=$(tmux display-message -p -F "#{session_name}")
 
