@@ -18,8 +18,9 @@ cronjobs: ## Install our cronjobs using gum's sensible defaults
 	  echo "SHELL=/bin/bash"; \
 	  echo "PATH=$$PATH"; \
 	  echo; \
-	  crontab -l | grep -v '^PATH=' 2>/dev/null || true; \
+	  crontab -l | grep -v '^PATH=' | grep -v 'obsidian-auto-commit' 2>/dev/null || true; \
 	  gum --crontab | grep -v '^#' | grep -v '^$$'; \
+	  echo "0 */4 * * * $(HOME)/.config/dotfiles/scripts/obsidian-auto-commit.sh"; \
 	  echo "0 0 * * *      sh -c '> ~/.local/state/nvim/lsp.log'" ; \
 	} | awk '(/^#/ || !a[$$0]++)' \
 	  | crontab -
@@ -231,10 +232,10 @@ test: ## Run acceptance tests (usage: make test [FAST=1])
 
 test-bash-container: ## Test bash config in OS-matched container with tmux
 	@if [ -z "$$TMUX" ]; then \
-		echo "❌ This target requires tmux. Start tmux first: tmux"; \
+		echo "? This target requires tmux. Start tmux first: tmux"; \
 		exit 1; \
 	fi
-	@echo "🐳 Testing bash config in container (OS-matched)..."
+	@echo "?? Testing bash config in container (OS-matched)..."
 	@./scripts/test-bash-in-container-tmux.sh
 
 test-bash: ## Run all bash test suites with goss
@@ -244,7 +245,7 @@ test-bash: ## Run all bash test suites with goss
 	@goss -g tests/goss-bash-bootstrap.yaml validate --format documentation
 	@goss -g tests/goss-bash-functions.yaml validate --format documentation
 	@goss -g tests/goss-bash-comprehensive.yaml validate --format documentation
-	@echo "✅ All bash tests passed"
+	@echo "? All bash tests passed"
 
 test-fast: ## Run fast tests only (environment + deployment)
 	@echo "Running bash standards validation..."
@@ -279,4 +280,4 @@ lint: ## Lint all bash and profile files with shellcheck
 	@echo "Linting profile files with POSIX standards..."
 	@find .config/profile.d -name "*.sh" | xargs shellcheck -s sh
 	@shellcheck -s sh .config/bash/profile
-	@echo "✅ All shell files passed linting!"
+	@echo "? All shell files passed linting!"
