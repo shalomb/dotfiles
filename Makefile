@@ -20,6 +20,7 @@ cronjobs: ## Install our cronjobs using gum's sensible defaults
 	  echo; \
 	  crontab -l | grep -v '^PATH=' | grep -v 'obsidian-auto-commit' 2>/dev/null || true; \
 	  gum --crontab | grep -v '^#' | grep -v '^$$'; \
+	  echo "0 11 * * * pass git push"; \
 	  echo "0 */4 * * * $(HOME)/.config/dotfiles/scripts/obsidian-auto-commit.sh"; \
 	  echo "0 0 * * *      sh -c '> ~/.local/state/nvim/lsp.log'" ; \
 	} | awk '(/^#/ || !a[$$0]++)' \
