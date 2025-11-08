@@ -42,7 +42,7 @@ export HISTSIZE=50000           # In-memory history size
 export HISTFILESIZE=50000       # On-disk history size
 export HISTCONTROL="ignoreboth:erasedups"  # Ignore duplicates and spaces
 export HISTTIMEFORMAT='%F %T '  # ISO-8601 timestamps
-export HISTIGNORE="&:ls:ls *:[bf]g:exit:set +o:set -o:shopt -s:shopt -u:dump_bash_state"  # Filter out common noise
+export HISTIGNORE="&:[bf]g:exit:set +o *:set -o *:shopt -s *:shopt -u *:dump_bash_state"  # Filter out common noise
 
 # Create history directory if it doesn't exist
 mkdir -p "$(dirname "$HISTFILE")"
@@ -57,13 +57,29 @@ shopt -s extglob           # Extended pattern matching
 shopt -s nocaseglob        # Case-insensitive pathname expansion
 
 # Set options
+# Temporarily disable history to prevent 'set -o' commands from being written
+HISTFILE_SAVE="$HISTFILE"
+unset HISTFILE
 set -o ignoreeof           # Prevent Ctrl+D from exiting (need 10 presses)
+HISTFILE="$HISTFILE_SAVE"
 
 # Bash completion
+# Temporarily disable history to prevent 'set +o' commands from bash_completion
+# from being written to history (they're filtered by HISTIGNORE but we want to be extra safe)
 if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+    set +H  # Disable history expansion temporarily
+    HISTFILE_SAVE="$HISTFILE"
+    unset HISTFILE  # Temporarily disable history file
     source /usr/share/bash-completion/bash_completion
+    HISTFILE="$HISTFILE_SAVE"
+    set -H  # Re-enable history expansion
 elif [[ -f /etc/bash_completion ]]; then
+    set +H
+    HISTFILE_SAVE="$HISTFILE"
+    unset HISTFILE
     source /etc/bash_completion
+    HISTFILE="$HISTFILE_SAVE"
+    set -H
 fi
 
 # Enable programmable completion features
