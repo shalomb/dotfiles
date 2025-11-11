@@ -152,6 +152,7 @@ pidfile
 *password*
 .ENV
 .env
+.config/jiratui/config.yaml
 
 # Terraform
 ## Local .terraform directories
