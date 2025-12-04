@@ -76,9 +76,19 @@ aws-sso-profile() {
 }
 
 # AWS Login Function
+# REQUIRES: aws-sso v2.0.0+ (login command added in v2.0.0)
 aws-login() {
+  # Verify aws-sso v2.0.0+ is installed
+  if ! aws-sso login --help >/dev/null 2>&1; then
+    echo "ERROR: aws-sso v2.0.0+ required. 'login' command not found." >&2
+    echo "Current version may be v1.x. Please upgrade:" >&2
+    echo "  go install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@v2.1.0" >&2
+    return 1
+  fi
   local console=0
   local creds_file=""
+  local account_arg=""
+  local role_suffix=""
   local args=()
   
   # Parse arguments
@@ -93,22 +103,40 @@ aws-login() {
         return 1
         ;;
       *)
-        if [[ -z "$creds_file" && -n "${2:-}" && "${2:-}" != "-c" ]]; then
+        if [[ -z "$account_arg" ]]; then
+          # First positional argument - check for account:role format
+          if [[ "$1" == *:* ]]; then
+            # Split account:role
+            account_arg="${1%%:*}"
+            role_suffix="${1#*:}"
+          else
+            account_arg="$1"
+          fi
+          args+=("$account_arg")
+        elif [[ -z "$creds_file" && -n "${2:-}" && "${2:-}" != "-c" ]]; then
           # Second argument is likely a file path
           creds_file="$2"
-          args+=("$1")
           shift 2
-        else
-          args+=("$1")
-          shift
+          continue
         fi
+        shift
         ;;
     esac
   done
   
-  # Get the profile
-  local profile
-  profile=$(aws-sso-profile "${args[@]}")
+  # Get the base profile (may include default role)
+  local base_profile
+  base_profile=$(aws-sso-profile "${args[@]}")
+  
+  # Construct full profile with role if specified
+  local profile="$base_profile"
+  if [[ -n "$role_suffix" ]]; then
+    # Replace the role part (everything after first colon) with user-specified role
+    profile="${base_profile%%:*}:${role_suffix}"
+    echo "Using profile: $profile (account: ${base_profile%%:*}, role: $role_suffix)" >&2
+  else
+    echo "Using profile: $profile" >&2
+  fi
   
   # Perform SSO authentication with proper browser control
   if [[ $console -eq 1 ]]; then
