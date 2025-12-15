@@ -39,7 +39,7 @@ apt-clean:
 	# sudo apt autoclean
 	# sudo apt autopurge
 	# sudo apt autoremove
-	uv cache clean
+	uv cache clean --force
 	find ~/.cache/ -type f -atime +182 -delete
 	find ~/.config/ -iname ".mypy_cache" -exec rm -fr {} +
 	find ~/.cache/act/ -atime +30 -delete

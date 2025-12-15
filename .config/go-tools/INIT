@@ -25,7 +25,16 @@ go-install github.com/muesli/duf@latest
 go-install github.com/nektos/act@latest
 go-install github.com/spf13/cobra-cli@latest
 go-install github.com/stern/stern@latest
-go-install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@latest
+# aws-sso: Pin to v2.1.0 (v2.0.0+ required for 'login' command)
+# NOTE: Using @latest may install v1.x which lacks the 'login' command
+go-install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@v2.1.0
+# Verify aws-sso v2.0.0+ is installed (login command added in v2.0.0)
+if ! aws-sso login --help >/dev/null 2>&1; then
+  echo "ERROR: aws-sso v2.0.0+ required but 'login' command not found" >&2
+  echo "Installed version may be v1.x. Please reinstall:" >&2
+  echo "  go install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@v2.1.0" >&2
+  exit 1
+fi
 go-install github.com/terraform-docs/terraform-docs@latest
 go-install github.com/warrensbox/terraform-switcher@latest
 go-install golang.org/x/lint/golint@latest
