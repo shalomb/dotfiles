@@ -88,3 +88,6 @@ fi
 
 # Kiro CLI post block. Keep at the bottom of this file.
 _kiro_cli_profile_post 2>/dev/null || true
+
+# Clear sourcing flag after profile loads
+unset _SOURCING_BASHRC
