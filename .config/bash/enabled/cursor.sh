@@ -91,7 +91,8 @@ _cursor_gpg_check() {
 # - Validates GPG configuration before starting cursor-agent
 # - Prevents terminal interaction issues by unsetting GPG_TTY
 # - Runs in foreground (not background) for proper job control
-# - Uses nice priority to prevent system impact
+# - Uses systemd-run with resource limits (CPUQuota=70%, MemoryMax=3G) if available
+# - Falls back to nice priority if systemd-run is not available
 #
 # Why not background (&):
 # - Background processes lose terminal control
@@ -133,12 +134,25 @@ cursor-agent() {
 
     echo "✅ GPG signing validated - starting cursor-agent"
 
+    # Get UID from environment or via id command
+    local uid="${UID:-$(id -u 2>/dev/null)}"
+    
     # Environment setup for cursor-agent
     # - Unset GPG_TTY to prevent terminal interaction prompts
-    # - Use nice to reduce system priority
+    # - Use systemd-run with resource limits if available, otherwise fall back to nice
     # - Run in foreground for proper job control and error handling
     # - Use absolute path to prevent any possibility of alias recursion/fork-bomb
-    GPG_TTY=/dev/null nice -n 15 "$HOME/.local/bin/cursor-agent" "$@"
+    if command -v systemd-run >/dev/null 2>&1; then
+        # Use systemd-run with resource limits
+        GPG_TTY=/dev/null systemd-run --scope \
+            -p CPUQuota=70% \
+            -p MemoryMax=3G \
+            --uid="$uid" \
+            nice -n 15 "$HOME/.local/bin/cursor-agent" "$@"
+    else
+        # Fall back to nice if systemd-run is not available
+        GPG_TTY=/dev/null nice -n 15 "$HOME/.local/bin/cursor-agent" "$@"
+    fi
 }
 
 # Export functions for subshells
