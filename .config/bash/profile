@@ -2,6 +2,9 @@
 
 # SOURCING: ~/.profile, ~/.bash_profile (symlinks)
 
+# Set flag to suppress bell during profile sourcing
+_SOURCING_BASHRC=true
+
 # Load Kiro CLI integration early
 # This provides the _kiro_cli_profile_pre/post functions
 if [ -f "$HOME/.config/bash/enabled/kiro-cli.sh" ]; then

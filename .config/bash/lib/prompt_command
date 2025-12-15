@@ -20,9 +20,12 @@ function prompt-command() {
 
 # Setup some zsh-like special functions
 # See http://zsh.sourceforge.net/Doc/Release/Functions.html
+# Don't ring bell if we're currently sourcing bashrc/profile (prevents bell during reload)
 PROMPT_COMMAND='
   _last_cmd_ec=$?;
-  (( _last_cmd_ec != 0 )) && call-if-defined bell-alert;
+  if (( _last_cmd_ec != 0 )) && [[ -z "${_SOURCING_BASHRC:-}" ]]; then
+    call-if-defined bell-alert;
+  fi
   [[ ${_pwd:=$PWD} != $PWD ]] && call-if-defined chpwd;
   call-if-defined prompt-command;
   _pwd="$PWD";
