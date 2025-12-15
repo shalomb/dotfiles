@@ -31,7 +31,7 @@ _glow_enhanced_completion() {
         return
     fi
     
-    # If previous word was a flag that takes an argument, use original completion
+    # Flags that take arguments: complete their values using original completion
     case "$prev" in
         --config|--style|--width|-s|-w)
             __start_glow
@@ -39,21 +39,20 @@ _glow_enhanced_completion() {
             ;;
     esac
     
-    # For the first argument (position 1), complete files and directories
-    # glow accepts: glow [SOURCE|DIR] [flags]
-    if [[ $cword -eq 1 ]]; then
-        # Enable default file completion
-        compopt -o default -o plusdirs
-        # Use bash's built-in file completion if available, otherwise use compgen
-        if declare -f _filedir >/dev/null 2>&1; then
-            _filedir
-        else
-            # Fallback: use compgen for file completion
-            COMPREPLY=($(compgen -f -- "$cur"))
-        fi
+    # For all other cases (file arguments), complete files and directories
+    # This handles:
+    # - glow <TAB> (first argument)
+    # - glow -p <TAB> (file after flag)
+    # - glow -l <TAB> (file after flag)
+    # - glow -a <TAB> (file after flag)
+    # - etc.
+    compopt -o default -o plusdirs
+    # Use bash's built-in file completion if available, otherwise use compgen
+    if declare -f _filedir >/dev/null 2>&1; then
+        _filedir
     else
-        # For subsequent arguments, use original glow completion
-        __start_glow
+        # Fallback: use compgen for file completion
+        COMPREPLY=($(compgen -f -- "$cur"))
     fi
 }
 
