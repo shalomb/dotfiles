@@ -1,0 +1,55 @@
+set shell := ["/bin/bash", "-euc"]
+set positional-arguments
+
+[private]
+@default:
+  just -g --list
+
+@_sync-building-block:
+  #!/bin/bash
+  repo_dir="$1"
+  echo "Processing $repo_dir"
+
+  # Clone if not exists
+  test -d "$repo_dir" || gh repo clone "oneTakeda/$repo_dir" "$repo_dir"
+
+  cd "$repo_dir" || exit 1
+  pwd
+
+  # Get default branch and current branch
+  default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|.*/||' || echo "main")
+  current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+
+  # Only sync if on default branch
+  if [[ "$current_branch" != "$default_branch" ]]; then
+    echo "  → Skipping sync (checked out on $current_branch, not on default branch $default_branch)"
+    exit 0
+  fi
+
+  # Check for and abort any active rebases
+  if [[ -d .git/rebase-merge ]] || [[ -d .git/rebase-apply ]]; then
+    echo "  → Aborting active rebase..."
+    git rebase --abort 2>/dev/null || true
+    git reset --hard origin/$default_branch 2>/dev/null || true
+  fi
+
+  # Proceed with normal fetch and pull
+  git fetch --all --tags --prune
+  git pull --rebase
+  echo "  → Sync complete (exit code: $?)"
+
+# Clone/Pull terraform-aws-* building block repos to ~/oneTakeda/
+mirror-building-blocks:
+  #!/bin/bash
+  target_dir="$HOME/oneTakeda"
+  if ! cd "$target_dir"; then
+    echo >&2 "Could not chdir to $target_dir"
+    exit 3
+  fi
+  gh search repos --owner=oneTakeda 'terraform-aws-*' --json owner,name --limit 1000 |
+  jq -Scer '.[] | .owner.url + "/" + .name' | sort |
+  while read -r repo; do
+    repo="${repo##*github.com/}"
+    dir="${repo##*oneTakeda/}"
+    echo "$dir"
+  done | parallel -j 3 just -g _sync-building-block {}

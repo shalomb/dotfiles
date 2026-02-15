@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# SYNOPSIS
+#   install-terraform [version] - Install terraform version
+#   version can be: latest, prompt, or specific version (e.g., 1.5.0)
+
+set -eu -o pipefail
+
+TMPDIR="${TMP:-${TMPDIR:-/tmp}}"
+version="${1:-latest}"
+arch="$(uname -m)"
+case "$arch" in
+aarch64) arch='arm64' ;;
+x86_64) arch='amd64' ;;
+*)
+  echo >&2 "Unknown architecture: $arch"
+  exit 1
+  ;;
+esac
+releases_url='https://releases.hashicorp.com/terraform/'
+releases_cache=$(mktemp -p "$TMPDIR")
+curl -fsSL "$releases_url" >"$releases_cache"
+os=$(uname -s | tr '[:upper:]' '[:lower:]')
+versions=($(
+  htmlq a --attribute href <"$releases_cache" |
+    awk -F/ '$0=$3' |
+    sort -r -t. -k 1,1rn -k 2,2rn -k 3,3rn
+))
+echo "Listing versions from $releases_url: ${#versions[@]} available"
+if [[ $version == @(prompt|confirm|ask|p|c|a) ]]; then
+  target_version=$(printf '%q\n' "${versions[@]}" | fzf)
+elif [[ $version == @(current|latest|release|l|r) ]]; then
+  target_version=${versions[0]}
+else
+  target_version=$(
+    printf '%q\n' "${versions[@]}" |
+      awk '$0 == "'"$version"'"'
+  )
+fi
+if [[ $target_version == "" ]]; then
+  echo >&2 "Target version missing or not available to install: $version"
+  printf ' Potential match: %q\n' "${versions[@]}" | grep -i "$version"
+  exit 1
+fi
+XDG_BIN_DIR="${XDG_DATA_HOME%/*}/bin"
+(
+  cd "$TMPDIR" || exit
+  release_url="https://releases.hashicorp.com/terraform/${target_version}/terraform_${target_version}_${os}_${arch}.zip"
+  echo "target_version: $target_version from $release_url"
+  wget -q -c "$release_url"
+  unzip -q -o "${release_url##*/}"
+  target="$XDG_BIN_DIR/terraform-${target_version}"
+  install -m0755 ./terraform "$target"
+  hash -r
+  command -v "${target##*/}"
+  "${target##*/}" version
+  command -v terraform
+)
