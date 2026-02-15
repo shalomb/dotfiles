@@ -61,10 +61,10 @@ find_orphaned_files() {
             local repo_file=""
             case "$home_file" in
                 "$HOME_DIR/.bashrc")
-                    repo_file="$REPO_ROOT/.config/bash/bashrc"
+                    repo_file="$REPO_ROOT/.bashrc"
                     ;;
                 "$HOME_DIR/.bash_profile")
-                    repo_file="$REPO_ROOT/.config/bash/profile"
+                    repo_file="$REPO_ROOT/.bash_profile"
                     ;;
                 "$CONFIG_DIR/bash/bashrc")
                     repo_file="$REPO_ROOT/.config/bash/bashrc"
