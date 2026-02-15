@@ -134,6 +134,20 @@ class DotfileManager:
         """Compare files between repository and home directory."""
         logger.info(f"Running diff for: {files}")
         
+        # Determine the diff command:
+        # 1. Use DIFFPROG environment variable if set
+        # 2. Use vimdiff if interactive and available
+        # 3. Default to diff -u
+        diff_prog = os.environ.get("DIFFPROG")
+        is_interactive = sys.stdout.isatty()
+        
+        if diff_prog:
+            diff_cmd = [diff_prog]
+        elif is_interactive and self._command_exists("vimdiff"):
+            diff_cmd = ["vimdiff"]
+        else:
+            diff_cmd = ["diff", "-u"]
+
         for file_pattern in files:
             src_paths = self._resolve_source_paths(file_pattern)
             
@@ -141,22 +155,41 @@ class DotfileManager:
                 if not src_path.exists():
                     continue
                 
+                # Skip directories for diff unless explicitly handled
+                if src_path.is_dir():
+                    # Walk through directory and diff individual files
+                    self._diff_directory(src_path, diff_cmd)
+                    continue
+
                 dst_path = self._get_destination_path(src_path)
                 
                 if not dst_path.exists():
                     console.print(f"[red]{dst_path}[/red]: does not exist in home directory")
                     continue
                 
-                # Use vimdiff if available, otherwise use diff
-                diff_cmd = "vimdiff" if self._command_exists("vimdiff") else "diff"
-                
                 try:
-                    subprocess.run([diff_cmd, str(src_path), str(dst_path)], check=True)
+                    subprocess.run(diff_cmd + [str(src_path), str(dst_path)], check=True)
                 except subprocess.CalledProcessError:
-                    # Diff found differences, which is expected
+                    # Diff found differences, which is expected for the 'diff' command
                     pass
                 except FileNotFoundError:
-                    logger.error(f"Diff command not found: {diff_cmd}")
+                    logger.error(f"Diff command not found: {diff_cmd[0]}")
+
+    def _diff_directory(self, src_dir: Path, diff_cmd: List[str]) -> None:
+        """Helper to diff all files within a directory."""
+        for root, _, filenames in os.walk(src_dir):
+            root_path = Path(root)
+            for filename in filenames:
+                src_file = root_path / filename
+                if self.file_ops._should_skip_file(src_file):
+                    continue
+                
+                dst_file = self._get_destination_path(src_file)
+                if dst_file.exists():
+                    try:
+                        subprocess.run(diff_cmd + [str(src_file), str(dst_file)], check=True)
+                    except subprocess.CalledProcessError:
+                        pass
     
     def _resolve_source_paths(self, pattern: str) -> List[Path]:
         """Resolve file patterns to actual source paths."""
