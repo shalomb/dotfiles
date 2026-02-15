@@ -60,6 +60,10 @@ aws-sso-profile() {
 
   profile=$(aws-sso list 2>&1 | grep "$account" | awk -F'|' '{print $4}' | sed 's/^ *//;s/ *$//')
 
+  # Filter out APMS-specific limited-permission roles (e.g., _APMS-XXXXX-...-S3-RW)
+  # These roles typically only have S3 access and lack necessary discovery permissions
+  profile=$(grep -v "_APMS-[0-9]\+-.*-\(S3-RW\|S3-RO\|EC2-\|RDS-\)" <<<"$profile")
+
   if (($(wc -l <<<"$profile") > 1)); then
     echo >&2 "WARNING: Multiple profiles found for '$account'"
     echo >&2 "$profile"
