@@ -163,3 +163,5 @@ reload() {
 
 # Clear sourcing flag after bashrc loads
 unset _SOURCING_BASHRC
+
+source '/home/unop/.bash_completions/terrapyne.sh'

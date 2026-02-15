@@ -212,7 +212,7 @@ update:  ## Update all components
 	make python-tools
 
 .PHONY: clean
-clean: nvim-cleanup cargo-cleanup go-cleanup npm-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup
+clean: nvim-cleanup cargo-cleanup go-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup npm-cleanup
 
 .PHONY: test test-fast
 test: ## Run acceptance tests (usage: make test [FAST=1])
