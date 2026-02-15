@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Unified Agent Management System
-Keychain-inspired architecture for SSH/GPG agent management
+Keychain-inspired architecture for SSH/GPG agent management + NPM package management
 """
 
 import os
@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import argparse
 import logging
+import shlex
 
 
 class AgentManager:
@@ -700,6 +701,119 @@ class AgentManager:
             return "❓ Unknown"
 
 
+class NPMPackageManager:
+    """
+    Manages NPM packages as CLI tools.
+    Provides lightweight wrappers around npm exec for quick package execution.
+    """
+    
+    # Package registry with package names and descriptions
+    PACKAGES = {
+        'copilot': {
+            'package': '@github/copilot',
+            'description': 'GitHub Copilot CLI'
+        },
+        'pi': {
+            'package': '@mariozechner/pi-coding-agent',
+            'description': 'Pi coding agent by Mario Zechner'
+        },
+        'gemini': {
+            'package': '@google/gemini-cli',
+            'description': 'Google Gemini CLI'
+        }
+    }
+    
+    def __init__(self, logger: logging.Logger = None):
+        """Initialize the NPM package manager."""
+        self.logger = logger or logging.getLogger('npm_manager')
+        self.state_dir = Path(os.environ.get('XDG_STATE_HOME', os.path.expanduser('~/.local/state')))
+        self.npm_state = self.state_dir / 'npm'
+        self.npm_state.mkdir(parents=True, exist_ok=True)
+    
+    def _run_npm_exec(self, package: str, version: str = '', args: List[str] = None) -> int:
+        """
+        Execute an npm package with minimal overhead using npm exec.
+        
+        Only uses cached/already-installed packages. No registry lookups or global installs.
+        
+        Args:
+            package: Full package name (e.g., '@github/copilot')
+            version: Optional version specifier (e.g., '@latest', '@1.2.3')
+            args: Optional additional arguments to pass to the package
+        
+        Returns:
+            Exit code from npm exec
+        """
+        cmd = ['npm', 'exec']
+        
+        # Build the package specifier
+        if version:
+            package_spec = f"{package}{version}"
+        else:
+            package_spec = package
+        
+        cmd.append(package_spec)
+        
+        # Add any additional arguments
+        if args:
+            cmd.extend(args)
+        
+        self.logger.info(f"Running: {' '.join(cmd)}")
+        
+        try:
+            # Use subprocess.run without capture to allow direct output/input
+            # Pass through stdin/stdout/stderr for interactive use
+            result = subprocess.run(cmd, timeout=None)
+            return result.returncode
+        except FileNotFoundError:
+            self.logger.error("npm command not found")
+            return 127
+        except KeyboardInterrupt:
+            self.logger.info("Interrupted by user")
+            return 130
+        except subprocess.TimeoutExpired:
+            self.logger.error("npm exec timed out")
+            return 124
+    
+    def start(self, tool_name: str, args: List[str] = None) -> int:
+        """
+        Start a tool with cached version (no registry lookup).
+        
+        Uses locally cached npm package without checking npm registry for updates.
+        Fastest execution path for tools already installed.
+        """
+        if tool_name not in self.PACKAGES:
+            self.logger.error(f"Unknown tool: {tool_name}")
+            return 1
+        
+        package = self.PACKAGES[tool_name]['package']
+        self.logger.info(f"Starting {tool_name} ({package})")
+        
+        return self._run_npm_exec(package, '', args)
+    
+    def upgrade(self, tool_name: str, args: List[str] = None) -> int:
+        """
+        Upgrade a tool to the latest version via npm registry.
+        
+        Fetches and executes the latest version from npm registry.
+        """
+        if tool_name not in self.PACKAGES:
+            self.logger.error(f"Unknown tool: {tool_name}")
+            return 1
+        
+        package = self.PACKAGES[tool_name]['package']
+        self.logger.info(f"Upgrading {tool_name} ({package}) to latest")
+        
+        return self._run_npm_exec(package, '@latest', args)
+    
+    def list_tools(self) -> int:
+        """List all available tools that can be managed."""
+        print("Available NPM tools:")
+        for tool_name, info in self.PACKAGES.items():
+            print(f"  {tool_name:10} - {info['description']} ({info['package']})")
+        return 0
+
+
 def main():
     """Main entry point for the agent command."""
     parser = argparse.ArgumentParser(description='Unified agent management system')
@@ -735,7 +849,20 @@ def main():
     gpg_subparsers.add_parser('unlock', help='Unlock GPG keys')
     gpg_subparsers.add_parser('restart', help='Restart GPG agent')
     
-    args = parser.parse_args()
+    # NPM tools management - top-level subcommands for each tool
+    for tool_name in NPMPackageManager.PACKAGES.keys():
+        tool_parser = subparsers.add_parser(tool_name, help=f'Manage {tool_name}')
+        tool_subparsers = tool_parser.add_subparsers(dest='tool_action', help=f'{tool_name} actions')
+        
+        # start action - all remaining args passed through via unknown args
+        tool_subparsers.add_parser('start', help=f'Start {tool_name} (cached version)')
+        
+        # upgrade action - all remaining args passed through via unknown args
+        tool_subparsers.add_parser('upgrade', help=f'Upgrade {tool_name} to latest')
+    
+    # Parse args, handling tools subcommand specially to allow unknown args
+    # This allows passing arbitrary arguments to npm exec
+    args, unknown = parser.parse_known_args()
     
     if not args.command:
         parser.print_help()
@@ -969,6 +1096,37 @@ def main():
                 else:
                     print("❌ Failed to restart GPG agent")
                     return 1
+        
+        # NPM tools management - handle tool-specific commands (copilot, pi, gemini)
+        elif args.command in NPMPackageManager.PACKAGES:
+            npm_manager = NPMPackageManager(manager.logger)
+            tool_name = args.command
+            
+            if not hasattr(args, 'tool_action') or not args.tool_action:
+                # If no action specified, show help for this tool
+                print(f"usage: agentctl {tool_name} {{start,upgrade}} ...")
+                print(f"\nManage {tool_name}")
+                print(f"\npositional arguments:")
+                print(f"  {{start,upgrade}}")
+                print(f"    start    Start {tool_name} (cached version)")
+                print(f"    upgrade  Upgrade {tool_name} to latest")
+                return 1
+            
+            # Combine parsed args and unknown args for the tool
+            # Unknown args (starting from after 'start'/'upgrade') are passed through
+            tool_args = unknown if unknown else None
+            
+            if args.tool_action == 'start':
+                exit_code = npm_manager.start(tool_name, tool_args)
+                return exit_code
+            
+            elif args.tool_action == 'upgrade':
+                exit_code = npm_manager.upgrade(tool_name, tool_args)
+                return exit_code
+            
+            else:
+                print(f"❌ Unknown action: {args.tool_action}")
+                return 1
         
         return 0
     
