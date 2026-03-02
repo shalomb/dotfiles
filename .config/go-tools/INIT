@@ -10,6 +10,7 @@ function go-install() {
   echo
 }
 
+go-install github.com/cli/cli/v2/cmd/gh@latest
 go-install github.com/ankitpokhrel/jira-cli/cmd/jira@latest
 go-install github.com/antonmedv/fx@latest
 go-install github.com/aquasecurity/tfsec/cmd/tfsec@latest
@@ -28,15 +29,30 @@ go-install github.com/stern/stern@latest
 # aws-sso: Pin to v2.1.0 (v2.0.0+ required for 'login' command)
 # NOTE: Using @latest may install v1.x which lacks the 'login' command
 go-install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@v2.1.0
-# Verify aws-sso v2.0.0+ is installed (login command added in v2.0.0)
-if ! aws-sso login --help >/dev/null 2>&1; then
-  echo "ERROR: aws-sso v2.0.0+ required but 'login' command not found" >&2
-  echo "Installed version may be v1.x. Please reinstall:" >&2
-  echo "  go install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@v2.1.0" >&2
-  exit 1
-fi
 go-install github.com/terraform-docs/terraform-docs@latest
 go-install github.com/warrensbox/terraform-switcher@latest
 go-install golang.org/x/lint/golint@latest
 go-install github.com/shalomb/gum@latest
 go-install github.com/shalomb/ob-cli/cmd/ob-cli@latest
+
+# High priority development tools
+go-install golang.org/x/tools/cmd/goimports@latest
+go-install github.com/goreleaser/goreleaser@latest
+go-install github.com/securego/gosec/v2/cmd/gosec@latest
+go-install gotest.tools/gotestsum@latest
+go-install github.com/onsi/ginkgo/v2/ginkgo@latest
+go-install github.com/cucumber/godog/cmd/godog@latest
+
+# Medium priority development/infra tools
+go-install github.com/wagoodman/dive@latest
+go-install github.com/charmbracelet/glow@latest
+go-install github.com/hashicorp/hcledit@latest
+go-install github.com/client9/misspell/cmd/misspell@latest
+go-install golang.org/x/tools/cmd/stringer@latest
+
+# Personal project tools
+go-install github.com/shalomb/td@latest
+go-install github.com/shalomb/sidecar@latest
+go-install github.com/shalomb/springfield@latest
+go-install github.com/shalomb/ogspy@latest
+go-install github.com/shalomb/jqp@latest
