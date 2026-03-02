@@ -26,9 +26,10 @@ go-install github.com/muesli/duf@latest
 go-install github.com/nektos/act@latest
 go-install github.com/spf13/cobra-cli@latest
 go-install github.com/stern/stern@latest
-# aws-sso: Pin to v2.1.0 (v2.0.0+ required for 'login' command)
-# NOTE: Using @latest may install v1.x which lacks the 'login' command
-go-install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@v2.1.0
+# aws-sso: Install from main branch (v2.0.0+ required for 'login' command)
+# NOTE: @latest installs v1.17.0 which lacks the 'login' command
+# v2.x releases have module path misconfiguration, so use @main instead
+go-install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@main
 go-install github.com/terraform-docs/terraform-docs@latest
 go-install github.com/warrensbox/terraform-switcher@latest
 go-install golang.org/x/lint/golint@latest
