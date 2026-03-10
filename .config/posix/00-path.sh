@@ -26,8 +26,8 @@ if [ -z "${PATH_SET_BY_PROFILE:-}" ]; then
     _add_to_path "$HOME/.cargo/bin"
     _add_to_path "$HOME/go/bin"
     _add_to_path "${XDG_DATA_HOME:-$HOME/.local/share}/go/bin"
-    _add_to_path "$HOME/.config/bin"
     _add_to_path "$HOME/.local/bin"
+    _add_to_path "$HOME/.config/bin"
 
     export PATH
     export PATH_SET_BY_PROFILE=1

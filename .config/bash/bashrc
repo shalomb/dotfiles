@@ -25,8 +25,8 @@ if [[ -z "$BASH_PROFILE_SOURCED" ]]; then
     export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
     # PATH setup - standard user directories
-    PATH="$HOME/.local/bin"           # User scripts/binaries
-    PATH="$PATH:$HOME/.config/bin"    # Config-managed binaries
+    PATH="$HOME/.config/bin"          # Config-managed binaries
+    PATH="$PATH:$HOME/.local/bin"     # User scripts/binaries
     PATH="$PATH:$HOME/.cargo/bin"     # Rust toolchain
     PATH="$PATH:$HOME/go/bin"         # Go binaries
     PATH="$PATH:$XDG_DATA_HOME/go/bin" # XDG-compliant Go binaries
@@ -165,3 +165,6 @@ reload() {
 unset _SOURCING_BASHRC
 
 source '/home/unop/.bash_completions/terrapyne.sh'
+export QLTY_INSTALL="$HOME/.qlty"
+export PATH=$QLTY_INSTALL/bin:$PATH
+export PATH="$HOME/.config/bin:$PATH"
