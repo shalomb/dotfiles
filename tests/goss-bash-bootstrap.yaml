@@ -72,10 +72,9 @@ command:
   "bash -c 'source ~/.bashrc >/dev/null 2>&1 && echo $PATH'":
     exit-status: 0
     stdout:
+      - "/.config/bin"
       - "/.local/bin"
       - "/.cargo/bin"
-      - "/go/bin"
-      - "/usr/bin"
     timeout: 5000
 
   # === DIRECTORY INDEPENDENCE ===
