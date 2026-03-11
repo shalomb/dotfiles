@@ -78,3 +78,4 @@ submodules/**
 .config/submodules/**
 
 **/.claude/settings.local.json
+# Temporary drift test

@@ -143,6 +143,7 @@ bfg-cleanup: ## Cleanup BFG JAR files
 
 .PHONY: system-cleanup
 system-cleanup: ## Cleanup system-wide caches and temporary files
+	set -xv
 	# Clean bash history and cache
 	find ~/.cache/bash/ -type f -atime +30 -delete || true
 	# Clean gum cache
