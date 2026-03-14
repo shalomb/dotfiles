@@ -48,15 +48,6 @@ jira() {
     return 1
   fi
   
-  # Show debug output
-  echo "jira: Config files found: ${config_files[*]}"
-  if [[ -n "$temp_config" ]]; then
-    echo "jira: Using merged config: $temp_config"
-  else
-    echo "jira: Using config: $merged_config"
-  fi
-  echo "jira: Full command: JIRA_CONFIG_FILE='$merged_config' command jira $*"
-  
   # Set JIRA_API_TOKEN from token file and run jira with the resolved config
   local jira_token=""
   if [[ -f "$HOME/.config/.jira/.token.env" ]]; then
@@ -81,7 +72,7 @@ mkdir -p "$_cache_dir"
 # If the completion file doesn't exist, or if the jira binary is
 # newer than the completion file, regenerate it.
 if [[ ! -f "$_completion_file" || "$(command -v jira)" -nt "$_completion_file" ]]; then
-  jira completion bash > "$_completion_file"
+  command jira completion bash > "$_completion_file"
 fi
 
 # Source the completion file.
