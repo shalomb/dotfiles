@@ -6,5 +6,5 @@ claude() {
   GPG_TTY=/dev/null \
     systemd-run --scope -p CPUQuota=70% -p MemoryMax=3G --uid="$uid" \
     nice -n 15 \
-    npx @anthropic-ai/claude-code@latest --dangerously-skip-permissions
+    ~/.local/bin/claude --dangerously-skip-permissions "$@"
 }
