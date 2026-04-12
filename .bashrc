@@ -168,5 +168,3 @@ source '/home/unop/.bash_completions/terrapyne.sh'
 export QLTY_INSTALL="$HOME/.qlty"
 export PATH=$QLTY_INSTALL/bin:$PATH
 export PATH="$HOME/.config/bin:$PATH"
-
-source '/home/unop/.bash_completions/tfc.sh'
