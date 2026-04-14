@@ -85,8 +85,19 @@ python-tools: ## Run python-tools installer
 .PHONY: workspace-tools workspace-cleanup
 workspace-tools: ## Run workspace-tools installer
 	.config/installers/INIT
+# Helper for cleaning specific work directories
+define clean_work_dir
+	if [ -d "$(1)" ]; then \
+		echo "Cleaning $(1)..."; \
+		find "$(1)" -maxdepth 4 -type d \( -name ".terraform" -o -name "node_modules" -o -name "__pycache__" -o -name ".pytest_cache" -o -name ".mypy_cache" -o -name "target" -o -name "dist" -o -name "build" \) -prune -exec rm -rf {} +; \
+	fi
+endef
 
 workspace-cleanup: ## Cleanup workspace-specific caches and temporary files
+	set -xv
+	$(call clean_work_dir,$(HOME)/oneTakeda)
+	$(call clean_work_dir,$(HOME)/workspaces)
+	$(call clean_work_dir,$(HOME)/shalomb)
 	# Clean Python build artifacts
 	find . -name "__pycache__" -type d -exec rm -rf {} + || true
 	find . -name "*.pyc" -type f -delete || true
@@ -148,10 +159,10 @@ system-cleanup: ## Cleanup system-wide caches and temporary files
 	find ~/.cache/bash/ -type f -atime +30 -delete || true
 	# Clean gum cache
 	find ~/.cache/gum/ -type f -atime +30 -delete || true
-	# Clean terraform cache
-	find ~/.cache/terraform.d/ -type f -atime +30 -delete || true
-	# Clean general cache files older than 6 months
-	find ~/.cache/ -type f -atime +182 -delete || true
+	# Clean terraform cache (keep only latest 2 versions)
+	$(HOME)/.config/dotfiles/scripts/prune-terraform-cache.sh 2
+	# Clean general cache files older than 3 months
+	find ~/.cache/ -type f -atime +90 -delete || true
 	# Clean temporary files
 	find /tmp -user $$(whoami) -type f -atime +7 -delete || true
 	# Clean old log files
@@ -213,7 +224,19 @@ update:  ## Update all components
 	make python-tools
 
 .PHONY: clean
-clean: nvim-cleanup cargo-cleanup go-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup npm-cleanup
+clean: nvim-cleanup cargo-cleanup go-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup npm-cleanup local-cleanup
+
+local-cleanup: ## Cleanup .local/share and .local/lib cruft
+	set -xv
+	# Prune unused podman images
+	command -v podman >/dev/null && podman image prune -a -f || true
+	# Remove old python versions in .local/lib that are not managed by uv
+	rm -rf $(HOME)/.local/lib/python3.11 $(HOME)/.local/lib/python3.12 || true
+	# Remove old uv tool data
+	command -v uv >/dev/null && uv toolchain prune || true
+	# Clean up any remaining .local/share/go if it somehow persisted
+	rm -rf $(HOME)/.local/share/go/pkg/mod/* || true
+	df -hP
 
 .PHONY: test test-fast
 test: ## Run acceptance tests (usage: make test [FAST=1])
