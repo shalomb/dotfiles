@@ -177,9 +177,9 @@ class AgentManager:
             # Trigger pinentry by attempting a sign operation
             # Do NOT use --batch or --pinentry-mode loopback
             # This allows pinentry to prompt interactively
+            # Do NOT pipe stdin (input=) - let pinentry read from the actual TTY
             result = subprocess.run(
                 ['gpg', '--sign', '--armor'],
-                input=b'test\n',
                 timeout=60,  # Allow time for passphrase entry
                 env={**os.environ, 'GPG_TTY': gpg_tty}
             )
