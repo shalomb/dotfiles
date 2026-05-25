@@ -7,8 +7,8 @@ DefaultRegion: us-east-1
 ConsoleDuration: 720
 CacheRefresh: 168
 AutoConfigCheck: true
-UrlAction: exec
-ConfigProfilesUrlAction: exec
+UrlAction: printurl
+ConfigProfilesUrlAction: printurl
 UrlExecCommand:
   - x-www-browser # bin/open
   - "%s"
