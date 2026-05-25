@@ -5,13 +5,6 @@
 # Set flag to suppress bell during bashrc sourcing
 _SOURCING_BASHRC=true
 
-# Load Kiro CLI integration early (before other enabled scripts)
-# This provides the _kiro_cli_bashrc_pre/post functions
-[[ -f "$HOME/.config/bash/enabled/kiro-cli.sh" ]] && source "$HOME/.config/bash/enabled/kiro-cli.sh"
-
-# Kiro CLI pre block. Keep at the top of this file.
-[[ "$(type -t _kiro_cli_bashrc_pre)" == "function" ]] && _kiro_cli_bashrc_pre
-
 # =============================================================================
 # UNIVERSAL SECTION (Always runs - all shell types)
 # =============================================================================
@@ -157,9 +150,6 @@ reload() {
 # =============================================================================
 # Silent startup - no verbose output
 # =============================================================================
-
-# Kiro CLI post block. Keep at the bottom of this file.
-[[ "$(type -t _kiro_cli_bashrc_post)" == "function" ]] && _kiro_cli_bashrc_post
 
 # Clear sourcing flag after bashrc loads
 unset _SOURCING_BASHRC
