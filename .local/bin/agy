@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+# Wrapper for Gemini CLI (agy/antigravity-cli)
+# Mitigates TUI busy-loop CPU burn and pager hangs in headless/agent use.
+
+export GIT_PAGER=cat
+export PAGER=cat
+export DELTA_PAGER=cat
+export GOMAXPROCS=2
+
+exec nice -n 19 /home/unop/.local/bin/agy.real "$@"
