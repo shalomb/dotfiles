@@ -37,12 +37,13 @@ go-install github.com/shalomb/gum@latest
 go-install github.com/shalomb/ob-cli/cmd/ob-cli@latest
 
 # High priority development tools
-go-install golang.org/x/tools/cmd/goimports@latest
-go-install github.com/goreleaser/goreleaser@latest
-go-install github.com/securego/gosec/v2/cmd/gosec@latest
-go-install gotest.tools/gotestsum@latest
-go-install github.com/onsi/ginkgo/v2/ginkgo@latest
 go-install github.com/cucumber/godog/cmd/godog@latest
+go-install github.com/goreleaser/goreleaser@latest
+go-install github.com/marcus/td@latest
+go-install github.com/onsi/ginkgo/v2/ginkgo@latest
+go-install github.com/securego/gosec/v2/cmd/gosec@latest
+go-install golang.org/x/tools/cmd/goimports@latest
+go-install gotest.tools/gotestsum@latest
 
 # Medium priority development/infra tools
 go-install github.com/wagoodman/dive@latest
@@ -52,7 +53,6 @@ go-install github.com/client9/misspell/cmd/misspell@latest
 go-install golang.org/x/tools/cmd/stringer@latest
 
 # Personal project tools
-go-install github.com/shalomb/td@latest
 go-install github.com/shalomb/sidecar@latest
 go-install github.com/shalomb/springfield@latest
 go-install github.com/shalomb/ogspy@latest
