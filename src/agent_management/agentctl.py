@@ -177,9 +177,10 @@ class AgentManager:
             # Trigger pinentry by attempting a sign operation
             # Do NOT use --batch or --pinentry-mode loopback
             # This allows pinentry to prompt interactively
-            # Do NOT pipe stdin (input=) - let pinentry read from the actual TTY
+            # Provide minimal input to prevent gpg from hanging on stdin
             result = subprocess.run(
                 ['gpg', '--sign', '--armor'],
+                input=b'trigger\n',
                 timeout=60,  # Allow time for passphrase entry
                 env={**os.environ, 'GPG_TTY': gpg_tty}
             )
@@ -214,17 +215,70 @@ class AgentManager:
             env = os.environ.copy()
             env['SSH_AUTH_SOCK'] = ssh_socket
             
-            test_result = subprocess.run(['ssh-add', '-l'], 
+            test_result = subprocess.run(['ssh-add', '-l'],
                                        capture_output=True, timeout=5, env=env)
-            if test_result.returncode == 0:
+            # returncode 0 = keys loaded, 1 = no keys but agent works, 2 = agent not running
+            if test_result.returncode in (0, 1):
                 os.environ['SSH_AUTH_SOCK'] = ssh_socket
                 self.logger.info("Using GPG agent's SSH functionality")
+                self._load_ssh_keys(env)
                 return True
-            
+
         except (subprocess.TimeoutExpired, FileNotFoundError):
             pass
-        
+
         return False
+
+    def _load_ssh_keys(self, env: dict = None):
+        """Load any unloaded SSH private keys into the agent."""
+        if env is None:
+            env = os.environ.copy()
+
+        # Get fingerprints of already-loaded keys
+        loaded = set()
+        try:
+            result = subprocess.run(['ssh-add', '-l'], capture_output=True, timeout=5, env=env)
+            if result.returncode == 0:
+                for line in result.stdout.decode('utf-8', errors='replace').splitlines():
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        loaded.add(parts[1])  # fingerprint
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+
+        # Find private keys in ~/.ssh (files without .pub extension that have a matching .pub)
+        ssh_dir = Path.home() / '.ssh'
+        for pub_key in ssh_dir.glob('id_*.pub'):
+            private_key = pub_key.with_suffix('')
+            if not private_key.exists():
+                continue
+            # Get fingerprint of this key
+            try:
+                fp_result = subprocess.run(
+                    ['ssh-keygen', '-lf', str(pub_key)],
+                    capture_output=True, timeout=5
+                )
+                if fp_result.returncode == 0:
+                    parts = fp_result.stdout.decode('utf-8', errors='replace').split()
+                    fingerprint = parts[1] if len(parts) >= 2 else None
+                    if fingerprint and fingerprint in loaded:
+                        self.logger.info(f"Key already loaded: {private_key}")
+                        continue
+            except (subprocess.TimeoutExpired, FileNotFoundError):
+                pass
+
+            # Add the key
+            try:
+                add_result = subprocess.run(
+                    ['ssh-add', str(private_key)],
+                    capture_output=True, timeout=30, env=env
+                )
+                if add_result.returncode == 0:
+                    self.logger.info(f"Loaded SSH key: {private_key}")
+                else:
+                    self.logger.warning(f"Failed to load SSH key: {private_key}: {add_result.stderr.decode()}")
+            except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+                self.logger.warning(f"Error loading SSH key {private_key}: {e}")
     
     def start_ssh_agent(self) -> bool:
         """Start a new SSH agent."""
@@ -366,7 +420,14 @@ class AgentManager:
     def recover_ssh_agent(self) -> bool:
         """Recover SSH agent specifically."""
         self.logger.info("Recovering SSH agent")
-        return self.init_ssh_agent()
+        result = self.init_ssh_agent()
+        # Update GPG agent's TTY so pinentry can prompt for passphrases
+        try:
+            subprocess.run(['gpg-connect-agent', 'updatestartuptty', '/bye'],
+                           capture_output=True, timeout=5)
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+        return result
     
     def restart_ssh_agent(self) -> bool:
         """Restart SSH agent specifically."""
