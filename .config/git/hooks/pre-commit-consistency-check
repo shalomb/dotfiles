@@ -4,7 +4,7 @@
 # This hook ENFORCES dotfile consistency and BLOCKS commits if inconsistent
 # Agents MUST fix consistency issues, not work around them
 
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -76,7 +76,7 @@ find_orphaned_files() {
             
             if [[ -n "$repo_file" && -f "$repo_file" ]]; then
                 if ! check_hardlink "$repo_file" "$home_file"; then
-                    ((orphaned_count++))
+                    orphaned_count=$((orphaned_count + 1))
                 fi
             fi
         fi
@@ -100,7 +100,7 @@ validate_managed_directories() {
                 
                 if [[ -f "$repo_script" ]]; then
                     if ! check_hardlink "$repo_script" "$script"; then
-                        ((error_count++))
+                        error_count=$((error_count + 1))
                     fi
                 fi
             fi
@@ -116,12 +116,12 @@ main() {
     
     # Check for orphaned files
     if ! find_orphaned_files; then
-        ((total_errors++))
+        total_errors=$((total_errors + 1))
     fi
     
     # Validate managed directories
     if ! validate_managed_directories; then
-        ((total_errors++))
+        total_errors=$((total_errors + 1))
     fi
     
     if [[ $total_errors -eq 0 ]]; then

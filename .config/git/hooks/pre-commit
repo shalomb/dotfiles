@@ -5,12 +5,18 @@
 
 # Run the MANDATORY GPG check
 echo "🔐 Running MANDATORY GPG validation..."
-.config/git/hooks/pre-commit-gpg-check
+if ! .config/git/hooks/pre-commit-gpg-check; then
+  echo "❌ COMMIT BLOCKED: GPG validation failed"
+  exit 1
+fi
 
 # Run MANDATORY consistency validation
 echo "🔍 Running MANDATORY dotfile consistency validation..."
-.config/git/hooks/pre-commit-consistency-check
+if ! .config/git/hooks/pre-commit-consistency-check; then
+  echo "❌ COMMIT BLOCKED: Dotfile consistency check failed"
+  exit 1
+fi
 
-# If we get here, both MANDATORY checks passed - proceed with commit
+# If we get here, both MANDATORY checks passed
 echo "✅ All MANDATORY pre-commit checks passed - proceeding with commit"
 exit 0
