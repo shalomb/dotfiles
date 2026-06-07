@@ -91,7 +91,6 @@ return {
       "hrsh7th/cmp-path",
 
       -- LSP Support
-      { "neovim/nvim-lspconfig", version = "v0.1.8" }, -- Pin to last version compatible with Neovim 0.10
       "WhoIsSethDaniel/mason-tool-installer.nvim",
       "mason-org/mason-lspconfig.nvim",
 
