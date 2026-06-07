@@ -212,8 +212,6 @@ return {
   },
 
   { "kana/vim-textobj-user",          lazy = false, event = "InsertEnter", priority = 1000 },
-  { "junegunn/fzf",                   lazy = true,  event = "InsertEnter", },
-  { "junegunn/fzf.vim",               lazy = true,  event = "InsertEnter", },
   { "haya14busa/vim-asterisk",        lazy = true,  event = "InsertEnter", },
   { "ibhagwan/smartyank.nvim",        lazy = true,  event = "InsertEnter", },
   { "idbrii/textobj-word-column.vim", lazy = true,  event = "InsertEnter", },
@@ -248,14 +246,6 @@ return {
       -- Required.
       "nvim-lua/plenary.nvim",
     },
-  },
-
-  {
-    "ravitemer/mcphub.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-    },
-    build = "npm install -g mcp-hub@latest", -- Installs `mcp-hub` node binary globally
   },
 
   -- GitHub Copilot
