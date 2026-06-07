@@ -201,7 +201,6 @@ return {
   { "tpope/vim-surround",    lazy = false },
   { "tpope/vim-unimpaired",  lazy = false },
 
-  -- { "tpope/vim-commentary",                lazy = true,    event = "BufWinEnter" },
   {
     'numToStr/Comment.nvim',
     opts = {
