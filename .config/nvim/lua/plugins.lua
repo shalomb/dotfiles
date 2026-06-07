@@ -116,12 +116,6 @@ return {
     dependencies = { 'nvim-treesitter/nvim-treesitter' },
   },
 
-  {
-    "danymat/neogen",
-    event = "InsertEnter",
-    dependencies = "nvim-treesitter/nvim-treesitter",
-    config = true,
-  },
 
   {
     "kdheepak/lazygit.nvim",
