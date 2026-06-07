@@ -140,8 +140,8 @@ return {
   { "folke/flash.nvim",                    event = "VeryLazy" },
   { "folke/lazydev.nvim",                  lazy = false },
   { "folke/which-key.nvim",                lazy = false },
-  { "godlygeek/tabular",                   lazy = false,      event = "BufWinEnter" },
-  { "jgdavey/tslime.vim",                  lazy = false,      event = "BufWinEnter" },
+  { "godlygeek/tabular",                   lazy = false },
+  { "jgdavey/tslime.vim",                  lazy = false },
   { "jghauser/follow-md-links.nvim",       ft = "markdown" },
   { "lukas-reineke/indent-blankline.nvim", lazy = false },
   { "mbbill/undotree",                     lazy = false },
@@ -192,7 +192,6 @@ return {
   {
     "epwalsh/obsidian.nvim",
     version = "*", -- recommended, use latest release instead of latest commit
-    lazy = false,
     ft = "markdown",
     -- event = {
     --   -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
