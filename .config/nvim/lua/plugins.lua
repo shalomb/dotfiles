@@ -173,7 +173,6 @@ return {
   { "folke/flash.nvim",                    event = "VeryLazy" },
   { "folke/lazydev.nvim",                  lazy = false },
   { "folke/which-key.nvim",                lazy = false },
-  { "ggandor/flit.nvim",                   lazy = false },
   -- { "ggandor/leap.nvim",                   lazy = false },
   { "godlygeek/tabular",                   lazy = false,      event = "BufWinEnter" },
   { "jgdavey/tslime.vim",                  lazy = false,      event = "BufWinEnter" },
