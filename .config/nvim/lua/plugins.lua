@@ -35,7 +35,6 @@ return {
     "nvim-treesitter/nvim-treesitter",
     dependencies = {
       "nvim-treesitter/nvim-treesitter-context",
-      "nvim-treesitter/playground",
       "RRethy/nvim-treesitter-textsubjects",
     },
     -- cargo install tree-sitter-cli   # tree-sitter 0.20.7
