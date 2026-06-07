@@ -15,6 +15,7 @@ local whichkey = require("which-key")
 
 -- Updated to use vim.lsp.config for Neovim 0.11+
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
+capabilities.offsetEncoding = { 'utf-16' }
 
 vim.lsp.config('lua_ls', {
   -- on_attach = lsp.default_keymaps({buffer = bufnr}),

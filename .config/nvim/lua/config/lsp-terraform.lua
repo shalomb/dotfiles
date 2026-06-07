@@ -92,6 +92,7 @@ cmp.setup({
 
 -- local capabilities = vim.lsp.protocol.make_client_capabilities()
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
+capabilities.offsetEncoding = { 'utf-16' }
 -- capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 -- Use an on_attach function to only map the following keys
