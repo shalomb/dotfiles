@@ -106,6 +106,7 @@ for _, lsp_server in ipairs(language_servers) do
     flags = { debounce_text_changes = 150 },
     on_attach = on_attach,
     capabilities = capabilities,
-    -- filetypes = { "terraform" },
   })
 end
+
+vim.lsp.enable(language_servers)

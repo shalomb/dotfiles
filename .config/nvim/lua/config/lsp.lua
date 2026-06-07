@@ -36,10 +36,11 @@ vim.lsp.config('lua_ls', {
 })
 
 vim.lsp.config('pyright', {
-  -- on_attach = on_attach,
   capabilities = capabilities,
   flags = { debounce_text_changes = 150 },
-  root_dir = vim.fs.find({ ".venv", "venv", "pyrightconfig.json" }, { path = vim.fs.dirname(vim.api.nvim_buf_get_name(0)), upward = true })[1],
+  root_dir = function(fname)
+    return vim.fs.dirname(vim.fs.find({ ".venv", "venv", "pyrightconfig.json", "pyproject.toml", "setup.py" }, { path = fname, upward = true })[1])
+  end,
   settings = {
     pyright = {
       disableLanguageServices = false,
@@ -54,6 +55,7 @@ vim.lsp.config('pyright', {
     },
   },
 })
+
 
 vim.lsp.config('rust_analyzer', {
   -- Server-specific settings. See `:help lspconfig-setup`
