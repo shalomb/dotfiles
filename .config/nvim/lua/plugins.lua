@@ -165,7 +165,6 @@ return {
   { "jgdavey/tslime.vim",                  lazy = false,      event = "BufWinEnter" },
   { "jghauser/follow-md-links.nvim",       ft = "markdown" },
   { "lukas-reineke/indent-blankline.nvim", lazy = false },
-  { "majutsushi/tagbar",                   lazy = false },
   { "mbbill/undotree",                     lazy = false },
   { "nvim-lualine/lualine.nvim",           lazy = false }, -- configure Neovim statusline
   -- { "p00f/nvim-ts-rainbow",                lazy = false },
