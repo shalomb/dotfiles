@@ -38,8 +38,9 @@ vim.lsp.config('lua_ls', {
 vim.lsp.config('pyright', {
   capabilities = capabilities,
   flags = { debounce_text_changes = 150 },
-  root_dir = function(fname)
-    return vim.fs.dirname(vim.fs.find({ ".venv", "venv", "pyrightconfig.json", "pyproject.toml", "setup.py" }, { path = fname, upward = true })[1])
+  root_dir = function(bufnr, cb)
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    cb(vim.fs.dirname(vim.fs.find({ ".venv", "venv", "pyrightconfig.json", "pyproject.toml", "setup.py" }, { path = fname, upward = true })[1]))
   end,
   settings = {
     pyright = {
