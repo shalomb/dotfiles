@@ -5,13 +5,6 @@
 # Set flag to suppress bell during profile sourcing
 _SOURCING_BASHRC=true
 
-# Load Kiro CLI integration early
-# This provides the _kiro_cli_profile_pre/post functions
-if [ -f "$HOME/.config/bash/enabled/kiro-cli.sh" ]; then
-  . "$HOME/.config/bash/enabled/kiro-cli.sh"
-  # Kiro CLI pre block. Keep at the top of this file.
-  _kiro_cli_profile_pre 2>/dev/null || true
-fi
 # SOURCES: profile.d/*.sh, lib/00-path
 # DOES NOT SOURCE: bashrc (prevents infinite loops)
 
@@ -86,8 +79,7 @@ if [ "${TTY:-$(tty)}" = '/dev/tty1' ]; then
   clear
 fi
 
-# Kiro CLI post block. Keep at the bottom of this file.
-_kiro_cli_profile_post 2>/dev/null || true
-
 # Clear sourcing flag after profile loads
 unset _SOURCING_BASHRC
+
+. "$HOME/.local/share/../bin/env"
