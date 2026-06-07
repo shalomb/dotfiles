@@ -32,36 +32,14 @@ vim.opt.fillchars:append({
     verthoriz = '╋',
 })
 
-require'kanagawa'.setup({
-  overrides = function(_)
-    return {
-      VertSplit  = {
-        fg = "#ffffff",
-        bg = "#ffffff",
-      },
-      StatusLine = { bg = "#ffffff" }
-    }
-  end,
-  theme = "wave",
-  background = {    -- map the value of 'background' option to a theme
-    dark = "dragon",  -- try "dragon" !
-    light = "lotus"
-  },
-  terminalColors = true,
-  compile = true,
-  globalStatus = true,
-  transparent = true,
-  dimInactive = true,
-})
-
 vim.cmd([[
 let $NVIM_TUI_ENABLE_TRUE_COLOR=1
-let g:gruvbox_contrast_dark = 'light'
+let g:gruvbox_contrast_dark = 'hard'
 let g:gruvbox_transparent_bg = 1
 set termguicolors
 
 augroup MyColorScheme
-  autocmd VimEnter * ++nested colorscheme kanagawa " gruvbox
+  autocmd VimEnter * ++nested colorscheme gruvbox
   autocmd VimEnter * hi! Normal ctermbg=none guibg=none
   autocmd VimEnter * hi! NormalFloat ctermbg=none guibg=none
 augroup end
