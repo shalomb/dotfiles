@@ -6,22 +6,6 @@
 
 return {
 
-  -- {
-  --   "OXY2DEV/markview.nvim",
-  --   lazy = false, -- Recommended
-  --   -- ft = "markdown" -- If you decide to lazy-load anyway
-  --
-  --   dependencies = {
-  --     -- You will not need this if you installed the
-  --     -- parsers manually
-  --     -- Or if the parsers are in your $RUNTIMEPATH
-  --     "nvim-treesitter/nvim-treesitter",
-  --
-  --     "nvim-tree/nvim-web-devicons",
-  --     "echasnovski/mini.icons",
-  --   }
-  -- },
-
   -- colorschemes
   { "rebelot/kanagawa.nvim",    lazy = true },
   { "ellisonleao/gruvbox.nvim", priority = 1000, config = true },
@@ -94,9 +78,6 @@ return {
       "saadparwaiz1/cmp_luasnip",
       "rafamadriz/friendly-snippets",
     },
-    config = function()
-      -- ...
-    end,
   },
 
   {                                  -- telescope fuzzy finder
@@ -156,19 +137,15 @@ return {
   { "ThePrimeagen/harpoon",                lazy = false },                             -- Manage quickly accessed files
   { "lewis6991/gitsigns.nvim",             lazy = true,       event = "BufWinEnter" }, -- Gitgutter replacement
   { "christoomey/vim-tmux-navigator",      lazy = false },
-  -- { "ellisonleao/glow.nvim",               cmd = "Glow",      ft = "markdown" },
   { "folke/flash.nvim",                    event = "VeryLazy" },
   { "folke/lazydev.nvim",                  lazy = false },
   { "folke/which-key.nvim",                lazy = false },
-  -- { "ggandor/leap.nvim",                   lazy = false },
   { "godlygeek/tabular",                   lazy = false,      event = "BufWinEnter" },
   { "jgdavey/tslime.vim",                  lazy = false,      event = "BufWinEnter" },
   { "jghauser/follow-md-links.nvim",       ft = "markdown" },
   { "lukas-reineke/indent-blankline.nvim", lazy = false },
   { "mbbill/undotree",                     lazy = false },
   { "nvim-lualine/lualine.nvim",           lazy = false }, -- configure Neovim statusline
-  -- { "p00f/nvim-ts-rainbow",                lazy = false },
-  -- { "preservim/vim-markdown",              ft = "markdown" },
   { "romainl/vim-cool",                    lazy = false },
   {
     "stevearc/oil.nvim",
@@ -258,14 +235,4 @@ return {
     end,
   },
 
-  -- {
-  --   "olimorris/codecompanion.nvim",
-  --   opts = {},
-  --   dependencies = {
-  --     "nvim-lua/plenary.nvim",
-  --     "nvim-treesitter/nvim-treesitter",
-  --     "ravitemer/mcphub.nvim",
-  --     "github/copilot.vim" -- required to setup the github auth
-  --   },
-  -- },
 }
