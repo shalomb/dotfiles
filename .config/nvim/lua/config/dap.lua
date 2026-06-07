@@ -2,10 +2,20 @@
 
 local dap = require('dap')
 
-local dap = require('dap')
+local function find_python()
+  local cwd = vim.fn.getcwd()
+  for _, dir in ipairs({ '.venv', 'venv' }) do
+    local python = cwd .. '/' .. dir .. '/bin/python3'
+    if vim.fn.executable(python) == 1 then
+      return python
+    end
+  end
+  return vim.fn.exepath('python3') or '/usr/bin/python3'
+end
+
 dap.adapters.python = {
   type = 'executable',
-  command = os.getenv('PWD') .. '/venv/bin/python3',
+  command = function() return find_python() end,
   args = { '-m', 'debugpy.adapter' },
 }
 
@@ -23,9 +33,7 @@ dap.configurations.python = {
     request = 'launch',
     name = "Launch file",
     program = "${file}",
-    pythonPath = function()
-      return '/usr/bin/python3'
-    end,
+    pythonPath = find_python,
   },
 }
 
