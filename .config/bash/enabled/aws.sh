@@ -58,7 +58,7 @@ aws-sso-profile() {
     fi
   fi
 
-  profile=$(aws-sso list 2>&1 | grep "$account" | awk -F'|' '{print $4}' | sed 's/^ *//;s/ *$//')
+  profile=$(aws-sso list 2>&1 | grep -i "$account" | awk -F'|' '{print $4}' | sed 's/^ *//;s/ *$//')
 
   # Filter out APMS-specific limited-permission roles (e.g., _APMS-XXXXX-...-S3-RW)
   # These roles typically only have S3 access and lack necessary discovery permissions
@@ -131,7 +131,14 @@ aws-login() {
   # Get the base profile (may include default role)
   local base_profile
   base_profile=$(aws-sso-profile "${args[@]}")
-  
+
+  # Guard: fail fast if profile resolution returned nothing
+  if [[ -z "$base_profile" ]]; then
+    echo "ERROR: Could not resolve an SSO profile for '${account_arg:-<auto>}'." >&2
+    echo "Run 'aws-sso list' to see available profiles, then use: aws-login ACCOUNT:ROLE" >&2
+    return 1
+  fi
+
   # Construct full profile with role if specified
   local profile="$base_profile"
   if [[ -n "$role_suffix" ]]; then
@@ -141,20 +148,28 @@ aws-login() {
   else
     echo "Using profile: $profile" >&2
   fi
-  
+
   # Perform SSO authentication with proper browser control
   if [[ $console -eq 1 ]]; then
     # Allow browser for console access
     aws-sso login --url-action=open
-    aws-sso eval -p "$profile" 2>&1 | grep -v "^+" >"$AWS_SSO_CACHE"
+    # Do NOT use 2>&1 — keeps aws-sso stderr (FATAL/WARN) off stdout so it
+    # never lands in the cache file and gets executed by `source`.
+    aws-sso eval -p "$profile" | grep -Ev "^(\+|gpg:)" > "$AWS_SSO_CACHE"
   else
-    # Prevent browser launch by using print action
-    # Get credentials and show any SSO URL if needed
     echo "Getting AWS SSO credentials..." >&2
     aws-sso login --url-action=print
-    aws-sso eval -p "$profile" 2>&1 | grep -v "^+" >"$AWS_SSO_CACHE"
+    aws-sso eval -p "$profile" | grep -Ev "^(\+|gpg:)" > "$AWS_SSO_CACHE"
   fi
-  
+
+  # Guard: only source if the cache looks like valid shell exports
+  if ! grep -q 'AWS_' "$AWS_SSO_CACHE"; then
+    echo "ERROR: aws-sso eval produced no credentials for profile '$profile'." >&2
+    echo "Cache contents:" >&2
+    cat "$AWS_SSO_CACHE" >&2
+    return 1
+  fi
+
   source "$AWS_SSO_CACHE"
   
   # Handle credential export
