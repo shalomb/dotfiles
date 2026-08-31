@@ -42,7 +42,7 @@ apt-clean:
 	uv cache clean --force
 	find ~/.cache/ -type f -atime +182 -delete
 	find ~/.config/ -iname ".mypy_cache" -exec rm -fr {} +
-	find ~/.cache/act/ -atime +30 -delete
+	find ~/.cache/act/ -atime +30 -delete 2>/dev/null || true
 	# Skipping man page cleanup that requires sudo
 	# bash -c 'shopt -s extglob; rm -fr /usr/share/man/!(man*|en*)'
 	# sudo localepurge
@@ -89,7 +89,7 @@ workspace-tools: ## Run workspace-tools installer
 define clean_work_dir
 	if [ -d "$(1)" ]; then \
 		echo "Cleaning $(1)..."; \
-		find "$(1)" -maxdepth 4 -type d \( -name ".terraform" -o -name "node_modules" -o -name "__pycache__" -o -name ".pytest_cache" -o -name ".mypy_cache" -o -name "target" -o -name "dist" -o -name "build" \) -prune -exec rm -rf {} +; \
+		find "$(1)" -maxdepth 4 -type d \( -name ".terraform" -o -name "node_modules" -o -name "__pycache__" -o -name ".pytest_cache" -o -name ".mypy_cache" -o -name "target" -o -name "dist" -o -name "build" \) -prune -exec rm -rf {} + 2>/dev/null; \
 	fi
 endef
 
@@ -133,7 +133,8 @@ workspace-cleanup: ## Cleanup workspace-specific caches and temporary files
 	find . -name "dist" -type d -exec rm -rf {} + || true
 
 python-cleanup: ## Cleanup the pip cache
-	find ~/.cache/pip/ ~/.cache/pypoetry/ -atime +30 -delete || true
+	find ~/.cache/pip/ -atime +30 -delete 2>/dev/null || true
+	find ~/.cache/pypoetry/ -atime +30 -delete 2>/dev/null || true
 	command -v $(HOME)/.local/bin/uv || $(HOME)/.local/bin/uv cache clean
 
 .PHONY: go-tools
@@ -156,9 +157,9 @@ bfg-cleanup: ## Cleanup BFG JAR files
 system-cleanup: ## Cleanup system-wide caches and temporary files
 	set -xv
 	# Clean bash history and cache
-	find ~/.cache/bash/ -type f -atime +30 -delete || true
+	find ~/.cache/bash/ -type f -atime +30 -delete 2>/dev/null || true
 	# Clean gum cache
-	find ~/.cache/gum/ -type f -atime +30 -delete || true
+	find ~/.cache/gum/ -type f -atime +30 -delete 2>/dev/null || true
 	# Clean terraform cache (keep only latest 2 versions)
 	$(HOME)/.config/dotfiles/scripts/prune-terraform-cache.sh 2
 	# Clean general cache files older than 3 months
@@ -233,7 +234,7 @@ local-cleanup: ## Cleanup .local/share and .local/lib cruft
 	# Remove old python versions in .local/lib that are not managed by uv
 	rm -rf $(HOME)/.local/lib/python3.11 $(HOME)/.local/lib/python3.12 || true
 	# Remove old uv tool data
-	command -v uv >/dev/null && uv toolchain prune || true
+	command -v uv >/dev/null && uv python list --only-installed 2>/dev/null | awk '/\/\.local\/share\/uv\// {print $$1}' | sort -V -r | awk 'match($$0, /^(cpython-[0-9]+\.[0-9]+)/, m) {minor=m[1]; if(minor==prev){print} else {prev=minor}}' | xargs -r uv python uninstall || true
 	# Clean up any remaining .local/share/go if it somehow persisted
 	rm -rf $(HOME)/.local/share/go/pkg/mod/* || true
 	df -hP
