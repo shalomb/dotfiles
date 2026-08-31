@@ -1,0 +1,161 @@
+# /etc/dnsmasq.d — DNS configuration for vmhost (10.211.55.3)
+
+## Topology
+
+This VM acts as the primary DNS resolver for the Mac host (via Parallels).
+
+    Mac (mDNSResponder)
+      → 10.211.55.3:53  (this VM, primary)
+      → 1.1.1.1         (fallback)
+      → 10.0.0.1      (CorpVPN, tertiary)
+
+    vmhost dnsmasq (this host)
+      → 127.0.2.1:53    (dnscrypt-proxy → Cloudflare DoH, public domains)
+      → 10.0.0.{1,2,3} (CorpVPN ZPA DNS, corporate domains via corpvpn-corporate.conf)
+
+## Why dnscrypt-proxy?
+
+Parallels gateway (10.211.55.1) intercepts and blocks outbound UDP port 53.
+dnscrypt-proxy uses HTTPS (port 443) for DNS-over-HTTPS, bypassing the block.
+TCP DNS also works: dig @1.1.1.1 +tcp
+
+## Split DNS
+
+Corporate domains resolve to ZPA-internal addresses (10.0.0.x) via CorpVPN.
+Public domains resolve via dnscrypt-proxy → Cloudflare DoH.
+
+Without corpvpn-corporate.conf, corporate domains fall through to public DNS
+and return public-facing IPs (e.g. corp.example → 184.168.131.241 instead
+of 10.0.1.x), breaking ZPA private access.
+
+## CorpVPN tunnel stability — DNS-SD storm (root cause & mitigation)
+
+Symptom: CorpVPNTunnel on the Mac loses its mDNSResponder socket (EPIPE) when
+overwhelmed by DNS-SD discovery queries, killing the DNS proxy on 10.0.0.1:53
+without killing the tunnel process.
+
+### Two contributing factors (both measured 2026-05-30)
+
+1. TRIGGER (primary, chronic): mDNSResponder fans out DNS-SD browse queries
+   across ALL active search domains on every CONFIG RELOAD. Measured: a browse
+   alone -> 0 DNS-SD to CorpVPN; a browse + `killall -HUP mDNSResponder` -> ~164.
+   The fan-out fires on reload, not on browsing.
+
+2. AMPLIFIER (latent): CorpVPN injects an empty string at
+   SupplementalMatchDomains[0]. An empty match domain matches the DNS root, so
+   mDNSResponder treats CorpVPN as authoritative for everything and each reload
+   fans out across all 23 corporate search domains via the tunnel.
+
+### What did NOT work (do not repeat)
+
+- Removing SupplementalMatchDomains[0] via `scutil set`: CorpVPN re-injects it
+  within ~30s. The `State:` key is agent-owned; direct writes do not hold.
+- A launchd watcher (com.myorg.corpvpn-dns-fix, StartInterval=30) that re-applied
+  the scutil fix every 30s: DISPROVEN and HARMFUL. Each run's `scutil set` forced
+  an mDNSResponder config reload -> the very fan-out it tried to prevent, every
+  30s. It logged "fix applied" on every cycle (never held). REPEALED -- the plist
+  is now com.myorg.corpvpn-dns-fix.plist.disabled; script at
+  /usr/local/bin/corpvpn-dns-fix.sh left in place but unused. Do NOT re-enable.
+
+### What DID work -- Mac-side /etc/resolver redirect (Option C)
+
+Redirect the DNS-SD meta-domains to this VM (10.211.55.3), which answers each
+instantly with 0.0.0.0 via dns-sd-block.conf -- so the fan-out never traverses
+the CorpVPN tunnel. This is static config CorpVPN does NOT manage, so it survives
+reconnects (unlike the scutil approach). It works even though the VM is not in
+the normal Mac->CorpVPN DNS path, because it intercepts at the source.
+
+  /etc/resolver/_dns-sd._udp                       (bare meta-domain)
+  /etc/resolver/_dns-sd._udp.<each corp domain>    (23 files, one per search domain)
+  /etc/resolver/_dns-sd._udp.in-addr.arpa          (registers but see limitation)
+  /etc/resolver/_dns-sd._udp.ip6.arpa              (registers but see limitation)
+  -> each file contains a single line: nameserver 10.211.55.3
+
+Result (measured, reload-triggered): DNS-SD reaching the CorpVPN tunnel dropped
+from ~164 to 24 (~85% reduction). After editing, apply with:
+  sudo killall -HUP mDNSResponder
+
+LIMITATION -- reverse-zone residual (~24 queries): names like
+db._dns-sd._udp.0.55.211.10.in-addr.arpa have _dns-sd._udp as a MID-name label,
+so they do NOT end in _dns-sd._udp.in-addr.arpa -- /etc/resolver matches by
+trailing suffix only and cannot catch them without keying on the reverse zone
+(55.211.10.in-addr.arpa), which would hijack ALL reverse DNS for that subnet
+(incl. this VM). These are bounded (4 subnets x 3 subtypes) and do NOT scale with
+the search-domain list, so they are accepted residual.
+
+### Regenerating the Option C files (when CorpVPN search domains change)
+
+  SINK=10.211.55.3
+  for d in $(scutil --dns | awk '/^resolver #1$/{f=1} f&&/search domain\[/{print $NF} /^resolver #2$/{exit}'); do
+    printf 'nameserver %s\n' "$SINK" | sudo tee "/etc/resolver/_dns-sd._udp.$d" >/dev/null
+  done
+  printf 'nameserver %s\n' "$SINK" | sudo tee /etc/resolver/_dns-sd._udp >/dev/null
+  sudo killall -HUP mDNSResponder
+
+### Same longest-suffix trap on the VM side
+
+DNS-SD queries are blocked on this VM in dns-sd-block.conf. The bare wildcard
+address=/_dns-sd._udp/ in local.conf does NOT cover *._dns-sd._udp.<corp-domain>
+because server=/<corp-domain>/ is a longer suffix and wins (forwards to CorpVPN).
+dns-sd-block.conf is LOAD-BEARING -- see the header comments in both files.
+
+### True root-cause fix (not yet done)
+
+Raise with CorpVPN/IT: the agent should not inject an empty SupplementalMatchDomains
+entry. That is the only fix that removes the amplifier at source; everything above
+is mitigation on a corporate-managed Mac.
+
+## Spread DNS test
+
+Run this to verify the full resolution path is healthy:
+
+  for d in google.com github.com bbc.co.uk \
+            corp.example myaccess.corp.example \
+            example.com global.example unit2.example; do
+    result=$(dig @127.0.0.1 $d +short +time=3 +tries=1 2>&1 | head -1)
+    echo "$d → $result"
+  done
+
+Expected output (corporate domains should return 10.0.0.x via CorpVPN):
+  google.com             → 142.x.x.x   (public)
+  github.com             → 140.x.x.x   (public)
+  bbc.co.uk              → 151.x.x.x   (public)
+  corp.example          → 10.0.1.x  (ZPA internal)
+  myaccess.corp.example → 10.0.1.x  (ZPA internal)
+  example.com             → 13.x.x.x    (public CDN)
+  global.example       → 10.0.1.x  (ZPA internal)
+  unit2.example               → 10.0.1.x (ZPA internal)
+
+## Files
+
+  local.conf              — main config: upstreams, caching, DNS-SD wildcard blocks
+  corpvpn-corporate.conf  — per-domain forwarders to CorpVPN (10.0.0.{1,2,3})
+                            KEEP ENABLED — required for split-DNS ZPA resolution
+                            Disabling causes corporate domains to return public IPs
+  dns-sd-block.conf       — LOAD-BEARING per-corporate-domain DNS-SD blocks.
+                            NOT redundant with the local.conf wildcard (longest-suffix
+                            match — see header comments). Do NOT delete/disable.
+  docs/README.md          — this file (moved out of the parse path; dnsmasq does not
+                            recurse into subdirs, so docs live safely under docs/)
+
+Related config on the Mac (not in this dir):
+  /etc/resolver/_dns-sd._udp*  — 26 files redirecting DNS-SD to this VM sink (Option C).
+                                 See "CorpVPN tunnel stability" above.
+  /Library/LaunchDaemons/com.myorg.corpvpn-dns-fix.plist.disabled
+                               — repealed watcher daemon. Left disabled. Do NOT re-enable.
+
+## Notes for future agents
+
+- Do NOT disable corpvpn-corporate.conf without understanding split-DNS impact
+- Do NOT delete dns-sd-block.conf as "redundant" — the local.conf wildcard does
+  not cover *._dns-sd._udp.<corp-domain> (longest-suffix match wins for server=)
+- Do NOT re-enable com.myorg.corpvpn-dns-fix — its 30s scutil churn was the storm
+  amplifier, not the fix (see "What did NOT work" above)
+- If dnsmasq CPU is high, check for DNS-SD storms: sudo tcpdump -i any udp port 53
+  | grep _dns-sd._udp   (top offender historically: db._dns-sd._udp.sub1.corp.internal)
+- If dnsmasq hangs (TCP children at max 20), CorpVPN tunnel DNS proxy has died
+  → On Mac: sudo launchctl kickstart -k system/com.corpvpn.tunnel
+- DNS-SD mitigation lives in two layers: Mac /etc/resolver (Option C, primary) +
+  this VM's dns-sd-block.conf (the sink Option C points at)
+- /etc/default/dnsmasq has CONFIG_DIR with .disabled exclusion — use that suffix
+  to safely disable conf files without removing them

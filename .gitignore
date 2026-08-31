@@ -201,6 +201,16 @@ package.json
 # Temporary context files
 tmp-CONTEXT.md
 
+# dnsmasq — real config contains corporate/VPN domains & internal IPs.
+# Only the sanitized *.template versions are published; live files are local-only.
+root/etc/dnsmasq.d/local.conf
+root/etc/dnsmasq.d/zscaler-corporate.conf
+root/etc/dnsmasq.d/dns-sd-block.conf
+root/etc/dnsmasq.d/docs/README.md
+root/etc/dnsmasq.d/**/*.disabled
+!root/etc/dnsmasq.d/*.template
+!root/etc/dnsmasq.d/docs/*.template
+
 # Cursor IDE files (keep cli-config.json)
 !.cursor/cli-config.json
 .cursor/

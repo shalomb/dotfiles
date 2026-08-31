@@ -1,0 +1,40 @@
+# See README.md for topology, split-DNS design, and the spread DNS test.
+
+# Basics
+domain-needed        # never forward bare names
+bogus-priv           # never forward RFC1918 PTR lookups
+no-resolv            # ignore /etc/resolv.conf — upstreams managed here
+port=53
+bind-interfaces
+local=/myorg.local/  # authoritative for local VM domain
+
+# Upstreams — see README.md for why dnscrypt-proxy is used instead of direct UDP
+# Corporate domains are handled per-domain in corpvpn-corporate.conf
+server=127.0.2.1     # dnscrypt-proxy (DoH) — bypasses Parallels UDP/53 intercept
+listen-address=10.211.55.3,127.0.0.1
+# --- DNS-SD storm suppression (READ THIS BEFORE EDITING) ---
+# dnsmasq routes by LONGEST-SUFFIX match, not config order or directive type.
+# The bare wildcards below ONLY catch names that *end* in _dns-sd._udp
+# (e.g. a literal "lb._dns-sd._udp" with no trailing domain). They do NOT
+# catch the real storms: db._dns-sd._udp.sub1.corp.internal etc. — because
+# .sub1.corp.internal matches server=/sub1.corp.internal/ in corpvpn-corporate.conf,
+# which is a LONGER suffix and wins, forwarding the storm to CorpVPN over TCP
+# (exhausts the 20 TCP-child limit, spikes CPU, EPIPEs the CorpVPN DNS socket).
+#
+# Those per-corporate-domain storms are blocked in dns-sd-block.conf, where each
+# entry (address=/db._dns-sd._udp.<domain>/) is a full suffix that out-specifies
+# the server= forwarder. dns-sd-block.conf is LOAD-BEARING — do NOT delete it as
+# "redundant"; these wildcards do not cover it. See README.md § CorpVPN tunnel stability.
+address=/lb._dns-sd._udp/
+address=/b._dns-sd._udp/
+address=/db._dns-sd._udp/
+address=/r._dns-sd._udp/
+address=/dr._dns-sd._udp/
+address=/_dns-sd._udp/
+
+
+# Caching — 15m min TTL balances staleness vs upstream query rate
+cache-size=1000
+min-cache-ttl=900
+neg-ttl=10           # short negative TTL so CorpVPN outages recover quickly
+#log-queries         # uncomment to debug resolution path
