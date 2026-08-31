@@ -26,12 +26,18 @@ go-install github.com/muesli/duf@latest
 go-install github.com/nektos/act@latest
 go-install github.com/spf13/cobra-cli@latest
 go-install github.com/stern/stern@latest
-# aws-sso: Install from main branch (v2.0.0+ required for 'login' command)
+# aws-sso: Pin to known-good commit (v2.0.0+ required for 'login' command)
 # NOTE: @latest installs v1.17.0 which lacks the 'login' command
-# v2.x releases have module path misconfiguration, so use @main instead
-go-install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@main
+# v2.x releases have module path misconfiguration (missing /v2 suffix in go.mod)
+# so tagged installs fail. Pin to a verified working @main commit instead.
+# Last verified: 2026-05-27 (aws-sso list working, no ResultSize regression)
+# To update: get new SHA from: gh api repos/synfinatic/aws-sso-cli/commits/main --jq .sha
+go-install github.com/synfinatic/aws-sso-cli/cmd/aws-sso@a4524beaa1693123a9aa16794b2db4a9a057bf6f
 go-install github.com/terraform-docs/terraform-docs@latest
 go-install github.com/warrensbox/terraform-switcher@latest
+# tpq: go install produces 'terraform-provider-query' binary, symlink to 'tpq'
+go-install github.com/mattias-fjellstrom/terraform-provider-query@latest
+ln -sf "$(go env GOPATH)/bin/terraform-provider-query" "$(go env GOPATH)/bin/tpq"
 go-install golang.org/x/lint/golint@latest
 go-install github.com/shalomb/gum@latest
 go-install github.com/shalomb/ob-cli/cmd/ob-cli@latest
