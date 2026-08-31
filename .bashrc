@@ -153,3 +153,6 @@ reload() {
 
 # Clear sourcing flag after bashrc loads
 unset _SOURCING_BASHRC
+
+. "$HOME/.local/share/../bin/env"
+. "$HOME/.cargo/env"
