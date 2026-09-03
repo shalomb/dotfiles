@@ -10,12 +10,24 @@ return {
   { "ellisonleao/gruvbox.nvim", priority = 1000, config = true },
 
   { -- treesitter
+    -- Migrated to the `main` branch: `master` is archived upstream and
+    -- incompatible with NeoVim 0.12's Treesitter core (E: attempt to call
+    -- method 'range' (a nil value)). `main` is a full rewrite: no more
+    -- `nvim-treesitter.configs`, `rainbow`, or `incremental_selection` --
+    -- highlighting/indent/folds now come from NeoVim core APIs, see
+    -- lua/config/treesitter.lua.
+    --
+    -- `nvim-treesitter-textsubjects` was dropped: it hard-imports the
+    -- removed legacy modules `nvim-treesitter.query` / `.ts_utils`, which
+    -- do not exist on `main` and are unmaintained upstream for it.
     "nvim-treesitter/nvim-treesitter",
+    branch = "main",
+    lazy = false,
+    build = ":TSUpdate",
     dependencies = {
       "nvim-treesitter/nvim-treesitter-context",
-      "RRethy/nvim-treesitter-textsubjects",
     },
-    -- cargo install tree-sitter-cli   # tree-sitter 0.20.7
+    -- Requires: tree-sitter-cli (>=0.26.1, installed via package manager, not npm), a C compiler.
   },
 
   {
@@ -131,7 +143,6 @@ return {
     },
   },
 
-  { "IndianBoy42/tree-sitter-just",        ft = "justfile" },
   { "ThePrimeagen/git-worktree.nvim",      lazy = false },
   { "ThePrimeagen/harpoon",                lazy = false },                             -- Manage quickly accessed files
   { "lewis6991/gitsigns.nvim",             lazy = true,       event = "BufWinEnter" }, -- Gitgutter replacement
