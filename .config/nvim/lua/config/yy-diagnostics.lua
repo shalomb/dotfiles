@@ -3,15 +3,10 @@
 
 local vim = vim
 
-vim.lsp.handlers['textDocument/hover'] = vim.lsp.with(
-  vim.lsp.handlers.hover,
-  { border = 'rounded' }
-)
-
-vim.lsp.handlers['textDocument/signatureHelp'] = vim.lsp.with(
-  vim.lsp.handlers.signature_help,
-  { border = 'rounded' }
-)
+-- vim.lsp.with() is deprecated as of NeoVim 0.11+ (removed guidance in 0.12 checkhealth).
+-- vim.o.winborder is the built-in global replacement for floating window borders,
+-- covering hover/signature-help popups (and other floats) without per-handler wrapping.
+vim.o.winborder = 'rounded'
 
 vim.diagnostic.config({
   virtual_text = true,

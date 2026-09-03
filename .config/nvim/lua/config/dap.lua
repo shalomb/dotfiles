@@ -13,11 +13,17 @@ local function find_python()
   return vim.fn.exepath('python3') or '/usr/bin/python3'
 end
 
-dap.adapters.python = {
-  type = 'executable',
-  command = function() return find_python() end,
-  args = { '-m', 'debugpy.adapter' },
-}
+-- `command` on an executable adapter must be a string, not a function
+-- (NeoVim 0.12's stricter vim.fn.executable() type-checking surfaces this as
+-- E1174: String required for argument 1 in `:checkhealth dap`).
+-- Use the adapter-as-function form to keep the dynamic python resolution.
+dap.adapters.python = function(callback, _config)
+  callback({
+    type = 'executable',
+    command = find_python(),
+    args = { '-m', 'debugpy.adapter' },
+  })
+end
 
 dap.defaults.python = {
   focus_terminal = false

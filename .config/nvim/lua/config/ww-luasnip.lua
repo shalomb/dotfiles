@@ -43,7 +43,7 @@ require("luasnip").setup({
 })
 
 -- Set global log level to reduce luasnip warnings
-vim.lsp.set_log_level("ERROR")
+vim.lsp.log.set_level("ERROR") -- vim.lsp.set_log_level() deprecated as of NeoVim 0.11+, removed path warns in 0.12
 
 ls.config.set_config({
   history = true, -- keep around last snippet local to jump back
