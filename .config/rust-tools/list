@@ -18,3 +18,5 @@ pastel           pastel           https://github.com/sharkdp/pastel
 ripgrep          ripgrep          https://github.com/burntsushi/ripgrep
 tree-sitter-cli  tree-sitter-cli  https://github.com/tree-sitter/tree-sitter-cli
 xh               xh               https://github.com/ducaale/xhtuin
+ast-grep
+pydep-mapper
