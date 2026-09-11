@@ -295,6 +295,62 @@ test-fast: ## Run fast tests only (environment + deployment)
 	@echo "Running fast Python tests..."
 	@uv run pytest tests/test_environment.py tests/test_dotfile_deployment.py -v --tb=short
 
+# Application patches under .config/patches/<app>/
+# Convention: each app dir exposes <app>-patch.sh with apply|status|restore.
+PATCHES_DIR := .config/patches
+ACTION ?= apply
+
+.PHONY: patch
+patch: ## Apply/list patches (APP=name|all [ACTION=apply|status|restore])
+ifeq ($(strip $(APP)),)
+	@echo "Available patches:"
+	@echo "  make patch APP=<name> [ACTION=apply|status|restore]"
+	@echo "  make patch APP=all    [ACTION=apply|status|restore]"
+	@echo
+	@found=0; \
+	for dir in $(PATCHES_DIR)/*/; do \
+	  [[ -d "$$dir" ]] || continue; \
+	  name=$$(basename "$$dir"); \
+	  script="$(PATCHES_DIR)/$$name/$$name-patch.sh"; \
+	  if [[ -f "$$script" ]]; then \
+	    found=1; \
+	    desc=""; \
+	    if [[ -f "$(PATCHES_DIR)/$$name/README.md" ]]; then \
+	      desc=$$(awk 'NR==1{next} /^#|^```/{exit} NF{gsub(/:$$/,""); print; exit}' "$(PATCHES_DIR)/$$name/README.md"); \
+	    fi; \
+	    printf "  %-16s %s\n" "$$name" "$${desc:-$(PATCHES_DIR)/$$name/$$name-patch.sh}"; \
+	  fi; \
+	done; \
+	if [[ "$$found" -eq 0 ]]; then \
+	  echo "  (none found under $(PATCHES_DIR)/)"; \
+	  exit 1; \
+	fi
+else ifeq ($(APP),all)
+	@case "$(ACTION)" in apply|status|restore) ;; *) \
+	  echo "Invalid ACTION='$(ACTION)' (expected apply|status|restore)"; exit 1 ;; esac
+	@failed=0; \
+	for dir in $(PATCHES_DIR)/*/; do \
+	  [[ -d "$$dir" ]] || continue; \
+	  name=$$(basename "$$dir"); \
+	  script="$(PATCHES_DIR)/$$name/$$name-patch.sh"; \
+	  [[ -f "$$script" ]] || continue; \
+	  echo "==> $$name ($(ACTION))"; \
+	  $(MAKE) --no-print-directory patch APP="$$name" ACTION="$(ACTION)" || failed=1; \
+	done; \
+	exit $$failed
+else
+	@case "$(ACTION)" in apply|status|restore) ;; *) \
+	  echo "Invalid ACTION='$(ACTION)' (expected apply|status|restore)"; exit 1 ;; esac
+	@script="$(PATCHES_DIR)/$(APP)/$(APP)-patch.sh"; \
+	if [[ ! -f "$$script" ]]; then \
+	  echo "Unknown patch APP='$(APP)' (expected $$script)"; \
+	  echo "Run 'make patch' to list available patches."; \
+	  exit 1; \
+	fi; \
+	chmod +x "$$script"; \
+	"$$script" "$(ACTION)"
+endif
+
 .DEFAULT_GOAL := help
 help: ## Show make targets available
 	@ echo "Available tasks:"

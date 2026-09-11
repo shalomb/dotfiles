@@ -16,16 +16,21 @@ Fixes `agent` / cursor-agent Shell harness noise (`dump_bash_state` / `eval: - :
 
 **Usage:**
 ```bash
-# Apply the patch (recommended)
+# List available patches
+make patch
+
+# Apply / status / restore one patch
 make patch APP=cursor-agent
+make patch APP=cursor-agent ACTION=status
+make patch APP=cursor-agent ACTION=restore
 
-# Or apply directly using Python-based system
+# Run the same action across every discovered patch
+make patch APP=all
+make patch APP=all ACTION=status
+
+# Or invoke the wrapper directly
 .config/patches/cursor-agent/cursor-agent-patch.sh apply
-
-# Check patch status
 .config/patches/cursor-agent/cursor-agent-patch.sh status
-
-# Restore from backup
 .config/patches/cursor-agent/cursor-agent-patch.sh restore
 ```
 
