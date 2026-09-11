@@ -63,6 +63,6 @@ go-install github.com/shalomb/sidecar@latest
 go-install github.com/shalomb/springfield@latest
 go-install github.com/shalomb/ogspy@latest
 go-install github.com/shalomb/jqp@latest
-go-install github.com/gaboteju/dep-tree@latest
+go-install github.com/gabotechs/dep-tree@latest
 go-install github.com/boyter/scc/v3@latest
 go-install github.com/anchore/syft/cmd/syft@latest
