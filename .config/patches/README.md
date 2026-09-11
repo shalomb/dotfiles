@@ -5,7 +5,7 @@ This directory contains patches for various applications that have known issues 
 ## Available Patches
 
 ### cursor-agent-patch
-Fixes bash initialization issues in cursor-agent by adding proper bash initialization prefix.
+Fixes `agent` / cursor-agent Shell harness noise (`dump_bash_state` / `eval: - : invalid option`).
 
 **Files:**
 - `cursor-agent/` - Python-based patch system directory
