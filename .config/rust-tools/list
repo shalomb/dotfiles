@@ -4,7 +4,8 @@ cargo-cache      cargo-cache      https://github.com/matthiaskrgr/cargo-cache
 difftastic       difft            https://github.com/Wilfred/difftastic
 du-dust          dust             https://github.com/bootandy/dust
 eva              eva              https://github.com/nerdypepper/eva
-exa              exa              https://github.com/ogham/exa
+eza              eza              https://github.com/eza-community/eza
+sd               sd               https://github.com/chmln/sd
 fd-find          fd-find          https://github.com/sharkdp/fd-find
 git-delta        git-delta        https://github.com/dandavison/delta
 htmlq            htmlq            https://github.com/mgdm/htmlq

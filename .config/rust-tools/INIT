@@ -2,7 +2,12 @@
 
 set -xv
 
-mapfile -t tools < <(awk '{print $1}' ~/.config/rust-tools/list)
-( set -xv
-  cargo install "${tools[@]}"
+# First column is the crates.io package name. Prefer --locked so installs
+# reproduce the crate's Cargo.lock (needed for eza on newer rustc).
+mapfile -t tools < <(awk 'NF { print $1 }' ~/.config/rust-tools/list)
+(
+  set -xv
+  for tool in "${tools[@]}"; do
+    cargo install --locked "$tool" || cargo install "$tool"
+  done
 )
