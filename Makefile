@@ -98,6 +98,16 @@ workspace-cleanup: ## Cleanup workspace-specific caches and temporary files
 	$(call clean_work_dir,$(HOME)/oneTakeda)
 	$(call clean_work_dir,$(HOME)/workspaces)
 	$(call clean_work_dir,$(HOME)/shalomb)
+	# Guard: the `find .` sweeps below are recursive and destructive, and they
+	# run against the invoking CWD -- not this Makefile's directory. Run from
+	# the wrong place (a repo with a real build/ or dist/, or worse $HOME) and
+	# they take legitimate files with them. Only proceed in the dotfiles repo.
+	if [ "$$(pwd -P)" != "$$(dirname $(MAKEFILE))" ]; then \
+		echo "workspace-cleanup: refusing to run recursive cleanup in $$(pwd -P)"; \
+		echo "  the find . sweeps only make sense in $$(dirname $(MAKEFILE))"; \
+		echo "  re-run as: make -C $$(dirname $(MAKEFILE)) workspace-cleanup"; \
+		exit 1; \
+	fi
 	# Clean Python build artifacts
 	find . -name "__pycache__" -type d -exec rm -rf {} + || true
 	find . -name "*.pyc" -type f -delete || true
@@ -164,6 +174,11 @@ system-cleanup: ## Cleanup system-wide caches and temporary files
 	$(HOME)/.config/dotfiles/scripts/prune-terraform-cache.sh 2
 	# Clean general cache files older than 3 months
 	find ~/.cache/ -type f -atime +90 -delete || true
+	# Remove directory skeletons left behind by the sweep above.
+	# Repeats until no empties remain, so nested husks collapse fully.
+	while [ -n "$$(find ~/.cache/ -mindepth 1 -type d -empty -print -quit)" ]; do \
+		find ~/.cache/ -mindepth 1 -type d -empty -delete || break; \
+	done
 	# Clean temporary files
 	find /tmp -user $$(whoami) -type f -atime +7 -delete || true
 	# Clean old log files
@@ -210,7 +225,6 @@ nvim-cleanup: ## Cleanup the nvim caches
 	find ~/.local/state/nvim/swap/ -type f -delete
 	find ~/.local/share/nvim/mason/packages/lua-language-server/libexec/log/ -iname "*.lock" -delete
 	find ~/.local/share/nvim/mason/ -ipath "*mason*.lock" -delete
-	find ~/.cache/terraform.d/plugin-cache/ -depth -type f -mtime +30 -print -delete
 
 nvim-clear-locks: ## Cleanup nvim lock files
 	find ~/.local/share/nvim/mason/ -iname "*.lock*" -delete
