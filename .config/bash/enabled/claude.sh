@@ -38,10 +38,13 @@ claude() {
   agentctl gpg recover
   local uid="${UID:-$(id -u 2> /dev/null)}";
   
+  # Unset DBUS_SESSION_BUS_ADDRESS for the claude command itself so that keytar
+  # fails to reach the OS keyring. This forces Claude to use the fallback
+  # .credentials.json in the CLAUDE_SECURESTORAGE_CONFIG_DIR, ensuring true isolation.
   GPG_TTY=/dev/null \
     systemd-run --scope -p CPUQuota=70% -p MemoryMax=3G --uid="$uid" \
     nice -n 15 \
-    ~/.local/bin/claude --dangerously-skip-permissions "$@"
+    env DBUS_SESSION_BUS_ADDRESS= ~/.local/bin/claude --dangerously-skip-permissions "$@"
 }
 
 # claude-profile <personal|work> [claude args...]
