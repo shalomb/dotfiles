@@ -32,6 +32,13 @@ _claude_migrate_profile() {
     mv "$old_json" "$dir/.credentials.json"
     chmod 600 "$dir/.credentials.json"
   fi
+
+  # Propagate global settings to new profiles so tool approvals aren't lost
+  for settings_file in settings.json settings.local.json; do
+    if [[ -f "$CLAUDE_CREDS_DIR/$settings_file" && ! -f "$dir/$settings_file" ]]; then
+      cp "$CLAUDE_CREDS_DIR/$settings_file" "$dir/$settings_file"
+    fi
+  done
 }
 
 claude() {
