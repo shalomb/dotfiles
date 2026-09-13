@@ -5,7 +5,7 @@
 # `claude --login` writes .credentials.json via rename(), which destroys symlinks.
 # Furthermore, background token refreshes also write via rename().
 # To allow concurrent instances to safely share ~/.claude without corrupting
-# each other's tokens, we isolate credentials using CLAUDE_SECURESTORAGE_CONFIG_DIR.
+# each other's tokens, we isolate credentials using CLAUDE_CONFIG_DIR.
 
 CLAUDE_CREDS_DIR="$HOME/.claude"
 CLAUDE_PROFILE_DIR="$CLAUDE_CREDS_DIR/profiles"
@@ -40,7 +40,7 @@ claude() {
   
   # Unset DBUS_SESSION_BUS_ADDRESS for the claude command itself so that keytar
   # fails to reach the OS keyring. This forces Claude to use the fallback
-  # .credentials.json in the CLAUDE_SECURESTORAGE_CONFIG_DIR, ensuring true isolation.
+  # .credentials.json in the CLAUDE_CONFIG_DIR, ensuring true isolation.
   GPG_TTY=/dev/null \
     systemd-run --scope -p CPUQuota=70% -p MemoryMax=3G --uid="$uid" \
     nice -n 15 \
@@ -62,19 +62,19 @@ claude-profile() {
       profile="$1"; shift
       _claude_migrate_profile "$profile"
       
-      prev_dir="$CLAUDE_SECURESTORAGE_CONFIG_DIR"
-      export CLAUDE_SECURESTORAGE_CONFIG_DIR="$(_claude_profile_dir "$profile")"
+      prev_dir="$CLAUDE_CONFIG_DIR"
+      export CLAUDE_CONFIG_DIR="$(_claude_profile_dir "$profile")"
       
-      [[ "$prev_dir" != "$CLAUDE_SECURESTORAGE_CONFIG_DIR" ]] && echo "Switched to $profile" >&2
+      [[ "$prev_dir" != "$CLAUDE_CONFIG_DIR" ]] && echo "Switched to $profile" >&2
       
       claude "$@"
       rc=$?
       
-      if [[ -n "$prev_dir" && "$prev_dir" != "$CLAUDE_SECURESTORAGE_CONFIG_DIR" ]]; then
-        export CLAUDE_SECURESTORAGE_CONFIG_DIR="$prev_dir"
+      if [[ -n "$prev_dir" && "$prev_dir" != "$CLAUDE_CONFIG_DIR" ]]; then
+        export CLAUDE_CONFIG_DIR="$prev_dir"
         echo "Restored previous profile" >&2
       elif [[ -z "$prev_dir" ]]; then
-        unset CLAUDE_SECURESTORAGE_CONFIG_DIR
+        unset CLAUDE_CONFIG_DIR
       fi
       
       return $rc ;;
@@ -87,7 +87,7 @@ claude-profile() {
         return 1
       fi
       _claude_migrate_profile "$profile"
-      export CLAUDE_SECURESTORAGE_CONFIG_DIR="$(_claude_profile_dir "$profile")"
+      export CLAUDE_CONFIG_DIR="$(_claude_profile_dir "$profile")"
       echo "Switched to $profile" ;;
 
     adopt)
@@ -107,9 +107,9 @@ claude-profile() {
     status)
       local active_profile="(none)"
       
-      if [[ "$CLAUDE_SECURESTORAGE_CONFIG_DIR" == "$CLAUDE_PROFILE_DIR/personal" ]]; then
+      if [[ "$CLAUDE_CONFIG_DIR" == "$CLAUDE_PROFILE_DIR/personal" ]]; then
         active_profile="personal"
-      elif [[ "$CLAUDE_SECURESTORAGE_CONFIG_DIR" == "$CLAUDE_PROFILE_DIR/work" ]]; then
+      elif [[ "$CLAUDE_CONFIG_DIR" == "$CLAUDE_PROFILE_DIR/work" ]]; then
         active_profile="work"
       elif [[ -f "$CLAUDE_CREDS_DIR/.credentials.json" ]]; then
         active_profile="default (~/.claude)"
