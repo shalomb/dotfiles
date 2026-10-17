@@ -161,6 +161,10 @@ make cargo-cleanup
 # Node.js tools
 make npm-tools
 make npm-cleanup
+
+# Coding agent harnesses (claude, copilot, codex, opencode, gemini, pi)
+make agent-tools
+make update-pi   # pi only
 ```
 
 ## Configuration Management

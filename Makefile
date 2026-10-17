@@ -69,9 +69,12 @@ submodules: .config/submodules/INIT .config/submodules/UPDATE
 .PHONY: tools
 tools: go-tools rust-tools workspace-tools bfg-tools ## Install CLI tools
 
-.PHONY: update-pi
+.PHONY: agent-tools update-pi
+agent-tools: ## Install/update coding agent harnesses (claude, copilot, codex, opencode, gemini, pi)
+	.config/agent-tools/INIT
+
 update-pi: ## Update only the pi.dev harness and its extensions
-	sudo "$$(command -v pi)" update
+	pi update
 	pi update --extensions
 
 .PHONY: npm-tools npm-cleanup
@@ -246,6 +249,7 @@ update:  ## Update all components
 	make nvim
 	make tools
 	make npm-tools
+	make agent-tools
 	make python-tools
 
 .PHONY: clean
