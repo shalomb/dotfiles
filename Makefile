@@ -90,11 +90,12 @@ python-tools: ## Run python-tools installer
 .PHONY: workspace-tools workspace-cleanup
 workspace-tools: ## Run workspace-tools installer
 	.config/installers/INIT
-# Helper for cleaning specific work directories
+# Helper for cleaning specific work directories. Only regenerable caches: build/, dist/ and
+# target/ are deliberately NOT swept here because some repos track them (e.g. si-proteome).
 define clean_work_dir
 	if [ -d "$(1)" ]; then \
 		echo "Cleaning $(1)..."; \
-		find "$(1)" -maxdepth 4 -type d \( -name ".terraform" -o -name "node_modules" -o -name "__pycache__" -o -name ".pytest_cache" -o -name ".mypy_cache" -o -name "target" -o -name "dist" -o -name "build" \) -prune -exec rm -rf {} + 2>/dev/null; \
+		find "$(1)" -maxdepth 4 -type d \( -name ".terraform" -o -name "node_modules" -o -name "__pycache__" -o -name ".pytest_cache" -o -name ".mypy_cache" \) -prune -exec rm -rf {} + 2>/dev/null; \
 	fi
 endef
 
@@ -186,6 +187,10 @@ system-cleanup: ## Cleanup system-wide caches and temporary files
 	done
 	# Clean temporary files
 	find /tmp -user $$(whoami) -type f -atime +7 -delete || true
+	# Terraform leaves ~150M provider-download dirs behind; /tmp is a small tmpfs
+	find /tmp -maxdepth 1 -user $$(whoami) -type d -name 'terraform-provider*' -mtime +2 -exec rm -rf {} + || true
+	# Remove empty directory husks left by the file sweep above
+	find /tmp -mindepth 1 -user $$(whoami) -type d -empty -mtime +7 -delete || true
 	# Clean old log files
 	find ~/.local/state/ -name "*.log" -type f -atime +30 -delete || true
 	# Clean old backup files
@@ -254,6 +259,9 @@ local-cleanup: ## Cleanup .local/share and .local/lib cruft
 	rm -rf $(HOME)/.local/lib/python3.11 $(HOME)/.local/lib/python3.12 || true
 	# Remove old uv tool data
 	command -v uv >/dev/null && uv python list --only-installed 2>/dev/null | awk '/\/\.local\/share\/uv\// {print $$1}' | sort -V -r | awk 'match($$0, /^(cpython-[0-9]+\.[0-9]+)/, m) {minor=m[1]; if(minor==prev){print} else {prev=minor}}' | xargs -r uv python uninstall || true
+	# Keep only the 2 newest cursor-agent versions (~/.local/bin/cursor-agent links to the newest)
+	ls -1 $(HOME)/.local/share/cursor-agent/versions 2>/dev/null | sort -V | head -n -2 | \
+		xargs -r -I{} rm -rf "$(HOME)/.local/share/cursor-agent/versions/{}" || true
 	# Clean up any remaining .local/share/go if it somehow persisted
 	rm -rf $(HOME)/.local/share/go/pkg/mod/* || true
 	df -hP
