@@ -286,6 +286,7 @@ function gB {
           --tiebreak=index \
           --no-mouse --print-query \
           --border --height 100% --cycle \
+          --header=$'enter/^m show · ^d diff · ^f files · ^v vimdiff · ^e help\ntab multi-select (2 shas = range) · ^s sort · esc quit' \
           --preview 'git show --color=always $(echo "{}" | perl -lane "print /([[:xdigit:]]\{7})/")' \
           --expect=ctrl-d,ctrl-e,ctrl-v,ctrl-f,ctrl-j,ctrl-m
     ); do
