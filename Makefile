@@ -69,6 +69,11 @@ submodules: .config/submodules/INIT .config/submodules/UPDATE
 .PHONY: tools
 tools: go-tools rust-tools workspace-tools bfg-tools ## Install CLI tools
 
+.PHONY: update-pi
+update-pi: ## Update only the pi.dev harness and its extensions
+	sudo "$$(command -v pi)" update
+	pi update --extensions
+
 .PHONY: npm-tools npm-cleanup
 npm-tools: ## Run npm-tools installer
 	.config/npm-tools/INIT
