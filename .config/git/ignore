@@ -1,8 +1,8 @@
 # git submodules
 .config/vim/bundle/*
 .vim/bundle/*
-tags
-**/tags
+# ctags output at the repo root only (a package or directory named "tags" is source)
+/tags
 
 wikidata/
 .config/vim/bundle/cheat.sh-vim
@@ -56,19 +56,18 @@ venv
 
 # Secrets
 .env
-env
+/env/
 
 # Additional ignores
 *~
-*.bak*
-*.bkp*
+*.bak
+*.bkp
 .*hist
-*hist
+
 *.svn
-*.sw*
-tags
-.tags
-*.tmp*
+*.sw[a-p]
+/.tags
+*.tmp
 
 # Project
 .vim/bundle/**
