@@ -14,29 +14,3 @@ sudo npm install \
   tree-sitter \
   vsce \
   write-good
-
-# claude-code coding agent harness: factored out to drive its own self-update after install
-sudo npm install -g @anthropic-ai/claude-code
-claude update
-
-# GitHub Copilot CLI: factored out to drive its own self-update after install
-sudo npm install -g @github/copilot
-copilot update
-
-# OpenAI Codex CLI: factored out to drive its own self-update after install
-sudo npm install -g @openai/codex
-codex update
-
-# opencode coding agent harness: factored out to drive its own self-update after install
-sudo npm install -g opencode-ai
-opencode upgrade
-
-# Gemini CLI: no built-in self-update subcommand, rely on npm reinstall to converge on latest
-sudo npm install -g @google/gemini-cli
-
-# pi.dev coding agent harness: installed separately (different registry flags)
-sudo "$(command -v npm)" --prefix /usr/local install -g --ignore-scripts --min-release-age=0 @earendil-works/pi-coding-agent
-
-# keep the pi.dev harness and its extensions up to date (idempotent, safe to rerun)
-sudo "$(command -v pi)" update
-pi update --extensions

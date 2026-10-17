@@ -1,0 +1,36 @@
+#!/bin/bash
+# Coding agent harnesses (claude, copilot, codex, opencode, gemini, pi).
+# Each drives its own upgrade after install, so this is deliberately not part of npm-tools
+# (a plain list of npm libraries). Idempotent: safe to rerun to converge on latest.
+
+set -eu
+
+# claude-code coding agent harness: factored out to drive its own self-update after install
+sudo npm install -g @anthropic-ai/claude-code
+claude update
+
+# GitHub Copilot CLI: factored out to drive its own self-update after install
+sudo npm install -g @github/copilot
+copilot update
+
+# OpenAI Codex CLI: factored out to drive its own self-update after install
+sudo npm install -g @openai/codex
+codex update
+
+# opencode coding agent harness: factored out to drive its own self-update after install
+sudo npm install -g opencode-ai
+opencode upgrade
+
+# Gemini CLI: no built-in self-update subcommand, rely on npm reinstall to converge on latest
+sudo npm install -g @google/gemini-cli
+
+# pi.dev coding agent harness: the official managed installer (user-local, no sudo; lives in
+# ~/.pi/agent/install with a ~/.local/bin/pi symlink). Not an npm global any more.
+# - install only when absent; afterwards `pi update` is the upgrade path (idempotent, safe to rerun)
+# - setsid detaches the controlling tty so the installer's /dev/tty prompts (action menu,
+#   "start pi now?", shell-profile edit) are skipped and it runs unattended
+if ! command -v pi >/dev/null 2>&1; then
+  curl -fsSL https://pi.dev/install.sh | setsid -w sh
+fi
+pi update
+pi update --extensions
