@@ -88,3 +88,31 @@ def test_import_keeps_symlinks_as_symlinks(env):
 
     dst = repo / ".pi/agent/link"
     assert dst.is_symlink() and dst.readlink() == target
+
+
+def test_import_refuses_a_denied_file_named_directly(env):
+    home, repo, run = env
+
+    result = run("import", ".pi/agent/auth.json")
+
+    assert result.returncode != 0
+    assert not (repo / ".pi/agent/auth.json").exists()
+
+
+def test_import_glob_skips_denied_matches_but_imports_the_rest(env):
+    home, repo, run = env
+
+    result = run("import", ".pi/agent/*.json")
+
+    assert result.returncode == 0, result.stderr
+    assert (repo / ".pi/agent/settings.json").exists()
+    assert not (repo / ".pi/agent/auth.json").exists()
+
+
+def test_import_refuses_a_denied_directory_used_as_the_root(env):
+    home, repo, run = env
+
+    result = run("import", ".pi/agent/sessions")
+
+    assert result.returncode != 0
+    assert not (repo / ".pi/agent/sessions").exists()

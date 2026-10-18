@@ -89,7 +89,15 @@ class DotfileManager:
             if not src_paths:
                 raise FileNotFoundError(f"Nothing to import matching {file_pattern!r}")
             
-            for src_path in src_paths:
+            allowed = [p for p in src_paths if not self._import_denied(p)]
+            if not allowed:
+                raise PermissionError(
+                    f"Refusing to import {file_pattern!r}: matches [import] exclude"
+                )
+            for denied in set(src_paths) - set(allowed):
+                logger.warning(f"Skipping {denied}: matches [import] exclude")
+
+            for src_path in allowed:
                 if not (src_path.exists() or src_path.is_symlink()):
                     raise FileNotFoundError(f"Nothing to import at {src_path}")
                 
@@ -223,6 +231,14 @@ class DotfileManager:
             rel_path = src_path.relative_to(self.repo_root)
             return self.home_dir / rel_path
     
+    def _import_denied(self, src_path: Path) -> bool:
+        """True if the source or any ancestor under $HOME matches [import] exclude."""
+        try:
+            rel = src_path.relative_to(self.home_dir)
+        except ValueError:
+            rel = Path(src_path.name)
+        return bool(self.config) and self.config.should_exclude_import(rel)
+
     def _get_repo_path(self, src_path: Path) -> Path:
         """Get repository path for imported file."""
         if src_path.is_absolute():
