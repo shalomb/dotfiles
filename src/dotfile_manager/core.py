@@ -86,16 +86,17 @@ class DotfileManager:
         
         for file_pattern in files:
             src_paths = self._resolve_home_paths(file_pattern)
+            if not src_paths:
+                raise FileNotFoundError(f"Nothing to import matching {file_pattern!r}")
             
             for src_path in src_paths:
-                if not src_path.exists():
-                    logger.warning(f"Source file does not exist: {src_path}")
-                    continue
+                if not (src_path.exists() or src_path.is_symlink()):
+                    raise FileNotFoundError(f"Nothing to import at {src_path}")
                 
                 dst_path = self._get_repo_path(src_path)
                 logger.info(f"Importing {src_path} -> {dst_path}")
                 
-                if src_path.is_file():
+                if src_path.is_file() or src_path.is_symlink():
                     self.file_ops.import_file(src_path, dst_path)
                 elif src_path.is_dir():
                     self.file_ops.import_directory(src_path, dst_path)

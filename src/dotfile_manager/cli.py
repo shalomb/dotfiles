@@ -63,7 +63,7 @@ def export(ctx: click.Context, files: List[str], cleanup: bool,
         sys.exit(1)
 
 
-@cli.command()
+@cli.command(name="import")
 @click.argument("files", nargs=-1, required=True)
 @click.pass_context
 def import_files(ctx: click.Context, files: List[str]) -> None:

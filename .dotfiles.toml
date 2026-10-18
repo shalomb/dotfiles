@@ -131,3 +131,9 @@ exclude_files = [
     ".gitignore",
     ".dotfiles-managed-files.json",
 ]
+# Deny list for `dotfile_manager import` (secrets/state: this repo is public)
+[import]
+exclude = [
+    "auth.json",
+    "sessions/",
+]

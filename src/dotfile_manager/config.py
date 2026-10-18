@@ -18,6 +18,7 @@ class DotfileConfig:
         self.exclusion_patterns: List[str] = []
         self.exclude_directories: List[str] = []
         self.exclude_files: List[str] = []
+        self.import_exclude: List[str] = []  # deny list for `import` only
         
         self._load_config()
     
@@ -35,6 +36,7 @@ class DotfileConfig:
             self.exclusion_patterns = exclusions.get("patterns", [])
             self.exclude_directories = exclusions.get("exclude_directories", [])
             self.exclude_files = exclusions.get("exclude_files", [])
+            self.import_exclude = config_data.get("import", {}).get("exclude", [])
             
             logger.info(f"Loaded configuration from {self.config_path}")
             logger.debug(f"Exclusion patterns: {self.exclusion_patterns}")
@@ -71,6 +73,10 @@ class DotfileConfig:
         
         logger.info("Using default exclusion patterns")
     
+    def should_exclude_import(self, rel_path: Path) -> bool:
+        """Check a path (relative to the imported root) against [import] exclude."""
+        return any(self._matches_pattern(str(rel_path), p) for p in self.import_exclude)
+
     def should_exclude_path(self, path: Path) -> bool:
         """Check if a path should be excluded."""
         path_str = str(path)
