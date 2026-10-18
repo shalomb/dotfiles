@@ -1,0 +1,9 @@
+# who sends HUP/ABRT/KILL/TERM to whom. kill/tkill: sig=a1; tgkill: sig=a2. search: ausearch -k sigsend -i
+-a always,exit -F arch=b64 -S kill,tkill -F a1=1 -k sigsend
+-a always,exit -F arch=b64 -S tgkill -F a2=1 -k sigsend
+-a always,exit -F arch=b64 -S kill,tkill -F a1=6 -k sigsend
+-a always,exit -F arch=b64 -S tgkill -F a2=6 -k sigsend
+-a always,exit -F arch=b64 -S kill,tkill -F a1=9 -k sigsend
+-a always,exit -F arch=b64 -S tgkill -F a2=9 -k sigsend
+-a always,exit -F arch=b64 -S kill,tkill -F a1=15 -k sigsend
+-a always,exit -F arch=b64 -S tgkill -F a2=15 -k sigsend
