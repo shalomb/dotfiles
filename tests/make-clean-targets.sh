@@ -8,6 +8,10 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FIX=$(mktemp -d)
 trap 'rm -rf "$FIX"' EXIT
 export HOME="$FIX/home" XDG_CONFIG_HOME="$FIX/home/.config" npm_config_cache="$FIX/npm-cache"
+# Tool env vars exported by the login shell point at the REAL caches and would
+# override the fixture HOME, so drop them, then prove we are fenced in.
+unset TF_PLUGIN_CACHE_DIR GOCACHE GOMODCACHE GOPATH XDG_CACHE_HOME XDG_DATA_HOME XDG_STATE_HOME
+[[ $HOME == "$FIX"/* ]] || { echo "refusing to run: HOME is not the fixture" >&2; exit 2; }
 mkdir -p "$HOME/.local/bin" "$HOME/.cache"
 CALLS="$FIX/calls"; : >"$CALLS"
 
@@ -49,5 +53,24 @@ run worktree-cleanup
 check "worktree-cleanup removes clean pushed worktree" test ! -d "$WR/.worktrees/safe"
 check "worktree-cleanup keeps dirty worktree"          test -d "$WR/.worktrees/dirty"
 check "clean depends on worktree-cleanup"              bash -c "make -n -f '$REPO/Makefile' clean 2>&1 | rg -q 'prune-worktrees.sh --apply'"
+
+# --- tool-cache-cleanup: wipe regenerable caches, cap the big live ones
+C=$HOME/.cache
+blob() { mkdir -p "$(dirname "$1")"; head -c 3145728 /dev/zero >"$1"; }   # 3 MB of real blocks
+for d in puppeteer opengrep copilot; do blob "$C/$d/data.bin"; done
+blob "$C/go-build/aa/obj"
+tfp=$C/terraform.d/plugin-cache/registry.terraform.io/hashicorp/aws
+for v in 5.1.0 5.2.0 5.3.0; do blob "$tfp/$v/linux_arm64/terraform-provider-aws"; done
+stub go; : >"$CALLS"
+CACHE_CAP_MB=100000 run tool-cache-cleanup   # far above the actual size
+check "tool-cache-cleanup wipes puppeteer"              test ! -e "$C/puppeteer"
+check "tool-cache-cleanup wipes opengrep"               test ! -e "$C/opengrep"
+check "tool-cache-cleanup wipes copilot"                test ! -e "$C/copilot"
+check "under cap: go-build left alone"                  bash -c "! rg -q '^go clean' '$CALLS'"
+check "under cap: terraform plugin cache untouched"     test -d "$tfp/5.1.0"
+CACHE_CAP_MB=1 run tool-cache-cleanup                    # now well over the cap
+check "over cap: go clean -cache runs"                  called '^go clean -cache'
+check "over cap: terraform keeps only newest version"   test -d "$tfp/5.3.0" -a ! -d "$tfp/5.2.0" -a ! -d "$tfp/5.1.0"
+check "clean depends on tool-cache-cleanup"             bash -c "make -n -f '$REPO/Makefile' clean 2>&1 | rg -q 'puppeteer'"
 
 exit $fail

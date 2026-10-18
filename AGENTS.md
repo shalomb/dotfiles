@@ -217,6 +217,7 @@ make go-cleanup            # Clean Go
 make npm-cleanup           # Clean Node.js
 make python-cleanup        # Clean Python
 make worktree-cleanup      # Remove git worktrees with no unique work (clean, pushed, unlocked)
+make tool-cache-cleanup    # Wipe puppeteer/opengrep/copilot caches; shrink go-build + terraform cache past CACHE_CAP_MB (default 1024)
 ```
 
 ### Updates

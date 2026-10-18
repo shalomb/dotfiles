@@ -259,7 +259,20 @@ update:  ## Update all components
 	make python-tools
 
 .PHONY: clean
-clean: nvim-cleanup cargo-cleanup go-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup npm-cleanup local-cleanup worktree-cleanup
+clean: nvim-cleanup cargo-cleanup go-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup npm-cleanup local-cleanup worktree-cleanup tool-cache-cleanup
+
+# Age-based sweeps never fire on caches that are in constant use (go-build,
+# terraform plugin-cache), so those are capped by size instead.
+CACHE_CAP_MB ?= 1024
+
+.PHONY: tool-cache-cleanup
+tool-cache-cleanup: ## Wipe regenerable tool caches; shrink go-build/terraform cache past CACHE_CAP_MB
+	# Re-downloaded on demand by their tools
+	rm -rf $(HOME)/.cache/puppeteer $(HOME)/.cache/opengrep $(HOME)/.cache/copilot
+	over() { [ -d "$$1" ] && [ "$$(du -sm "$$1" | cut -f1)" -gt "$(CACHE_CAP_MB)" ]; }
+	if over $(HOME)/.cache/go-build; then command -v go >/dev/null && go clean -cache; fi
+	tf="$${TF_PLUGIN_CACHE_DIR:-$(HOME)/.cache/terraform.d/plugin-cache}"
+	if over "$$tf"; then $(dir $(MAKEFILE))scripts/prune-terraform-cache.sh 1; fi
 
 .PHONY: worktree-cleanup
 worktree-cleanup: ## Remove git worktrees with no unique work (clean tree, HEAD pushed, unlocked)
