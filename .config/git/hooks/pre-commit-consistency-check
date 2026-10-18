@@ -14,7 +14,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO_ROOT="$(git rev-parse --show-toplevel)"
+# In a linked worktree, $HOME is hardlinked to the main checkout, so compare against it
+REPO_ROOT="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
 HOME_DIR="$HOME"
 CONFIG_DIR="$HOME_DIR/.config"
 
