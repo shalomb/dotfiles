@@ -1,0 +1,11 @@
+# Debian sid/unstable -- DISABLED by default (trailing "_").
+# Enable on demand:   sudo mv 02.x_debian-sid.sources_ 02.x_debian-sid.sources && sudo apt update
+# Install from it:    sudo apt install -t unstable <pkg>     (dry run first: apt -s)
+# Disable again:      sudo mv 02.x_debian-sid.sources 02.x_debian-sid.sources_ && sudo apt update
+# Priority is held at priority 1 by preferences.d/00-sid-low, so nothing upgrades
+# from sid unless -t unstable is given explicitly.
+Types: deb
+URIs: http://deb.debian.org/debian/
+Suites: sid
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

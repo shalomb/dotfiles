@@ -14,4 +14,4 @@ Types: deb
 URIs: http://ftp.debian.org/debian/
 Suites: bookworm-backports
 Components: main 
-Signed-By: 
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

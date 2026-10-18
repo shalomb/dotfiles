@@ -1,0 +1,10 @@
+# Debian experimental -- DISABLED by default (trailing "_").
+# Enable by renaming to *.sources and running apt update; install with
+#   sudo apt install -t experimental <pkg>
+# Experimental is NotAutomatic (priority 1), so it is safe to leave enabled,
+# but it layers on top of sid -- enable 02.x_debian-sid.sources too.
+Types: deb
+URIs: http://deb.debian.org/debian/
+Suites: experimental
+Components: main
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

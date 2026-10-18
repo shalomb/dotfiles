@@ -1,0 +1,5 @@
+# Keep sid/unstable at priority 1 (below installed versions at 100) so enabling its source never upgrades
+# packages implicitly. Pull from it explicitly: apt install -t unstable <pkg>
+Package: *
+Pin: release a=unstable
+Pin-Priority: 1
