@@ -1,0 +1,12 @@
+[Unit]
+Description=tmux server (code) outside any login scope
+[Service]
+Type=forking
+Environment=TMUX_TMPDIR=/tmp
+ExecStart=/usr/bin/tmux -vv new-session -d -s code -c %h
+ExecStop=/usr/bin/tmux kill-server
+LimitCORE=infinity
+KillMode=process
+WorkingDirectory=/tmp
+[Install]
+WantedBy=default.target

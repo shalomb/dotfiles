@@ -1,0 +1,13 @@
+#!/bin/bash
+# Log tmux server health to the journal every 10s; log loudly when the server pid changes/vanishes.
+last=""
+while sleep 10; do
+  pid=$(tmux display -p '#{pid}' 2>/dev/null || true)
+  if [[ -z $pid ]]; then
+    [[ -n $last ]] && logger -t tmux-watch -p user.crit "tmux server GONE (last pid=$last) load=$(cut -d' ' -f1-3 /proc/loadavg) $(rg -N 'MemAvailable|SwapFree' /proc/meminfo | tr -s ' ' | tr '\n' ' ')"
+    last=""; continue
+  fi
+  [[ -n $last && $pid != "$last" ]] && logger -t tmux-watch -p user.crit "tmux server pid changed $last -> $pid"
+  last=$pid
+  logger -t tmux-watch "pid=$pid rss_kb=$(awk '/VmRSS/{print $2}' /proc/$pid/status) fds=$(ls /proc/$pid/fd | wc -l) panes=$(tmux list-panes -a 2>/dev/null | wc -l) clients=$(tmux list-clients 2>/dev/null | wc -l) cg=$(cut -d: -f3 /proc/$pid/cgroup)"
+done

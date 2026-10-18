@@ -1,0 +1,7 @@
+[Unit]
+Description=Log tmux server health to the journal
+[Service]
+ExecStart=%h/.local/bin/tmux-watch
+Restart=always
+[Install]
+WantedBy=default.target

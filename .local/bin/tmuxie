@@ -118,6 +118,17 @@ function select_sessions() {
       --bind="ctrl-/:toggle-preview"
 }
 
+# Ensure the tmux server runs as a systemd user unit (outside this login's
+# cgroup scope, with core dumps + -vv logging) and shout if it was missing.
+function ensure_server() {
+  command tmux list-sessions &>/dev/null && return 0
+  command systemctl --user cat tmux.service &>/dev/null || return 0
+  _tmuxie_log "tmux server was missing - starting tmux.service"
+  logger -t tmuxie -p user.warning "tmuxie: tmux server was missing - starting tmux.service" || true
+  systemctl --user start tmux.service || _tmuxie_log "WARNING: tmux.service failed to start; falling back"
+}
+case "${1-}" in -h|--help) ;; *) ensure_server ;; esac
+
 # Main command handling
 case "${1-}" in
   -l|--list)
