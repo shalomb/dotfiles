@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "currentMode": "default",
+  "modes": {
+    "default": {
+      "provider": "github-copilot",
+      "modelId": "claude-sonnet-4.6",
+      "thinkingLevel": "off"
+    },
+    "fast": {
+      "provider": "github-copilot",
+      "modelId": "claude-sonnet-4.6",
+      "thinkingLevel": "off"
+    },
+    "medium": {
+      "provider": "github-copilot",
+      "modelId": "claude-sonnet-4.6",
+      "thinkingLevel": "medium"
+    }
+  }
+}

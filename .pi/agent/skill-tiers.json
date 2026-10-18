@@ -1,0 +1,34 @@
+{
+  "_comment": "tier1 = always in the prompt catalog (policy: mandated by AGENTS.md). tier2 = hidden, named in an on-demand index (usage-ranked from session history). Anything unlisted = tier3. Project overrides: <repo>/.pi/skill-tiers.json (adds to tiers; its tier3 demotes). hide = duplicates removed from the picker and on-demand index (still on disk; /skill:name works). Canonical: the fuller synced docx/pptx/xlsx/pdf.",
+  "tier1": [
+    "modern-cli-overrides",
+    "git-commit-formatter",
+    "git-safety-guardrails",
+    "test-driven-development",
+    "farley-tdd",
+    "verification-before-completion"
+  ],
+  "tier2": [
+    "github-cli",
+    "tfc-api",
+    "tmux-remote-control",
+    "aws-cli",
+    "skill-creator",
+    "bart-adversarial-reviewer",
+    "brainstorming",
+    "web-to-markdown",
+    "using-git-worktrees",
+    "writing-plans",
+    "terraform-dev",
+    "architecture-decision-records",
+    "test-accordion",
+    "systematic-debugging",
+    "pi-sub-agent"
+  ],
+  "hide": [
+    "docx-word-processor",
+    "pptx-slide-processor",
+    "xlsx-spreadsheet-processor",
+    "pdf-document-processor"
+  ]
+}

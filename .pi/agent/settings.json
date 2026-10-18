@@ -1,0 +1,51 @@
+{
+  "defaultModel": "claude-sonnet-5-5",
+  "defaultProvider": "anthropic",
+  "defaultThinkingLevel": "minimal",
+  "defaultTools": [
+    "+codemode",
+    "+tool_search"
+  ],
+  "enableInstallTelemetry": false,
+  "enableSkillCommands": true,
+  "enabledModels": [
+    "anthropic/claude-*-[0-9]",
+    "github-copilot/claude-*-[0-9]",
+    "github-copilot/claude-*-[4-9].[0-9]",
+    "antigravity/*"
+  ],
+  "hideThinkingBlock": false,
+  "lastChangelogVersion": "1.3.0",
+  "markdown": {
+    "mermaid": "streaming"
+  },
+  "modelThinkingLevels": {
+    "anthropic/claude-sonnet-5": "low"
+  },
+  "packages": [
+    "npm:pi-background-tasks",
+    "npm:pi-lens",
+    "npm:pi-powerline-footer",
+    "npm:pi-smart-fetch",
+    "npm:pi-subagents",
+    "npm:pi-vimmode",
+    "npm:@tmustier/pi-usage-extension",
+    "npm:@narumitw/pi-tool",
+    "npm:@narumitw/pi-github-pr",
+    "npm:pi-antigravity"
+  ],
+  "powerline": {
+    "welcome": false
+  },
+  "quietStartup": false,
+  "shellCommandPrefix": "shopt -s expand_aliases\nsource ~/.bash_aliases",
+  "showHardwareCursor": true,
+  "terminal": {
+    "clearOnShrink": false,
+    "showImages": true,
+    "showTerminalProgress": true
+  },
+  "theme": "system",
+  "transport": "auto",
+  "tuiMode": "regular"
+}
