@@ -232,12 +232,19 @@ class DotfileManager:
             return self.home_dir / rel_path
     
     def _import_denied(self, src_path: Path) -> bool:
-        """True if the source or any ancestor under $HOME matches [import] exclude."""
-        try:
-            rel = src_path.relative_to(self.home_dir)
-        except ValueError:
-            rel = Path(src_path.name)
-        return bool(self.config) and self.config.should_exclude_import(rel)
+        """True if the source matches [import] exclude, lexically or once its
+        parent directories are resolved (so a directory symlink is no alias)."""
+        if not self.config:
+            return False
+        real = src_path.parent.resolve() / src_path.name
+        for candidate in (src_path, real):
+            try:
+                rel = candidate.relative_to(self.home_dir)
+            except ValueError:
+                rel = candidate
+            if self.config.should_exclude_import(rel):
+                return True
+        return False
 
     def _get_repo_path(self, src_path: Path) -> Path:
         """Get repository path for imported file."""

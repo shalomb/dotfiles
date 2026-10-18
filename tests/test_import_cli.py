@@ -116,3 +116,13 @@ def test_import_refuses_a_denied_directory_used_as_the_root(env):
 
     assert result.returncode != 0
     assert not (repo / ".pi/agent/sessions").exists()
+
+
+def test_import_refuses_files_reached_through_a_directory_symlink(env):
+    home, repo, run = env
+    (home / "slink").symlink_to(home / ".pi/agent/sessions")
+
+    for arg in ("slink/1.jsonl", "slink/*"):
+        result = run("import", arg)
+        assert result.returncode != 0, arg
+    assert not (repo / "slink/1.jsonl").exists()
