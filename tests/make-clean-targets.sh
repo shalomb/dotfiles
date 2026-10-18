@@ -73,4 +73,18 @@ check "over cap: go clean -cache runs"                  called '^go clean -cache
 check "over cap: terraform keeps only newest version"   test -d "$tfp/5.3.0" -a ! -d "$tfp/5.2.0" -a ! -d "$tfp/5.1.0"
 check "clean depends on tool-cache-cleanup"             bash -c "make -n -f '$REPO/Makefile' clean 2>&1 | rg -q 'puppeteer'"
 
+# --- disk-report: read-only dust summary of the usual hot spots
+mkdir -p "$HOME/.local/share/x" "$HOME/oneTakeda/keepme" "$HOME/.cache/keepme"
+stub dust; : >"$CALLS"
+run disk-report
+check "disk-report summarises ~/.cache"       called "dust .*$HOME/.cache\$"
+check "disk-report summarises ~/.local/share" called "dust .*$HOME/.local/share\$"
+check "disk-report summarises ~/oneTakeda"    called "dust .*$HOME/oneTakeda\$"
+check "disk-report summarises ~ top level"    called "dust .*$HOME\$"
+check "disk-report skips dirs that do not exist" bash -c "! rg -q workspaces '$CALLS'"
+check "disk-report is read-only"              test -d "$HOME/oneTakeda/keepme" -a -d "$HOME/.cache/keepme"
+PATH=/usr/bin:/bin run disk-report; rc=$?
+check "disk-report fails without dust"        test "$rc" -ne 0
+check "disk-report says dust is missing"      rg -q 'dust is not installed' "$FIX/make.out"
+
 exit $fail

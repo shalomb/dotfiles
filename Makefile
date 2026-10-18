@@ -265,6 +265,16 @@ clean: nvim-cleanup cargo-cleanup go-cleanup apt-clean python-cleanup bfg-cleanu
 # terraform plugin-cache), so those are capped by size instead.
 CACHE_CAP_MB ?= 1024
 
+.PHONY: disk-report
+disk-report: ## Read-only disk usage report of the usual hot spots (needs dust)
+	command -v dust >/dev/null || { echo "disk-report: dust is not installed (cargo install du-dust)"; exit 1; }
+	df -hP $(HOME) | tail -n 1
+	for d in $(HOME) $(HOME)/.cache $(HOME)/.local/share $(HOME)/oneTakeda $(HOME)/workspaces; do \
+		[ -d "$$d" ] || continue; \
+		echo; echo "== $$d"; \
+		dust -P -d 1 -n 12 -x "$$d"; \
+	done
+
 .PHONY: tool-cache-cleanup
 tool-cache-cleanup: ## Wipe regenerable tool caches; shrink go-build/terraform cache past CACHE_CAP_MB
 	# Re-downloaded on demand by their tools
