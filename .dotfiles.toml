@@ -152,4 +152,13 @@ exclude = [
     ".pi/agent/bin/*",
     ".pi/tasks/*",
     ".pi/generated-images/*",
+    # pi: not config - nested runtime state, editor temp files, experiments,
+    # and agent-skills content (its own repo; never vendor it here)
+    ".pi/agent/extensions/.pi/*",
+    ".tmp*",
+    ".pi/spikes/*",
+    ".pi/agents/*",
+    ".pi/prompts/*",
+    ".pi/skills/*",
+    ".pi/ideas.md",
 ]
