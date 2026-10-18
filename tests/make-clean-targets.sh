@@ -25,4 +25,15 @@ stub uv
 run python-cleanup
 check "python-cleanup runs uv cache clean when uv exists" called '^uv cache clean'
 
+# --- npm-cleanup must not delete a project's files when run from another directory
+stub npm
+export PATH="$HOME/.local/bin:$PATH"
+PROJ="$FIX/proj"; mkdir -p "$PROJ/node_modules"; echo '{}' >"$PROJ/package.json"; echo '{}' >"$PROJ/package-lock.json"
+CWD=$PROJ run npm-cleanup
+check "npm-cleanup keeps package.json outside dotfiles"      test -f "$PROJ/package.json"
+check "npm-cleanup keeps package-lock.json outside dotfiles" test -f "$PROJ/package-lock.json"
+check "npm-cleanup keeps node_modules outside dotfiles"      test -d "$PROJ/node_modules"
+check "npm-cleanup still cleans the npm cache"               called '^npm cache clean'
+check "npm-cleanup explains the skip"                        rg -q 'skipping' "$FIX/make.out"
+
 exit $fail

@@ -83,7 +83,12 @@ npm-tools: ## Run npm-tools installer
 
 npm-cleanup: ## Cleanup the npm cache
 	npm cache clean --force
-	rm -fr package-lock.json package.json node_modules/
+	# Destructive and relative to the invoking CWD: only run in the dotfiles repo
+	if [ "$$(pwd -P)" = "$$(dirname $(MAKEFILE))" ]; then \
+		rm -fr package-lock.json package.json node_modules/; \
+	else \
+		echo "npm-cleanup: skipping package.json/node_modules removal in $$(pwd -P)"; \
+	fi
 	npm cache verify
 
 .PHONY: python-tools python-cleanup
