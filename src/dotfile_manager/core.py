@@ -107,7 +107,11 @@ class DotfileManager:
                 if src_path.is_file() or src_path.is_symlink():
                     self.file_ops.import_file(src_path, dst_path)
                 elif src_path.is_dir():
-                    self.file_ops.import_directory(src_path, dst_path)
+                    try:
+                        home_rel = src_path.relative_to(self.home_dir)
+                    except ValueError:
+                        home_rel = None
+                    self.file_ops.import_directory(src_path, dst_path, home_rel)
                 else:
                     logger.warning(f"Unknown file type: {src_path}")
     

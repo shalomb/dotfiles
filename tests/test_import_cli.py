@@ -126,3 +126,59 @@ def test_import_refuses_files_reached_through_a_directory_symlink(env):
         result = run("import", arg)
         assert result.returncode != 0, arg
     assert not (repo / "slink/1.jsonl").exists()
+
+
+def test_import_refuses_denied_paths_via_dotdot_chains_and_nested_symlinks(env):
+    home, repo, run = env
+    agent = home / ".pi/agent"
+    (agent / "sub").mkdir()
+    (home / "slink").symlink_to(agent / "sessions")
+    (home / "chain").symlink_to(home / "slink")
+    (home / "d").mkdir()
+    (home / "d/inner").symlink_to(agent)
+    (home / "dlink").symlink_to(home / "d")
+
+    for arg in (
+        ".pi/agent/sub/../auth.json",
+        "chain/1.jsonl",
+        "chain/*",
+        "d/inner/auth.json",
+        "dlink/inner/auth.json",
+        "dlink/inner/sessions/1.jsonl",
+    ):
+        assert run("import", arg).returncode != 0, arg
+    assert not any(
+        p.name in ("auth.json", "1.jsonl") for p in repo.rglob("*") if p.is_file()
+    )
+
+
+def test_import_directory_walk_never_hardlinks_denied_files_via_symlinked_dirs(env):
+    home, repo, run = env
+    (home / "walk").mkdir()
+    (home / "walk/f").write_text("ok")
+    (home / "walk/sl").symlink_to(home / ".pi/agent/sessions")
+    (home / "walk/ag").symlink_to(home / ".pi/agent")
+
+    run("import", "walk")
+    run("import", "walk/*/*")
+
+    leaked = [p for p in repo.rglob("*") if p.name in ("auth.json", "1.jsonl")]
+    assert leaked == []
+
+
+def test_import_parent_directory_honours_path_prefixed_deny_entries(env):
+    home, repo, run = env
+    pi = home / ".pi"
+    for d in ("agent/install/releases", "agent/npm", "agent/missions/index", "tasks"):
+        (pi / d).mkdir(parents=True)
+        (pi / d / "x.json").write_text("STATE")
+    (pi / "agent/npm/.gitignore").write_text("*")
+
+    for arg in (".pi/", ".pi/agent/"):
+        assert run("import", arg).returncode == 0
+    run("import", ".pi/agent/")
+
+    names = {p.relative_to(repo).as_posix() for p in repo.rglob("*") if p.is_file()}
+    assert ".pi/agent/AGENTS.md" in names
+    assert not [n for n in names if any(
+        s in n for s in ("/install/", "/npm/", "/missions/", ".pi/tasks/"))], names

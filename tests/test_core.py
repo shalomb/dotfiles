@@ -35,13 +35,10 @@ class TestDotfileManager:
                 assert isinstance(rel_paths, list)
     
     def test_get_destination_path(self):
-        """Test destination path calculation."""
+        """Absolute paths are already in place and are returned unchanged."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch('pathlib.Path.cwd', return_value=Path(temp_dir)):
                 manager = DotfileManager()
-                
-                # Test relative path
+
                 src_path = Path(temp_dir) / "test_file"
-                dst_path = manager._get_destination_path(src_path)
-                expected = Path.home() / "test_file"
-                assert dst_path == expected
+                assert manager._get_destination_path(src_path) == src_path

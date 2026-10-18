@@ -105,19 +105,30 @@ class FileOperations:
             logger.warning(f"Not linked ({e}); copied instead: {dst_path}")
             shutil.copy2(src_path, dst_path)
 
-    def import_directory(self, src_path: Path, dst_path: Path) -> None:
-        """Import a directory tree file by file, honouring the [import] deny list."""
+    def import_directory(self, src_path: Path, dst_path: Path,
+                         home_rel: Optional[Path] = None) -> None:
+        """Import a directory tree file by file, honouring the [import] deny list.
+
+        Entries are matched relative to the imported root and, when ``home_rel``
+        (the root's path under $HOME) is given, relative to $HOME as well, so
+        path-prefixed entries like ``.pi/agent/install/*`` apply."""
         for root, dirs, files in os.walk(src_path):
             root_path = Path(root)
-            denied = lambda name: self._import_denied(src_path, root_path / name)  # noqa: E731
+            denied = lambda name: self._import_denied(  # noqa: E731
+                src_path, root_path / name, home_rel)
             dirs[:] = [d for d in dirs if not denied(d)]
             for name in files:
                 if not denied(name):
                     self.import_file(root_path / name,
                                      dst_path / root_path.relative_to(src_path) / name)
 
-    def _import_denied(self, root: Path, path: Path) -> bool:
-        return bool(self.config) and self.config.should_exclude_import(path.relative_to(root))
+    def _import_denied(self, root: Path, path: Path,
+                       home_rel: Optional[Path] = None) -> bool:
+        if not self.config:
+            return False
+        rel = path.relative_to(root)
+        candidates = [rel] + ([home_rel / rel] if home_rel is not None else [])
+        return any(self.config.should_exclude_import(c) for c in candidates)
 
     def _should_skip_file(self, file_path: Path) -> bool:
         """Check if file should be skipped."""
@@ -192,8 +203,12 @@ class FileOperations:
             'managed_files': [str(f) for f in sorted(managed_files)]
         }
         
-        with open(self.registry_file, 'w') as f:
-            json.dump(registry_data, f, indent=2)
+        try:
+            with open(self.registry_file, 'w') as f:
+                json.dump(registry_data, f, indent=2)
+        except OSError as e:
+            logger.error(f"Failed to write registry {self.registry_file}: {e}")
+            raise
         
         logger.info(f"Updated managed files registry: {self.registry_file}")
     
