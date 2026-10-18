@@ -154,7 +154,8 @@ workspace-cleanup: ## Cleanup workspace-specific caches and temporary files
 python-cleanup: ## Cleanup the pip cache
 	find ~/.cache/pip/ -atime +30 -delete 2>/dev/null || true
 	find ~/.cache/pypoetry/ -atime +30 -delete 2>/dev/null || true
-	command -v $(HOME)/.local/bin/uv || $(HOME)/.local/bin/uv cache clean
+	# Only clean when uv is installed (the old `||` ran it only when it was missing)
+	[ -x $(HOME)/.local/bin/uv ] && $(HOME)/.local/bin/uv cache clean || true
 
 .PHONY: go-tools
 go-tools: ## Run go-tools installer
