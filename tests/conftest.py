@@ -24,14 +24,18 @@ def dotfiles_repo():
 
 @pytest.fixture
 def test_env():
-    """Get a clean test environment."""
+    """Get a clean test environment with a private tmux socket.
+
+    Never touches the caller's tmux server: TMUX is dropped and TMUX_TMPDIR
+    points at a throwaway dir, so tmux commands run with this env talk to an
+    isolated (initially empty) server.
+    """
     env = os.environ.copy()
-    # Remove any existing tmux sessions
-    try:
-        subprocess.run(['tmux', 'kill-server'], capture_output=True)
-    except:
-        pass
-    return env
+    env.pop('TMUX', None)
+    with tempfile.TemporaryDirectory(prefix='tmux-test-') as tmpdir:
+        env['TMUX_TMPDIR'] = tmpdir
+        yield env
+        subprocess.run(['tmux', 'kill-server'], env=env, capture_output=True)
 
 
 def run_command(cmd, env=None, cwd=None, timeout=10):
