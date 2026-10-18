@@ -36,4 +36,18 @@ check "npm-cleanup keeps node_modules outside dotfiles"      test -d "$PROJ/node
 check "npm-cleanup still cleans the npm cache"               called '^npm cache clean'
 check "npm-cleanup explains the skip"                        rg -q 'skipping' "$FIX/make.out"
 
+# --- worktree-cleanup removes only provably-safe worktrees, and `clean` runs it
+export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t GIT_CONFIG_NOSYSTEM=1
+git init -q --bare "$FIX/origin.git"
+git clone -q "$FIX/origin.git" "$HOME/oneTakeda/repo" 2>/dev/null
+WR=$HOME/oneTakeda/repo
+git -C "$WR" commit -q --allow-empty -m "chore: init"; git -C "$WR" branch -M main; git -C "$WR" push -q origin main
+for b in safe dirty; do git -C "$WR" worktree add -q -b $b "$WR/.worktrees/$b" main; done
+git -C "$WR/.worktrees/safe" push -q origin safe
+echo x >"$WR/.worktrees/dirty/new.txt"
+run worktree-cleanup
+check "worktree-cleanup removes clean pushed worktree" test ! -d "$WR/.worktrees/safe"
+check "worktree-cleanup keeps dirty worktree"          test -d "$WR/.worktrees/dirty"
+check "clean depends on worktree-cleanup"              bash -c "make -n -f '$REPO/Makefile' clean 2>&1 | rg -q 'prune-worktrees.sh --apply'"
+
 exit $fail

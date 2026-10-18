@@ -259,7 +259,12 @@ update:  ## Update all components
 	make python-tools
 
 .PHONY: clean
-clean: nvim-cleanup cargo-cleanup go-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup npm-cleanup local-cleanup
+clean: nvim-cleanup cargo-cleanup go-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup npm-cleanup local-cleanup worktree-cleanup
+
+.PHONY: worktree-cleanup
+worktree-cleanup: ## Remove git worktrees with no unique work (clean tree, HEAD pushed, unlocked)
+	roots="$(wildcard $(HOME)/oneTakeda $(HOME)/workspaces $(HOME)/projects)"
+	[ -z "$$roots" ] || $(dir $(MAKEFILE))scripts/prune-worktrees.sh --apply $$roots
 
 local-cleanup: ## Cleanup .local/share and .local/lib cruft
 	set -xv
