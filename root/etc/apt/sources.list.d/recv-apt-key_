@@ -13,13 +13,11 @@ for key; do
 
   gpg --fingerprint "$key"
 
-  file="/etc/apt/trusted.gpg.d/$key.gpg"
+  file="/etc/apt/keyrings/$key.gpg"
   gpg --armor --export  "$key" |
-    sudo gpg --no-default-keyring --keyring gnupg-ring:"$file" --import
+     sudo tee "$file" > /dev/null
 
   (set -xv; sudo chown _apt "$file";)
 
   echo
 done
-
-
