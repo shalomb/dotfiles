@@ -136,4 +136,20 @@ exclude_files = [
 exclude = [
     "auth.json",
     "sessions/",
+    # pi: credentials, state, caches, installs (public repo; keep config only)
+    "antigravity-accounts.json",
+    "trust.json",
+    "crashes.json",
+    "run-history.jsonl",
+    "usage-extension-cache.json",
+    "models-store.json",
+    "last-seen-version.json",
+    "local-state.json",
+    ".pi/agent/install/*",
+    ".pi/agent/npm/*",
+    ".pi/agent/tmp/*",
+    ".pi/agent/missions/*",
+    ".pi/agent/bin/*",
+    ".pi/tasks/*",
+    ".pi/generated-images/*",
 ]
