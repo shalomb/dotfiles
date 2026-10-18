@@ -79,7 +79,7 @@ def test_import_missing_path_fails_loudly(env):
 
 def test_import_keeps_symlinks_as_symlinks(env):
     home, repo, run = env
-    target = home.parent / "elsewhere" / "x"
+    target = home / "elsewhere" / "x"
     target.parent.mkdir()
     target.write_text("payload")
     (home / ".pi/agent/link").symlink_to(target)
@@ -182,3 +182,22 @@ def test_import_parent_directory_honours_path_prefixed_deny_entries(env):
     assert ".pi/agent/AGENTS.md" in names
     assert not [n for n in names if any(
         s in n for s in ("/install/", "/npm/", "/missions/", ".pi/tasks/"))], names
+
+
+def test_import_skips_symlinks_that_point_outside_home(env, tmp_path):
+    home, repo, run = env
+    outside = tmp_path / "other-repo"
+    outside.mkdir()
+    (outside / "ext.ts").write_text("x")
+    ext = home / ".pi/agent/extensions"
+    ext.mkdir()
+    (ext / "mine.ts").write_text("y")
+    (ext / "foreign.ts").symlink_to(outside / "ext.ts")
+    (ext / "inside.ts").symlink_to(home / ".pi/agent/settings.json")
+
+    assert run("import", ".pi/agent/extensions/").returncode == 0
+
+    got = repo / ".pi/agent/extensions"
+    assert (got / "mine.ts").exists()
+    assert (got / "inside.ts").is_symlink()
+    assert not (got / "foreign.ts").is_symlink() and not (got / "foreign.ts").exists()

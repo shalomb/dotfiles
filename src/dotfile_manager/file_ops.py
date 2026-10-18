@@ -86,6 +86,12 @@ class FileOperations:
     
     def import_file(self, src_path: Path, dst_path: Path) -> None:
         """Adopt a home file into the repo as a hardlink (symlinks stay symlinks)."""
+        if src_path.is_symlink():
+            target = Path(os.path.realpath(src_path))
+            if not target.is_relative_to(Path.home().resolve()):
+                logger.warning(f"Skipping {src_path}: symlink points outside $HOME ({target})")
+                return
+
         dst_path.parent.mkdir(parents=True, exist_ok=True)
 
         if src_path.is_symlink():
