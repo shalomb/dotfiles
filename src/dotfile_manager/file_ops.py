@@ -85,39 +85,40 @@ class FileOperations:
                 self.export_file(src_file, dst_file, force=force)
     
     def import_file(self, src_path: Path, dst_path: Path) -> None:
-        """Import a file from home directory to repository."""
-        # Create parent directory if it doesn't exist
+        """Adopt a home file into the repo as a hardlink (symlinks stay symlinks)."""
         dst_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Copy file to repository
-        shutil.copy2(src_path, dst_path)
-        logger.info(f"Imported file: {src_path} -> {dst_path}")
-    
+
+        if src_path.is_symlink():
+            if dst_path.is_symlink() or dst_path.exists():
+                dst_path.unlink()
+            dst_path.symlink_to(os.readlink(src_path))
+            return
+
+        if dst_path.exists() and dst_path.samefile(src_path):
+            return  # already linked
+
+        if dst_path.exists() or dst_path.is_symlink():
+            dst_path.unlink()
+        try:
+            os.link(src_path, dst_path)
+        except OSError as e:  # e.g. repo and home on different filesystems
+            logger.warning(f"Not linked ({e}); copied instead: {dst_path}")
+            shutil.copy2(src_path, dst_path)
+
     def import_directory(self, src_path: Path, dst_path: Path) -> None:
-        """Import a directory tree."""
-        # Create destination directory if it doesn't exist
-        dst_path.mkdir(parents=True, exist_ok=True)
-        
-        # Walk through source directory
+        """Import a directory tree file by file, honouring the [import] deny list."""
         for root, dirs, files in os.walk(src_path):
             root_path = Path(root)
-            rel_path = root_path.relative_to(src_path)
-            dst_dir = dst_path / rel_path
-            
-            # Create subdirectory
-            dst_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Process files
-            for file_name in files:
-                src_file = root_path / file_name
-                dst_file = dst_dir / file_name
-                
-                # Skip certain files
-                if self._should_skip_file(src_file):
-                    continue
-                
-                self.import_file(src_file, dst_file)
-    
+            denied = lambda name: self._import_denied(src_path, root_path / name)  # noqa: E731
+            dirs[:] = [d for d in dirs if not denied(d)]
+            for name in files:
+                if not denied(name):
+                    self.import_file(root_path / name,
+                                     dst_path / root_path.relative_to(src_path) / name)
+
+    def _import_denied(self, root: Path, path: Path) -> bool:
+        return bool(self.config) and self.config.should_exclude_import(path.relative_to(root))
+
     def _should_skip_file(self, file_path: Path) -> bool:
         """Check if file should be skipped."""
         # Use configuration if available
