@@ -8,12 +8,9 @@ MAKEFILE := $(realpath $(lastword $(MAKEFILE_LIST)))
 
 install: init submodules refresh cronjobs tmux-service  ## Init/update submodules and refresh dotfiles
 
-.PHONY: tmux-service debug-tools
+.PHONY: tmux-service
 tmux-service: ## Enable tmux + tmux-watch user units (needs 'make refresh' first; never restarts a running server)
 	scripts/install-tmux-service.sh
-
-debug-tools: ## Crash-diagnosis tooling: coredump, auditd, NTP, /etc config (needs sudo)
-	scripts/install-debug-tools.sh
 
 init: ## Run all package installers
 	# Call all other INIT scripts in this directory hierarchy

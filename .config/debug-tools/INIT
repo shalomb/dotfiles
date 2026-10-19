@@ -1,0 +1,26 @@
+#!/bin/bash
+# Crash-diagnosis setup (needs sudo): deploy root/etc config, load audit rules,
+# enable auditd + NTP. Packages (gdb, auditd, libc6-dbg, systemd-coredump,
+# systemd-timesyncd) come from .config/apt/dpkg--set-selections via apt/INIT.
+# Idempotent. DRY_RUN=1 prints instead of running.
+set -eu
+repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+run() { if [[ ${DRY_RUN:-0} == 1 ]]; then echo "+ $*"; else "$@"; fi; }
+
+for f in etc/systemd/coredump.conf.d/50-debug.conf \
+         etc/security/limits.d/20-coredump-debian.conf \
+         etc/audit/rules.d/50-sigsend.rules; do
+  run sudo install -D -m 0644 "$repo/root/$f" "/$f"
+done
+
+# INIT order is not guaranteed relative to apt/INIT: skip service steps until
+# the packages exist (a second 'make install' picks them up).
+if [[ ${DRY_RUN:-0} != 1 ]] && ! command -v augenrules >/dev/null; then
+  echo "auditd not installed yet; re-run 'make install' to finish debug-tools" >&2
+  exit 0
+fi
+
+run sudo augenrules --load
+run sudo systemctl enable --now auditd systemd-timesyncd
+# A stale future-dated stamp here makes boot set the clock decades ahead.
+run sudo rm -f /var/lib/systemd/timesync/clock

@@ -9,6 +9,7 @@ apt-utils                  install
 aptitude                   install
 aptitude-common            install
 atool                      install
+auditd                     install
 base-files                 install
 base-passwd                install
 bash                       install
@@ -67,6 +68,7 @@ fzf                        install
 g++                        install
 gawk                       install
 gcc                        install
+gdb                        install
 geoip-database             install
 gh                         install
 git                        install
@@ -111,6 +113,7 @@ less                       install
 libc-bin                   install
 libc-dev-bin               install
 libc-l10n                  install
+libc6-dbg                  install
 libfile-which-perl         install
 libkrb5-dev                install
 libssl-dev                 install
@@ -285,6 +288,8 @@ strace                     install
 subnetcalc                 install
 suckless-tools             install
 sudo                       install
+systemd-coredump           install
+systemd-timesyncd          install
 sysvinit-utils             install
 tar                        install
 tasksel                    install
