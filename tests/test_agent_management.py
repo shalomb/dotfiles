@@ -13,6 +13,14 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 import pytest
 
+# These drive an `agent` CLI that was designed but never shipped in this repo.
+# `agent` on PATH is the Cursor CLI (~/.local/bin/agent), so every call below hit
+# the wrong tool. Quarantined, not deleted: drop the marker once a dotfiles `agent`
+# command exists (agentctl is the Python implementation, see agentctl.py).
+needs_dotfiles_agent_cli = pytest.mark.skip(
+    reason="no dotfiles `agent` CLI; `agent` on PATH is the Cursor CLI"
+)
+
 
 class TestAgentManagement:
     """Test suite for the unified agent management system."""
@@ -52,6 +60,7 @@ class TestAgentManagement:
         assert result.returncode == 0, "agent command should exist"
         assert 'agent' in result.stdout, "agent command should be found"
     
+    @needs_dotfiles_agent_cli
     def test_agent_init_creates_directories(self):
         """Test that agent init creates necessary XDG directories."""
         # Run agent init
@@ -68,6 +77,7 @@ class TestAgentManagement:
         assert agents_state.exists(), "State agents directory should exist"
         assert agents_config.exists(), "Config agents directory should exist"
     
+    @needs_dotfiles_agent_cli
     def test_agent_status_shows_agent_health(self):
         """Test that agent status shows current agent health."""
         # Initialize agents first
@@ -82,6 +92,7 @@ class TestAgentManagement:
         output = result.stdout.lower()
         assert 'ssh' in output or 'gpg' in output, "Should show agent status"
     
+    @needs_dotfiles_agent_cli
     def test_agent_context_detection(self):
         """Test that agent context detection works correctly."""
         # Test different contexts
@@ -94,6 +105,7 @@ class TestAgentManagement:
                 assert result.returncode == 0, f"agent context should work for {context}"
                 assert context in result.stdout, f"Should detect {context} context"
     
+    @needs_dotfiles_agent_cli
     def test_agent_share_creates_state_files(self):
         """Test that agent share creates proper state files."""
         # Initialize and share agent state
@@ -113,6 +125,7 @@ class TestAgentManagement:
         assert len(runtime_files) > 0, "Should create runtime state files"
         assert len(state_files) > 0, "Should create persistent state files"
     
+    @needs_dotfiles_agent_cli
     def test_agent_recovery_handles_dead_agents(self):
         """Test that agent recovery handles dead agents gracefully."""
         # Initialize agents
@@ -132,6 +145,7 @@ class TestAgentManagement:
         pid_files = list(agents_runtime.glob("*.pid"))
         assert len(pid_files) > 0, "Should recreate PID files after recovery"
     
+    @needs_dotfiles_agent_cli
     def test_agent_cleanup_removes_dead_agents(self):
         """Test that agent cleanup removes dead agents."""
         # Initialize agents
@@ -150,6 +164,7 @@ class TestAgentManagement:
         # Dead agent files should be removed
         assert not dead_pid.exists(), "Dead agent files should be cleaned up"
     
+    @needs_dotfiles_agent_cli
     def test_agent_restart_refreshes_agents(self):
         """Test that agent restart refreshes agent state."""
         # Initialize agents
@@ -171,6 +186,7 @@ class TestAgentManagement:
         # State should be refreshed (different timestamps, etc.)
         assert initial_result.stdout != new_result.stdout, "Agent state should be refreshed"
     
+    @needs_dotfiles_agent_cli
     def test_xdg_compliance(self):
         """Test that the system follows XDG Base Directory Specification."""
         # Initialize agents
@@ -244,6 +260,7 @@ class TestAgentManagement:
             returncode = results.get()
             assert returncode == 0, "All concurrent initializations should succeed"
     
+    @needs_dotfiles_agent_cli
     def test_error_handling(self):
         """Test that the system handles errors gracefully."""
         # Test with invalid environment
@@ -256,6 +273,7 @@ class TestAgentManagement:
         assert result.returncode != 0, "Should fail gracefully with bad environment"
         assert 'error' in result.stderr.lower() or 'failed' in result.stderr.lower(), "Should provide error message"
     
+    @needs_dotfiles_agent_cli
     def test_logging_functionality(self):
         """Test that the system provides proper logging."""
         # Initialize agents
