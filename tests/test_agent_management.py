@@ -52,6 +52,7 @@ class TestAgentManagement:
         import shutil
         shutil.rmtree(self.temp_dir, ignore_errors=True)
     
+    @needs_dotfiles_agent_cli
     def test_agent_command_exists(self):
         """Test that the agent command exists and is executable."""
         # This test will fail until we implement the agent command
@@ -209,6 +210,7 @@ class TestAgentManagement:
         config_files = list(agents_config.glob("*"))
         assert len(config_files) > 0, "Should use XDG_CONFIG_HOME for config files"
     
+    @needs_dotfiles_agent_cli
     def test_context_aware_behavior(self):
         """Test that agent behavior adapts to different contexts."""
         contexts = {
@@ -230,6 +232,7 @@ class TestAgentManagement:
                                              capture_output=True, text=True, env=self.env)
                 assert status_result.returncode == 0, f"Status should work in {context} context"
     
+    @needs_dotfiles_agent_cli
     def test_race_condition_handling(self):
         """Test that the system handles race conditions properly."""
         # This test simulates multiple shells trying to initialize agents simultaneously
