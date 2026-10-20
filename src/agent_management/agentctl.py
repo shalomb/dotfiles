@@ -529,9 +529,11 @@ class AgentManager:
         if self.unlock_gpg_agent():
             return True
 
-        # Step 4: If unlock failed, try restarting as last resort
-        self.logger.info("Unlock failed, attempting restart")
-        return self.restart_gpg_agent()
+        # Step 4: Unlock failed but the agent is responsive. Restarting would
+        # kill it and discard every cached passphrase (including ones unlocked
+        # by the user), so never do that: a locked key is not a dead agent.
+        self.logger.info("Unlock failed; leaving responsive agent running")
+        return False
     
     def restart_gpg_agent(self) -> bool:
         """Restart GPG agent specifically."""

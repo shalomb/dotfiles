@@ -91,3 +91,27 @@ def test_unlock_keeps_gpg_tty_so_pinentry_can_prompt(manager, monkeypatch):
     with patch.object(subprocess, "run", side_effect=run):
         assert manager.unlock_ssh_agent() is True
     assert seen["env"]["GPG_TTY"] == "/dev/pts/9"
+
+
+# --- recover must not kill a healthy agent when unlock merely lacks a tty ---
+
+def _recover_mgr(manager, *, responding=True, signing=False, tty=None):
+    manager.check_gpg_agent = lambda: responding
+    manager.test_gpg_signing = lambda: signing
+    manager.unlock_gpg_agent = MagicMock(return_value=False)
+    manager.cleanup_gpg_agent = MagicMock()
+    manager.init_gpg_agent = MagicMock(return_value=True)
+    return manager
+
+
+def test_recover_does_not_kill_responsive_agent_without_tty(manager, monkeypatch):
+    monkeypatch.delenv("GPG_TTY", raising=False)
+    _recover_mgr(manager)
+    assert manager.recover_gpg_agent() is False
+    manager.cleanup_gpg_agent.assert_not_called()
+
+
+def test_recover_still_restarts_unresponsive_agent(manager):
+    _recover_mgr(manager, responding=False)
+    manager.recover_gpg_agent()
+    manager.cleanup_gpg_agent.assert_called_once()
