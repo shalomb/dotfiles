@@ -274,7 +274,7 @@ class AgentManager:
             return False
         return self._ssh_sign_probe(keep_tty=True, timeout=60)
 
-    def _load_ssh_keys(self, env: dict = None):
+    def _load_ssh_keys(self, env: Optional[dict] = None):
         """Load any unloaded SSH private keys into the agent."""
         if env is None:
             env = os.environ.copy()
@@ -831,14 +831,14 @@ class NPMPackageManager:
         }
     }
     
-    def __init__(self, logger: logging.Logger = None):
+    def __init__(self, logger: Optional[logging.Logger] = None):
         """Initialize the NPM package manager."""
         self.logger = logger or logging.getLogger('npm_manager')
         self.state_dir = Path(os.environ.get('XDG_STATE_HOME', os.path.expanduser('~/.local/state')))
         self.npm_state = self.state_dir / 'npm'
         self.npm_state.mkdir(parents=True, exist_ok=True)
     
-    def _run_npm_exec(self, package: str, version: str = '', args: List[str] = None) -> int:
+    def _run_npm_exec(self, package: str, version: str = '', args: Optional[List[str]] = None) -> int:
         """
         Execute an npm package with minimal overhead using npm exec.
         
@@ -883,7 +883,7 @@ class NPMPackageManager:
             self.logger.error("npm exec timed out")
             return 124
     
-    def start(self, tool_name: str, args: List[str] = None) -> int:
+    def start(self, tool_name: str, args: Optional[List[str]] = None) -> int:
         """
         Start a tool with cached version (no registry lookup).
         
@@ -899,7 +899,7 @@ class NPMPackageManager:
         
         return self._run_npm_exec(package, '', args)
     
-    def upgrade(self, tool_name: str, args: List[str] = None) -> int:
+    def upgrade(self, tool_name: str, args: Optional[List[str]] = None) -> int:
         """
         Upgrade a tool to the latest version via npm registry.
         
