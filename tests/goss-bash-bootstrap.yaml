@@ -92,3 +92,15 @@ command:
     stdout:
       - "/.config/bash"
     timeout: 5000
+
+  # === GPG TTY ===
+
+  # Tell gpg-agent about the current terminal when there is one (so pinentry
+  # prompts in this pane) and never without one. Uses a fake gpg-connect-agent,
+  # so the live agent and its passphrase cache are untouched.
+  "bash /home/unop/.config/dotfiles/tests/gpg-tty-update-check.sh":
+    exit-status: 0
+    stdout:
+      - "tty: updatestartuptty called"
+      - "notty: not called"
+    timeout: 10000
