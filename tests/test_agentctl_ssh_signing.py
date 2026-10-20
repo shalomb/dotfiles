@@ -47,3 +47,47 @@ def test_signing_refused_is_reported_unhealthy(manager):
 def test_signing_ok_is_reported_healthy(manager):
     with patch.object(subprocess, "run", side_effect=_fake_run(sign_rc=0)):
         assert manager.ssh_signing_works() is True
+
+
+# --- wiring into check_gpg_ssh_socket -------------------------------------
+
+def _wire(manager, tmp_path, signing):
+    sock = tmp_path / "gpg.ssh"
+    sock.touch()
+
+    def run(cmd, *a, **kw):
+        if cmd[0] == "gpgconf":
+            return _proc(0, str(sock).encode() + b"\n")
+        return _proc(0)
+
+    manager._load_ssh_keys = lambda env=None: None
+    manager.ssh_signing_works = lambda: signing
+    manager.unlock_ssh_agent = MagicMock(return_value=True)
+    return patch.object(subprocess, "run", side_effect=run)
+
+
+def test_locked_ssh_key_triggers_unlock(manager, tmp_path):
+    with _wire(manager, tmp_path, signing=False):
+        assert manager.check_gpg_ssh_socket() is True  # keep gpg socket; never clobber
+    manager.unlock_ssh_agent.assert_called_once()
+
+
+def test_unlocked_ssh_key_skips_unlock(manager, tmp_path):
+    with _wire(manager, tmp_path, signing=True):
+        assert manager.check_gpg_ssh_socket() is True
+    manager.unlock_ssh_agent.assert_not_called()
+
+
+def test_unlock_keeps_gpg_tty_so_pinentry_can_prompt(manager, monkeypatch):
+    monkeypatch.setenv("GPG_TTY", "/dev/pts/9")
+    seen = {}
+
+    def run(cmd, *a, **kw):
+        if cmd[0] == "ssh-add":
+            return _proc(0, b"ssh-ed25519 AAAA key\n")
+        seen["env"] = kw.get("env")
+        return _proc(0)
+
+    with patch.object(subprocess, "run", side_effect=run):
+        assert manager.unlock_ssh_agent() is True
+    assert seen["env"]["GPG_TTY"] == "/dev/pts/9"

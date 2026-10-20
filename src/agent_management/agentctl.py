@@ -222,6 +222,11 @@ class AgentManager:
                 os.environ['SSH_AUTH_SOCK'] = ssh_socket
                 self.logger.info("Using GPG agent's SSH functionality")
                 self._load_ssh_keys(env)
+                if not self.ssh_signing_works():
+                    # Keep the gpg socket (never clobber it with a new ssh-agent);
+                    # just prompt so the key is usable for this session.
+                    self.logger.info("SSH key locked, attempting unlock")
+                    self.unlock_ssh_agent()
                 return True
 
         except (subprocess.TimeoutExpired, FileNotFoundError):
@@ -229,11 +234,11 @@ class AgentManager:
 
         return False
 
-    def ssh_signing_works(self) -> bool:
-        """Check the SSH agent can actually sign (not just list keys).
+    def _ssh_sign_probe(self, keep_tty: bool, timeout: int) -> bool:
+        """Ask the SSH agent to sign a probe with its first key.
 
-        `ssh-add -l` succeeds for a locked gpg-agent key; the signing request
-        is what gets refused, making ssh fall back to a password prompt.
+        keep_tty=False drops GPG_TTY so a locked key fails fast; True lets
+        pinentry prompt on the caller's tty.
         """
         try:
             listing = subprocess.run(['ssh-add', '-L'], capture_output=True, timeout=5)
@@ -245,14 +250,29 @@ class AgentManager:
             with tempfile.TemporaryDirectory() as tmp:
                 pub = Path(tmp) / 'probe.pub'
                 pub.write_text(pubkeys[0] + '\n')
-                # No GPG_TTY: a locked key must fail fast, never block on pinentry
-                env = {k: v for k, v in os.environ.items() if k != 'GPG_TTY'}
+                env = {k: v for k, v in os.environ.items()
+                       if keep_tty or k != 'GPG_TTY'}
                 result = subprocess.run(
                     ['ssh-keygen', '-Y', 'sign', '-n', 'agentctl-probe', '-f', str(pub)],
-                    input=b'probe', capture_output=True, timeout=10, env=env)
+                    input=b'probe', capture_output=True, timeout=timeout, env=env)
                 return result.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             return False
+
+    def ssh_signing_works(self) -> bool:
+        """Check the SSH agent can actually sign (not just list keys).
+
+        `ssh-add -l` succeeds for a locked gpg-agent key; the signing request
+        is what gets refused, making ssh fall back to a password prompt.
+        """
+        return self._ssh_sign_probe(keep_tty=False, timeout=10)
+
+    def unlock_ssh_agent(self) -> bool:
+        """Trigger pinentry to cache the SSH key passphrase (needs a tty)."""
+        if not os.environ.get('GPG_TTY'):
+            self.logger.error("Cannot unlock ssh key: No TTY available")
+            return False
+        return self._ssh_sign_probe(keep_tty=True, timeout=60)
 
     def _load_ssh_keys(self, env: dict = None):
         """Load any unloaded SSH private keys into the agent."""
