@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, MagicMock
 import pytest
 
 
@@ -89,25 +89,19 @@ class TestGPGRecovery:
         Then command should exit with status 1
         And error message should indicate "No TTY available"
         """
-        with patch('agent_management.agentctl.AgentManager') as mock_manager:
-            # Mock: agent running but keys locked, no TTY
-            mock_instance = mock_manager.return_value
-            mock_instance.check_gpg_agent.return_value = True
-            mock_instance.test_gpg_signing.return_value = False
-            mock_instance.recover_gpg_agent.return_value = False
+        # Runs agentctl in a subprocess against the sandboxed HOME (no keys, no
+        # TTY), so keys are genuinely unavailable; mocks cannot cross the process.
+        self.env['GPG_TTY'] = 'not a tty'
 
-            # Ensure no TTY
-            self.env['GPG_TTY'] = 'not a tty'
+        result = self.run_agentctl('gpg', 'recover', timeout=5)
 
-            result = self.run_agentctl('gpg', 'recover', timeout=5)
+        # Should fail
+        assert result.returncode != 0, "Expected failure without TTY"
 
-            # Should fail
-            assert result.returncode != 0, "Expected failure without TTY"
-
-            # Should have error message about TTY
-            output = result.stdout + result.stderr
-            assert 'tty' in output.lower() or 'interactive' in output.lower(), \
-                f"Expected TTY error, got: {output}"
+        # Should have error message about TTY
+        output = result.stdout + result.stderr
+        assert 'tty' in output.lower() or 'interactive' in output.lower(), \
+            f"Expected TTY error, got: {output}"
 
     # BDD Scenario: Recovery output should not contain bash errors
     @pytest.mark.integration
@@ -184,24 +178,18 @@ class TestGPGUnlock:
         And error message should indicate "No TTY available"
         And no hanging processes should remain
         """
-        with patch('agent_management.agentctl.AgentManager') as mock_manager:
-            mock_instance = mock_manager.return_value
-            mock_instance.check_gpg_agent.return_value = True
-            mock_instance.test_gpg_signing.return_value = False
-            mock_instance.unlock_gpg_agent.return_value = False
+        # Subprocess against the sandboxed HOME (no keys, no TTY); see above.
+        self.env['GPG_TTY'] = 'not a tty'
 
-            # Ensure no TTY
-            self.env['GPG_TTY'] = 'not a tty'
+        result = self.run_agentctl('gpg', 'unlock', timeout=5)
 
-            result = self.run_agentctl('gpg', 'unlock', timeout=5)
+        # Should fail
+        assert result.returncode != 0, "Expected failure without TTY"
 
-            # Should fail
-            assert result.returncode != 0, "Expected failure without TTY"
-
-            # Should have error about TTY
-            output = result.stdout + result.stderr
-            assert 'cannot unlock' in output.lower() or 'tty' in output.lower(), \
-                f"Expected TTY error, got: {output}"
+        # Should have error about TTY
+        output = result.stdout + result.stderr
+        assert 'cannot unlock' in output.lower() or 'tty' in output.lower(), \
+            f"Expected TTY error, got: {output}"
 
 
 class TestGPGTestSigning:
