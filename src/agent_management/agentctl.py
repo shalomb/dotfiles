@@ -770,7 +770,7 @@ class AgentManager:
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
     
-    def _get_gpg_agent_pid(self) -> str:
+    def _get_gpg_agent_pid(self) -> Optional[str]:
         """Get GPG agent PID."""
         try:
             result = subprocess.run(['gpgconf', '--list-dirs', 'agent-socket'], 
