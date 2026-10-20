@@ -229,6 +229,31 @@ class AgentManager:
 
         return False
 
+    def ssh_signing_works(self) -> bool:
+        """Check the SSH agent can actually sign (not just list keys).
+
+        `ssh-add -l` succeeds for a locked gpg-agent key; the signing request
+        is what gets refused, making ssh fall back to a password prompt.
+        """
+        try:
+            listing = subprocess.run(['ssh-add', '-L'], capture_output=True, timeout=5)
+            if listing.returncode != 0:
+                return False
+            pubkeys = listing.stdout.decode('utf-8', errors='replace').splitlines()
+            if not pubkeys:
+                return False
+            with tempfile.TemporaryDirectory() as tmp:
+                pub = Path(tmp) / 'probe.pub'
+                pub.write_text(pubkeys[0] + '\n')
+                # No GPG_TTY: a locked key must fail fast, never block on pinentry
+                env = {k: v for k, v in os.environ.items() if k != 'GPG_TTY'}
+                result = subprocess.run(
+                    ['ssh-keygen', '-Y', 'sign', '-n', 'agentctl-probe', '-f', str(pub)],
+                    input=b'probe', capture_output=True, timeout=10, env=env)
+                return result.returncode == 0
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+            return False
+
     def _load_ssh_keys(self, env: dict = None):
         """Load any unloaded SSH private keys into the agent."""
         if env is None:
