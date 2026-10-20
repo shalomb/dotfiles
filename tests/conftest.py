@@ -38,12 +38,15 @@ def test_env():
         subprocess.run(['tmux', 'kill-server'], env=env, capture_output=True)
 
 
-def run_command(cmd, env=None, cwd=None, timeout=10):
-    """Run a command and return the result."""
+def run_command(cmd: str, env=None, cwd=None, timeout: float = 10):
+    """Run a shell command string (pipes, $VARS, ~ allowed) and return the result.
+
+    The shell is invoked explicitly as `bash -c` rather than via shell=True.
+    Callers pass test-authored command strings, never untrusted input.
+    """
     try:
         result = subprocess.run(
-            cmd,
-            shell=True,
+            ['bash', '-c', cmd],
             capture_output=True,
             text=True,
             env=env,
