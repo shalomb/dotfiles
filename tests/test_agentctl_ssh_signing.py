@@ -115,3 +115,13 @@ def test_recover_still_restarts_unresponsive_agent(manager):
     _recover_mgr(manager, responding=False)
     manager.recover_gpg_agent()
     manager.cleanup_gpg_agent.assert_called_once()
+
+
+# --- `tty` prints "not a tty" in non-interactive shells; that is not a tty ---
+
+@pytest.mark.parametrize("value", ["", "not a tty"])
+def test_unlock_ssh_refuses_without_a_real_tty(manager, monkeypatch, value):
+    monkeypatch.setenv("GPG_TTY", value)
+    with patch.object(subprocess, "run") as run:
+        assert manager.unlock_ssh_agent() is False
+    run.assert_not_called()

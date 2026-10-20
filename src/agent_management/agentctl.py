@@ -269,7 +269,9 @@ class AgentManager:
 
     def unlock_ssh_agent(self) -> bool:
         """Trigger pinentry to cache the SSH key passphrase (needs a tty)."""
-        if not os.environ.get('GPG_TTY'):
+        # `tty` prints "not a tty" outside a terminal, and 03-environment.sh
+        # exports that verbatim, so treat it like unset (as unlock_gpg_agent does).
+        if os.environ.get('GPG_TTY', '') in ('', 'not a tty'):
             self.logger.error("Cannot unlock ssh key: No TTY available")
             return False
         return self._ssh_sign_probe(keep_tty=True, timeout=60)
