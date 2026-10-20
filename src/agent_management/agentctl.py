@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import argparse
 import logging
 import shlex
@@ -570,7 +570,7 @@ class AgentManager:
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
     
-    def status(self) -> Dict[str, any]:
+    def status(self) -> Dict[str, Any]:
         """Get current agent status."""
         status = {
             'context': self.context,
@@ -704,7 +704,7 @@ class AgentManager:
         
         return True
     
-    def context_info(self) -> Dict[str, any]:
+    def context_info(self) -> Dict[str, Any]:
         """Get current context information."""
         return {
             'context': self.context,
