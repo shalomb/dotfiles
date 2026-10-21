@@ -94,3 +94,16 @@ test("pickerOrder: a loaded tier-2 skill drops into the already-loaded group", (
 	const m = { tier1: [], tier2: ["a", "b"], tier3: [], hide: [] };
 	expect(pickerOrder(skills, m, new Set(["a"])).map((s) => s.name)).toEqual(["b", "a"]);
 });
+
+test("pickerOrder: pinned skills (repo-local) come first, A-Z, regardless of tier or loaded state", () => {
+	const skills = ["a", "b", "r2", "r1"].map((name) => ({ name }));
+	const m = { tier1: ["a"], tier2: [], tier3: [], hide: [] };
+	expect(pickerOrder(skills, m, new Set(["r2"]), new Set(["r1", "r2"])).map((s) => s.name)).toEqual(["r1", "r2", "b", "a"]);
+});
+
+test("pickerOrder: pinned is optional; hidden pinned skills stay hidden", () => {
+	const skills = ["x", "y"].map((name) => ({ name }));
+	const m = { tier1: [], tier2: [], tier3: [], hide: ["y"] };
+	expect(pickerOrder(skills, m, new Set()).map((s) => s.name)).toEqual(["x"]);
+	expect(pickerOrder(skills, m, new Set(), new Set(["y"])).map((s) => s.name)).toEqual(["x"]);
+});

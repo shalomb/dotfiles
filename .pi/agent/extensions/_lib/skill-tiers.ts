@@ -90,8 +90,8 @@ export function savings(all: { name: string; description: string }[], shown: Set
 	return { fullTok, nowTok, savedTok: fullTok - nowTok };
 }
 
-/** Picker order: tier 2, then tier 3, then what is already in the prompt (loaded, then tier 1); A-Z within each. */
-export function pickerOrder<T extends { name: string }>(skills: T[], m: Manifest, loaded: Set<string>): T[] {
-	const rank = (n: string) => (tierOf(n, m) === 1 ? 3 : loaded.has(n) ? 2 : tierOf(n, m) === 2 ? 0 : 1);
+/** Picker order: `pinned` (repo-local) first, then tier 2, tier 3, then what is already in the prompt (loaded, then tier 1); A-Z within each. */
+export function pickerOrder<T extends { name: string }>(skills: T[], m: Manifest, loaded: Set<string>, pinned: Set<string> = new Set()): T[] {
+	const rank = (n: string) => (pinned.has(n) ? -1 : tierOf(n, m) === 1 ? 3 : loaded.has(n) ? 2 : tierOf(n, m) === 2 ? 0 : 1);
 	return visible(skills, m).sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));
 }

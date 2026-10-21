@@ -1,7 +1,7 @@
 // @ts-nocheck — extension runs inside pi; no tsconfig/node_modules here, so the LSP cannot resolve pi/node types.
 /**
  * /skills:loader — tiered skills catalog with on-demand loading. Logic: _lib/skill-tiers.ts (tested).
- *   /skills:loader             fzf popup (tab = multi) -> load the picks
+ *   /skills:loader             fzf popup (tab = multi) -> load the picks; also lists repo-local skills (_lib/repo-skills.ts)
  *   /skills:loader a b         load named skills (catalog entry + body message)
  *   /skills:loader status      tiers, catalog tokens now vs full, savings, what is loaded
  * Tiers come from ~/.pi/agent/skill-tiers.json (+ <cwd>/.pi/skill-tiers.json). Unlisted = tier 3.
@@ -13,6 +13,7 @@ import { appendFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { discoverRepoSkills } from "./_lib/repo-skills";
 import { type Manifest, formatLoadNotice, inventory, loadManifest, mergeManifests, onDemandSection, pickerOrder, savings, tierOf, tok, visible } from "./_lib/skill-tiers";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -64,7 +65,8 @@ export default function (pi: ExtensionAPI) {
 	// Row = name \t display \t path. fzf shows only `display` (name first, fixed width) and returns `name`.
 	const row = (s: any, m: Manifest) => {
 		const state = loaded.has(s.name) ? "● " : `T${tierOf(s.name, m)}`;
-		const desc = String(s.description).replace(/\s+/g, " ").replace(/\t/g, " ").slice(0, 200);
+		const src = s.repoSource ? `[repo ${s.repoSource}] ` : "";
+		const desc = (src + String(s.description)).replace(/\s+/g, " ").replace(/\t/g, " ").slice(0, 200);
 		const nm = s.name.padEnd(32).slice(0, 32);
 		const rest = `${state}  ${String(tok(s.name + s.description)).padStart(4)}t  ${desc}`;
 		// Already in the prompt (tier 1 or loaded): dimmed. Name and rest are separate tab fields so fzf can search the name alone.
@@ -73,8 +75,16 @@ export default function (pi: ExtensionAPI) {
 		return [s.name, display, s.filePath].join("\t");
 	};
 
+	// Picker/load candidates: pi's catalog plus repo-local skills (.claude/.gemini/.github/.agent/... under cwd..git root).
+	// Repo skills never enter the prompt catalog or on-demand index; they are only loadable here. Pi's own entry wins on a name clash.
+	const candidates = (ctx: any) => {
+		const have = new Set(all.map((s) => s.name));
+		const repo = discoverRepoSkills(ctx.cwd, homedir()).filter((s) => !have.has(s.name)).map((s) => ({ ...s, repoSource: s.source }));
+		return [...all, ...repo];
+	};
+
 	const load = (names: string[], ctx: any) => {
-		const byName = new Map(all.map((s) => [s.name, s]));
+		const byName = new Map(candidates(ctx).map((s) => [s.name, s]));
 		const ok: string[] = [], bad: string[] = [], notes: string[] = [];
 		for (const n of names) (byName.has(n) ? ok : bad).push(n);
 		for (const n of ok) {
@@ -111,7 +121,7 @@ export default function (pi: ExtensionAPI) {
 	};
 
 	pi.registerCommand("skills:loader", {
-		description: "Load skills on demand (fzf picker with no args; `status` shows tiers and savings; or skill names)",
+		description: "Load skills on demand (fzf picker with no args, incl. repo-local .claude/.gemini/.github/.agent skills; `status` shows tiers and savings; or skill names)",
 		handler: async (args: string, ctx: any) => {
 			ensureAll(ctx);
 			const names = args.trim().split(/\s+/).filter(Boolean);
@@ -120,7 +130,7 @@ export default function (pi: ExtensionAPI) {
 			if (!all.length) return ctx.ui.notify("skills:loader: could not read the skills catalog from this session", "error");
 			if (!process.env.TMUX) return ctx.ui.notify("skills:loader picker needs tmux; pass names instead", "error");
 			const m = manifestFor(ctx.cwd);
-			const ordered = pickerOrder([...all], m, loaded);
+			const ordered = pickerOrder(candidates(ctx), m, loaded, new Set(candidates(ctx).filter((s) => s.repoSource).map((s) => s.name)));
 			const dir = mkdtempSync(join(tmpdir(), "skills-loader-"));
 			const rows = join(dir, "rows.tsv"), out = join(dir, "out.txt");
 			writeFileSync(rows, ordered.map((s) => row(s, m)).join("\n") + "\n");
