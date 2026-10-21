@@ -21,9 +21,10 @@ export interface Result {
 	cancelled: boolean;
 	answers: Answer[];
 }
+export interface DialogOpts { signal?: AbortSignal }
 export interface Ui {
-	select(title: string, options: string[]): Promise<string | undefined>;
-	input(title: string, placeholder?: string): Promise<string | undefined>;
+	select(title: string, options: string[], opts?: DialogOpts): Promise<string | undefined>;
+	input(title: string, placeholder?: string, opts?: DialogOpts): Promise<string | undefined>;
 }
 
 export const CUSTOM = "Type something.";
@@ -54,19 +55,22 @@ const title = (q: Question, extra = "") =>
 const rows = (q: Question) => q.options.map((o, i) => `${i + 1}. ${o.label}`);
 const labelOf = (q: Question, row: string) => q.options[rows(q).indexOf(row)]?.label;
 
-async function askCustom(ui: Ui, q: Question): Promise<string | undefined | null> {
-	const text = await ui.input(q.question, "Your answer");
+async function askCustom(ui: Ui, q: Question, opts?: DialogOpts): Promise<string | undefined | null> {
+	if (opts?.signal?.aborted) return undefined;
+	const text = await ui.input(q.question, "Your answer", opts);
 	if (text === undefined) return undefined; // dismissed
 	return text.trim() || null; // blank -> back to options
 }
 
-async function askOne(ui: Ui, q: Question): Promise<Answer | undefined> {
+async function askOne(ui: Ui, q: Question, opts?: DialogOpts): Promise<Answer | undefined> {
+	const aborted = () => opts?.signal?.aborted === true;
 	if (!q.multiSelect) {
 		for (;;) {
-			const row = await ui.select(title(q), [...rows(q), CUSTOM]);
-			if (row === undefined) return undefined;
+			if (aborted()) return undefined;
+			const row = await ui.select(title(q), [...rows(q), CUSTOM], opts);
+			if (row === undefined || aborted()) return undefined;
 			if (row === CUSTOM) {
-				const t = await askCustom(ui, q);
+				const t = await askCustom(ui, q, opts);
 				if (t === undefined) return undefined;
 				if (t === null) continue;
 				return { question: q.question, kind: "custom", answer: t };
@@ -78,12 +82,13 @@ async function askOne(ui: Ui, q: Question): Promise<Answer | undefined> {
 	const picked = new Set<string>();
 	let custom: string | undefined;
 	for (;;) {
+		if (aborted()) return undefined;
 		const marked = rows(q).map((r) => (picked.has(labelOf(q, r) as string) ? `${r} ✓` : r));
-		const row = await ui.select(title(q, " (select any, then Done)"), [...marked, CUSTOM, DONE]);
-		if (row === undefined) return undefined;
+		const row = await ui.select(title(q, " (select any, then Done)"), [...marked, CUSTOM, DONE], opts);
+		if (row === undefined || aborted()) return undefined;
 		if (row === DONE) break;
 		if (row === CUSTOM) {
-			const t = await askCustom(ui, q);
+			const t = await askCustom(ui, q, opts);
 			if (t === undefined) return undefined;
 			if (t !== null) custom = t;
 			continue;
@@ -96,10 +101,12 @@ async function askOne(ui: Ui, q: Question): Promise<Answer | undefined> {
 	return a;
 }
 
-export async function askQuestions(ui: Ui, qs: Question[]): Promise<Result> {
+/** `signal` dismisses any open dialog and cancels the questionnaire (a cancelled remote task, Esc on the run). */
+export async function askQuestions(ui: Ui, qs: Question[], signal?: AbortSignal): Promise<Result> {
 	const answers: Answer[] = [];
+	const opts: DialogOpts | undefined = signal ? { signal } : undefined;
 	for (const q of qs) {
-		const a = await askOne(ui, q);
+		const a = await askOne(ui, q, opts);
 		if (!a) return { cancelled: true, answers: [] };
 		answers.push(a);
 	}

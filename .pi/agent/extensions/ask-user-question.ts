@@ -42,11 +42,11 @@ export default function (pi: ExtensionAPI) {
 			"The user can always type their own answer. Do not use for trivia you can look up.",
 		promptSnippet: "Ask the user structured multiple-choice questions instead of guessing",
 		parameters: Params,
-		async execute(_id, params, _signal, _onUpdate, ctx) {
+		async execute(_id, params, signal, _onUpdate, ctx) {
 			if (!ctx.hasUI) return fail("no_ui", "Error: UI not available (non-interactive mode); ask in plain text instead.");
 			const err = validate(params.questions);
 			if (err) return fail(err, `Error: invalid questionnaire (${err}). Fix and retry.`);
-			const result = await askQuestions(ctx.ui, params.questions);
+			const result = await askQuestions(ctx.ui, params.questions, signal);
 			return { content: [{ type: "text" as const, text: formatResult(result) }], details: result };
 		},
 	});

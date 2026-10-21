@@ -54,3 +54,43 @@ test("multi select toggles then Done; custom text is kept alongside", async () =
 	// a on, c on, a off, custom added, done
 	expect(r.answers[0]).toEqual({ question: "Pick?", kind: "multi", answer: null, selected: ["c"], custom: "extra" });
 });
+
+// ---- abort signal: lets a remote cancel (or Esc on the run) close an open dialog ----
+test("every dialog call receives the abort signal", async () => {
+	const seen: unknown[] = [];
+	const spy: Ui = {
+		select: async (_t, _o, opts) => { seen.push(opts?.signal); return seen.length === 1 ? "Type something." : "1. a"; },
+		input: async (_t, _p, opts) => { seen.push(opts?.signal); return "typed"; },
+	};
+	const ac = new AbortController();
+	await askQuestions(spy, [q("one?", ["a", "b"]), q("two?", ["a", "b"])], ac.signal);
+	expect(seen.length).toBe(3);
+	expect(seen.every((s) => s === ac.signal)).toBe(true);
+});
+
+test("an already-aborted signal cancels without opening any dialog", async () => {
+	let opened = 0;
+	const spy: Ui = { select: async () => { opened++; return "1. a"; }, input: async () => { opened++; return "x"; } };
+	const ac = new AbortController();
+	ac.abort();
+	const r = await askQuestions(spy, [q("one?", ["a", "b"])], ac.signal);
+	expect(r).toEqual({ cancelled: true, answers: [] });
+	expect(opened).toBe(0);
+});
+
+test("aborting while a dialog is open cancels the questionnaire and opens no further dialogs", async () => {
+	const ac = new AbortController();
+	let opened = 0;
+	const spy: Ui = {
+		select: async () => { opened++; ac.abort(); return "1. a"; }, // user answers just as the abort lands
+		input: async () => undefined,
+	};
+	const r = await askQuestions(spy, [q("one?", ["a", "b"]), q("two?", ["a", "b"])], ac.signal);
+	expect(r.cancelled).toBe(true);
+	expect(opened).toBe(1);
+});
+
+test("without a signal behaviour is unchanged", async () => {
+	const r = await askQuestions(ui(["1. red"]), [q("Colour?", ["red", "blue"])]);
+	expect(r.answers[0].answer).toBe("red");
+});
