@@ -579,7 +579,7 @@ Before making any changes:
 
 - [ ] **Check current end-state** (read `docs/explanation/end-state-evolution.md`)
 - [ ] **Assess current state** (discover what's working and what's not)
-- [ ] **Recalculate plans** (update TODO.md based on current end-state)
+- [ ] **Recalculate plans** (update the backlog via `todo`, based on current end-state; it lives in the todo-navigator shadow dir `~/.cache/agent-skills/todos/home-unop-.config-dotfiles/`, no longer in this repo)
 - [ ] **Identify the component** (tmux, nvim, bash, gum, etc.)
 - [ ] **Review the workflow** for that component
 - [ ] **Use the correct tools** (dotfile_stash, make targets, etc.)
