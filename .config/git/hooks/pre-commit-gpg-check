@@ -182,6 +182,15 @@ main() {
     fi
     
     echo -e "${YELLOW}⚠️  GPG signing failed - attempting automatic recovery...${NC}"
+
+    # Key locked/expired: prompt for the passphrase (tmux popup when non-interactive)
+    if command -v gpg-unlock >/dev/null 2>&1; then
+        echo -e "${CYAN}🔑 Requesting unlock via gpg-unlock...${NC}"
+        if gpg-unlock && check_gpg_status; then
+            echo -e "${GREEN}✅ GPG unlocked - proceeding with commit${NC}"
+            exit 0
+        fi
+    fi
     
     if attempt_gpg_recovery; then
         echo -e "${GREEN}✅ GPG recovered - proceeding with commit${NC}"
