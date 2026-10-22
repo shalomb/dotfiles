@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# gpg-unlock: re-unlock the GPG signing key, popping a tmux prompt if needed.
+#
+#   gpg-unlock          no-op if already unlocked; else prompt here (if on a tty)
+#                       or in a tmux popup (if called from a non-tty, e.g. an agent)
+#   gpg-unlock --here   prompt on the current tty (this is what the popup runs)
+#
+# Exit: 0 unlocked, 1 passphrase not accepted, 2 no way to prompt.
+set -uo pipefail
+
+GPG=${GPG_UNLOCK_GPG:-gpg}
+TMUX_BIN=${GPG_UNLOCK_TMUX:-tmux}
+key=$(git config --get user.signingkey 2>/dev/null || true)
+keyargs=()
+[[ -n $key ]] && keyargs=(--default-key "$key")
+
+is_unlocked() {  # never prompts: pinentry-mode error fails if a passphrase is needed
+	echo t | "$GPG" --batch --yes --pinentry-mode error "${keyargs[@]}" --clearsign >/dev/null 2>&1
+}
+
+prompt_here() {
+	GPG_TTY=$(tty) || return 2
+	export GPG_TTY
+	gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1 || true
+	echo "🔐 Unlock GPG key ${key:-(default)}"
+	local try
+	for try in 1 2 3; do
+		# default pinentry mode: gpg-agent's pinentry (tty) asks on GPG_TTY
+		if echo t | "$GPG" --yes "${keyargs[@]}" --clearsign >/dev/null; then
+			echo "✅ unlocked"; sleep 0.5; return 0
+		fi
+		echo "❌ try $try/3 failed"
+	done
+	sleep 2
+	return 1
+}
+
+case ${1:-} in
+--here) prompt_here; exit ;;
+esac
+
+is_unlocked && exit 0
+if [[ -t 0 && -t 1 ]]; then prompt_here; exit; fi
+
+# Non-interactive caller (agent hook): borrow a tmux client for the prompt.
+command -v "$TMUX_BIN" >/dev/null 2>&1 || exit 2
+target=()
+if [[ -n ${TMUX_PANE:-} ]]; then
+	target=(-t "$TMUX_PANE")
+else
+	client=$("$TMUX_BIN" list-clients -F '#{client_activity} #{client_name}' 2>/dev/null | sort -rn | awk 'NR==1{print $2}')
+	[[ -n $client ]] || exit 2
+	target=(-c "$client")
+fi
+self=$(readlink -f "${BASH_SOURCE[0]}")
+"$TMUX_BIN" display-popup "${target[@]}" -E -w 60 -h 12 -T ' 🔐 unlock GPG ' "$self --here" || exit 2
+is_unlocked
