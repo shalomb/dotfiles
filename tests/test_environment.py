@@ -43,7 +43,7 @@ class TestEnvironment:
         files = [
             '~/.bash_profile',
             '~/.config/bash/bashrc',
-            '~/.config/bash/rc.d/00-path'
+            '~/.config/posix/00-path.sh'
         ]
         
         for file_path in files:

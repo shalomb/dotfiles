@@ -32,6 +32,9 @@ def test_env():
     """
     env = os.environ.copy()
     env.pop('TMUX', None)
+    # A parent shell that already ran the profile sets this guard, which makes
+    # login shells skip PATH setup; drop it so tests get a genuinely clean login.
+    env.pop('PATH_SET_BY_PROFILE', None)
     with tempfile.TemporaryDirectory(prefix='tmux-test-') as tmpdir:
         env['TMUX_TMPDIR'] = tmpdir
         yield env
