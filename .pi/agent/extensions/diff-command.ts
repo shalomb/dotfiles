@@ -5,10 +5,11 @@
  * Untracked files aren't diffed (use `git add -N`).
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { registerShared } from "./_lib/subcommands.ts";
 import { splitArgs } from "./_lib/args.ts";
 
 export default function (pi: ExtensionAPI) {
-  pi.registerCommand("diff", {
+  registerShared(pi, "diff", {
     description: "Show git diff (unstaged; `staged`, `all`) in a delta popup (no agent turn).",
     handler: async (args: string, ctx: any) => {
       const notify = (m: string, l: "info" | "error" = "info") => ctx.ui.notify(m, l);

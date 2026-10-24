@@ -9,6 +9,7 @@
  * Unreferenced objects survive until git gc prunes them (default ~2 weeks).
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { registerShared } from "./_lib/subcommands.ts";
 import { splitArgs } from "./_lib/args.ts";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,7 +44,7 @@ export default function (pi: ExtensionAPI) {
     if (!baseline) await capture(ctx.cwd);
   });
 
-  pi.registerCommand("since", {
+  registerShared(pi, "since", {
     description: "Diff the working tree against the session-start baseline (incl. untracked). `reset` re-baselines; other args go to git diff.",
     getArgumentCompletions: (prefix: string) => {
       const opts = ["reset", "--stat", "--name-only"].filter((o) => o.startsWith(prefix));

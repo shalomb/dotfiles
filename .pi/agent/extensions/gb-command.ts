@@ -6,11 +6,12 @@
  * Opens in a tmux popup at the repo root. No agent turn, no tokens.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { registerShared } from "./_lib/subcommands.ts";
 import { splitArgs } from "./_lib/args.ts";
 
 export default function (pi: ExtensionAPI) {
   const register = (name: string, mode: "show" | "diff", title: string, description: string) =>
-    pi.registerCommand(name, {
+    registerShared(pi, name, {
       description,
       handler: async (args: string, ctx: any) => {
         const notify = (m: string, l: "info" | "error" = "info") => ctx.ui.notify(m, l);

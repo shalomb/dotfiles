@@ -15,6 +15,7 @@
  * Rendering/UI lives in _lib/changes.sh (tested: _lib/changes.test.ts).
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { registerShared } from "./_lib/subcommands.ts";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -135,7 +136,7 @@ export default function (pi: ExtensionAPI) {
     await launch(ctx, "HEAD", false);
   });
 
-  pi.registerCommand("changes", {
+  registerShared(pi, "changes", {
     description: "Live diff panel beside pi (toggle). Args: popup | attach | close | <base ref>.",
     getArgumentCompletions: (prefix: string) => {
       const opts = ["popup", "attach", "close", "HEAD~1", "origin/main"].filter((o) => o.startsWith(prefix));
