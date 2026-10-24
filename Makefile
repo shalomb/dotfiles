@@ -308,6 +308,17 @@ local-cleanup: ## Cleanup .local/share and .local/lib cruft
 	rm -rf $(HOME)/.local/share/go/pkg/mod/* || true
 	df -hP
 
+PI_EXT_LIB := .pi/agent/extensions/_lib
+
+.PHONY: test-pi
+test-pi: ## Run pi extension unit tests (bun; cd needed, bun skips dot-dirs by path)
+	@if ! command -v bun >/dev/null 2>&1; then \
+		echo "SKIP test-pi: bun not installed"; \
+	else \
+		echo "Running pi extension tests..."; \
+		cd $(PI_EXT_LIB) && bun test; \
+	fi
+
 .PHONY: test test-fast
 test: ## Run acceptance tests (usage: make test [FAST=1])
 	@echo "Running bash standards validation..."
@@ -316,6 +327,7 @@ test: ## Run acceptance tests (usage: make test [FAST=1])
 	@tests/bash-standards/run-shellcheck.sh
 	@echo "Running bash function loading tests..."
 	@tests/bash-function-loading.sh
+	@$(MAKE) --no-print-directory test-pi
 	@echo "Running Python tests..."
 	@if [ "$(FAST)" = "1" ]; then \
 		echo "Running fast tests..."; \
@@ -347,6 +359,7 @@ test-fast: ## Run fast tests only (environment + deployment)
 	@tests/bash-standards/validate-standards.sh
 	@echo "Running shellcheck validation..."
 	@tests/bash-standards/run-shellcheck.sh
+	@$(MAKE) --no-print-directory test-pi
 	@echo "Running fast Python tests..."
 	@uv run pytest tests/test_environment.py tests/test_dotfile_deployment.py -v --tb=short
 
