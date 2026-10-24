@@ -12,12 +12,12 @@
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { join } from "node:path";
-import { wireA2A } from "./_lib/a2a-wire.ts";
 
-export default function (pi: ExtensionAPI) {
+export default async function (pi: ExtensionAPI) {
 	if (process.env.PI_A2A !== "1") return;
 	const base = process.env.XDG_RUNTIME_DIR && process.env.XDG_RUNTIME_DIR.startsWith("/")
 		? process.env.XDG_RUNTIME_DIR
 		: `/tmp/pi-runtime-${process.getuid?.() ?? "u"}`;
+	const { wireA2A } = await import("./_lib/a2a-wire.ts"); // lazy: only when PI_A2A=1
 	wireA2A(pi, { stateDir: join(base, "pi", "a2a") });
 }
