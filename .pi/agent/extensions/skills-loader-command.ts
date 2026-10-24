@@ -14,17 +14,18 @@ import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverRepoSkills } from "./_lib/repo-skills";
-import { type Manifest, formatLoadNotice, inventory, loadManifest, mergeManifests, onDemandSection, pickerOrder, savings, tierOf, tok, visible } from "./_lib/skill-tiers";
+import { type Manifest, formatLoadNotice, inventory, loadManifest, mergeManifests, onDemandSection, pickerOrder, resolveUserManifestPath, savings, tierOf, tok, visible } from "./_lib/skill-tiers";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PICKER = join(HERE, "_lib", "skills-picker.sh");
-const USER_MANIFEST = join(homedir(), ".pi", "agent", "skill-tiers.json");
-const SKILLS_DIR = join(homedir(), ".pi", "agent", "skills");
+const AGENT_DIR = join(homedir(), ".pi", "agent");
+const SKILLS_DIR = join(AGENT_DIR, "skills");
 const q = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
 const off = () => process.env.SKILLS_TIERS === "off";
 const log = (o: unknown) => process.env.SKILLS_LOG && appendFileSync(process.env.SKILLS_LOG, JSON.stringify(o) + "\n");
+const userManifestPath = () => resolveUserManifestPath(process.env, AGENT_DIR);
 const manifestFor = (cwd?: string): Manifest =>
-	mergeManifests(loadManifest(USER_MANIFEST), cwd ? loadManifest(join(cwd, ".pi", "skill-tiers.json")) : { tier1: [], tier2: [], tier3: [], hide: [] });
+	mergeManifests(loadManifest(userManifestPath()), cwd ? loadManifest(join(cwd, ".pi", "skill-tiers.json")) : { tier1: [], tier2: [], tier3: [], hide: [] });
 
 export default function (pi: ExtensionAPI) {
 	let all: any[] = []; // full catalog, captured before filtering
@@ -104,15 +105,17 @@ export default function (pi: ExtensionAPI) {
 	};
 
 	const status = (ctx: any) => {
+		const userM = loadManifest(userManifestPath());
 		const m = manifestFor(ctx.cwd);
 		const keep = off() ? new Set(all.map((s) => s.name)) : shown(m);
 		const section = off() ? "" : onDemandSection(all, m, loaded, SKILLS_DIR);
 		const sv = savings(all, keep, section);
 		const vis = visible(all, m);
 		const n = (t: number) => vis.filter((s) => tierOf(s.name, m) === t).length;
-		log({ ev: "status", ...sv, all: all.length, inPrompt: keep.size });
+		const roleLine = userM.role ? `role: ${userM.role}\n` : process.env.PI_ROLE ? `role: ${process.env.PI_ROLE}\n` : "";
+		log({ ev: "status", ...sv, all: all.length, inPrompt: keep.size, role: userM.role });
 		ctx.ui.notify(
-			`skills catalog: ${keep.size}/${all.length} in prompt${off() ? " (tiers OFF)" : ""}\n` +
+			`${roleLine}skills catalog: ${keep.size}/${all.length} in prompt${off() ? " (tiers OFF)" : ""}\n` +
 				`tiers: T1 ${n(1)} · T2 ${n(2)} · T3 ${n(3)} · hidden ${all.length - vis.length}\n` +
 				`catalog cost ~${sv.nowTok}t now vs ~${sv.fullTok}t full → saving ~${sv.savedTok}t per turn\n` +
 				`loaded: ${[...loaded].join(", ") || "-"}`,

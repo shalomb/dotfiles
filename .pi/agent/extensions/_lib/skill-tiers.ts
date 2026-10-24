@@ -8,16 +8,31 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-export interface Manifest { tier1: string[]; tier2: string[]; tier3: string[]; hide: string[] }
+export interface Manifest {
+	tier1: string[];
+	tier2: string[];
+	tier3: string[];
+	hide: string[];
+	role?: string;
+	model?: string;
+	thinkingLevel?: string;
+	fallbackModel?: string;
+}
 export interface Inventory { scripts: string[]; references: string[]; assets: string[] }
 
 export const tok = (s: string) => Math.ceil(s.length / 4);
 const strs = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+const strOrUndef = (v: unknown): string | undefined => (typeof v === "string" && v.trim() ? v.trim() : undefined);
 
 export function parseManifest(raw: string): Manifest {
 	try {
 		const j = JSON.parse(raw);
-		return { tier1: strs(j?.tier1), tier2: strs(j?.tier2), tier3: strs(j?.tier3), hide: strs(j?.hide) };
+		const m: Manifest = { tier1: strs(j?.tier1), tier2: strs(j?.tier2), tier3: strs(j?.tier3), hide: strs(j?.hide) };
+		if (strOrUndef(j?.role)) m.role = strOrUndef(j?.role);
+		if (strOrUndef(j?.model)) m.model = strOrUndef(j?.model);
+		if (strOrUndef(j?.thinkingLevel)) m.thinkingLevel = strOrUndef(j?.thinkingLevel);
+		if (strOrUndef(j?.fallbackModel)) m.fallbackModel = strOrUndef(j?.fallbackModel);
+		return m;
 	} catch {
 		return { tier1: [], tier2: [], tier3: [], hide: [] };
 	}
@@ -25,6 +40,17 @@ export function parseManifest(raw: string): Manifest {
 
 export function loadManifest(path: string): Manifest {
 	try { return parseManifest(readFileSync(path, "utf8")); } catch { return { tier1: [], tier2: [], tier3: [], hide: [] }; }
+}
+
+export function resolveUserManifestPath(env: Record<string, string | undefined>, agentDir: string): string {
+	const custom = env.PI_SKILL_MANIFEST?.trim();
+	if (custom && existsSync(custom)) return custom;
+	const role = env.PI_ROLE?.trim();
+	if (role) {
+		const rolePath = join(agentDir, "roles", `${role}.json`);
+		if (existsSync(rolePath)) return rolePath;
+	}
+	return join(agentDir, "skill-tiers.json");
 }
 
 /** Project adds to the user's tiers; `tier3` in the project demotes a skill out of tiers 1 and 2. */

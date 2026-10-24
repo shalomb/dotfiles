@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { formatLoadNotice, inventory, mergeManifests, onDemandSection, parseManifest, pickerOrder, savings, tierOf, tok, visible } from "./skill-tiers";
+import { formatLoadNotice, inventory, mergeManifests, onDemandSection, parseManifest, pickerOrder, resolveUserManifestPath, savings, tierOf, tok, visible } from "./skill-tiers";
 
 let root: string;
 beforeEach(() => { root = mkdtempSync(join(tmpdir(), "skill-tiers-")); });
@@ -107,3 +107,51 @@ test("pickerOrder: pinned is optional; hidden pinned skills stay hidden", () => 
 	expect(pickerOrder(skills, m, new Set()).map((s) => s.name)).toEqual(["x"]);
 	expect(pickerOrder(skills, m, new Set(), new Set(["y"])).map((s) => s.name)).toEqual(["x"]);
 });
+
+test("parseManifest: parses optional role metadata fields", () => {
+	const raw = JSON.stringify({
+		role: "builder",
+		model: "antigravity/gemini-3.8-flash",
+		thinkingLevel: "low",
+		fallbackModel: "anthropic/claude-sonnet-5-5",
+		tier1: ["todo-navigator"],
+		tier2: ["ast-grep"],
+	});
+	const m = parseManifest(raw);
+	expect(m.role).toBe("builder");
+	expect(m.model).toBe("antigravity/gemini-3.8-flash");
+	expect(m.thinkingLevel).toBe("low");
+	expect(m.fallbackModel).toBe("anthropic/claude-sonnet-5-5");
+	expect(m.tier1).toEqual(["todo-navigator"]);
+	expect(m.tier2).toEqual(["ast-grep"]);
+	expect(m.tier3).toEqual([]);
+	expect(m.hide).toEqual([]);
+});
+
+test("resolveUserManifestPath: priority resolution (PI_SKILL_MANIFEST -> PI_ROLE -> default)", () => {
+	const agentDir = join(root, "agent");
+	const customManifest = join(root, "custom-tiers.json");
+	const rolesDir = join(agentDir, "roles");
+	const builderRole = join(rolesDir, "builder.json");
+	const defaultManifest = join(agentDir, "skill-tiers.json");
+
+	put(customManifest, "{}");
+	put(builderRole, "{}");
+	put(defaultManifest, "{}");
+
+	// 1. If PI_SKILL_MANIFEST is non-empty and exists -> returns custom path
+	expect(resolveUserManifestPath({ PI_SKILL_MANIFEST: customManifest, PI_ROLE: "builder" }, agentDir)).toBe(customManifest);
+
+	// If PI_SKILL_MANIFEST is set but file does not exist -> fall through to PI_ROLE
+	expect(resolveUserManifestPath({ PI_SKILL_MANIFEST: join(root, "nonexistent.json"), PI_ROLE: "builder" }, agentDir)).toBe(builderRole);
+
+	// 2. Else if PI_ROLE is non-empty and roles/<role>.json exists -> returns role manifest path
+	expect(resolveUserManifestPath({ PI_ROLE: "builder" }, agentDir)).toBe(builderRole);
+
+	// If PI_ROLE does not exist -> falls back to defaultManifest
+	expect(resolveUserManifestPath({ PI_ROLE: "nonexistent" }, agentDir)).toBe(defaultManifest);
+
+	// 3. Else returns defaultManifest
+	expect(resolveUserManifestPath({}, agentDir)).toBe(defaultManifest);
+});
+
