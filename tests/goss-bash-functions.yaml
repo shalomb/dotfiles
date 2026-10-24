@@ -1,7 +1,8 @@
 # Bash function loading and core utility functions
 # Tests that essential functions are defined and work correctly
 # Covers has-cmd, @has-cmd, defined, @is-interactive, call-if-defined
-# NOTE: Avoid command substitution $(...) as it causes timeouts with bashrc sourcing
+# NOTE: Avoid command substitution $(...) as it causes timeouts
+# with bashrc sourcing
 
 command:
   # === CORE FUNCTION EXISTENCE ===
@@ -37,7 +38,8 @@ command:
     exit-status: 0
     timeout: 5000
 
-  # === NOTE: Interactive function tests (reload, _dotfiles_help) are covered in goss-bash-contexts.yaml ===
+  # === NOTE: Interactive function tests (reload, _dotfiles_help) ===
+# === are covered in goss-bash-contexts.yaml ===
 
   # === FUNCTION AVAILABILITY FROM DIFFERENT DIRECTORIES ===
 
@@ -49,4 +51,24 @@ command:
   # Functions should work from /var/tmp
   "cd /var/tmp && bash -c 'source ~/.bashrc && defined has-cmd'":
     exit-status: 0
+    timeout: 5000
+
+  # === PI PROFILE SWITCHING (mirrors claude-profile) ===
+
+  # pi-profile must be defined
+  "setsid bash -i -c 'type pi-profile >/dev/null' </dev/null 2>&1":
+    exit-status: 0
+    timeout: 5000
+
+  # Isolation: profile gets own auth.json, other entries symlinked
+  "tests/pi-profile-isolation.sh":
+    exit-status: 0
+    stdout:
+      - "/.pi/profiles/work ARGS=--foo"
+      - "ISOLATED"
+    timeout: 5000
+
+  # Invalid profile names are rejected
+  "setsid bash -i -c 'pi-profile bogus' </dev/null >/dev/null 2>&1":
+    exit-status: 1
     timeout: 5000
