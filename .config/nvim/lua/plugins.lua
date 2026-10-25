@@ -222,6 +222,35 @@ return {
     opts = {},
   },
 
+  { -- Inline diagrams in markdown (mermaid fences -> PNG -> kitty protocol).
+    -- Needs: mmdc (npm-tools), ImageMagick (`apt install imagemagick`), and a
+    -- kitty-protocol terminal (WezTerm) -- tmux needs allow-passthrough on.
+    "3rd/diagram.nvim",
+    ft = { "markdown" },
+    cond = function()
+      return vim.fn.executable("magick") == 1 or vim.fn.executable("convert") == 1
+    end,
+    dependencies = {
+      {
+        "3rd/image.nvim",
+        opts = {
+          backend = "kitty",
+          processor = "magick_cli",
+          integrations = { markdown = { enabled = true } },
+          tmux_show_only_in_active_window = true,
+        },
+      },
+    },
+    opts = function()
+      return {
+        integrations = { require("diagram.integrations.markdown") },
+        renderer_options = {
+          mermaid = { cli_args = require("config.diagrams").puppeteer_args(), scale = 2 },
+        },
+      }
+    end,
+  },
+
   { -- Mermaid diagrams: preview, format, lint (lint/render need `mmdc`)
     -- Parser is installed via lua/config/treesitter.lua (ensure_installed).
     "kevalin/mermaid.nvim",

@@ -10,6 +10,7 @@ sudo npm install \
   bash-language-server \
   markdownlint-cli2 \
   mcp-hub \
+  @mermaid-js/mermaid-cli \
   neovim \
   tree-sitter \
   vsce \
