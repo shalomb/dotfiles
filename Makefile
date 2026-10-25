@@ -345,17 +345,22 @@ test-bash-container: ## Test bash config in OS-matched container with tmux
 	@echo "?? Testing bash config in container (OS-matched)..."
 	@./scripts/test-bash-in-container-tmux.sh
 
-test-bash: ## Run all bash test suites with goss
+BASH_SUITES ?= $(addprefix tests/goss-bash-,safe.yaml contexts.yaml bootstrap.yaml functions.yaml comprehensive.yaml provenance.yaml options.yaml agents.yaml)
+
+# Fail closed: run every suite, report each failure, exit non-zero if any failed.
+# (.ONESHELL runs the recipe without -e, so status must be tracked explicitly.)
+# --max-concurrent keeps parallel interactive shells from starving each other.
+test-bash: ## Run all bash test suites with goss (fails if any suite fails)
 	@echo "Running bash validation tests..."
-	@goss -g tests/goss-bash-safe.yaml validate --format documentation
-	@goss -g tests/goss-bash-contexts.yaml validate --format documentation
-	@goss -g tests/goss-bash-bootstrap.yaml validate --format documentation
-	@goss -g tests/goss-bash-functions.yaml validate --format documentation
-	@goss -g tests/goss-bash-comprehensive.yaml validate --format documentation
-	@goss -g tests/goss-bash-provenance.yaml validate --format documentation
-	@goss -g tests/goss-bash-options.yaml validate --format documentation
-	@goss -g tests/goss-bash-agents.yaml validate --format documentation
-	@echo "? All bash tests passed"
+	failed=""
+	for suite in $(BASH_SUITES); do
+		goss -g "$$suite" validate --max-concurrent 4 --format documentation || failed="$$failed $$suite"
+	done
+	if [ -n "$$failed" ]; then
+		echo "FAILED bash suites:$$failed" >&2
+		exit 1
+	fi
+	echo "All bash tests passed"
 
 test-fast: ## Run fast tests only (environment + deployment)
 	@echo "Running bash standards validation..."
