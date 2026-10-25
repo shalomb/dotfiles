@@ -95,6 +95,7 @@ export HISTFILESIZE=50000       # On-disk history size
 export HISTCONTROL="ignoreboth:erasedups"  # Ignore duplicates and spaces
 export HISTTIMEFORMAT='%F %T '  # ISO-8601 timestamps
 export HISTIGNORE="&:[bf]g:exit:set +o *:set -o *:shopt -s *:shopt -u *:dump_bash_state"  # Filter out common noise
+export TIMEFORMAT=$'\nReal: %3lR\tUser: %3lU\tSys: %3lS\tCPU: %P'  # `time` output (note: %P takes no precision/l)
 
 # Create history directory if it doesn't exist
 mkdir -p "$(dirname "$HISTFILE")"

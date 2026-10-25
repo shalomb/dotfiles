@@ -61,6 +61,14 @@ command:
     exit-status: 0
     timeout: 5000
 
+  # `time` output format must be configured (regression: dropped in cb2c19d)
+  "setsid bash -i -c 'source ~/.bashrc >/dev/null 2>&1; declare -p TIMEFORMAT' </dev/null 2>&1":
+    exit-status: 0
+    stdout:
+      - "Real:"
+      - "%3lR"
+    timeout: 5000
+
   # === LOGIN SHELL CONTEXT TESTS ===
 
   # Login shells should have interactive features
