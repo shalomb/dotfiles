@@ -22,7 +22,7 @@ update-history() {
 get-history() {
   {
     head -n3 "$history_file"
-    echo "x-terminal-emulator -e ranger"
+    echo "x-terminal-emulator -e yazi"
     echo "i3-dmenu-desktop"
     echo "gmrun"
     echo "dmenu_quickactions"

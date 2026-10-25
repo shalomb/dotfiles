@@ -612,7 +612,6 @@ The repository is designed for **incremental updates** - you can deploy individu
 - **`alacritty:`** - Alacritty terminal configuration
 - **`i3:`** - i3 window manager configuration
 - **`rofi:`** - Rofi launcher configuration
-- **`ranger:`** - Ranger file manager configuration
 - **`fzf:`** - fzf fuzzy finder configuration
 - **`gum:`** - Gum CLI tool configuration
 - **`ghostship:`** - Ghostship prompt manager

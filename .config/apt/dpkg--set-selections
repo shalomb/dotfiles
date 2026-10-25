@@ -272,7 +272,6 @@ python3-yaml               install
 python3-zipp               install
 qrencode                   install
 rake                       install
-ranger                     install
 readline-common            install
 rename                     install
 ripgrep                    install
