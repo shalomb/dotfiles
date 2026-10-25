@@ -106,7 +106,8 @@ shopt -s nocaseglob        # Case-insensitive pathname expansion
 # Temporarily disable history to prevent 'set -o' commands from being written
 HISTFILE_SAVE="$HISTFILE"
 unset HISTFILE
-set -o ignoreeof           # Prevent Ctrl+D from exiting (need 10 presses)
+set -o ignoreeof           # Prevent Ctrl+D from exiting
+IGNOREEOF=5                # ...until pressed 6 times (set after ignoreeof, which resets it)
 HISTFILE="$HISTFILE_SAVE"
 
 # Bash completion
@@ -151,6 +152,10 @@ reload() {
 # =============================================================================
 # Silent startup - no verbose output
 # =============================================================================
+
+# Dedupe PATH/MANPATH now that all PATH edits are done
+clean_path PATH; export PATH
+clean_path MANPATH; export MANPATH
 
 # Clear sourcing flag after bashrc loads
 unset _SOURCING_BASHRC

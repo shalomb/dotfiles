@@ -353,6 +353,7 @@ test-bash: ## Run all bash test suites with goss
 	@goss -g tests/goss-bash-functions.yaml validate --format documentation
 	@goss -g tests/goss-bash-comprehensive.yaml validate --format documentation
 	@goss -g tests/goss-bash-provenance.yaml validate --format documentation
+	@goss -g tests/goss-bash-options.yaml validate --format documentation
 	@echo "? All bash tests passed"
 
 test-fast: ## Run fast tests only (environment + deployment)

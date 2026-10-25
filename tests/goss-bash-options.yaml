@@ -1,0 +1,35 @@
+---
+# Interactive shell options restored after the bashrc simplification (cb2c19d).
+command:
+  "tests/support/bash-options-check.sh shopts":
+    exit-status: 0
+    stdout:
+      - "shopt -s histverify"
+      - "shopt -s histreedit"
+      - "shopt -s cdspell"
+      - "shopt -s cdable_vars"
+      - "shopt -s checkhash"
+      - "shopt -s mailwarn"
+      - "shopt -s no_empty_cmd_completion"
+      - "shopt -s sourcepath"
+      - "shopt -u huponexit"
+    timeout: 8000
+  "tests/support/bash-options-check.sh modes":
+    exit-status: 0
+    stdout:
+      - "/vi\\s+on/"
+      - "/ignoreeof\\s+on/"
+      - "IGNOREEOF=5"
+    timeout: 8000
+  # clean_path drops duplicate and non-existent entries
+  "tests/support/bash-options-check.sh clean-path":
+    exit-status: 0
+    stdout:
+      - "RESULT=/usr/bin:/bin"
+    timeout: 8000
+  # Non-interactive shells must not get interactive-only options
+  "tests/support/bash-options-check.sh noninteractive":
+    exit-status: 1
+    stdout:
+      - "shopt -u cdspell"
+    timeout: 5000
