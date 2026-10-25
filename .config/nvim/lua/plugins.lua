@@ -222,8 +222,10 @@ return {
     ft = "mermaid",
     cmd = { "MermaidPreview", "MermaidPreviewStop", "MermaidFormat", "MermaidRender", "MermaidCopyURL" },
     dependencies = { "nvim-treesitter/nvim-treesitter" },
-    config = function()
-      require("mermaid").setup()
+    -- Fixed port (VM tunnel); keep in sync with config.mermaid_block.configured_port
+    opts = { preview = { port = vim.g.mermaid_port or 8765 } },
+    config = function(_, opts)
+      require("mermaid").setup(opts)
       vim.api.nvim_create_autocmd("FileType", {
         pattern = "mermaid",
         callback = function(ev)

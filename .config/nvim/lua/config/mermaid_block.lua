@@ -143,12 +143,24 @@ end
 
 local REASONS = { [200] = "OK", [404] = "Not Found" }
 
+--- Fixed port so an SSH/VM tunnel never needs changing. Override with
+--- `vim.g.mermaid_port`. Shared with mermaid.nvim's own preview (plugins.lua).
+function M.configured_port()
+  return vim.g.mermaid_port or 8765
+end
+
+--- @return integer|nil port, string|nil err
 function M.start_server()
   if M.server then return M.port end
+  local port = M.configured_port()
   local srv = vim.uv.new_tcp()
-  local ok = srv:bind("127.0.0.1", 0)
-  if not ok then return nil end
-  srv:listen(16, function(err)
+  -- 0.0.0.0 so a forwarded/tunnelled connection from outside the VM works
+  local ok, berr = srv:bind("0.0.0.0", port)
+  if not ok then
+    srv:close()
+    return nil, ("port %d unavailable: %s"):format(port, tostring(berr))
+  end
+  local lok, lerr = srv:listen(16, function(err)
     if err then return end
     local c = vim.uv.new_tcp()
     srv:accept(c)
@@ -167,6 +179,10 @@ function M.start_server()
       end)
     end)
   end)
+  if not lok then
+    srv:close()
+    return nil, ("port %d unavailable: %s"):format(port, tostring(lerr))
+  end
   M.server, M.port = srv, srv:getsockname().port
   return M.port
 end
@@ -192,9 +208,9 @@ end
 function M.preview()
   M.state.bufnr = vim.api.nvim_get_current_buf()
   refresh()
-  local port = M.start_server()
+  local port, err = M.start_server()
   if not port then
-    return vim.notify("Mermaid gallery: could not start server", vim.log.levels.ERROR)
+    return vim.notify("Mermaid gallery: " .. err, vim.log.levels.ERROR)
   end
   local g = vim.api.nvim_create_augroup("MermaidGallery", { clear = true })
   vim.api.nvim_create_autocmd(
