@@ -152,7 +152,6 @@ return {
   { "folke/which-key.nvim",                lazy = false },
   { "godlygeek/tabular",                   lazy = false },
   { "jgdavey/tslime.vim",                  lazy = false },
-  { "jghauser/follow-md-links.nvim",       ft = "markdown" },
   { "lukas-reineke/indent-blankline.nvim", lazy = false },
   { "mbbill/undotree",                     lazy = false },
   { "nvim-lualine/lualine.nvim",           lazy = false }, -- configure Neovim statusline
