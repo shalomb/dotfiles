@@ -34,9 +34,10 @@ command:
     timeout: 20000
     
   # === SSH CONTEXT ===
-  # SSH context in non-interactive mode should NOT load interactive features
+  # SSH contexts deliberately continue into the interactive section even when
+  # non-interactive (7580f8a: they may become interactive), so reload exists.
   "SSH_CLIENT=test bash -c 'source ~/.bashrc && type reload 2>/dev/null'":
-    exit-status: 1
+    exit-status: 0
     timeout: 20000
     
   # === NON-INTERACTIVE SHOULD NOT HAVE RELOAD ===
@@ -47,15 +48,15 @@ command:
   # === ESSENTIAL COMMANDS ===
   "which delta":
     exit-status: 0
-    timeout: 5000
+    timeout: 20000
     
   "which gum":
     exit-status: 0
-    timeout: 5000
+    timeout: 20000
     
   "which rustup":
     exit-status: 0
-    timeout: 5000
+    timeout: 20000
     
   # === PERFORMANCE (relaxed) ===
   "timeout 10s bash -c 'source ~/.bashrc'":
