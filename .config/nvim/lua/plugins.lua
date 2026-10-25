@@ -224,11 +224,15 @@ return {
 
   { -- Inline diagrams in markdown (mermaid fences -> PNG -> kitty protocol).
     -- Needs: mmdc (npm-tools), ImageMagick (`apt install imagemagick`), and a
-    -- kitty-protocol terminal (WezTerm) -- tmux needs allow-passthrough on.
+    -- kitty-protocol terminal (WezTerm).
+    -- OPT-IN (`vim.g.mermaid_inline = true`): inside tmux, passthrough images
+    -- misplace, flicker and leave artefacts (tested: tmux 3.8 + WezTerm over
+    -- SSH). Works best in a bare WezTerm tab without tmux.
     "3rd/diagram.nvim",
     ft = { "markdown" },
     cond = function()
-      return vim.fn.executable("magick") == 1 or vim.fn.executable("convert") == 1
+      return vim.g.mermaid_inline == true
+        and (vim.fn.executable("magick") == 1 or vim.fn.executable("convert") == 1)
     end,
     dependencies = {
       {

@@ -14,22 +14,27 @@ describe("inline diagrams (diagram.nvim + image.nvim)", function()
     assert.are.same({ "markdown" }, s.ft)
   end)
 
-  it("is disabled (cond=false) when ImageMagick is missing", function()
+  local function cond_with(magick, optin)
     local s = spec("3rd/diagram.nvim")
     local orig = vim.fn.executable
-    vim.fn.executable = function() return 0 end
+    vim.fn.executable = function(c) return (magick and c == "magick") and 1 or 0 end
+    vim.g.mermaid_inline = optin
     local ok = s.cond()
     vim.fn.executable = orig
-    assert.is_false(ok)
+    vim.g.mermaid_inline = nil
+    return ok
+  end
+
+  it("is OFF by default even when ImageMagick exists (tmux passthrough is flaky)", function()
+    assert.is_false(cond_with(true, nil))
   end)
 
-  it("is enabled when magick exists", function()
-    local s = spec("3rd/diagram.nvim")
-    local orig = vim.fn.executable
-    vim.fn.executable = function(c) return c == "magick" and 1 or 0 end
-    local ok = s.cond()
-    vim.fn.executable = orig
-    assert.is_true(ok)
+  it("is off when opted in but ImageMagick is missing", function()
+    assert.is_false(cond_with(false, true))
+  end)
+
+  it("is on only when opted in via vim.g.mermaid_inline AND magick exists", function()
+    assert.is_true(cond_with(true, true))
   end)
 
   it("builds mmdc puppeteer args with --no-sandbox and a headless shell", function()
