@@ -16,8 +16,7 @@ quiet="${quiet:-0}"                   # no continuous logs, useful for invoking 
 
 set -- -A -t -oConnectTimeout=5 "$@"
 
-# Setup
-type -P update_ssh_agent_info &>/dev/null && source "$( type -P update_ssh_agent_info )"
+# SSH_AUTH_SOCK is provided by the shell (agentctl init), nothing to set up
 
 stderr=$(mktemp -u)
 mkfifo "$stderr"
