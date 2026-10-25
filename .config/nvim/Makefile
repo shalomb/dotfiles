@@ -177,3 +177,8 @@ help: ## Show make targets available
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s - %s\n", $$1, $$2}'
 
 # vim:ft=make noet nolist
+
+.PHONY: test test-unit
+test test-unit: ## Run headless plenary tests for the nvim config
+	nvim --headless -u tests/minimal_init.lua \
+		-c "PlenaryBustedDirectory tests/ { minimal_init = 'tests/minimal_init.lua', sequential = true }"

@@ -216,6 +216,33 @@ return {
     },
   },
 
+  { -- Mermaid diagrams: preview, format, lint (lint/render need `mmdc`)
+    -- Parser is installed via lua/config/treesitter.lua (ensure_installed).
+    "kevalin/mermaid.nvim",
+    ft = "mermaid",
+    cmd = { "MermaidPreview", "MermaidPreviewStop", "MermaidFormat", "MermaidRender", "MermaidCopyURL" },
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    config = function()
+      require("mermaid").setup()
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "mermaid",
+        callback = function(ev)
+          local maps = {
+            p = { "MermaidPreview", "Mermaid Preview" },
+            f = { "MermaidFormat", "Mermaid Format" },
+            r = { "MermaidRender", "Mermaid Render" },
+            c = { "MermaidCopyURL", "Mermaid Copy URL" },
+            x = { "MermaidPreviewStop", "Mermaid Stop Preview" },
+          }
+          for k, v in pairs(maps) do
+            vim.keymap.set("n", "<leader>m" .. k, "<Cmd>" .. v[1] .. "<CR>",
+              { buffer = ev.buf, desc = v[2] })
+          end
+        end,
+      })
+    end,
+  },
+
   -- GitHub Copilot
   {
     "github/copilot.vim",
