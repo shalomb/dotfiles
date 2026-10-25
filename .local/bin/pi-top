@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+"""pi-top: top-like view of pi processes, with tmux pane, cwd, CPU and RAM.
+Keys: q quit, c/m/t/p sort by cpu/mem/time/pane, r reverse. --once prints one snapshot."""
+import os, sys, time, subprocess, curses
+
+HZ = os.sysconf("SC_CLK_TCK"); PAGE = os.sysconf("SC_PAGE_SIZE")
+
+def read_procs():
+    out = {}
+    for d in os.listdir("/proc"):
+        if not d.isdigit(): continue
+        try:
+            s = open(f"/proc/{d}/stat").read()
+            rp = s.rindex(")"); f = s[rp + 2:].split()
+            comm = s[s.index("(") + 1:rp]
+            out[int(d)] = dict(comm=comm, ppid=int(f[1]), tty=int(f[4]),
+                               ticks=int(f[11]) + int(f[12]), start=int(f[19]),
+                               rss=int(f[21]) * PAGE)
+        except Exception: pass
+    return out
+
+def tmux_panes():
+    m = {}
+    try:
+        o = subprocess.run(["tmux", "list-panes", "-a", "-F",
+            "#{pane_tty}\t#{session_name}:#{window_index}.#{pane_index}\t#{window_name}"],
+            capture_output=True, text=True).stdout
+        for l in o.splitlines():
+            t, loc, w = l.split("\t"); m[t] = f"{loc} ({w})"
+    except Exception: pass
+    return m
+
+def tty_name(pid):
+    try: return os.readlink(f"/proc/{pid}/fd/0")
+    except Exception: return ""
+
+def is_pi(pid, p):
+    if p["comm"] != "pi": return False
+    try: return b"pi" in open(f"/proc/{pid}/cmdline", "rb").read().split(b"\0")[0][-2:]
+    except Exception: return False
+
+def snapshot(prev, tprev, sortkey, rev):
+    procs = read_procs(); now = time.time(); dt = max(now - tprev, 1e-6)
+    kids = {}
+    for pid, p in procs.items(): kids.setdefault(p["ppid"], []).append(pid)
+    def tree(pid):
+        n, rss, st = 0, 0, [pid]
+        while st:
+            for c in kids.get(st.pop(), []):
+                n += 1; rss += procs[c]["rss"]; st.append(c)
+        return n, rss
+    panes = tmux_panes(); up = float(open("/proc/uptime").read().split()[0])
+    rows = []
+    for pid, p in procs.items():
+        if not is_pi(pid, p): continue
+        cpu = (p["ticks"] - prev[pid]["ticks"]) / HZ / dt * 100 if pid in prev else 0.0
+        n, krss = tree(pid)
+        try: cwd = os.readlink(f"/proc/{pid}/cwd").replace(os.path.expanduser("~"), "~")
+        except Exception: cwd = "?"
+        rows.append(dict(pid=pid, cpu=cpu, rss=p["rss"] / 2**20, kids=n, krss=krss / 2**20,
+                         time=p["ticks"] / HZ, age=up - p["start"] / HZ,
+                         pane=panes.get(tty_name(pid), "-"), cwd=cwd))
+    rows.sort(key=lambda r: r[sortkey], reverse=rev)
+    return rows, procs, now
+
+def fmt_t(s):
+    s = int(s); d, s = divmod(s, 86400); h, s = divmod(s, 3600); m, s = divmod(s, 60)
+    return f"{d}d{h:02}h" if d else f"{h}:{m:02}:{s:02}"
+
+HDR = f"{'PID':>8} {'%CPU':>5} {'RSS MB':>7} {'KIDS':>4} {'KRSS':>6} {'CPUTIME':>8} {'AGE':>7}  {'TMUX PANE':<66} CWD"
+def line(r):
+    return (f"{r['pid']:>8} {r['cpu']:>5.1f} {r['rss']:>7.0f} {r['kids']:>4} {r['krss']:>6.0f} "
+            f"{fmt_t(r['time']):>8} {fmt_t(r['age']):>7}  {r['pane'][:66]:<66} {r['cwd']}")
+
+def main(scr):
+    curses.curs_set(0); scr.timeout(2000)
+    sortkey, rev, prev, tprev = "cpu", True, {}, time.time()
+    keys = {ord("c"): "cpu", ord("m"): "rss", ord("t"): "time", ord("p"): "pane", ord("a"): "age"}
+    while True:
+        rows, procs, now = snapshot(prev, tprev, sortkey, rev); prev, tprev = procs, now
+        scr.erase(); h, w = scr.getmaxyx()
+        la = open("/proc/loadavg").read().split()[:3]
+        tot = sum(r["rss"] + r["krss"] for r in rows)
+        scr.addnstr(0, 0, f"pi-top  load {' '.join(la)}  sessions {len(rows)}  "
+                          f"pi+children RSS {tot:.0f} MB  sort={sortkey}  [c m t p a sort, r rev, q quit]", w - 1)
+        scr.addnstr(2, 0, HDR, w - 1, curses.A_REVERSE)
+        for i, r in enumerate(rows[: h - 4]): scr.addnstr(3 + i, 0, line(r), w - 1)
+        scr.refresh()
+        k = scr.getch()
+        if k == ord("q"): return
+        if k == ord("r"): rev = not rev
+        if k in keys: sortkey = keys[k]; rev = sortkey != "pane"
+
+if __name__ == "__main__":
+    if "--once" in sys.argv:
+        p = read_procs(); time.sleep(1)
+        rows, _, _ = snapshot(p, time.time() - 1, "cpu", True)
+        print(HDR); [print(line(r)) for r in rows]
+    else:
+        curses.wrapper(main)
