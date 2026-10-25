@@ -1,0 +1,19 @@
+---
+# Provenance: ~/.bashrc and ~/.bash_profile are relative symlinks into
+# ~/.config/bash/ (single source of truth); no Kiro / Amazon Q remnants.
+command:
+  "tests/support/bash-provenance-check.sh bashrc-link":
+    exit-status: 0
+    timeout: 3000
+  "tests/support/bash-provenance-check.sh profile-link":
+    exit-status: 0
+    timeout: 3000
+  "tests/support/bash-provenance-check.sh repo-symlinks":
+    exit-status: 0
+    timeout: 3000
+  "tests/support/bash-provenance-check.sh no-remnants":
+    exit-status: 0
+    timeout: 3000
+  "tests/support/bash-provenance-check.sh no-vendor-modules":
+    exit-status: 0
+    timeout: 3000
