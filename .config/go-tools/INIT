@@ -62,7 +62,8 @@ go-install golang.org/x/tools/cmd/stringer@latest
 # Personal project tools
 go-install github.com/shalomb/sidecar@latest
 go-install github.com/shalomb/springfield@latest
-go-install github.com/shalomb/ogspy@latest
+# @latest resolves to the v1.0.0 tag, which has no main package; install from the branch.
+go-install github.com/vincenzomaritato/ogspy@main
 go-install github.com/shalomb/jqp@latest
 go-install github.com/gabotechs/dep-tree@latest
 go-install github.com/boyter/scc/v3@latest
