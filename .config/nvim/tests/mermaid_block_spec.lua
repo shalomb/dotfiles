@@ -16,3 +16,12 @@ describe("mermaid fenced-block extraction", function()
     assert.is_nil(blk.extract({ "hello" }, 1))
   end)
 end)
+
+describe("markdown buffers", function()
+  it("override :MermaidPreview with a buffer-local block-aware command", function()
+    vim.cmd("enew")
+    vim.bo.filetype = "markdown"
+    local cmds = vim.api.nvim_buf_get_commands(0, {})
+    assert.is_not_nil(cmds.MermaidPreview)
+  end)
+end)

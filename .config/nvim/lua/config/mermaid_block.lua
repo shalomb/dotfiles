@@ -37,13 +37,15 @@ function M.preview()
   vim.bo[buf].filetype = "mermaid"
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, block)
   require("lazy").load({ plugins = { "mermaid.nvim" } })
-  vim.cmd("MermaidPreview")
+  vim.cmd("MermaidPreview") -- scratch buffer is ft=mermaid: global command
 end
 
 vim.api.nvim_create_user_command("MermaidPreviewBlock", M.preview, {})
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "markdown",
   callback = function(ev)
+    -- buffer-local command shadows the plugin's whole-buffer :MermaidPreview
+    vim.api.nvim_buf_create_user_command(ev.buf, "MermaidPreview", M.preview, {})
     vim.keymap.set("n", "<leader>mp", M.preview, { buffer = ev.buf, desc = "Mermaid preview block" })
   end,
 })
