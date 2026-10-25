@@ -36,6 +36,15 @@ check_hardlink() {
         return 1
     fi
     
+    # Symlinks in the repo are exported as symlinks: compare link targets
+    if [[ -L "$repo_file" ]]; then
+        if [[ -L "$home_file" && "$(readlink "$repo_file")" == "$(readlink "$home_file")" ]]; then
+            return 0
+        fi
+        echo -e "${RED}❌ Symlink mismatch: $repo_file <-> $home_file${NC}"
+        return 1
+    fi
+
     # Check if files are hardlinked (same inode)
     local repo_inode=$(stat -c %i "$repo_file" 2>/dev/null || echo "")
     local home_inode=$(stat -c %i "$home_file" 2>/dev/null || echo "")
