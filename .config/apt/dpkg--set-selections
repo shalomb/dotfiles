@@ -140,6 +140,7 @@ ncurses-bin                install
 neovim                     install
 net-tools                  install
 netbase                    install
+nftables                   install
 openjdk-24-jdk-headless    install
 openjdk-24-jre-headless    install
 openssl                    install
@@ -277,6 +278,7 @@ rename                     install
 ripgrep                    install
 rsync                      install
 rsyslog                    install
+samba                      install
 sed                        install
 sensible-utils             install
 shared-mime-info           install

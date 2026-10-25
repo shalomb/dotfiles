@@ -1,0 +1,32 @@
+#!/bin/bash
+# Read-only guest SMB share of $HOME for the Parallels host (needs sudo):
+# deploy root/etc config, validate, enable the nftables guard, reload samba.
+# Packages (samba, nftables) come from .config/apt/dpkg--set-selections via apt/INIT.
+# Idempotent. DRY_RUN=1 prints instead of running.
+#
+# SECURITY: [unop$] is password-less and exposes the whole home (incl. ~/.ssh) to
+# 10.211.55.0/24. smb-guard.service drops 139/445 from everywhere else, as a
+# second layer under samba's own `hosts allow`. Do not widen without both.
+set -eu
+repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+run() { if [[ ${DRY_RUN:-0} == 1 ]]; then echo "+ $*"; else "$@"; fi; }
+
+# INIT order is not guaranteed relative to apt/INIT: skip until packages exist.
+if [[ ${DRY_RUN:-0} != 1 ]] && ! command -v testparm >/dev/null; then
+  echo "samba not installed yet; re-run 'make install' to finish smb-share" >&2
+  exit 0
+fi
+
+# Validate the source of truth before touching /etc.
+run sh -c 'testparm -s "$1" >/dev/null' testparm "$repo/root/etc/samba/smb.conf"
+
+for f in etc/samba/smb.conf \
+         etc/nftables-smb-guard.nft \
+         etc/systemd/system/smb-guard.service; do
+  run sudo install -D -m 0644 -o root -g root "$repo/root/$f" "/$f"
+done
+
+run sudo systemctl daemon-reload
+# Guard first: the share must never be reachable before the firewall layer is up.
+run sudo systemctl enable --now smb-guard.service
+run sudo smbcontrol smbd reload-config

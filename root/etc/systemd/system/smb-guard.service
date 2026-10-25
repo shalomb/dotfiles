@@ -1,0 +1,13 @@
+[Unit]
+Description=SMB firewall guard (Parallels subnet only)
+Before=smbd.service
+After=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/nftables-smb-guard.nft
+ExecStop=-/usr/sbin/nft delete table inet smb_guard
+
+[Install]
+WantedBy=multi-user.target

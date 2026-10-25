@@ -1,0 +1,12 @@
+#!/usr/sbin/nft -f
+# SMB guard: allow SMB (139/445) only from the Parallels subnet and loopback.
+# Separate table so it never touches Tailscale's iptables-nft chains.
+add table inet smb_guard
+flush table inet smb_guard
+table inet smb_guard {
+	chain input {
+		type filter hook input priority -5; policy accept;
+		iifname != "lo" tcp dport { 139, 445 } ip saddr != 10.211.55.0/24 counter drop
+		iifname != "lo" tcp dport { 139, 445 } meta nfproto ipv6 counter drop
+	}
+}
