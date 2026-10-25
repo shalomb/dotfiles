@@ -8,7 +8,7 @@ Files in this directory are loaded **first** during bash startup, before any `en
 
 ## File Naming Convention
 - **Numbered files** (e.g., `00-path`, `01-functions`): Loaded in numerical order
-- **Named files** (e.g., `agent-commands`, `bootstrap-agents`): Loaded alphabetically after numbered files
+- **Named files** (e.g., `agent-commands`, `ps1`): Loaded alphabetically after numbered files
 
 ## Key Files
 
@@ -24,7 +24,7 @@ Files in this directory are loaded **first** during bash startup, before any `en
 - **`tz.sh`**: Timezone environment variables
 
 ### Agent Management
-- **`bootstrap-agents.sh`**: SSH and GPG agent bootstrap and discovery functions
+- SSH/GPG agents are managed by `agentctl` (`enabled/agentctl-integration.sh`)
 - **`agent-commands`**: Agent-specific workflow commands (`next`, `agent-status`)
 
 ### Shell Features
@@ -48,8 +48,8 @@ Files in this directory are loaded **first** during bash startup, before any `en
 ## Example Usage
 ```bash
 # In an enabled/ script
-source "${BASHRC_DIR}/lib/bootstrap-agents.sh"
-bootstrap_agents  # Function now available
+source "${BASHRC_DIR}/lib/ps1"
+# functions from that file are now available
 ```
 
 ## Agent Context

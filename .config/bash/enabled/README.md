@@ -9,7 +9,7 @@ Scripts in this directory are loaded **after** `lib/` functions, ensuring core u
 ## File Types
 
 ### Agent Management Functions
-- **`agent-bootstrap.sh`**: Agent status display
+- **`agentctl-integration.sh`**: `agentctl` wrapper; runs `agentctl init` at startup (SSH/GPG agents)
 - **`agentctl-integration.sh`**: Unified agent management function
 - **`ai-workflow-helpers.sh`**: Agent workflow commands (`next`, `agent-status`)
 
@@ -31,7 +31,6 @@ Scripts in this directory are loaded **after** `lib/` functions, ensuring core u
 
 ## Naming Convention
 - **Tool scripts**: `toolname.sh` (e.g., `aws.sh`, `git.sh`)
-- **Bootstrap scripts**: `toolname-bootstrap.sh` (e.g., `ssh-agent-bootstrap.sh`)
 - **Fix/recovery scripts**: `fix-toolname.sh` (e.g., `fix-ssh-auth-sock.sh`)
 - **Completion scripts**: `toolname-completion.bash.sh` (e.g., `git-flow-completion.bash.sh`)
 

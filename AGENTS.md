@@ -765,8 +765,8 @@ When user types "discuss" or requests analysis of complex topics, use this struc
 This format ensures systematic analysis and actionable outcomes for complex technical discussions.
 
 ### **Script Naming Convention**
-- **Executable scripts**: No `.sh` suffix (e.g., `gpg-agent-recover`, `ssh-retry`)
-- **Sourceable scripts**: Use `.sh` suffix (e.g., `update_ssh_agent.sh`, `cursor.sh`)
+- **Executable scripts**: No `.sh` suffix (e.g., `gpg-unlock`, `ssh-retry`)
+- **Sourceable scripts**: Use `.sh` suffix (e.g., `aws.sh`, `cursor.sh`)
 - **Location**: Executable scripts go in `~/.local/bin/`, sourceable scripts in `.config/bash/tools/`
 
 ### **Manpage Format**

@@ -1,0 +1,18 @@
+---
+# agentctl is the only agent manager; legacy bootstrap scripts are removed.
+command:
+  "tests/support/bash-agents-check.sh no-legacy-bins":
+    exit-status: 0
+    timeout: 3000
+  "tests/support/bash-agents-check.sh no-legacy-refs":
+    exit-status: 0
+    timeout: 3000
+  "tests/support/bash-agents-check.sh keychain-real":
+    exit-status: 0
+    timeout: 3000
+  "tests/support/bash-agents-check.sh agentctl-status":
+    exit-status: 0
+    stdout:
+      - "SSH:"
+      - "GPG:"
+    timeout: 15000
