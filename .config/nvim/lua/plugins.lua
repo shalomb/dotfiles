@@ -216,6 +216,13 @@ return {
     },
   },
 
+  { -- In-buffer markdown rendering (headings, tables, code, links, checkboxes)
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = { "markdown" },
+    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+    opts = {},
+  },
+
   { -- Mermaid diagrams: preview, format, lint (lint/render need `mmdc`)
     -- Parser is installed via lua/config/treesitter.lua (ensure_installed).
     "kevalin/mermaid.nvim",
