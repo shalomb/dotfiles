@@ -241,6 +241,8 @@ return {
           backend = "kitty",
           processor = "magick_cli",
           integrations = { markdown = { enabled = true } },
+          max_height_window_percentage = 25,
+          max_width_window_percentage = 70,
           tmux_show_only_in_active_window = true,
         },
       },
@@ -249,7 +251,7 @@ return {
       return {
         integrations = { require("diagram.integrations.markdown") },
         renderer_options = {
-          mermaid = { cli_args = require("config.diagrams").puppeteer_args(), scale = 2 },
+          mermaid = { cli_args = require("config.diagrams").puppeteer_args(), scale = 1 },
         },
       }
     end,

@@ -1,7 +1,7 @@
 -- Minimal, isolated init for headless plugin tests (plenary busted).
 -- Uses plugins already installed by lazy.nvim; does NOT load the full config.
 local lazy = vim.fn.stdpath("data") .. "/lazy"
-for _, name in ipairs({ "plenary.nvim", "mermaid.nvim", "render-markdown.nvim", "nvim-treesitter", "nvim-web-devicons" }) do
+for _, name in ipairs({ "plenary.nvim", "mermaid.nvim", "render-markdown.nvim", "nvim-treesitter", "nvim-web-devicons", "diagram.nvim", "image.nvim" }) do
   vim.opt.rtp:append(lazy .. "/" .. name)
 end
 vim.opt.rtp:append(vim.fn.getcwd())

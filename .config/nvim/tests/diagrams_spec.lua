@@ -56,3 +56,31 @@ describe("inline diagrams (diagram.nvim + image.nvim)", function()
     assert.are.same({ "--no-sandbox" }, cfg.args)
   end)
 end)
+
+describe("inline diagram sizing", function()
+  local function image_opts()
+    package.loaded["plugins"] = nil
+    for _, s in ipairs(require("plugins")) do
+      if s[1] == "3rd/diagram.nvim" then
+        for _, d in ipairs(s.dependencies) do
+          if type(d) == "table" and d[1] == "3rd/image.nvim" then return d.opts end
+        end
+      end
+    end
+  end
+
+  it("caps image height so diagrams don't overrun the buffer", function()
+    local o = image_opts()
+    assert.is_true(o.max_height_window_percentage <= 30)
+    assert.is_true(o.max_width_window_percentage <= 80)
+  end)
+
+  it("does not oversample mermaid (scale 1)", function()
+    package.loaded["plugins"] = nil
+    for _, s in ipairs(require("plugins")) do
+      if s[1] == "3rd/diagram.nvim" then
+        assert.are.equal(1, s.opts().renderer_options.mermaid.scale)
+      end
+    end
+  end)
+end)
