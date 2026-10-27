@@ -48,7 +48,10 @@ $if Bash
   Space: magic-space
   "\C-0": "\e0 "
   "\C-e": glob-expand-word
-  "\C-j": ""                         # taken up by tmux
+  # C-j is deliberately NOT unbound. tmux already grabs it (root-table
+  # select-pane -D), so an empty binding added nothing for keyboard use but made
+  # readline swallow every LF sent by `tmux send-keys -l` / agents, gluing
+  # multi-line commands together. See tests/inputrc-lf-newline.sh.
 $endif
 
 # man 3 readline | less +/"VI Mode bindings"
