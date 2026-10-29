@@ -8,6 +8,7 @@
  *
  * Filters: --tool a,b  --since 7d|12h|2w|YYYY-MM-DD  --until ...  --cwd SUBSTR
  *          --grep TEXT (or bare words)  --min-msgs N  --limit N
+ *          --handoff  only sessions with a /persist hand-off (column H; goal shown as summary)
  * summarize only: --model provider/id (default anthropic/claude-haiku-4-5)  --dry-run
  * No agent turn in this session; the summary is a separate one-shot `pi -p` call.
  * Hand-maintained: not generated from commands.json.
@@ -22,7 +23,7 @@ const q = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
 
 export default function (pi: ExtensionAPI) {
 	pi.registerCommand("sessions", {
-		description: "Past agent sessions in a tmux popup. `summarize` = Haiku summary. Filters: --tool --since --until --cwd --grep --min-msgs --limit",
+		description: "Past agent sessions in a tmux popup. `summarize` = Haiku summary. Filters: --tool --since --until --cwd --grep --min-msgs --limit --handoff",
 		handler: async (args: string, ctx: any) => {
 			if (!process.env.TMUX) return ctx.ui.notify("/sessions needs a tmux session (popup).", "error");
 			const argv = args.trim() ? args.trim().split(/\s+/) : [];

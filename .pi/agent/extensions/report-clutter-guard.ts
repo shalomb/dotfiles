@@ -48,6 +48,9 @@ const ALLOWED_STEMS = new Set([
 	"todo",
 	// Agent skills: the file name the skill format requires.
 	"skill",
+	// Domain-modeling glossaries: the ubiquitous language and its context map.
+	"glossary",
+	"glossary-map",
 	// GitHub community and template files.
 	"pull_request_template",
 	"issue_template",

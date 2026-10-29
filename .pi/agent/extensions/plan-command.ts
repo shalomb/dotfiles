@@ -3,9 +3,10 @@
  *
  * Provides a `/plan` slash command that puts the session in planning and research mode.
  * In plan mode:
- * - The agent strictly makes NO changes to the file system
+ * - The agent makes NO changes to code, config, or the system
  * - Focus is on planning, design, requirements, elicitation, and research
- * - Modification tools (write, edit, bash with dangerous commands) are blocked
+ * - write/edit are allowed only for design artefacts (docs, specs, ADRs, glossary,
+ *   .feature files, diagram sources); bash commands that modify files are blocked
  * - Read and query tools remain available for research
  *
  * Usage:
@@ -18,6 +19,9 @@
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+// Planning produces artefacts: specs, ADRs, glossary, acceptance scenarios, diagrams.
+const DESIGN_DOC = /\.(md|mdx|markdown|rst|adoc|feature|mmd|mermaid|puml|plantuml|d2|dot)$/i;
 
 interface PlanState {
   enabled: boolean;
@@ -48,7 +52,7 @@ export default function planModeExtension(pi: ExtensionAPI) {
 
   // Register the /plan command
   pi.registerCommand("plan", {
-    description: "Enter or exit planning mode (no file modifications allowed)",
+    description: "Enter or exit planning mode (only design artefacts can be written)",
     getArgumentCompletions: (prefix) => {
       const options = ["on", "off", "status"];
       const filtered = options.filter((o) => o.startsWith(prefix));
@@ -66,7 +70,7 @@ export default function planModeExtension(pi: ExtensionAPI) {
         pi.appendEntry("plan-state", planState);
 
         ctx.ui.notify(
-          "📋 Plan mode ACTIVATED\n\nNo file modifications allowed.\nFocus: planning, design, requirements, research.",
+          "📋 Plan mode ACTIVATED\n\nOnly design artefacts can be written.\nFocus: planning, design, requirements, research.",
           "info"
         );
 
@@ -76,7 +80,8 @@ export default function planModeExtension(pi: ExtensionAPI) {
             customType: "plan-mode-activated",
             content:
               "Plan mode activated. Focus on planning, design, requirements gathering, and research. " +
-              "Do not execute commands that modify files or the system. Propose and discuss solutions instead.",
+              "Write design artefacts (specs, ADRs, glossary, .feature files) as docs-as-code. " +
+              "Do not modify code, config, or the system. Propose and discuss solutions instead.",
             display: true,
           },
           { triggerTurn: false }
@@ -92,7 +97,7 @@ export default function planModeExtension(pi: ExtensionAPI) {
       } else if (action === "status") {
         // Show status
         if (planState.enabled) {
-          ctx.ui.notify("📋 Plan mode is ACTIVE\n\nNo file modifications allowed.", "info");
+          ctx.ui.notify("📋 Plan mode is ACTIVE\n\nOnly design artefacts can be written.", "info");
         } else {
           ctx.ui.notify("📋 Plan mode is INACTIVE\n\nFile modifications are allowed.", "info");
         }
@@ -103,18 +108,22 @@ export default function planModeExtension(pi: ExtensionAPI) {
   });
 
   // Block dangerous tools when plan mode is active
-  pi.on("tool_call", async (event, ctx) => {
+  pi.on("tool_call", async (event, _ctx) => {
     if (!planState.enabled) {
       return; // Plan mode not active, allow all tools
     }
 
-    // In plan mode, block file modifications
+    // In plan mode, block file modifications except design artefacts (docs-as-code)
     const blockedTools = ["write", "edit"];
 
     if (blockedTools.includes(event.toolName)) {
+      const path = String((event.input as { path?: string }).path ?? "");
+      if (DESIGN_DOC.test(path)) return;
       return {
         block: true,
-        reason: `📋 Plan mode: ${event.toolName} tool is blocked. Focus on planning and design instead.`,
+        reason:
+          `📋 Plan mode: ${event.toolName} is blocked for "${path}". Only design artefacts ` +
+          "(docs, specs, ADRs, glossary, .feature, diagram sources) can be written while planning.",
       };
     }
 
@@ -152,7 +161,7 @@ export default function planModeExtension(pi: ExtensionAPI) {
   });
 
   // Inject planning-mode context into the system prompt
-  pi.on("before_agent_start", async (event, ctx) => {
+  pi.on("before_agent_start", async (event, _ctx) => {
     if (!planState.enabled) {
       return;
     }
@@ -167,8 +176,10 @@ export default function planModeExtension(pi: ExtensionAPI) {
       "- Propose solutions and alternatives\n" +
       "- Write pseudocode and sketches\n" +
       "\n" +
+      "- Write design artefacts as docs-as-code (specs, ADRs, glossary, .feature files, diagram sources)\n" +
+      "\n" +
       "DO NOT:\n" +
-      "- Execute file modifications (write, edit)\n" +
+      "- Modify code, config, or any non-document file (write, edit)\n" +
       "- Run system commands that change state\n" +
       "- Make any changes to the codebase\n" +
       "\n" +

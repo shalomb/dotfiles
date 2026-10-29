@@ -148,3 +148,52 @@ test("buildDigest: chronological, includes tool/time/cwd/prompts, respects char 
 	expect(one.text).toContain("then Y");
 	expect(one.included).toBe(1);
 });
+
+// ---- /persist hand-offs ----
+import { attachHandoffs, scanHandoffs } from "./sessions";
+
+const H = (o: Partial<any> = {}) => ({ sessionId: "s1", created: new Date("2026-10-11T10:00:00Z"), directory: "/w/a", branch: "main", goal: "ship it", next: "write tests", path: "/c/x/20261011-100000-s1.md", ...o }) as any;
+
+test("hand-offs attach to their pi session, newest first; orphans become their own rows", () => {
+	const rows = attachHandoffs(
+		[S({ id: "s1" }), S({ id: "s2", tool: "claude" })],
+		[H(), H({ created: new Date("2026-10-12T10:00:00Z"), goal: "newer" }), H({ sessionId: "gone", goal: "lost work" }), H({ sessionId: "s2" })],
+	);
+	expect(rows.find((r) => r.id === "s1")!.handoffs!.map((h) => h.goal)).toEqual(["newer", "ship it"]);
+	expect(rows.find((r) => r.tool === "claude")!.handoffs).toBeUndefined();
+	const orphans = rows.filter((r) => r.summary.startsWith("(session not found)"));
+	expect(orphans.map((o) => o.id).sort()).toEqual(["gone", "s2"]);
+	expect(orphans.find((o) => o.id === "gone")).toMatchObject({ cwd: "/w/a", msgs: 0, summary: "(session not found) lost work" });
+});
+
+test("--handoff keeps only sessions with a hand-off; grep searches goal and next steps", () => {
+	const rows = attachHandoffs([S({ id: "s1" }), S({ id: "s3" })], [H()]);
+	expect(parseArgs(["--handoff"]).filters.handoff).toBe(true);
+	expect(applyFilters(rows, { handoff: true }).map((r) => r.id)).toEqual(["s1"]);
+	expect(applyFilters(rows, { grep: "write tests" }).map((r) => r.id)).toEqual(["s1"]);
+});
+
+test("the table marks hand-offs in column H and shows the goal with --handoff", () => {
+	const rows = attachHandoffs([S({ id: "s1", summary: "first prompt" }), S({ id: "s3" })], [H()]);
+	const plain = renderTable(rows, { width: 140, plain: true }).split("\n");
+	expect(plain[0]).toMatch(/MSGS H CWD/);
+	expect(plain.find((l) => l.includes("first prompt"))).toMatch(/ ✓ /);
+	const ho = renderTable(rows, { width: 140, plain: true, handoff: true });
+	expect(ho).toContain("ship it [20261011-100000-s1.md]");
+});
+
+test("the digest carries the newest hand-off's goal and next steps", () => {
+	const [s] = attachHandoffs([S({ id: "s1" })], [H()]);
+	expect(buildDigest([s]).text).toContain("goal: ship it; next: write tests");
+});
+
+test("scanHandoffs reads every repo directory and skips other files", () => {
+	const root = mkdtempSync(join(tmpdir(), "handoffs-"));
+	mkdirSync(join(root, "repo-a"));
+	writeFileSync(join(root, "repo-a", "20261011-100000-s1.md"), "---\ntype: handoff\ncreated: 2026-10-11T10:00:00Z\ndirectory: /w/a\npi_session_id: s1\n---\n### Goal\n\nship it\n");
+	writeFileSync(join(root, "repo-a", "notes.md"), "---\ntype: handoff\n---\n");
+	const hs = scanHandoffs(root);
+	expect(hs).toHaveLength(1);
+	expect(hs[0]).toMatchObject({ sessionId: "s1", goal: "ship it", path: join(root, "repo-a", "20261011-100000-s1.md") });
+	rmSync(root, { recursive: true, force: true });
+});

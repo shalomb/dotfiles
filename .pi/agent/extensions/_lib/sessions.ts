@@ -7,6 +7,10 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { HANDOFF_FILE, type HandoffMeta, handoffRoot, parseHandoff } from "./persist";
+
+/** A /persist hand-off document (persist-command.ts), joined to its pi session by id. */
+export interface Handoff extends HandoffMeta { path: string }
 
 export interface Session {
 	tool: "pi" | "claude" | "copilot" | "gemini";
@@ -18,6 +22,8 @@ export interface Session {
 	summary: string;
 	/** First few user prompts plus the last one (for grep + digest). */
 	prompts?: string[];
+	/** Hand-offs written by this session, newest first. */
+	handoffs?: Handoff[];
 }
 
 const HOME = homedir();
@@ -172,6 +178,45 @@ export function scanGemini(root = join(HOME, ".gemini")): Session[] {
 }
 
 
+export function scanHandoffs(root = handoffRoot(process.env, HOME)): Handoff[] {
+	const out: Handoff[] = [];
+	for (const dir of subdirs(root)) {
+		for (const f of readdirSync(dir).filter((n) => HANDOFF_FILE.test(n))) {
+			const path = join(dir, f);
+			const meta = parseHandoff(readFileSync(path, "utf8"));
+			if (meta) out.push({ ...meta, path });
+		}
+	}
+	return out;
+}
+
+/**
+ * Attach hand-offs to their pi sessions. A hand-off whose session is gone (deleted, or written
+ * with --no-session) becomes its own pi row, so it stays findable.
+ */
+export function attachHandoffs(sessions: Session[], handoffs: Handoff[]): Session[] {
+	const byId = new Map(sessions.filter((s) => s.tool === "pi").map((s) => [s.id, s]));
+	const orphans = new Map<string, Session>();
+	for (const h of [...handoffs].sort((a, b) => b.created.getTime() - a.created.getTime())) {
+		const s = byId.get(h.sessionId);
+		if (s) {
+			(s.handoffs ??= []).push(h);
+			continue;
+		}
+		const key = h.sessionId || h.path;
+		const o = orphans.get(key);
+		if (o) {
+			o.handoffs!.push(h);
+			continue;
+		}
+		orphans.set(key, {
+			tool: "pi", id: h.sessionId, cwd: h.directory, start: h.created, end: h.created, msgs: 0,
+			summary: `(session not found) ${h.goal || "hand-off"}`, handoffs: [h],
+		});
+	}
+	return [...sessions, ...orphans.values()];
+}
+
 // ---------------------------------------------------------------- filters / args
 export const TOOLS = ["pi", "claude", "copilot", "gemini"] as const;
 
@@ -183,6 +228,8 @@ export interface Filters {
 	grep?: string;
 	minMsgs?: number;
 	limit?: number;
+	/** Only sessions with a /persist hand-off. */
+	handoff?: boolean;
 }
 
 /** `7d`, `12h`, `2w` (relative to now) or an ISO date. */
@@ -236,6 +283,7 @@ export function parseArgs(argv: string[], now = new Date()): Args {
 			case "--width": out.width = num(t); break;
 			case "--model": out.model = val(t); break;
 			case "--plain": out.plain = true; break;
+			case "--handoff": case "--handoffs": f.handoff = true; break;
 			case "--dry-run": out.dryRun = true; break;
 			default:
 				if (t.startsWith("--")) throw new Error(`unknown option ${t}`);
@@ -255,7 +303,9 @@ export function applyFilters(all: Session[], f: Filters): Session[] {
 		if (f.until && s.start > f.until) return false;
 		if (cwd && !s.cwd.toLowerCase().includes(cwd)) return false;
 		if (f.minMsgs !== undefined && s.msgs < f.minMsgs) return false;
-		if (grep && !`${s.summary}\n${(s.prompts ?? []).join("\n")}\n${s.cwd}`.toLowerCase().includes(grep)) return false;
+		if (f.handoff && !s.handoffs?.length) return false;
+		const handoffText = (s.handoffs ?? []).map((h) => `${h.goal}\n${h.next}\n${h.branch ?? ""}`).join("\n");
+		if (grep && !`${s.summary}\n${(s.prompts ?? []).join("\n")}\n${s.cwd}\n${handoffText}`.toLowerCase().includes(grep)) return false;
 		return true;
 	});
 	rows.sort((a, b) => b.start.getTime() - a.start.getTime());
@@ -269,7 +319,11 @@ export function applyFilters(all: Session[], f: Filters): Session[] {
 export function buildDigest(sessions: Session[], maxChars = 60_000): { text: string; included: number; omitted: number } {
 	const entry = (s: Session) => {
 		const head = `## ${fmtStart(s.start)} ${s.tool} ${shortCwd(s.cwd) || "?"} (${fmtDur(s.end.getTime() - s.start.getTime())}, ${s.msgs} msgs)`;
-		const body = [`title: ${s.summary.slice(0, 160)}`, ...(s.prompts ?? []).map((p) => `- ${p.slice(0, 220)}`)];
+		const h = s.handoffs?.[0];
+		const handoff = h
+			? [`hand-off (${fmtStart(h.created)}${h.branch ? `, branch ${h.branch}` : ""}): goal: ${h.goal.slice(0, 220) || "-"}; next: ${h.next.slice(0, 300) || "-"}`]
+			: [];
+		const body = [`title: ${s.summary.slice(0, 160)}`, ...handoff, ...(s.prompts ?? []).map((p) => `- ${p.slice(0, 220)}`)];
 		return [head, ...body].join("\n") + "\n";
 	};
 	const newestFirst = [...sessions].sort((a, b) => b.start.getTime() - a.start.getTime());
@@ -291,6 +345,7 @@ export const SUMMARY_PROMPT =
 	"You are summarising a developer's past AI-coding-agent sessions (tools: pi, claude, copilot, gemini). " +
 	"From the digest below write a concise report in Markdown: (1) a 2-3 sentence overview; (2) a timeline grouped by day, " +
 	"one line per theme with the project (cwd) and tool; (3) recurring themes / unfinished threads. " +
+	"A 'hand-off' line is the agent's own record of the goal and next steps when it stopped: use it for unfinished threads. " +
 	"Use only what the digest says; do not invent details. Be brief.";
 
 /** Run a one-shot, tool-less Haiku call via the pi CLI. */
@@ -304,9 +359,11 @@ export function runSummary(digest: string, model = "anthropic/claude-haiku-4-5")
 
 export function scanAll(tools?: string[]): Session[] {
 	const all: Record<string, () => Session[]> = { pi: scanPi, claude: scanClaude, copilot: scanCopilot, gemini: scanGemini };
-	return Object.entries(all).filter(([k]) => !tools || tools.includes(k)).flatMap(([k, fn]) => {
+	const sessions = Object.entries(all).filter(([k]) => !tools || tools.includes(k)).flatMap(([k, fn]) => {
 		try { return fn(); } catch (e) { console.error(`${k}: scan failed: ${(e as Error).message}`); return []; }
 	});
+	if (tools && !tools.includes("pi")) return sessions;
+	try { return attachHandoffs(sessions, scanHandoffs()); } catch (e) { console.error(`hand-offs: scan failed: ${(e as Error).message}`); return sessions; }
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -324,21 +381,28 @@ const fit = (s: string, n: number, left = false) =>
 
 const COLOR: Record<string, string> = { pi: "35", claude: "33", copilot: "36", gemini: "32" };
 
-export function renderTable(sessions: Session[], opts: { width?: number; plain?: boolean; limit?: number } = {}): string {
+/** H column: ✓ for one hand-off, the count for several. */
+const handoffMark = (s: Session) => (!s.handoffs?.length ? " " : s.handoffs.length === 1 ? "✓" : String(Math.min(9, s.handoffs.length)));
+
+export function renderTable(sessions: Session[], opts: { width?: number; plain?: boolean; limit?: number; handoff?: boolean } = {}): string {
 	const width = opts.width ?? 120;
 	const rows = [...sessions].sort((a, b) => b.start.getTime() - a.start.getTime()).slice(0, opts.limit ?? Infinity);
-	const W = { tool: 7, start: 16, dur: 6, msgs: 5, cwd: Math.min(34, Math.max(16, Math.floor(width * 0.3))) };
-	const fixed = W.tool + W.start + W.dur + W.msgs + W.cwd + 5; // 5 single-space gutters
+	const W = { tool: 7, start: 16, dur: 6, msgs: 5, h: 1, cwd: Math.min(34, Math.max(16, Math.floor(width * 0.3))) };
+	const fixed = W.tool + W.start + W.dur + W.msgs + W.h + W.cwd + 6; // 6 single-space gutters
 	const sumW = Math.max(10, width - fixed);
-	const line = (t: string, s: string, d: string, m: string, c: string, sum: string, color?: string) => {
+	const line = (t: string, s: string, d: string, m: string, h: string, c: string, sum: string, color?: string) => {
 		const tool = color && !opts.plain ? `\x1b[${color}m${t}\x1b[0m` : t;
-		return [tool, s, d, m, c, sum].join(" ").trimEnd();
+		return [tool, s, d, m, h, c, sum].join(" ").trimEnd();
 	};
-	const lines = [line(fit("TOOL", W.tool), fit("START", W.start), fit("DUR", W.dur), "MSGS".padStart(W.msgs), fit("CWD", W.cwd), "SUMMARY")];
+	const summaryOf = (r: Session) => {
+		const h = r.handoffs?.[0];
+		return opts.handoff && h ? `${h.goal || r.summary} [${h.path.split("/").pop()}]` : r.summary;
+	};
+	const lines = [line(fit("TOOL", W.tool), fit("START", W.start), fit("DUR", W.dur), "MSGS".padStart(W.msgs), "H", fit("CWD", W.cwd), "SUMMARY")];
 	for (const r of rows) {
 		lines.push(line(
 			fit(r.tool, W.tool), fmtStart(r.start), fit(fmtDur(r.end.getTime() - r.start.getTime()), W.dur),
-			String(r.msgs).padStart(W.msgs), fit(shortCwd(r.cwd), W.cwd, true), fit(r.summary, sumW).trimEnd(), COLOR[r.tool],
+			String(r.msgs).padStart(W.msgs), handoffMark(r), fit(shortCwd(r.cwd), W.cwd, true), fit(summaryOf(r), sumW).trimEnd(), COLOR[r.tool],
 		));
 	}
 	return lines.join("\n") + "\n";
@@ -350,7 +414,11 @@ if (import.meta.main) {
 	try { args = parseArgs(process.argv.slice(2)); } catch (e) { console.error(`sessions: ${(e as Error).message}`); process.exit(2); }
 	const rows = applyFilters(scanAll(args.filters.tools), args.filters);
 	if (args.cmd === "list") {
-		process.stdout.write(renderTable(rows, { width: args.width || process.stdout.columns || 120, plain: args.plain }) + `${rows.length} sessions\n`);
+		const handoffs = rows.filter((r) => r.handoffs?.length).length;
+		process.stdout.write(
+			renderTable(rows, { width: args.width || process.stdout.columns || 120, plain: args.plain, handoff: args.filters.handoff }) +
+			`${rows.length} sessions${handoffs ? `, ${handoffs} with a hand-off (H; /persist resume)` : ""}\n`,
+		);
 	} else if (!rows.length) {
 		console.log("No sessions match those filters.");
 	} else {
