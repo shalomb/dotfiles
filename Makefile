@@ -310,6 +310,11 @@ local-cleanup: ## Cleanup .local/share and .local/lib cruft
 
 PI_EXT_LIB := .pi/agent/extensions/_lib
 
+.PHONY: test-agentctl
+test-agentctl: ## agentctl BDD + unit tests (SSH/GPG key availability)
+	@echo "Running agentctl tests..."
+	uv run pytest tests/test_agentctl_ssh_key_bdd.py tests/test_agentctl_ssh_key.py tests/test_agentctl_ssh_signing.py tests/test_agentctl_gpg_recovery.py -v --tb=short
+
 .PHONY: test-pi
 test-pi: ## Run pi extension unit tests (bun; cd needed, bun skips dot-dirs by path)
 	@if ! command -v bun >/dev/null 2>&1; then \

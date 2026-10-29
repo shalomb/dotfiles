@@ -21,3 +21,8 @@ dependencies = [
     "urllib3>=2.5.0",
     "uv>=0.7.19",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest-bdd>=9.0.0",
+]

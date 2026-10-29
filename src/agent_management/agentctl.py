@@ -18,6 +18,12 @@ import logging
 import shlex
 
 
+PINNED_AGENT_MESSAGE = (
+    "gpg-agent ignores terminal changes, so it cannot ask for the SSH "
+    "passphrase here. Remove keep-tty (and keep-display) from "
+    "~/.gnupg/gpg-agent.conf, then restart it: gpgconf --kill gpg-agent")
+
+
 class AgentManager:
     """Unified agent management system following keychain principles."""
     
@@ -234,11 +240,11 @@ class AgentManager:
 
         return False
 
-    def _ssh_sign_probe(self, keep_tty: bool, timeout: int) -> bool:
+    def _ssh_sign_probe(self, timeout: int) -> bool:
         """Ask the SSH agent to sign a probe with its first key.
 
-        keep_tty=False drops GPG_TTY so a locked key fails fast; True lets
-        pinentry prompt on the caller's tty.
+        A locked key makes gpg-agent prompt on its startup tty; see
+        point_agent_at_terminal.
         """
         try:
             listing = subprocess.run(['ssh-add', '-L'], capture_output=True, timeout=5)
@@ -250,14 +256,33 @@ class AgentManager:
             with tempfile.TemporaryDirectory() as tmp:
                 pub = Path(tmp) / 'probe.pub'
                 pub.write_text(pubkeys[0] + '\n')
-                env = {k: v for k, v in os.environ.items()
-                       if keep_tty or k != 'GPG_TTY'}
                 result = subprocess.run(
                     ['ssh-keygen', '-Y', 'sign', '-n', 'agentctl-probe', '-f', str(pub)],
-                    input=b'probe', capture_output=True, timeout=timeout, env=env)
+                    input=b'probe', capture_output=True, timeout=timeout)
                 return result.returncode == 0
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             return False
+
+    def ssh_key_state(self) -> Optional[str]:
+        """'locked' or 'unlocked' for the gpg-agent SSH key; None if unknown.
+
+        Reads the agent's cache flag, so unlike a sign request it can never
+        start pinentry.
+        """
+        try:
+            result = subprocess.run(['gpg-connect-agent', 'keyinfo --ssh-list', '/bye'],
+                                    capture_output=True, timeout=5)
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return None
+        cached_flags = []
+        for line in result.stdout.decode('utf-8', errors='replace').splitlines():
+            fields = line.split()
+            # S KEYINFO <grip> <type> <serial> <idstr> <cached> ...; type '-' = no key on disk
+            if fields[:2] == ['S', 'KEYINFO'] and len(fields) > 6 and fields[3] != '-':
+                cached_flags.append(fields[6] == '1')
+        if not cached_flags:
+            return None
+        return 'unlocked' if any(cached_flags) else 'locked'
 
     def ssh_signing_works(self) -> bool:
         """Check the SSH agent can actually sign (not just list keys).
@@ -265,16 +290,71 @@ class AgentManager:
         `ssh-add -l` succeeds for a locked gpg-agent key; the signing request
         is what gets refused, making ssh fall back to a password prompt.
         """
-        return self._ssh_sign_probe(keep_tty=False, timeout=10)
+        return self.ssh_key_state() == 'unlocked'
 
     def unlock_ssh_agent(self) -> bool:
-        """Trigger pinentry to cache the SSH key passphrase (needs a tty)."""
-        # `tty` prints "not a tty" outside a terminal, and 03-environment.sh
-        # exports that verbatim, so treat it like unset (as unlock_gpg_agent does).
-        if os.environ.get('GPG_TTY', '') in ('', 'not a tty'):
+        """Trigger pinentry on this terminal to cache the SSH key passphrase."""
+        if not self._my_tty():
             self.logger.error("Cannot unlock ssh key: No TTY available")
             return False
-        return self._ssh_sign_probe(keep_tty=True, timeout=60)
+        if not self.point_agent_at_terminal():
+            self.logger.error(PINNED_AGENT_MESSAGE)
+            return False
+        if not self._ssh_sign_probe(timeout=60):
+            return False
+        self._ssh_unlock_record.write_text(f'{time.time()}\n')
+        return True
+
+    @property
+    def _ssh_unlock_record(self) -> Path:
+        return self.agents_state / 'ssh-unlocked-at'
+
+    def ensure_ssh_key(self) -> bool:
+        """Make sure ssh can sign without falling back to a password.
+
+        Cheap when the key is unlocked, so it suits a pre-connection hook.
+        """
+        if self.ssh_key_state() == 'unlocked':
+            return True
+        if not self._my_tty():
+            self.logger.error("SSH key is locked; run this from a terminal to unlock it")
+            return False
+        return self.unlock_ssh_agent()
+
+    def _max_cache_ttl_ssh(self) -> Optional[int]:
+        try:
+            result = subprocess.run(['gpgconf', '--list-options', 'gpg-agent'],
+                                    capture_output=True, timeout=5)
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return None
+        for line in result.stdout.decode('utf-8', errors='replace').splitlines():
+            fields = line.split(':')
+            # name:flags:level:description:type:alt-type:argname:default:argdef:value
+            if fields[0] == 'max-cache-ttl-ssh' and len(fields) >= 10:
+                value = fields[9] or fields[7]
+                return int(value) if value.isdigit() else None
+        return None
+
+    def ssh_passphrase_expires_in(self) -> Optional[int]:
+        """Seconds until the agent forgets the SSH passphrase; None if unknown.
+
+        The agent does not expose when a passphrase was cached, so this only
+        knows about unlocks agentctl itself performed.
+        """
+        state = self.ssh_key_state()
+        if state == 'locked':
+            return 0
+        if state is None:
+            return None
+        try:
+            unlocked_at = float(self._ssh_unlock_record.read_text())
+        except (OSError, ValueError):
+            return None
+        ttl = self._max_cache_ttl_ssh()
+        if ttl is None:
+            return None
+        remaining = int(unlocked_at + ttl - time.time())
+        return remaining if remaining > 0 else None
 
     def _load_ssh_keys(self, env: Optional[dict] = None):
         """Load any unloaded SSH private keys into the agent."""
@@ -464,17 +544,41 @@ class AgentManager:
         return '\n'.join(exports) if exports else ''
 
     # SSH-specific methods
+    def _my_tty(self) -> Optional[str]:
+        # `tty` prints "not a tty" outside a terminal and 03-environment.sh
+        # exports that verbatim.
+        tty = os.environ.get('GPG_TTY', '')
+        return None if tty in ('', 'not a tty') else tty
+
+    def point_agent_at_terminal(self) -> bool:
+        """Make gpg-agent ask for ssh passphrases on this terminal.
+
+        ssh sign requests carry no tty, so pinentry prompts on the agent's
+        startup tty.  With keep-tty the agent answers OK to updatestartuptty
+        but ignores it, so read the startup tty back to confirm.
+        """
+        tty = self._my_tty()
+        if not tty:
+            return False
+        try:
+            result = subprocess.run(
+                ['gpg-connect-agent',
+                 f'OPTION ttyname={tty}',
+                 f"OPTION ttytype={os.environ.get('TERM', 'dumb')}",
+                 'updatestartuptty', 'getinfo std_startup_env', '/bye'],
+                capture_output=True, timeout=5)
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
+        output = result.stdout.decode('utf-8', errors='replace')
+        return any(line.split() == ['D', f'GPG_TTY={tty}'] for line in output.splitlines())
+
     def recover_ssh_agent(self) -> bool:
         """Recover SSH agent specifically."""
         self.logger.info("Recovering SSH agent")
-        result = self.init_ssh_agent()
-        # Update GPG agent's TTY so pinentry can prompt for passphrases
-        try:
-            subprocess.run(['gpg-connect-agent', 'updatestartuptty', '/bye'],
-                           capture_output=True, timeout=5)
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
-        return result
+        if not self.point_agent_at_terminal() and self._my_tty() and self._is_using_gpg_ssh():
+            self.logger.error(PINNED_AGENT_MESSAGE)
+            return False
+        return self.init_ssh_agent()
     
     def restart_ssh_agent(self) -> bool:
         """Restart SSH agent specifically."""
@@ -948,6 +1052,7 @@ def main():
     ssh_subparsers.add_parser('recover', help='Recover SSH agent')
     ssh_subparsers.add_parser('keys', help='List SSH keys')
     ssh_subparsers.add_parser('restart', help='Restart SSH agent')
+    ssh_subparsers.add_parser('ensure', help='Unlock the SSH key if locked (prompts on this terminal)')
     
     # GPG-specific commands
     gpg_parser = subparsers.add_parser('gpg', help='GPG agent management')
@@ -1070,7 +1175,23 @@ def main():
                     print(f"Process: {ssh_status['process_status']}")
                 if ssh_status['lifetime']:
                     print(f"Lifetime: {ssh_status['lifetime']}")
-            
+                key_state = manager.ssh_key_state()
+                if key_state:
+                    print(f"SSH key: {key_state}")
+                    expires_in = manager.ssh_passphrase_expires_in()
+                    if expires_in is None:
+                        print("Passphrase needed again within: unknown")
+                    elif expires_in == 0:
+                        print("Passphrase needed again within: now")
+                    else:
+                        print(f"Passphrase needed again within: "
+                              f"{expires_in // 3600}h {expires_in % 3600 // 60}m")
+
+            elif args.ssh_command == 'ensure':
+                if not manager.ensure_ssh_key():
+                    print("❌ SSH key is not usable")
+                    return 1
+
             elif args.ssh_command == 'init':
                 success = manager.init_ssh_agent()
                 if success:
