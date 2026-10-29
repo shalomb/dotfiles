@@ -16,3 +16,9 @@ command:
       - "SSH:"
       - "GPG:"
     timeout: 15000
+  "tests/support/bash-agents-check.sh ssh-ensure-wired":
+    exit-status: 0
+    timeout: 3000
+  "tests/support/bash-agents-check.sh ssh-ensure-before-ssh":
+    exit-status: 0
+    timeout: 20000

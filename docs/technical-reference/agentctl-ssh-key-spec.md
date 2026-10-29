@@ -36,11 +36,13 @@ agent's initial (often empty) tty, so ssh falls back to a password prompt.
 
 ## Keep-alive
 
-From an interactive shell that has a real tty:
+`agentctl-integration.sh` wraps `ssh`, `scp`, and `sftp` so that, when
+`GPG_TTY` is a real terminal, they run `agentctl ssh ensure` first. If ensure
+fails (locked key and cancelled pinentry, or a pinned agent), the connection
+is aborted instead of falling back to a password prompt.
+
+Manual / prompt use:
 
 ```bash
 agentctl ssh ensure
 ```
-
-Suitable as a pre-ssh or prompt hook once the key is known to expire within
-the configured `max-cache-ttl-ssh` window.

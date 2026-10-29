@@ -63,3 +63,17 @@ export -f agentctl
 if command -v uv >/dev/null 2>&1; then
     agentctl init >/dev/null 2>&1 || true
 fi
+
+# Before SSH connections, unlock the gpg-agent SSH key on this terminal when
+# needed so ssh never silently falls back to a password prompt.
+_agentctl_ssh_ensure() {
+  # Same gate as agentctl._my_tty: no usable GPG_TTY means pinentry cannot
+  # prompt (cron, pipes, CI). Skip and let ssh behave as before.
+  case ${GPG_TTY-} in ""|"not a tty") return 0 ;; esac
+  agentctl ssh ensure
+}
+
+ssh()  { _agentctl_ssh_ensure || return $?; command ssh  "$@"; }
+scp()  { _agentctl_ssh_ensure || return $?; command scp  "$@"; }
+sftp() { _agentctl_ssh_ensure || return $?; command sftp "$@"; }
+export -f _agentctl_ssh_ensure ssh scp sftp
