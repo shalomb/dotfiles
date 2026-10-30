@@ -296,11 +296,35 @@ return {
       vim.g.copilot_assume_mapped = true
       vim.g.copilot_tab_fallback = ""
 
-      -- Key mappings
-      vim.keymap.set("i", "<C-l>", 'copilot#Accept("\\<CR>")', {
+      -- Enable for all filetypes, including empty/unspecified ones (common in pass and scratch files)
+      vim.g.copilot_filetypes = {
+        ["*"] = true,
+        [""] = true,
+      }
+
+      -- Smart accept: if Copilot has an active suggestion, accept it;
+      -- otherwise, if nvim-cmp or native popupmenu is open, confirm completion
+      vim.keymap.set("i", "<C-l>", function()
+        local suggestion = vim.fn["copilot#GetDisplayedSuggestion"]()
+        if suggestion and suggestion.text and suggestion.text ~= "" then
+          return vim.fn["copilot#Accept"]("")
+        end
+
+        local cmp_ok, cmp = pcall(require, "cmp")
+        if cmp_ok and cmp.visible() then
+          cmp.confirm({ select = true })
+          return ""
+        end
+
+        if vim.fn.pumvisible() == 1 then
+          return vim.api.nvim_replace_termcodes("<C-y>", true, true, true)
+        end
+
+        return ""
+      end, {
         expr = true,
-        replace_keycodes = false,
-        desc = "Accept Copilot suggestion"
+        replace_keycodes = true,
+        desc = "Accept Copilot suggestion or active completion",
       })
       vim.keymap.set("i", "<C-;>", "<Plug>(copilot-next)", {
         desc = "Next Copilot suggestion"
