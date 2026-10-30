@@ -20,14 +20,34 @@ local language_servers = {
   "gopls",
   "jsonls",
   "lua_ls",
-  "pyright",
   "ruff",
+  -- type checker / language server added below (ty or pyright)
   "rust_analyzer",
   "terraformls",
   "tflint",
   "vimls",
   "yamlls",
 }
+
+-- ── Python type server (experiment: ty replacing pyright) ─────────────────────
+-- NVIM_PYTHON_LSP=pyright falls back; default is ty when its binary exists.
+-- ty: https://docs.astral.sh/ty/  (install: uv tool install ty)
+
+local python_lsp = vim.env.NVIM_PYTHON_LSP
+if python_lsp ~= 'ty' and python_lsp ~= 'pyright' then
+  python_lsp = vim.fn.executable('ty') == 1 and 'ty' or 'pyright'
+end
+table.insert(language_servers, python_lsp)
+
+vim.lsp.config('ty', {
+  capabilities = capabilities,
+  settings = {
+    ty = {
+      -- uv-ty integration: PEP 723 scripts get their own uv-built env
+      experimental = { useUv = 'on' },
+    },
+  },
+})
 
 -- ── Per-server configuration ──────────────────────────────────────────────────
 
@@ -81,7 +101,7 @@ vim.lsp.config('rust_analyzer', {
 })
 
 -- Servers with explicit config above; apply shared defaults to the rest
-local configured = { lua_ls = true, pyright = true, ruff = true, rust_analyzer = true }
+local configured = { lua_ls = true, pyright = true, ruff = true, rust_analyzer = true, ty = true }
 for _, lsp_server in ipairs(language_servers) do
   if not configured[lsp_server] then
     vim.lsp.config(lsp_server, {

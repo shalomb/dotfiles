@@ -296,6 +296,15 @@ return {
       vim.g.copilot_assume_mapped = true
       vim.g.copilot_tab_fallback = ""
 
+      -- Use pre-installed binary instead of running npx every session
+      vim.g.copilot_command = { "copilot-language-server" }
+
+      -- Enable for all filetypes, including empty/unspecified ones (common in pass and scratch files)
+      vim.g.copilot_filetypes = {
+        ["*"] = true,
+        [""] = true,
+      }
+
       -- Key mappings
       vim.keymap.set("i", "<C-l>", 'copilot#Accept("\\<CR>")', {
         expr = true,
