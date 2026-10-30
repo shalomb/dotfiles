@@ -302,13 +302,29 @@ return {
         [""] = true,
       }
 
-      -- Key mappings:
-      -- copilot#Accept("") returns the internal Vim keystroke sequence (<Del>, <C-R><C-O>=...)
-      -- which MUST NOT be re-escaped with replace_keycodes = true.
-      vim.keymap.set("i", "<C-l>", 'copilot#Accept("")', {
+      -- Smart accept: if Copilot has an active suggestion, accept it;
+      -- otherwise, if nvim-cmp or native popupmenu is open, confirm completion
+      vim.keymap.set("i", "<C-l>", function()
+        local suggestion = vim.fn["copilot#GetDisplayedSuggestion"]()
+        if suggestion and suggestion.text and suggestion.text ~= "" then
+          return vim.fn["copilot#Accept"]("")
+        end
+
+        local cmp_ok, cmp = pcall(require, "cmp")
+        if cmp_ok and cmp.visible() then
+          cmp.confirm({ select = true })
+          return ""
+        end
+
+        if vim.fn.pumvisible() == 1 then
+          return vim.api.nvim_replace_termcodes("<C-y>", true, true, true)
+        end
+
+        return ""
+      end, {
         expr = true,
-        replace_keycodes = false,
-        desc = "Accept Copilot suggestion",
+        replace_keycodes = true,
+        desc = "Accept Copilot suggestion or active completion",
       })
       vim.keymap.set("i", "<C-;>", "<Plug>(copilot-next)", {
         desc = "Next Copilot suggestion"
