@@ -12,6 +12,7 @@ uv tool install checkov
 uv tool install httpie
 uv tool install pylint
 uv tool install ruff
+uv tool install ty
 uv tool install sshuttle
 uv tool install vint
 uv tool install yamllint
