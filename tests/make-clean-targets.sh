@@ -108,20 +108,17 @@ check "vscode-server-cleanup keeps 2 newest"   test -d "$S/Stable-4" -a -d "$S/S
 check "vscode-server-cleanup drops older"      test ! -e "$S/Stable-2" -a ! -e "$S/Stable-1"
 check "vscode-server-cleanup keeps lru.json"   test -f "$S/lru.json"
 
-mkdir -p "$HOME/.claude/projects/p" "$HOME/.copilot/session-state/s" "$HOME/.copilot/pkg"
-for f in "$HOME/.claude/projects/p/old.jsonl" "$HOME/.copilot/session-state/s/old" "$HOME/.copilot/pkg/old"; do echo x >"$f"; touch -d "90 days ago" "$f"; done
-echo x >"$HOME/.claude/projects/p/new.jsonl"
+mkdir -p "$HOME/.claude/projects/p" "$HOME/.claude/file-history/h"
+for f in "$HOME/.claude/projects/p/old.jsonl" "$HOME/.claude/file-history/h/old"; do echo x >"$f"; touch -d "90 days ago" "$f"; done
 run agent-state-cleanup
-check "agent-state-cleanup drops old claude sessions"  test ! -e "$HOME/.claude/projects/p/old.jsonl"
-check "agent-state-cleanup drops old copilot sessions" test ! -e "$HOME/.copilot/session-state/s/old"
-check "agent-state-cleanup keeps recent sessions"      test -f "$HOME/.claude/projects/p/new.jsonl"
-check "agent-state-cleanup leaves installed packages"  test -f "$HOME/.copilot/pkg/old"
+check "agent-state-cleanup drops old non-session state" test ! -e "$HOME/.claude/file-history/h/old"
+check "agent-state-cleanup keeps sessions"              test -f "$HOME/.claude/projects/p/old.jsonl"
 
 mkdir -p "$FIX/gocache/aa"; head -c 3145728 /dev/zero >"$FIX/gocache/aa/obj"
 TMP_GOCACHE="$FIX/gocache" CACHE_CAP_MB=1 run tool-cache-cleanup
 check "tool-cache-cleanup shrinks over-cap /tmp gocache" test ! -e "$FIX/gocache/aa"
 for t in podman-cleanup journal-cleanup vscode-server-cleanup agent-state-cleanup; do
-  check "clean depends on $t" bash -c "make -n -f '$REPO/Makefile' clean 2>&1 | rg -q -- '$t|$(case $t in podman*) echo 'volume prune';; journal*) echo vacuum;; vscode*) echo 'cli/servers';; agent*) echo 'session-state';; esac)'"
+  check "clean depends on $t" bash -c "make -n -f '$REPO/Makefile' clean 2>&1 | rg -q -- '$t|$(case $t in podman*) echo 'volume prune';; journal*) echo vacuum;; vscode*) echo 'cli/servers';; agent*) echo 'file-history';; esac)'"
 done
 
 exit $fail

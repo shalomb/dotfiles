@@ -298,6 +298,19 @@ tool-cache-cleanup: ## Wipe regenerable tool caches; shrink go-build/terraform c
 	if over "$$tf"; then $(dir $(MAKEFILE))scripts/prune-terraform-cache.sh 1; fi
 	# /tmp/gocache is a separate GOCACHE that grows unbounded
 	if over "$(TMP_GOCACHE)"; then rm -rf "$(TMP_GOCACHE)"; fi
+	# npx cache: re-fetched on demand, and `npm cache clean` does not touch it
+	rm -rf $(HOME)/.npm/_npx
+	# Superseded installs: keep only the newest (version sort), the rest is dead weight
+	keep_newest() { ls -1 "$$1" 2>/dev/null | sort -V | head -n -1 | while read -r v; do rm -rf "$$1/$$v"; done; }
+	keep_newest $(HOME)/.local/share/cursor-agent/versions
+	keep_newest $(HOME)/.copilot/pkg/linux-arm64
+	# pi keeps every release it ever installed; only current-version is live
+	cur=$$(cat $(HOME)/.pi/agent/install/current-version 2>/dev/null)
+	if [ -n "$$cur" ] && [ -d "$(HOME)/.pi/agent/install/releases/$$cur" ]; then \
+		for r in $(HOME)/.pi/agent/install/releases/*; do [ "$$(basename "$$r")" = "$$cur" ] || rm -rf "$$r"; done; \
+	fi
+	# Regenerable /tmp leftovers only (never tmux-*/ssh-*/gpg sockets), idle for 2+ days
+	find /tmp -maxdepth 1 -user "$$(whoami)" \( -name 'gomod' -o -name 'vend' -o -name 'terraform-provider*' -o -name 'pi-bash-*.log' \) -mtime +2 -exec rm -rf {} +
 
 .PHONY: podman-cleanup journal-cleanup vscode-server-cleanup agent-state-cleanup
 podman-cleanup: ## Prune unused podman volumes and dangling images
@@ -313,12 +326,16 @@ vscode-server-cleanup: ## Drop all but the newest VSCODE_SERVERS_KEEP vscode-ser
 	[ -d "$$d" ] || exit 0
 	ls -dt "$$d"/Stable-* 2>/dev/null | tail -n +$$(($(VSCODE_SERVERS_KEEP) + 1)) | xargs -r rm -rf
 
-agent-state-cleanup: ## Delete agent session transcripts older than AGENT_STATE_DAYS (never installed packages/tools)
-	for d in $(HOME)/.claude/projects $(HOME)/.claude/file-history $(HOME)/.copilot/session-state; do \
+agent-state-cleanup: ## Prune non-session agent state older than AGENT_STATE_DAYS (sessions/conversations/auth are never touched)
+	for d in $(HOME)/.claude/file-history $(HOME)/.copilot/logs $(HOME)/.copilot/pkg/tmp \
+		$(HOME)/.pi/agent/tmp $(HOME)/.pi/agent/cache $(HOME)/.pi-lens/projects $(HOME)/.gemini/antigravity-cli/log \
+		$(HOME)/.gemini/antigravity-cli/cache $(HOME)/.gemini/antigravity-cli/crashes; do \
 		[ -d "$$d" ] || continue; \
 		find "$$d" -type f -mtime +$(AGENT_STATE_DAYS) -delete; \
 		find "$$d" -mindepth 1 -type d -empty -delete; \
 	done
+	# Rotated logs
+	find $(HOME)/.pi-lens -maxdepth 1 -name '*.log.[0-9]*' -delete 2>/dev/null || true
 
 .PHONY: worktree-cleanup
 worktree-cleanup: ## Remove git worktrees with no unique work (clean tree, HEAD pushed, unlocked)
