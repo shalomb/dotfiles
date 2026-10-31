@@ -69,7 +69,9 @@ const NO_CHANGE = ["Accept the recommendations and continue", "Reshape the reque
 const NO_CHANGE_FINAL = ["Approve the handoff", "Reshape the request", "Answer later", "Stop the session"];
 const SORT_NOTES =
 	"Sort each note (question, correction, constraint, decision, new branch). Update the decision tree " +
-	"and the glossary, then send the next frontier with grill_round.";
+	"and the glossary. Before writing any ADR, C4 diagram, or .feature file, read its owner skill " +
+	"(architecture-decision-records + adr-template.md, c4-architecture, adzic-bdd) and enforce 1 decision per ADR. " +
+	"When functional nodes settle, run a Well-Architected & Falsifiability stress-test round (waf.*) before the final review round.";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -175,6 +177,8 @@ export default function (pi: ExtensionAPI) {
 		promptGuidelines: [
 			"During /grill-me, present every frontier round with grill_round, never as chat text.",
 			"Write round text in Strict ASD-STE100. Put the recommended option's index in `recommended`.",
+			"Before writing an ADR, C4 diagram, or .feature file, read its owner skill (architecture-decision-records, c4-architecture, adzic-bdd); never bundle multiple decisions into one ADR.",
+			"Once functional nodes settle, run a dedicated Adversarial Stress-Test & Falsifiability round (waf.*) before sending the final review round.",
 		],
 		parameters: Params,
 		defaultActive: false,
@@ -252,8 +256,10 @@ export default function (pi: ExtensionAPI) {
 			send(ctx,
 				"/skill:design-thinking Run this design session as /grill-me. Present every frontier round with the " +
 				"grill_round tool (references/grill-rounds.md), never in chat. Round 1 includes the stance question. " +
-				"Write artefacts as decisions settle (references/artefact-package.md), and pass record_dir so the " +
-				"replies are kept next to the decision tree.\n" +
+				"Write artefacts as decisions settle (references/artefact-package.md), loading each owner skill " +
+				"(architecture-decision-records, c4-architecture, adzic-bdd) before writing its artefact, and pass " +
+				"record_dir so the replies are kept next to the decision tree. Run an adversarial stress-test & " +
+				"falsifiability round (waf.*) before the final review round.\n" +
 				`Intent: ${arg || "the current conversation"}`);
 		},
 	});
