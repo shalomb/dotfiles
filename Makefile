@@ -246,6 +246,7 @@ neovim-deps:  ## Install neovim's dependencies
 nvim:  neovim-deps ## Setup neovim
 	# make -f .config/nvim/Makefile install
 	./dotfile_stash export .config/nvim/
+	nvim --headless "+Lazy! sync" +qa
 
 nvim-cleanup: ## Cleanup the nvim caches
 	sh -c '> ~/.local/state/nvim/lsp.log'
