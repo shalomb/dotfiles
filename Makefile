@@ -272,6 +272,7 @@ CACHE_CAP_MB ?= 1024
 TMP_GOCACHE ?= /tmp/gocache
 JOURNAL_CAP ?= 200M
 AGENT_STATE_DAYS ?= 60
+STALE_DAYS ?= 90
 VSCODE_SERVERS_KEEP ?= 2
 
 .PHONY: disk-report
@@ -335,6 +336,11 @@ agent-state-cleanup: ## Prune non-session agent state older than AGENT_STATE_DAY
 	done
 	# Rotated logs
 	find $(HOME)/.pi-lens -maxdepth 1 -name '*.log.[0-9]*' -delete 2>/dev/null || true
+
+.PHONY: stale-clone-cleanup
+stale-clone-cleanup: ## Report clones under oneTakeda safe to delete (clean, pushed, idle STALE_DAYS); APPLY=1 deletes them
+	roots="$(wildcard $(HOME)/oneTakeda $(HOME)/workspaces)"
+	[ -z "$$roots" ] || $(dir $(MAKEFILE))scripts/prune-stale-clones.sh $(if $(APPLY),--apply) --days $(STALE_DAYS) $$roots
 
 .PHONY: worktree-cleanup
 worktree-cleanup: ## Remove git worktrees with no unique work (clean tree, HEAD pushed, unlocked)
