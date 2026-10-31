@@ -79,8 +79,7 @@ gnupg                      install
 gnupg-l10n                 install
 gnupg-utils                install
 gnupg2                     install
-golang-1.19                install
-golang-1.19-go             install
+golang-go                  install
 gpg                        install
 gpg-agent                  install
 gpg-wks-client             install
@@ -141,8 +140,7 @@ neovim                     install
 net-tools                  install
 netbase                    install
 nftables                   install
-openjdk-24-jdk-headless    install
-openjdk-24-jre-headless    install
+openjdk-26-jdk-headless    install
 openssl                    install
 os-prober                  install
 p7zip                      install
