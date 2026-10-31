@@ -1,5 +1,5 @@
 #!/bin/bash
-# Coding agent harnesses (claude, copilot, codex, opencode, pi).
+# Coding agent harnesses (claude, copilot, codex, pi).
 # Each drives its own upgrade after install, so this is deliberately not part of npm-tools
 # (a plain list of npm libraries). Idempotent: safe to rerun to converge on latest.
 
@@ -9,17 +9,10 @@ set -eu
 sudo npm install -g @anthropic-ai/claude-code
 claude update
 
-# GitHub Copilot CLI: factored out to drive its own self-update after install
-sudo npm install -g @github/copilot
-copilot update
-
-# OpenAI Codex CLI: factored out to drive its own self-update after install
-sudo npm install -g @openai/codex
-codex update
-
-# opencode coding agent harness: factored out to drive its own self-update after install
-sudo npm install -g opencode-ai
-opencode upgrade
+# GitHub Copilot and OpenAI Codex ship standalone, self-managed installs (gh-managed copilot,
+# ~/.codex/packages); the npm globals were shadowed duplicates, so only update what exists.
+command -v copilot >/dev/null 2>&1 && copilot update || true
+command -v codex >/dev/null 2>&1 && codex update || true
 
 # pi.dev coding agent harness: the official managed installer (user-local, no sudo; lives in
 # ~/.pi/agent/install with a ~/.local/bin/pi symlink). Not an npm global any more.

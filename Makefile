@@ -74,7 +74,7 @@ submodules: .config/submodules/INIT .config/submodules/UPDATE
 tools: go-tools rust-tools workspace-tools bfg-tools ## Install CLI tools
 
 .PHONY: agent-tools update-pi
-agent-tools: ## Install/update coding agent harnesses (claude, copilot, codex, opencode, pi)
+agent-tools: ## Install/update coding agent harnesses (claude, copilot, codex, pi)
 	.config/agent-tools/INIT
 
 update-pi: ## Update only the pi.dev harness and its extensions

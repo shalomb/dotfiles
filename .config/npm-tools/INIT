@@ -6,12 +6,10 @@ sudo apt-get -yyq --no-install-recommends --no-install-suggests install nodejs n
 
 sudo npm install \
   @devcontainers/cli \
-  @pnp/cli-microsoft365 \
   bash-language-server \
   markdownlint-cli2 \
   mcp-hub \
   @mermaid-js/mermaid-cli \
   neovim \
   tree-sitter \
-  vsce \
   write-good
