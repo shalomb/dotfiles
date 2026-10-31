@@ -1,6 +1,6 @@
 #!/bin/bash
 # .config/smb-share/INIT: deploys the read-only guest SMB share + its nftables
-# guard from root/etc. Packages come from apt/dpkg--set-selections, NOT here.
+# guard from root/etc. Packages come from apt/profiles/*.list, NOT here.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd)
 INIT="${INIT:-$repo/.config/smb-share/INIT}"
@@ -29,6 +29,6 @@ check "guard does not flush the whole ruleset" "! grep -Eq '^\s*flush ruleset' '
 check "guard drops 445 outside the subnet"    "grep -Eq 'tcp dport \{ 139, 445 \}.*saddr != 10\.211\.55\.0/24.*drop' '$guard'"
 check "guard unit runs before smbd"           "grep -q '^Before=smbd.service' '$repo/root/etc/systemd/system/smb-guard.service'"
 for p in samba nftables; do
-  check "package $p in dpkg--set-selections"  "grep -Eq '^$p[[:space:]]+install' '$repo/.config/apt/dpkg--set-selections'"
+  check "package $p in the default apt profiles" "'$repo/.config/apt/profile-packages' | grep -qx '$p'"
 done
 exit $fail

@@ -1,6 +1,6 @@
 #!/bin/bash
 # .config/debug-tools/INIT: deploys root/etc config + enables services. Packages
-# come from apt/dpkg--set-selections, NOT from this script.
+# come from apt/profiles/*.list, NOT from this script.
 set -u
 repo=$(cd "$(dirname "$0")/.." && pwd)
 INIT="${INIT:-$repo/.config/debug-tools/INIT}"
@@ -17,6 +17,6 @@ check "enables auditd + timesyncd"          "grep -q 'enable --now auditd system
 check "removes stale timesync clock"        "grep -q 'rm -f /var/lib/systemd/timesync/clock' <<<\"\$out\""
 check "does not install packages itself"    "! grep -q 'apt' <<<\"\$out\""
 for p in gdb auditd libc6-dbg systemd-coredump systemd-timesyncd; do
-  check "package $p in dpkg--set-selections" "grep -Eq '^$p[[:space:]]+install' '$repo/.config/apt/dpkg--set-selections'"
+  check "package $p in the default apt profiles" "'$repo/.config/apt/profile-packages' | grep -qx '$p'"
 done
 exit $fail

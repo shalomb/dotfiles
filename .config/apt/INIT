@@ -37,12 +37,11 @@ if ((${GUI:-0} == 1)); then
 	type -P xset &>/dev/null || pkgs_to_install+=('x11-xserver-utils')
 	vi --version | grep -iq x11 || pkgs_to_install+=('vim-gtk3')
 
-	# Install packages making up our GUI desktop
-	pkgs_to_install+=($(awk '/^[a-z]/ {print $1}' dpkg--set-selections.gui))
 fi
 
-# Install packages making up our workspace
-pkgs_to_install+=($(awk '/^[a-z]/ {print $1}' dpkg--set-selections))
+# Install the packages of the selected profiles (profiles/<name>.list). Lean by default:
+# base, dev and cloud. Opt in with PROFILES="base dev cloud extras"; GUI=1 adds gui.
+pkgs_to_install+=($("$SCRIPT_DIR/profile-packages"))
 
 if ((${#pkgs_to_install[@]} >= 1)); then
 	echo "Installing pre-requisites ... ${pkgs_to_install[@]}"

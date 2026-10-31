@@ -1,0 +1,60 @@
+#!/bin/bash
+# Resolve apt package profiles (.config/apt/profiles/<name>.list) to package names.
+#
+# usage: profile-packages [--audit | --outside] [PROFILE...]
+#   (default)  print the packages of the selected profiles, sorted and unique
+#   --audit    print manual packages that NO profile mentions (record drift)
+#   --outside  print manual packages outside the SELECTED profiles (demote candidates:
+#              review, then `apt-mark auto <pkg>` and `apt autoremove`)
+#
+# Selection: PROFILE args, else $PROFILES, else "base dev cloud"; GUI=1 adds "gui".
+# Reports skip noise: priority required/important packages, libraries, kernel and boot
+# packages, and python3-* libraries (all come back as dependencies).
+# Test seams: APT_PROFILE_DIR, APT_MANUAL_FILE, APT_BASELINE_FILE.
+set -uo pipefail
+
+dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+pdir=${APT_PROFILE_DIR:-$dir/profiles}
+
+mode=list
+case ${1:-} in
+--audit) mode=audit; shift ;;
+--outside) mode=outside; shift ;;
+esac
+
+read_list() { # read_list <file>: package names, comments/blank lines/trailing words dropped
+  awk '/^[a-z0-9]/ {print $1}' "$1"
+}
+
+resolve() { # resolve <profile>...: package names, sorted and unique
+  local p
+  for p in "$@"; do
+    [[ -f $pdir/$p.list ]] || { echo "profile-packages: unknown profile '$p' (have: $(cd "$pdir" && ls ./*.list 2>/dev/null | awk -F'[/.]' '{printf "%s ", $3}'))" >&2; return 1; }
+    read_list "$pdir/$p.list"
+  done | sort -u
+}
+
+all_profiles() { (cd "$pdir" && for f in *.list; do echo "${f%.list}"; done); }
+
+manual() {
+  if [[ -n ${APT_MANUAL_FILE:-} ]]; then cat "$APT_MANUAL_FILE"; else apt-mark showmanual; fi | sort -u
+}
+
+baseline() { # packages any Debian install already has
+  if [[ -n ${APT_BASELINE_FILE:-} ]]; then sort -u "$APT_BASELINE_FILE"; return; fi
+  dpkg-query -Wf '${Package} ${Priority} ${Essential}\n' | awk '$2=="required"||$2=="important"||$3=="yes" {sub(/:.*/,"",$1); print $1}' | sort -u
+}
+
+noise() { # noise <names on stdin>: drop libs, kernel/boot packages and python3-* libraries
+  rg -v '^(lib|linux-(image|headers)|grub-|initramfs|native-arch|installation-report|dh-builtusing|gcc-[0-9]+-base|python3-)' || true
+}
+
+selected=("$@")
+((${#selected[@]})) || read -ra selected <<<"${PROFILES:-base dev cloud}"
+[[ ${GUI:-0} == 1 ]] && [[ " ${selected[*]} " != *" gui "* ]] && selected+=(gui)
+
+case $mode in
+list) resolve "${selected[@]}" ;;
+audit) comm -23 <(manual | noise) <(resolve $(all_profiles) | sort -u) | comm -23 - <(baseline) ;;
+outside) comm -23 <(manual | noise) <(resolve "${selected[@]}") | comm -23 - <(baseline) ;;
+esac

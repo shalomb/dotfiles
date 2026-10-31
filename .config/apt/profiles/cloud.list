@@ -1,0 +1,16 @@
+# cloud: Cloud and container CLIs (several come from third-party apt repos in sources.list.d). Installed by default.
+# One package per line; text after the name and lines starting with # are ignored.
+boundary
+goss
+helm
+k9s
+kubectl
+kubectx
+passt
+podman
+session-manager-plugin
+slirp4netns
+tailscale
+terraform
+uidmap
+vault-enterprise
