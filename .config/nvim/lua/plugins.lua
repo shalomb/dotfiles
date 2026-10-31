@@ -306,9 +306,12 @@ return {
       }
 
       -- Key mappings
+      -- Note: replace_keycodes must be true (or omitted) in Neovim Lua vim.keymap.set
+      -- so copilot#Accept()'s returned keycodes (<C-R>=, <Left>, <CR>) are evaluated rather
+      -- than inserted literally into the buffer as '=copilot#TextQueuedForInsertion()'.
       vim.keymap.set("i", "<C-l>", 'copilot#Accept("\\<CR>")', {
         expr = true,
-        replace_keycodes = false,
+        replace_keycodes = true,
         desc = "Accept Copilot suggestion"
       })
       vim.keymap.set("i", "<C-;>", "<Plug>(copilot-next)", {
