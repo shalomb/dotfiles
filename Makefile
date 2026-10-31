@@ -74,7 +74,7 @@ submodules: .config/submodules/INIT .config/submodules/UPDATE
 tools: go-tools rust-tools workspace-tools bfg-tools ## Install CLI tools
 
 .PHONY: agent-tools update-pi
-agent-tools: ## Install/update coding agent harnesses (claude, copilot, codex, opencode, gemini, pi)
+agent-tools: ## Install/update coding agent harnesses (claude, copilot, codex, opencode, pi)
 	.config/agent-tools/INIT
 
 update-pi: ## Update only the pi.dev harness and its extensions
@@ -302,7 +302,6 @@ tool-cache-cleanup: ## Wipe regenerable tool caches; shrink go-build/terraform c
 	rm -rf $(HOME)/.npm/_npx
 	# Superseded installs: keep only the newest (version sort), the rest is dead weight
 	keep_newest() { ls -1 "$$1" 2>/dev/null | sort -V | head -n -1 | while read -r v; do rm -rf "$$1/$$v"; done; }
-	keep_newest $(HOME)/.local/share/cursor-agent/versions
 	keep_newest $(HOME)/.copilot/pkg/linux-arm64
 	# pi keeps every release it ever installed; only current-version is live
 	cur=$$(cat $(HOME)/.pi/agent/install/current-version 2>/dev/null)
@@ -350,9 +349,6 @@ local-cleanup: ## Cleanup .local/share and .local/lib cruft
 	rm -rf $(HOME)/.local/lib/python3.11 $(HOME)/.local/lib/python3.12 || true
 	# Remove old uv tool data
 	command -v uv >/dev/null && uv python list --only-installed 2>/dev/null | awk '/\/\.local\/share\/uv\// {print $$1}' | sort -V -r | awk 'match($$0, /^(cpython-[0-9]+\.[0-9]+)/, m) {minor=m[1]; if(minor==prev){print} else {prev=minor}}' | xargs -r uv python uninstall || true
-	# Keep only the 2 newest cursor-agent versions (~/.local/bin/cursor-agent links to the newest)
-	ls -1 $(HOME)/.local/share/cursor-agent/versions 2>/dev/null | sort -V | head -n -2 | \
-		xargs -r -I{} rm -rf "$(HOME)/.local/share/cursor-agent/versions/{}" || true
 	# Clean up any remaining .local/share/go if it somehow persisted
 	rm -rf $(HOME)/.local/share/go/pkg/mod/* || true
 	df -hP
