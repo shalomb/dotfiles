@@ -94,6 +94,7 @@ npm-cleanup: ## Cleanup the npm cache
 		echo "npm-cleanup: skipping package.json/node_modules removal in $$(pwd -P)"; \
 	fi
 	npm cache verify
+	command -v pnpm >/dev/null && pnpm store prune || true
 
 .PHONY: python-tools python-cleanup
 python-tools: ## Run python-tools installer
@@ -263,20 +264,28 @@ update:  ## Update all components
 	make python-tools
 
 .PHONY: clean
-clean: nvim-cleanup cargo-cleanup go-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup npm-cleanup local-cleanup worktree-cleanup tool-cache-cleanup
+clean: nvim-cleanup cargo-cleanup go-cleanup apt-clean python-cleanup bfg-cleanup system-cleanup workspace-cleanup npm-cleanup local-cleanup worktree-cleanup tool-cache-cleanup podman-cleanup journal-cleanup vscode-server-cleanup agent-state-cleanup
 
 # Age-based sweeps never fire on caches that are in constant use (go-build,
 # terraform plugin-cache), so those are capped by size instead.
 CACHE_CAP_MB ?= 1024
+TMP_GOCACHE ?= /tmp/gocache
+JOURNAL_CAP ?= 200M
+AGENT_STATE_DAYS ?= 60
+VSCODE_SERVERS_KEEP ?= 2
 
 .PHONY: disk-report
 disk-report: ## Read-only disk usage report of the usual hot spots (needs dust)
 	command -v dust >/dev/null || { echo "disk-report: dust is not installed (cargo install du-dust)"; exit 1; }
 	df -hP $(HOME) | tail -n 1
-	for d in $(HOME) $(HOME)/.cache $(HOME)/.local/share $(HOME)/oneTakeda $(HOME)/workspaces; do \
+	# Never scan $(HOME) itself: it holds symlinks into Parallels/OneDrive host
+	# mounts that make dust hang. Explicit real dirs only, each time-boxed.
+	for d in $(HOME)/.cache $(HOME)/.local $(HOME)/oneTakeda $(HOME)/workspaces \
+		$(HOME)/.claude $(HOME)/.copilot $(HOME)/.gemini $(HOME)/.pi $(HOME)/.pi-lens \
+		$(HOME)/.vscode-server $(HOME)/.npm /usr/local /var /tmp; do \
 		[ -d "$$d" ] || continue; \
 		echo; echo "== $$d"; \
-		dust -P -d 1 -n 12 -x "$$d"; \
+		timeout 60 dust -P -d 1 -n 12 -x "$$d" || echo "disk-report: skipped $$d (timeout/error)"; \
 	done
 
 .PHONY: tool-cache-cleanup
@@ -287,6 +296,29 @@ tool-cache-cleanup: ## Wipe regenerable tool caches; shrink go-build/terraform c
 	if over $(HOME)/.cache/go-build; then command -v go >/dev/null && go clean -cache; fi
 	tf="$${TF_PLUGIN_CACHE_DIR:-$(HOME)/.cache/terraform.d/plugin-cache}"
 	if over "$$tf"; then $(dir $(MAKEFILE))scripts/prune-terraform-cache.sh 1; fi
+	# /tmp/gocache is a separate GOCACHE that grows unbounded
+	if over "$(TMP_GOCACHE)"; then rm -rf "$(TMP_GOCACHE)"; fi
+
+.PHONY: podman-cleanup journal-cleanup vscode-server-cleanup agent-state-cleanup
+podman-cleanup: ## Prune unused podman volumes and dangling images
+	command -v podman >/dev/null || exit 0
+	podman volume prune -f || true
+	podman image prune -f || true
+
+journal-cleanup: ## Cap the systemd journal at JOURNAL_CAP (needs passwordless sudo, else skipped)
+	sudo -n journalctl --vacuum-size=$(JOURNAL_CAP) || echo "journal-cleanup: skipped (no passwordless sudo)"
+
+vscode-server-cleanup: ## Drop all but the newest VSCODE_SERVERS_KEEP vscode-server builds
+	d=$(HOME)/.vscode-server/cli/servers
+	[ -d "$$d" ] || exit 0
+	ls -dt "$$d"/Stable-* 2>/dev/null | tail -n +$$(($(VSCODE_SERVERS_KEEP) + 1)) | xargs -r rm -rf
+
+agent-state-cleanup: ## Delete agent session transcripts older than AGENT_STATE_DAYS (never installed packages/tools)
+	for d in $(HOME)/.claude/projects $(HOME)/.claude/file-history $(HOME)/.copilot/session-state; do \
+		[ -d "$$d" ] || continue; \
+		find "$$d" -type f -mtime +$(AGENT_STATE_DAYS) -delete; \
+		find "$$d" -mindepth 1 -type d -empty -delete; \
+	done
 
 .PHONY: worktree-cleanup
 worktree-cleanup: ## Remove git worktrees with no unique work (clean tree, HEAD pushed, unlocked)

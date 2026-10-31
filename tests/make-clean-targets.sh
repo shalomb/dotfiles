@@ -27,7 +27,7 @@ run() { (cd "${CWD:-$REPO}" && make -f "$REPO/Makefile" "$@" >"$FIX/make.out" 2>
 # --- python-cleanup must run `uv cache clean` when uv IS installed
 stub uv
 run python-cleanup
-check "python-cleanup runs uv cache clean when uv exists" called '^uv cache clean'
+check "python-cleanup runs uv cache prune when uv exists" called '^uv cache prune'
 
 # --- npm-cleanup must not delete a project's files when run from another directory
 stub npm
@@ -78,13 +78,50 @@ mkdir -p "$HOME/.local/share/x" "$HOME/oneTakeda/keepme" "$HOME/.cache/keepme"
 stub dust; : >"$CALLS"
 run disk-report
 check "disk-report summarises ~/.cache"       called "dust .*$HOME/.cache\$"
-check "disk-report summarises ~/.local/share" called "dust .*$HOME/.local/share\$"
+check "disk-report summarises ~/.local"       called "dust .*$HOME/.local\$"
 check "disk-report summarises ~/oneTakeda"    called "dust .*$HOME/oneTakeda\$"
-check "disk-report summarises ~ top level"    called "dust .*$HOME\$"
+check "disk-report never scans ~ itself"      bash -c "! rg -q 'dust .* $HOME\$' '$CALLS'"
+check "disk-report stays on one filesystem"   called "dust .*-x .*$HOME/.cache\$"
+check "disk-report is time-boxed"             rg -q 'timeout' "$FIX/make.out"
+mkdir -p "$HOME/.claude" "$HOME/.pi"; : >"$CALLS"; run disk-report
+check "disk-report covers agent state dirs"   called "dust .*$HOME/.claude\$"
 check "disk-report skips dirs that do not exist" bash -c "! rg -q workspaces '$CALLS'"
 check "disk-report is read-only"              test -d "$HOME/oneTakeda/keepme" -a -d "$HOME/.cache/keepme"
 PATH=/usr/bin:/bin run disk-report; rc=$?
 check "disk-report fails without dust"        test "$rc" -ne 0
 check "disk-report says dust is missing"      rg -q 'dust is not installed' "$FIX/make.out"
+
+# --- new cleanups, all wired into `clean`
+stub podman; stub sudo; stub pnpm; : >"$CALLS"
+run podman-cleanup
+check "podman-cleanup prunes volumes"          called '^podman volume prune'
+run journal-cleanup
+check "journal-cleanup vacuums the journal"    called 'journalctl --vacuum-size'
+run npm-cleanup
+check "npm-cleanup prunes the pnpm store"      called '^pnpm store prune'
+
+S=$HOME/.vscode-server/cli/servers; mkdir -p "$S"
+for i in 1 2 3 4; do mkdir -p "$S/Stable-$i"; touch -d "$((10-i)) days ago" "$S/Stable-$i"; done
+: >"$S/lru.json"
+run vscode-server-cleanup
+check "vscode-server-cleanup keeps 2 newest"   test -d "$S/Stable-4" -a -d "$S/Stable-3"
+check "vscode-server-cleanup drops older"      test ! -e "$S/Stable-2" -a ! -e "$S/Stable-1"
+check "vscode-server-cleanup keeps lru.json"   test -f "$S/lru.json"
+
+mkdir -p "$HOME/.claude/projects/p" "$HOME/.copilot/session-state/s" "$HOME/.copilot/pkg"
+for f in "$HOME/.claude/projects/p/old.jsonl" "$HOME/.copilot/session-state/s/old" "$HOME/.copilot/pkg/old"; do echo x >"$f"; touch -d "90 days ago" "$f"; done
+echo x >"$HOME/.claude/projects/p/new.jsonl"
+run agent-state-cleanup
+check "agent-state-cleanup drops old claude sessions"  test ! -e "$HOME/.claude/projects/p/old.jsonl"
+check "agent-state-cleanup drops old copilot sessions" test ! -e "$HOME/.copilot/session-state/s/old"
+check "agent-state-cleanup keeps recent sessions"      test -f "$HOME/.claude/projects/p/new.jsonl"
+check "agent-state-cleanup leaves installed packages"  test -f "$HOME/.copilot/pkg/old"
+
+mkdir -p "$FIX/gocache/aa"; head -c 3145728 /dev/zero >"$FIX/gocache/aa/obj"
+TMP_GOCACHE="$FIX/gocache" CACHE_CAP_MB=1 run tool-cache-cleanup
+check "tool-cache-cleanup shrinks over-cap /tmp gocache" test ! -e "$FIX/gocache/aa"
+for t in podman-cleanup journal-cleanup vscode-server-cleanup agent-state-cleanup; do
+  check "clean depends on $t" bash -c "make -n -f '$REPO/Makefile' clean 2>&1 | rg -q -- '$t|$(case $t in podman*) echo 'volume prune';; journal*) echo vacuum;; vscode*) echo 'cli/servers';; agent*) echo 'session-state';; esac)'"
+done
 
 exit $fail
