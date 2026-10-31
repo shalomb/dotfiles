@@ -286,43 +286,16 @@ return {
     end,
   },
 
-  -- GitHub Copilot
+  -- GitHub Copilot (pure Lua, prose-tuned, disabled in pass cleanroom mode)
   {
-    "github/copilot.vim",
-    lazy = false,
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
+    cond = function()
+      return not vim.g.pass_redact_mode
+    end,
     config = function()
-      -- Copilot configuration
-      vim.g.copilot_no_tab_map = true
-      vim.g.copilot_assume_mapped = true
-      vim.g.copilot_tab_fallback = ""
-
-      -- Use pre-installed binary instead of running npx every session
-      vim.g.copilot_command = { "copilot-language-server" }
-
-      -- Enable for all filetypes, including empty/unspecified ones (common in pass and scratch files)
-      vim.g.copilot_filetypes = {
-        ["*"] = true,
-        [""] = true,
-      }
-
-      -- Key mappings
-      -- Note: replace_keycodes must be true (or omitted) in Neovim Lua vim.keymap.set
-      -- so copilot#Accept()'s returned keycodes (<C-R>=, <Left>, <CR>) are evaluated rather
-      -- than inserted literally into the buffer as '=copilot#TextQueuedForInsertion()'.
-      vim.keymap.set("i", "<C-l>", 'copilot#Accept("\\<CR>")', {
-        expr = true,
-        replace_keycodes = true,
-        desc = "Accept Copilot suggestion"
-      })
-      vim.keymap.set("i", "<C-;>", "<Plug>(copilot-next)", {
-        desc = "Next Copilot suggestion"
-      })
-      vim.keymap.set("i", "<C-,>", "<Plug>(copilot-previous)", {
-        desc = "Previous Copilot suggestion"
-      })
-      vim.keymap.set("i", "<C-\\>", "<Plug>(copilot-dismiss)", {
-        desc = "Dismiss Copilot suggestion"
-      })
+      require("config.copilot").setup()
     end,
   },
 
