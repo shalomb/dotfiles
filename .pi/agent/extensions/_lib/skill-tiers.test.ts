@@ -155,3 +155,12 @@ test("resolveUserManifestPath: priority resolution (PI_SKILL_MANIFEST -> PI_ROLE
 	expect(resolveUserManifestPath({}, agentDir)).toBe(defaultManifest);
 });
 
+test("shipped user skill-tiers.json: design-thinking is tier 2, brainstorming and pi-sub-agent are demoted", () => {
+	const actualPath = join(import.meta.dir, "..", "..", "skill-tiers.json");
+	const m = parseManifest(require("node:fs").readFileSync(actualPath, "utf8"));
+	expect(tierOf("design-thinking", m)).toBe(2);
+	expect(tierOf("brainstorming", m)).toBe(3);
+	expect(tierOf("pi-sub-agent", m)).toBe(3);
+});
+
+

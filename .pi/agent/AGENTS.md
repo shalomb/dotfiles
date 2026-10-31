@@ -36,8 +36,8 @@
 
 ## Skills to apply by situation
 
-- **Design/planning**: `brainstorming` before creative work; `writing-plans` for
-  multi-step tasks; `executing-plans` to run them;
+- **Design/planning**: `design-thinking` (`/grill-me`) before creative work;
+  `writing-plans` for multi-step tasks; `executing-plans` to run them;
   `architecture-decision-records` for significant decisions.
 - **Debugging**: `systematic-debugging` before proposing any fix.
 - **Review**: `requesting-code-review` before merging;
