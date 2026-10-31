@@ -1,6 +1,6 @@
 // Run: bun test ~/.pi/agent/extensions/_lib/grill.test.ts
 import { expect, test } from "bun:test";
-import { type Round, WIDTH, computeDelta, renderRound, validateRound } from "./grill";
+import { type Round, WIDTH, computeDelta, renderRound, resolveEditor, validateRound } from "./grill";
 
 const round = (over: Partial<Round> = {}): Round => ({
 	topic: "offline sync",
@@ -54,6 +54,13 @@ const sameQuestion = (doc: string, off: number, label: string) => {
 };
 
 // ---- validate ----
+
+test("resolveEditor prefers PI_GRILL_VIM then VISUAL then EDITOR then vi", () => {
+	expect(resolveEditor({})).toBe("vi");
+	expect(resolveEditor({ EDITOR: "nvim" })).toBe("nvim");
+	expect(resolveEditor({ VISUAL: "vi", EDITOR: "vim" })).toBe("vi");
+	expect(resolveEditor({ PI_GRILL_VIM: "/usr/bin/vim", VISUAL: "vi" })).toBe("/usr/bin/vim");
+});
 
 test("a valid round passes", () => expect(validateRound(round())).toBeUndefined());
 test("max 7 questions", () => {

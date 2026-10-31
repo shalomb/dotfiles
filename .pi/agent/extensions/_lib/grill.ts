@@ -37,6 +37,14 @@ export function stateDir(env: Record<string, string | undefined>, home: string):
 	return join(xdg && isAbsolute(xdg) ? xdg : join(home, ".local", "state"), "pi", "grill");
 }
 
+export function resolveEditor(env: Record<string, string | undefined>): string {
+	for (const k of ["PI_GRILL_VIM", "VISUAL", "EDITOR"] as const) {
+		const v = env[k]?.trim();
+		if (v) return v;
+	}
+	return "vi";
+}
+
 export function validateRound(r: Round): string | undefined {
 	if (!r.topic?.trim()) return "topic is empty";
 	if (r.questions.length > 7) return "too many questions (max 7): ask the rest in a later round";

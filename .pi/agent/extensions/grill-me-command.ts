@@ -7,7 +7,7 @@
  * grill_round renders the round file, opens it in vim (-S _lib/grill.vim), and returns only the
  * delta, so the model never re-reads the file. Round files stay in
  * $XDG_STATE_HOME/pi/grill/<session>/ until answered; record_dir copies each reply into the repo.
- * The vim binary is $PI_GRILL_VIM (default: vim).
+ * The editor binary is $PI_GRILL_VIM (fallback: $VISUAL, $EDITOR, vi).
  * Logic + tests: _lib/grill.ts, _lib/grill.test.ts.
  *
  * Load location: ~/.pi/agent/extensions/grill-me-command.ts (global)
@@ -18,7 +18,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { type Round, computeDelta, renderRound, stateDir, validateRound } from "./_lib/grill.ts";
+import { type Round, computeDelta, renderRound, resolveEditor, stateDir, validateRound } from "./_lib/grill.ts";
 
 const TOOL = "grill_round";
 const VIM_SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "_lib", "grill.vim");
@@ -113,7 +113,7 @@ export default function (pi: ExtensionAPI) {
 		const res = await pi.exec(
 			"tmux",
 			["display-popup", "-E", "-d", p.cwd, "-w", "90%", "-h", "90%", "-T", ` grill-me: round ${p.n} `,
-				process.env.PI_GRILL_VIM || "vim", "-S", VIM_SCRIPT, p.work],
+				resolveEditor(process.env), "-S", VIM_SCRIPT, p.work],
 			{ signal },
 		);
 		if (signal?.aborted) return { kind: "later", text: `Round ${p.n} was cancelled. It is saved: /grill-me resume reopens it.` };
