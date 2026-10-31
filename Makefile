@@ -164,7 +164,7 @@ python-cleanup: ## Cleanup the pip cache
 	find ~/.cache/pip/ -atime +30 -delete 2>/dev/null || true
 	find ~/.cache/pypoetry/ -atime +30 -delete 2>/dev/null || true
 	# Only clean when uv is installed (the old `||` ran it only when it was missing)
-	[ -x $(HOME)/.local/bin/uv ] && $(HOME)/.local/bin/uv cache clean || true
+	[ -x $(HOME)/.local/bin/uv ] && timeout 60 $(HOME)/.local/bin/uv cache prune --force || true
 
 .PHONY: go-tools
 go-tools: ## Run go-tools installer
