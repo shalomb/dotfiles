@@ -216,3 +216,4 @@ root/etc/dnsmasq.d/**/*.disabled
 .cursor/
 .config/bash/bashrc.backup
 tmp/
+.worktrees/
