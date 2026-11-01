@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpath
 import { join, resolve } from "node:path";
 import { type Goal, goalPath, goalsDir, parseGoal, renderGoal, storeDir, validateGoal } from "./goal.ts";
 
-export type Exec = (cmd: string, args: string[], opts?: { cwd?: string; timeout?: number }) => Promise<{ code: number; stdout: string; stderr: string }>;
+export type Exec = (cmd: string, args: string[], opts?: { cwd?: string; timeout?: number }) => Promise<{ code: number; stdout: string; stderr: string; killed?: boolean }>;
 
 const CHECK_TIMEOUT_MS = 600_000;
 const OUTPUT_TAIL_LINES = 40;
@@ -48,12 +48,16 @@ export interface CheckRun { exit: number | undefined; output: string }
 
 const tail = (s: string) => s.split("\n").slice(-OUTPUT_TAIL_LINES).join("\n").trim();
 
-/** Run each command with `bash -c` in `cwd`, in order. Stop at the first non-zero exit. Exit 0 means every command passed. */
+/**
+ * Run each command with `bash -c` in `cwd`, in order. Stop at the first non-zero exit. Exit 0 means every command passed.
+ * A killed (timed-out) command reports code 0 in pi's exec, so `killed` is checked first: exit is then undefined.
+ */
 export async function runChecks(exec: Exec, commands: string[], cwd: string): Promise<CheckRun> {
 	let output = "";
 	for (const command of commands) {
 		const r = await exec("bash", ["-c", command], { cwd, timeout: CHECK_TIMEOUT_MS });
 		output += `$ ${command}\n${r.stdout}${r.stderr}`;
+		if (r.killed) return { exit: undefined, output: tail(`${output}\n(command killed or timed out; the check did not finish)`) };
 		if (r.code !== 0) return { exit: r.code, output: tail(output) };
 	}
 	return { exit: 0, output: tail(output) };

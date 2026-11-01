@@ -336,3 +336,24 @@ test("parseGoalArgs: bare subcommand words are subcommands, anything else is an 
 	expect(parseGoalArgs("drop the legacy cache")).toEqual({ kind: "start", outcome: "drop the legacy cache" });
 	expect(parseGoalArgs("done")).toEqual({ kind: "done" });
 });
+
+// A killed or timed-out check reports code 0 in pi's exec; it must never read as green.
+const killedBash: Exec = async (cmd, args, o) => (cmd === "bash" ? { code: 0, stdout: "", stderr: "", killed: true } : exec(cmd, args, o));
+
+test("done does not close on a killed check even though its exit code is 0", async () => {
+	const d = await activeGoal();
+	await doneGoal({ ...d, exec: killedBash });
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	expect(lastNote()).toMatch(/killed|timed out/i);
+	expect(commands).toEqual([]);
+});
+
+test("lock does not treat a killed check as 'failed on base'", async () => {
+	const d = await draftWithCheck();
+	answers.push(true);
+	await lockGoal({ ...d, exec: killedBash });
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+	expect(lastNote()).toMatch(/could not be run|killed|timed out/i);
+	expect(confirms).toEqual([]);
+	expect(worktrees()).toBe(1);
+});

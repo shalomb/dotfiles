@@ -44,7 +44,7 @@ const Params = Type.Object({
 export default function (pi: ExtensionAPI) {
 	const exec: Exec = async (cmd, args, o) => {
 		const r = await pi.exec(cmd, args, { cwd: o?.cwd, timeout: o?.timeout } as any);
-		return { code: r.code, stdout: r.stdout, stderr: r.stderr };
+		return { code: r.code, stdout: r.stdout, stderr: r.stderr, killed: r.killed };
 	};
 
 	/** Build the flow dependencies for the current checkout, or undefined outside a git repo. */
