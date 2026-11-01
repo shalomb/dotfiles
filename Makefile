@@ -34,7 +34,7 @@ refresh:  ## refresh all dotfiles in $HOME with versions in repo
 	# Install all dotfiles into the home directory using glob patterns with cleanup
 	env PYTHONPATH=src $(HOME)/.local/bin/uv run python -m dotfile_manager export --cleanup ".*" ".config/*"
 
-.PHONY: apt apt-clean apt-audit apt-lean
+.PHONY: apt apt-clean apt-audit apt-lean apt-prune
 apt: ## Install apt packages, lean (PROFILES="base dev cloud" by default; add extras, GUI=1 adds gui)
 	.config/apt/INIT
 
@@ -43,6 +43,9 @@ apt-audit: ## Report manual packages that no apt profile records (drift); read-o
 
 apt-lean: ## Report manual packages outside the selected apt profiles (PROFILES=...); demote with apt-mark auto
 	.config/apt/profile-packages --outside
+
+apt-prune: ## Simulate demoting packages outside the apt profiles + autoremove; APPLY=1 does it (sudo)
+	.config/apt/apt-prune $(if $(APPLY),--apply)
 
 apt-clean:
 	# Skipping apt commands that require sudo

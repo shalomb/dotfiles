@@ -1,0 +1,84 @@
+#!/bin/bash
+# Demote manual packages outside the selected apt profiles, then autoremove what is orphaned.
+#
+# usage: apt-prune [--apply]
+#   Default is a dry run: simulates the whole thing in a sandbox copy of apt's package
+#   state and prints what would be demoted and removed. Nothing is changed.
+#   --apply  (make apt-prune APPLY=1) pins the keep set manual, marks the rest auto, then
+#            runs `apt autoremove --purge` (which still asks you to confirm).
+#
+# Guards (any one aborts, in dry runs too):
+#   - manual packages that no profile records (run `make apt-audit`) block it until you
+#     either record them in a profile or acknowledge with ACK_UNRECORDED=1
+#   - the removal set contains a keep-set package or a protected one (APT_PROTECT)
+# Selection: PROFILES (default "base dev cloud"), GUI=1 adds gui; see profile-packages.
+# Test seams: SUDO APT_MARK APT_GET APT APT_STATE_FILE (+ the profile-packages seams).
+set -uo pipefail
+
+dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+SUDO=${SUDO:-sudo}
+APT_MARK=${APT_MARK:-apt-mark}
+APT_GET=${APT_GET:-apt-get}
+APT=${APT:-apt}
+state=${APT_STATE_FILE:-/var/lib/apt/extended_states}
+protect=${APT_PROTECT:-network-manager openssh-server sudo systemd tailscale}
+
+apply=0
+[[ ${1:-} == --apply ]] && apply=1
+die() {
+  echo "apt-prune: $*" >&2
+  exit 1
+}
+
+keep=$("$dir/profile-packages") || exit 1
+demote=$("$dir/profile-packages" --outside) || exit 1
+unrecorded=$("$dir/profile-packages" --audit) || exit 1
+
+if [[ -n $unrecorded && ${ACK_UNRECORDED:-0} != 1 ]]; then
+  {
+    echo "apt-prune: manual packages that no profile records (they would be demoted and may be removed):"
+    sed 's/^/  /' <<<"$unrecorded"
+    echo "Record the ones you want in .config/apt/profiles/*.list, or re-run with ACK_UNRECORDED=1."
+  } >&2
+  exit 1
+fi
+
+# Keep-set packages currently marked auto must be pinned manual or autoremove can take them.
+pin=$(comm -12 <("$APT_MARK" showauto | sort -u) <(sort -u <<<"$keep"))
+
+# Simulate in a throwaway copy of the state file: the real one is never touched.
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+cp "$state" "$tmp" 2>/dev/null || : >"$tmp"
+[[ -n $pin ]] && xargs -r "$APT_MARK" -f "$tmp" manual <<<"$pin" >/dev/null 2>&1
+[[ -n $demote ]] && xargs -r "$APT_MARK" -f "$tmp" auto <<<"$demote" >/dev/null 2>&1
+remove=$("$APT_GET" -s -o "Dir::State::extended_states=$tmp" autoremove 2>/dev/null | awk '/^Remv/ {print $2}' | sort -u)
+
+bad=$(comm -12 <(sort -u <<<"$remove") <(printf '%s\n%s\n' "$keep" "${protect// /$'\n'}" | sort -u | rg -v '^$'))
+if [[ -n $bad ]]; then
+  {
+    echo "apt-prune: refusing, autoremove would remove packages you need:"
+    sed 's/^/  /' <<<"$bad"
+    echo "Record them in a profile (or pin with apt-mark manual) and re-run."
+  } >&2
+  exit 1
+fi
+
+count() { [[ -n $1 ]] && wc -l <<<"$1" | tr -d ' ' || echo 0; }
+echo "demote (manual -> auto): $(count "$demote")"
+sed 's/^/  /' <<<"$demote"
+echo "autoremove would remove: $(count "$remove")"
+sed 's/^/  /' <<<"$remove"
+[[ -z $demote ]] && echo "nothing to demote"
+
+if ((!apply)); then
+  echo "dry run only; apply with: make apt-prune APPLY=1 (needs sudo)"
+  exit 0
+fi
+
+# shellcheck disable=SC2086  # word splitting of package lists is intended
+{
+  [[ -n $pin ]] && "$SUDO" "$APT_MARK" manual $pin
+  [[ -n $demote ]] && "$SUDO" "$APT_MARK" auto $demote
+  "$SUDO" "$APT" autoremove --purge
+}
