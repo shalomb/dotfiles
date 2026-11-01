@@ -8,6 +8,9 @@
 PI_AGENT_DIR="${PI_AGENT_DIR:-$HOME/.pi/agent}"
 PI_PROFILE_DIR="$HOME/.pi/profiles"
 
+# TokenEconomizer pi extension spawns $TE_PYTHON (default "python"); only python3 exists
+export TE_PYTHON="${TE_PYTHON:-python3}"
+
 _pi_profile_dir() {
   case "$1" in
   personal | work) printf '%s\n' "$PI_PROFILE_DIR/$1" ;;

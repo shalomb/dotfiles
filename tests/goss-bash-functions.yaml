@@ -68,6 +68,13 @@ command:
       - "ISOLATED"
     timeout: 5000
 
+  # TokenEconomizer pi extension spawns $TE_PYTHON (default python, absent)
+  "setsid bash -i -c 'command -v \"$TE_PYTHON\"' </dev/null 2>&1":
+    exit-status: 0
+    stdout:
+      - "/python3"
+    timeout: 5000
+
   # Invalid profile names are rejected
   "setsid bash -i -c 'pi-profile bogus' </dev/null >/dev/null 2>&1":
     exit-status: 1
