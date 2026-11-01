@@ -5,10 +5,15 @@ set -eu
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 cd "$SCRIPT_DIR"
 
+repo=$(cd -- "$SCRIPT_DIR/../.." &>/dev/null && pwd)
+# DRY_RUN=1 prints instead of running (nothing is downloaded, deployed or installed).
+run() { if [[ ${DRY_RUN:-0} == 1 ]]; then echo "+ $*"; else "$@"; fi; }
+
 pkgs_to_install=()
 
 # Install keys
 install-gpg-keyring() {
+  [[ ${DRY_RUN:-0} == 1 ]] && { echo "+ install-gpg-keyring $*"; return 0; }
   gpg_file="$1"
   keyring_name="${2:-${1##*/}}"
 	wget -qc -O- "$gpg_file" |
@@ -43,10 +48,17 @@ fi
 # base, dev and cloud. Opt in with PROFILES="base dev cloud extras"; GUI=1 adds gui.
 pkgs_to_install+=($("$SCRIPT_DIR/profile-packages"))
 
+# Keep installs lean: plain `apt install` honours APT::Install-Recommends (the existing
+# APT::Get:: settings only cover apt-get), so deploy the config before installing anything.
+run sudo install -D -m 0644 "$repo/root/etc/apt/apt.conf.d/default.conf" /etc/apt/apt.conf.d/default.conf
+
 if ((${#pkgs_to_install[@]} >= 1)); then
-	echo "Installing pre-requisites ... ${pkgs_to_install[@]}"
+	echo "Installing pre-requisites ... ${pkgs_to_install[*]}"
 	(
 		set -xv
-		sudo apt install -yqq --no-install-recommends ${pkgs_to_install[@]}
+		run sudo apt install -yqq --no-install-recommends "${pkgs_to_install[@]}"
 	)
+	# Mark the profile packages manual so `apt autoremove` can never reap them (a package
+	# first pulled in as a dependency stays "auto" even after we list it here).
+	run sudo apt-mark manual $("$SCRIPT_DIR/profile-packages")
 fi

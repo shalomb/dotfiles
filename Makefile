@@ -35,7 +35,8 @@ refresh:  ## refresh all dotfiles in $HOME with versions in repo
 	env PYTHONPATH=src $(HOME)/.local/bin/uv run python -m dotfile_manager export --cleanup ".*" ".config/*"
 
 .PHONY: apt apt-clean apt-audit apt-lean
-apt: .config/apt/INIT  ## Install apt packages (PROFILES="base dev cloud" by default; add extras, GUI=1 adds gui)
+apt: ## Install apt packages, lean (PROFILES="base dev cloud" by default; add extras, GUI=1 adds gui)
+	.config/apt/INIT
 
 apt-audit: ## Report manual packages that no apt profile records (drift); read-only
 	.config/apt/profile-packages --audit
