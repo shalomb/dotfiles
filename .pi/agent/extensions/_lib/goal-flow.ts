@@ -7,7 +7,7 @@ import {
 	applyApprovedChange, applyClose, applyLock, applyReject, closeDecision, dropGoal, fillDraft, newDraft, oneLine,
 	proposeChange, reminderLine, staleGoal,
 } from "./goal.ts";
-import { type Exec, branchState, listGoals, loadGoal, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
+import { type Exec, branchState, listGoals, loadGoal, loadGoalFile, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
 
 export interface Deps {
 	exec: Exec;
@@ -100,6 +100,9 @@ export async function startGoal(d: Deps, outcome: string): Promise<void> {
 	if (!d.branch) return d.ui.notify(NEEDS_BRANCH, "error");
 	const { goal: existing, error } = load(d);
 	if (error && error !== NO_GOAL) return d.ui.notify(error, "error");
+	const sharing = loadGoalFile(d.store, d.branch);
+	if (sharing && sharing.branch !== d.branch)
+		return d.ui.notify(`The goal file for this branch name belongs to branch ${sharing.branch} (${sharing.id}); branch names ${sharing.branch} and ${d.branch} map to the same file. Not overwritten.`, "error");
 	if (existing && (existing.status === "draft" || existing.status === "active"))
 		return d.ui.notify(`This branch already has a ${existing.status} goal (${existing.id}). /goal drop ends it first.`, "error");
 	const g = newDraft({ branch: d.branch, outcome, baseCommit: d.head }, d.now());

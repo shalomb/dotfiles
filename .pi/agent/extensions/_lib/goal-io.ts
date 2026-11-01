@@ -11,10 +11,11 @@ const CHECK_TIMEOUT_MS = 600_000;
 const OUTPUT_TAIL_LINES = 40;
 
 /**
- * The goal of `branch`, or undefined when there is no file. An existing file that cannot be parsed throws:
+ * The goal in the file that `branch` maps to, whichever branch it records (feat/x and feat-x share a file),
+ * or undefined when there is no file. An existing file that cannot be parsed throws:
  * "no goal" must never be reported for a file that is there, or /goal <outcome> could overwrite a locked goal.
  */
-export function loadGoal(store: string, branch: string): Goal | undefined {
+export function loadGoalFile(store: string, branch: string): Goal | undefined {
 	const path = goalPath(store, branch);
 	let text: string;
 	try {
@@ -26,6 +27,12 @@ export function loadGoal(store: string, branch: string): Goal | undefined {
 	const g = parseGoal(text);
 	if (!g) throw new Error(`Goal file ${path} cannot be parsed. Fix or remove it by hand; /goal will not overwrite it.`);
 	return g;
+}
+
+/** The goal of `branch`: the file's goal when it records this branch, else undefined. */
+export function loadGoal(store: string, branch: string): Goal | undefined {
+	const g = loadGoalFile(store, branch);
+	return g?.branch === branch ? g : undefined;
 }
 
 /** Every goal file in the store that parses, whatever its branch. */

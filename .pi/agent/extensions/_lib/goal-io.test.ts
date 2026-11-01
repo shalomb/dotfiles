@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { newDraft } from "./goal.ts";
-import { agentWouldWriteGoalStore, branchState, isGoalStorePath, listGoals, loadGoal, resolveRepo, runChecks, runChecksAtCommit, saveGoal, type Exec } from "./goal-io.ts";
+import { agentWouldWriteGoalStore, branchState, isGoalStorePath, listGoals, loadGoal, loadGoalFile, resolveRepo, runChecks, runChecksAtCommit, saveGoal, type Exec } from "./goal-io.ts";
 
 const exec: Exec = (cmd, args, o) =>
 	new Promise((res) => execFile(cmd, args, { cwd: o?.cwd, timeout: o?.timeout }, (e: any, stdout, stderr) => res({ code: e ? (typeof e.code === "number" ? e.code : 1) : 0, stdout, stderr })));
@@ -44,6 +44,14 @@ test("loadGoal throws for an existing file it cannot parse instead of reporting 
 	mkdirSync(join(store, "goals"), { recursive: true });
 	writeFileSync(join(store, "goals", "feat-x.md"), "garbage, not a goal\n");
 	expect(() => loadGoal(store, "feat/x")).toThrow(/cannot be parsed/);
+});
+
+test("branches whose names share a slug (feat/x and feat-x) do not see each other's goal", () => {
+	const g = newDraft({ branch: "feat/x", outcome: "o", baseCommit: "abc" }, new Date("2026-11-01T10:00:00Z"));
+	saveGoal(store, g);
+	expect(loadGoal(store, "feat-x")).toBeUndefined();
+	expect(loadGoalFile(store, "feat-x")?.branch).toBe("feat/x");
+	expect(loadGoal(store, "feat/x")).toEqual(g);
 });
 
 test("saving refuses a goal with no outcome and writes nothing", () => {

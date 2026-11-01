@@ -385,3 +385,22 @@ test("/goal <outcome> refuses to overwrite a goal file it cannot parse; other ha
 	expect((await proposeFromAgent(d, { antiGoals: ["x"] })).message).toMatch(/cannot be parsed/);
 	expect(promptReminder(d)).toBeUndefined();
 });
+
+// P1: feat/x and feat-x share the file feat-x.md.
+test("a branch whose name collides with another branch's goal slug sees no goal and cannot overwrite it", async () => {
+	const slash = deps("feat/x");
+	await startGoal(slash, "slash outcome");
+	const file = join(store, "goals", "feat-x.md");
+	const before = readFileSync(file, "utf8");
+	const dash = deps("feat-x");
+	notes.length = 0;
+	await showGoal(dash);
+	expect(lastNote()).toMatch(/No goal for this branch/);
+	expect(promptReminder(dash)).toBeUndefined();
+	await startGoal(dash, "dash outcome");
+	expect(lastNote()).toMatch(/feat\/x/);
+	expect(readFileSync(file, "utf8")).toBe(before);
+	await dropCurrentGoal(dash, "x");
+	expect(readFileSync(file, "utf8")).toBe(before);
+	expect(loadGoal(store, "feat/x")!.outcome).toBe("slash outcome");
+});
