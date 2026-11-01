@@ -207,3 +207,130 @@ function splitSections(body: string): Record<string, string[]> {
 	}
 	return out;
 }
+
+// ---- transitions ----
+// Each returns a new Goal or the reason it was refused. Only command handlers driven by the human
+// may call applyLock, applyApprovedChange, applyReject, applyClose and dropGoal; the agent's tool
+// reaches only fillDraft and proposeChange.
+
+export type Result = { ok: true; goal: Goal } | { ok: false; reason: string };
+const refuse = (reason: string): Result => ({ ok: false, reason });
+
+/** The done-check may be locked only if it failed on the base commit. */
+export function canLock(baseCheckExit: number | undefined): { ok: true } | { ok: false; reason: string } {
+	if (baseCheckExit === undefined) return { ok: false, reason: "The check could not be run on the base commit, so it cannot be shown to fail." };
+	if (baseCheckExit === 0) return { ok: false, reason: "The check passes on the base commit. It must fail before the work starts; make it test the outcome." };
+	return { ok: true };
+}
+
+export interface DraftFields { doneCheck?: CheckSpec; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
+
+/** Agent-reachable: set draft fields. Never locks; refuses once the goal is no longer a draft. */
+export function fillDraft(g: Goal, f: DraftFields): Result {
+	if (g.status !== "draft") return refuse(`The goal is ${g.status}; only a draft is filled directly. Propose a change to a locked done-check instead.`);
+	return {
+		ok: true,
+		goal: {
+			...g,
+			doneCheck: f.doneCheck ? { ...g.doneCheck, kind: f.doneCheck.kind, commands: f.doneCheck.commands.map(oneLine).filter(Boolean) } : g.doneCheck,
+			antiGoals: f.antiGoals?.map(oneLine).filter(Boolean) ?? g.antiGoals,
+			scopeAnchors: f.scopeAnchors?.map(oneLine).filter(Boolean) ?? g.scopeAnchors,
+			specLinks: f.specLinks?.map(oneLine).filter(Boolean) ?? g.specLinks,
+		},
+	};
+}
+
+const specOf = (d: DoneCheck): CheckSpec => ({ kind: d.kind, commands: [...d.commands] });
+
+/** Human only: lock a draft. A command check needs `baseExit` from a run on the base commit, and it must be non-zero. */
+export function applyLock(g: Goal, input: { now: Date; baseCommit: string; baseExit?: number }): Result {
+	if (g.status !== "draft") return refuse(`Only a draft can be locked (the goal is ${g.status}).`);
+	const why = validateGoal({ ...g, status: "active" });
+	if (why) return refuse(`Not locked: ${why}.`);
+	let reason = "locked (human-confirm check)";
+	if (g.doneCheck.kind === "command") {
+		const c = canLock(input.baseExit);
+		if (!c.ok) return refuse(c.reason);
+		reason = `locked (base ${input.baseCommit} failed: exit ${input.baseExit})`;
+	}
+	const at = stamp(input.now);
+	return {
+		ok: true,
+		goal: {
+			...g,
+			status: "active",
+			doneCheck: { ...g.doneCheck, lockedAt: at, lockedBy: "human", baseCommit: input.baseCommit },
+			history: [...g.history, { at, by: "human", reason }],
+		},
+	};
+}
+
+/** Agent-reachable: park a proposed replacement for the locked done-check. It changes nothing until the human approves. */
+export function proposeChange(g: Goal, input: { now: Date; by: string; reason: string; check: CheckSpec }): Result {
+	if (g.status !== "active") return refuse(`Changes to a done-check are proposed only for an active goal (the goal is ${g.status}).`);
+	if (!oneLine(input.reason)) return refuse("A proposed change needs a reason.");
+	const commands = input.check.commands.map(oneLine).filter(Boolean);
+	if (input.check.kind === "command" && !commands.length) return refuse("A command check needs at least one command.");
+	return {
+		ok: true,
+		goal: { ...g, pending: { at: stamp(input.now), by: input.by, reason: oneLine(input.reason), old: specOf(g.doneCheck), new: { kind: input.check.kind, commands } } },
+	};
+}
+
+/** Human only: apply the pending change and record it. */
+export function applyApprovedChange(g: Goal, input: { now: Date }): Result {
+	const p = g.pending;
+	if (!p?.new) return refuse("No change is pending.");
+	return {
+		ok: true,
+		goal: {
+			...g,
+			doneCheck: { ...g.doneCheck, kind: p.new.kind, commands: [...p.new.commands] },
+			pending: undefined,
+			history: [...g.history, { at: stamp(input.now), by: "human", reason: p.reason, old: p.old, new: p.new }],
+		},
+	};
+}
+
+/** Human only: discard the pending change and log that it was rejected. */
+export function applyReject(g: Goal, input: { now: Date }): Result {
+	if (!g.pending) return refuse("No change is pending.");
+	return {
+		ok: true,
+		goal: { ...g, pending: undefined, history: [...g.history, { at: stamp(input.now), by: "human", reason: `change rejected: ${g.pending.reason}` }] },
+	};
+}
+
+/** `exit` is the done-check exit code (undefined: it could not run). For kind human the caller has the human's confirmation. */
+export function closeDecision(checkExit: number | undefined, kind: CheckKind): { close: true; closedBy: "check" | "assertion" } | { close: false; reason: string } {
+	if (kind === "human") return { close: true, closedBy: "assertion" };
+	if (checkExit === 0) return { close: true, closedBy: "check" };
+	const how = checkExit === undefined ? "could not run" : `failed (exit ${checkExit})`;
+	return { close: false, reason: `The done-check ${how}. The goal stays active; see the check output above.` };
+}
+
+/** Human only. */
+export function applyClose(g: Goal, input: { now: Date; closedBy: "check" | "assertion" }): Result {
+	if (g.status !== "active") return refuse(`Only an active goal can be closed (the goal is ${g.status}).`);
+	const at = stamp(input.now);
+	return { ok: true, goal: { ...g, status: "closed", closedAt: at, closedBy: input.closedBy, pending: undefined, history: [...g.history, { at, by: "human", reason: `closed (${input.closedBy})` }] } };
+}
+
+/** Human only: abandon a draft or active goal. */
+export function dropGoal(g: Goal, input: { now: Date; reason: string }): Result {
+	if (g.status !== "draft" && g.status !== "active") return refuse(`The goal is already ${g.status}.`);
+	const at = stamp(input.now);
+	const why = oneLine(input.reason) || "no reason given";
+	return { ok: true, goal: { ...g, status: "dropped", pending: undefined, history: [...g.history, { at, by: "human", reason: `dropped: ${why}` }] } };
+}
+
+/** The one line added to each prompt; none unless the goal is active. */
+export function reminderLine(g: Goal): string | undefined {
+	return g.status === "active" ? `Goal: ${g.id} ${oneLine(g.outcome)}; run /goal to refresh` : undefined;
+}
+
+/** Why the goal of a branch needs a decision at session start, or undefined. */
+export function staleGoal(branchExists: boolean, merged: boolean): string | undefined {
+	if (!branchExists) return "its branch was deleted";
+	return merged ? "its branch is merged" : undefined;
+}
