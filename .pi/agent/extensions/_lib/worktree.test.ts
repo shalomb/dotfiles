@@ -4,7 +4,7 @@ import { execFileSync, execFile } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildBrief, dirNameFor, parseWorktreeArgs, setupWorktree, type Exec } from "./worktree";
+import { buildBrief, dirNameFor, findWorktree, parseWorktreeArgs, setupWorktree, type Exec } from "./worktree";
 
 const exec: Exec = (cmd, args, o) =>
 	new Promise((res) => execFile(cmd, args, { cwd: o?.cwd }, (e: any, stdout, stderr) => res({ code: e ? (e.code ?? 1) : 0, stdout, stderr })));
@@ -23,7 +23,7 @@ test("parseWorktreeArgs: flags, text, back", () => {
 	expect(parseWorktreeArgs("--base v1.2 --branch a/b go")).toMatchObject({ base: "v1.2", branch: "a/b", text: "go" });
 	expect(parseWorktreeArgs("back")).toMatchObject({ back: true });
 	expect(parseWorktreeArgs("--branch")).toMatchObject({ error: expect.stringContaining("--branch") });
-	expect(parseWorktreeArgs("just text")).toMatchObject({ error: expect.stringContaining("--branch") });
+	expect(parseWorktreeArgs("just text")).toMatchObject({ target: "just", text: "text" });
 	expect(parseWorktreeArgs("")).toMatchObject({ error: expect.any(String) });
 });
 
@@ -69,4 +69,28 @@ test("buildBrief holds the contract fields", () => {
 	const b = buildBrief({ origin: "/o", base: "HEAD", branch: "feat/x", parentSession: "/s/p.jsonl", status: " M a.ts", text: "do it" });
 	for (const needle of ["/o", "HEAD", "feat/x", "/s/p.jsonl", "M a.ts", "do it", "baseline"]) expect(b).toContain(needle);
 	expect(buildBrief({ origin: "/o", base: "HEAD", branch: "b", status: "", text: "t" })).toContain("clean");
+});
+
+test("parseWorktreeArgs: first word without --branch is a candidate worktree target", () => {
+	expect(parseWorktreeArgs(".worktrees/iacre-console/")).toEqual({ back: false, target: ".worktrees/iacre-console/", text: "" });
+	expect(parseWorktreeArgs("feat/x fix the bug")).toMatchObject({ target: "feat/x", text: "fix the bug" });
+	expect(parseWorktreeArgs("--branch feat/x go").target).toBeUndefined();
+});
+
+test("findWorktree: matches by relative path (trailing slash), absolute path, dir name and branch", async () => {
+	const r = await setupWorktree(exec, root, { branch: "feat/x" });
+	if (!r.ok) throw new Error(r.error);
+	for (const t of [".worktrees/feat-x/", ".worktrees/feat-x", r.dir, "feat-x", "feat/x"]) {
+		const f = await findWorktree(exec, root, t);
+		expect(f).toEqual({ ok: true, dir: r.dir, branch: "feat/x" });
+	}
+	// also from inside another worktree, relative to the common root
+	expect(await findWorktree(exec, r.dir, ".worktrees/feat-x/")).toMatchObject({ ok: true, dir: r.dir });
+});
+
+test("findWorktree: unknown target lists the known worktrees", async () => {
+	await setupWorktree(exec, root, { branch: "feat/x" });
+	const f = await findWorktree(exec, root, "nope");
+	expect(f.ok).toBe(false);
+	if (!f.ok) expect(f.error).toContain("feat/x");
 });
