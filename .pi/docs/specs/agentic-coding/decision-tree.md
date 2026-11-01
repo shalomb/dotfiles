@@ -51,3 +51,15 @@ Stance: long horizon
       Reason: Prevents overfitting on small single-session sample sizes and blocks brittle auto-generated rules from breaking builds. Round 7. ADR: adr/ADR-006-three-stream-learning-loop.md
 - [settled] waf.falsifiable-hypotheses -- Gate architecture on 4 falsifiable hypotheses (H1–H4) with numeric kill criteria tested via tracer spikes.
     Reason: Ensures every mechanism proves its token, latency, quality, and convergence value before full build-out. Round 7.
+
+## v1.1 revision (2026-11-01) — rounds/v1.1/
+
+- [settled] horizon.stance.v1.1 -- Long horizon (overrides recommended mid-execution).
+    Reason: Round v1.1-01. The H1–H4 amendments are evidence, not authority; any node may reopen.
+- [open] ledger.confirm -- Re-test some nodes before confirming the ledger.
+    Reason: Round v1.1-01. Which nodes and how: round v1.1-02.
+- [settled] ledger.invalidated-text -- Remove killed/moot mechanisms from the spec body; history stays in ADR amendments.
+- [settled] ledger.untested -- Untested nodes stay "accepted, unbuilt", each with a build trigger.
+- [settled] ledger.retry-escalation -- Keep 2 retries then OHECI; build it with the runner.
+- [settled] ledger.backlog-gap -- Add closure timestamps to the todo store in v1.1 scope.
+- [settled] ledger.version -- 1.1.0, status Revising.
