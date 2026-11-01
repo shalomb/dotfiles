@@ -1,6 +1,6 @@
 # ADR-007: Two-Stage Intent Governor (Ingress Observations, Observation Heat WSJF, and Convergence Pruner)
 
-- **Status:** Accepted
+- **Status:** Accepted, with TB-4 evidence 2026-10-31 (`H4` passes; necessity unproven); see [Amendment 1](#amendment-1-2026-10-31-tb-4-evidence)
 - **Date:** 2026-10-31
 - **Decider(s):** unop, Main Copilot (Design Session)
 - **Consulted:** Obsidian `Tech/AI/AgenticLoops.md` (`Backpressure Loop`), `todo-navigator` (WSJF engine)
@@ -96,3 +96,16 @@ Enforce a **Two-Stage Intent Governor** across ingress and wave boundaries:
 ## Revisit Criteria
 
 - Revisit the promotion threshold ($\ge 2$ occurrences) or `Observation Heat` weight if `TB-4` shows either premature promotion ($\Delta > 1.0$) or starvation of legitimate tech-debt fixes.
+
+## Amendment 1 (2026-10-31): TB-4 Evidence
+
+**Finding.** `H4` **passes**, but so does a control arm with no governor, so the governor is *useful but not yet shown to be necessary*. Real waves over the 9 real holdout test gaps in todo-navigator (≤ 3 parallel Builders, gate-verified closures):
+- **Governed:** open backlog 6 → 3 → 0, all 9 closed, one near-duplicate finding folded.
+- **Control:** 6 → 4 → 4, with 3 tasks created from findings, including the same gap twice.
+
+Findings were rare (3 of 27 Builder runs), so the runaway backlog this ADR guards against never arose. Evidence: `~/shalomb/agentic-falsify/runs/h4/`, `runs/FINDINGS.md`.
+
+**Decision stands, with one addition.**
+- **Verify before folding.** Admission routes findings by claimed priority and size, and never checks them. A Builder produced a *false* finding (a non-existent `.venv` shadowing) that the filter would have folded into the next task as work. Before a finding is folded or promoted, run one deterministic check where one exists (e.g. reproduce the claim with the command the Builder cites). Otherwise log it as an `Observation` only.
+
+**Re-test** with high-finding-rate work (refactors, exploratory reviews) for ≥ 5 waves. That is the regime where the control arm should diverge if the governor is necessary.

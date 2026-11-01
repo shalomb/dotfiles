@@ -115,4 +115,6 @@ Evidence lives in `~/shalomb/agentic-falsify/runs/h1/`, `runs/h1b/` and `runs/FI
 2. **Invariant 1 stands** (one ACP commit per task). **Invariant 3 (`Prefix Salvage`) becomes moot** with one task per worktree, though the gate keeps it for any future multi-task use.
 3. `todo batch` is repurposed as **wave scheduling.** It still uses WSJF and `codemap` disjointness to pick which ≤ 3 tasks run in parallel; it no longer packs several tasks into one worktree.
 
+**Lock evidence (TB-4, 2026-10-31).** Without the `Disjoint Codemap Lock`, 1 of 9 control-arm merges failed the gate with a rebase conflict: two parallel tasks in one wave both edited `test_claims.py`. Disjointness must cover *test* files as well as production fan-out.
+
 **Re-open only if** provisioning dominates agent time (e.g. > 50% of a single run, as with heavy container builds or very large dependency installs), and then re-run `spikes/h1b` with ≥ 3 replicates per model.
