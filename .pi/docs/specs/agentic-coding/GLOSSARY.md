@@ -5,13 +5,9 @@ The interactive `pi` agent that partners with the human to capture intent, steer
 _Avoid_: orchestrator daemon, master agent
 
 **Work Batch**:
-A cohesive set of 2 to 5 backlog tasks assigned to one subagent in one Transient Worktree, where each task produces one atomic commit under the Atomic Commit Protocol (ACP).
-_Avoid_: epic, ticket list, chunk
-
+_Retired in v1.1_ (H1, ADR-003 Amendment 1): one task runs per Transient Worktree. Use **Task Run**.
 **Batch Planner**:
-The wave-boundary planning capability (deterministic `todo batch` by default, escalating to a focused LRM subagent only on ambiguity or design pivot) that groups ready `todo` tasks into cohesive Work Batches and enriches remaining backlog tasks.
-_Avoid_: Lisa daemon, ticket slicer
-
+_Retired in v1.1_: replaced by **Wave Scheduler**.
 **Feature Worktree**:
 The git worktree where the Main Copilot holds the active feature branch and receives validated Work Batches.
 _Avoid_: main repo, sandbox
@@ -25,21 +21,17 @@ The pre-dispatch check using `codemap` fan-in/fan-out that prevents two concurre
 _Avoid_: file lock
 
 **Prefix Salvage**:
-The recovery rule where valid, tested ACP commits ($1 \dots K-1$) from a partially completed Work Batch are fast-forwarded into the Feature Worktree while only the blocked tail tasks ($K \dots N$) return to the backlog.
-_Avoid_: all-or-nothing rollback
-
+_Retired in v1.1_: moot with one task per worktree. The gate keeps the logic for any future multi-task use.
 **Critic Gate**:
 The verification and integration gate that rebases a completed Work Batch onto the Feature Worktree, runs deterministic and adversarial checks, fast-forwards on pass, and emits the Batch Receipt and Trajectory Signal.
 _Avoid_: passive reviewer, manual merge
 
 **Tiered Critic Gate**:
-The adaptive verification policy where every Work Batch runs Builder self-review plus a deterministic rebase/test gate, and only high-risk or wave-boundary batches spawn a separate Adversarial Critic subagent.
-_Avoid_: always-on Bart, manual review
-
+The verification policy where every Task Run passes a deterministic rebase/test/ACP gate, and an independent Adversarial Critic also reviews it unless every touched module has earned low risk (holdout mutation score >= 0.85) and no hub, public API or security path is touched.
+_Avoid_: always-on Bart, assumed-low-risk
 **Batch Receipt**:
-A compact (<= 25 lines), structured summary returned by a subagent that uses Context Pointers (hyperlinks, commit SHAs, `file:line#symbol` anchors, task card links, and log paths) instead of inline prose or diffs.
-_Avoid_: summary, log dump
-
+A compact (<= 25 lines) summary of one Task Run that uses Context Pointers instead of prose or diffs, carries no prose attestation, and is checked in one call with `verify-receipt`.
+_Avoid_: summary, log dump, "verified by gate"
 **Context Pointer**:
 A navigable reference (URI, commit SHA, `file:line#symbol` anchor, or `todo` card ID) inside a Batch Receipt that lets the Main Copilot or human inspect detailed evidence on demand without loading it by default.
 _Avoid_: inline excerpt, raw dump
@@ -107,3 +99,15 @@ _Avoid_: focus area
 **Wave Scheduler**:
 The deterministic `todo batch` step that selects at most 3 ready single tasks per wave whose code and test files are disjoint.
 _Avoid_: Batch Planner, batch packer
+
+**Task Run**:
+One Builder run on one backlog task in one Transient Worktree, producing one ACP commit.
+_Avoid_: Work Batch, job
+
+**verify-receipt**:
+The deterministic command that checks every Context Pointer in a Batch Receipt (commits on the Feature Worktree branch, files and line ranges exist) in one call.
+_Avoid_: attestation, trust line
+
+**Accepted, unbuilt**:
+A settled design node that has no build until its build trigger (evidence) is met.
+_Avoid_: deferred, backlog

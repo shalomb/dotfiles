@@ -1,6 +1,6 @@
 ---
-status: Approved
-version: 1.0.0
+status: Revising
+version: 1.1.0
 owner: unop
 type: handoff-spec
 topic: agentic-coding-system
@@ -11,6 +11,7 @@ related:
   - features/batch-execution-and-merge.feature
   - features/learning-and-intent-governor.feature
   - features/waf-guardrails-and-recovery.feature
+  - features/goal-contract.feature
 promotes_to:
   - adr/ADR-001-copilot-deterministic-topology.md
   - adr/ADR-002-single-out-of-repo-todo-store.md
@@ -19,14 +20,18 @@ promotes_to:
   - adr/ADR-005-context-hygiene-and-pointer-receipts.md
   - adr/ADR-006-three-stream-learning-loop.md
   - adr/ADR-007-two-stage-intent-governor.md
+  - adr/ADR-008-branch-scoped-goal-contract.md
+  - adr/ADR-009-precommitted-done-check-gates-closure.md
 ---
 
 # Handoff Specification: Agentic Coding System
 
-> **Status:** Approved (8 Grill Rounds) | **Owner:** `unop`  
-> **Audience:** Engineers, Implementation Agents, Quality Agents, System Architects  
-> **Scope:** Interactive `Main Copilot` (`pi`), `todo` Backlog Store, Deterministic Wave Runner, Transient Worktree Execution, Context Hygiene, and Three-Stream Learning Loop.  
-> **Stance:** Long Horizon — existing `~/shalomb/springfield/` and `pi` skills are evidence to reuse selectively where they earn their keep, not fixed authority.
+> **Status:** Revising, v1.1.0 (v1.0 approved after 8 grill rounds; v1.1 revised after H1–H4 falsification, 5 more rounds in [rounds/v1.1/](rounds/v1.1/)) | **Owner:** `unop`
+> **Audience:** Engineers, Implementation Agents, Quality Agents, System Architects
+> **Scope:** Interactive `Main Copilot` (`pi`), Goal Contract (`/goal`), `todo` Backlog Store, Deterministic Wave Runner, single-task Transient Worktrees, Tiered Critic Gate, Context Hygiene, and the Learning Loop.
+> **Stance:** Long horizon. Nodes reopen only where evidence touched them; `control.topology` stands.
+
+**What changed in v1.1.** Multi-task Work Batches are gone (H1). Every Task Run is one task in one worktree. The Critic runs by default until a module earns low risk (H3). Trust in receipts comes from `verify-receipt`, not prose (H2). Findings are verified before they are folded (H4). The North Star is now stored and checkable (`/goal`, ADR-008/009). The reasons live in the ADR amendments; this document describes only the current design.
 
 ---
 
@@ -34,39 +39,40 @@ promotes_to:
 
 | Audience | Read in this order |
 | :--- | :--- |
-| **Product / Human Partner** | [§2 At a Glance](#2-at-a-glance), [§3 Goal and Falsifiable Hypotheses](#3-goal-and-falsifiable-hypotheses), [§6 Anti-Goals](#6-anti-goals), [§7 Tracer-Bullet Tickets](#7-tracer-bullet-tickets) |
-| **System Architect** | [§2 At a Glance](#2-at-a-glance), [§4 Architectural Seams (C4)](#4-architectural-seams-c4), [ADR-001](adr/ADR-001-copilot-deterministic-topology.md) through [ADR-007](adr/ADR-007-two-stage-intent-governor.md) |
-| **Implementation Agent (Builder)** | [GLOSSARY.md](GLOSSARY.md), [§5 Spec Units](#5-spec-units), [§6 Anti-Goals](#6-anti-goals), [§7 Tracer-Bullet Tickets](#7-tracer-bullet-tickets) |
-| **Quality / Verification Agent (Critic)** | [§3 Goal and Falsifiable Hypotheses](#3-goal-and-falsifiable-hypotheses), [features/batch-execution-and-merge.feature](features/batch-execution-and-merge.feature), [features/learning-and-intent-governor.feature](features/learning-and-intent-governor.feature), [features/waf-guardrails-and-recovery.feature](features/waf-guardrails-and-recovery.feature) |
+| **Product / Human Partner** | [§2](#2-at-a-glance), [§3](#3-goal-and-falsifiable-hypotheses), [§5.1](#51-spec-unit-1-goal-contract-and-done-check), [§6](#6-anti-goals), [§7](#7-tracer-bullet-tickets) |
+| **System Architect** | [§2](#2-at-a-glance), [§4](#4-architectural-seams-c4), ADR-001 to ADR-009, [§8](#8-commitment-ledger) |
+| **Implementation Agent (Builder)** | [GLOSSARY.md](GLOSSARY.md), [§5](#5-spec-units), [§6](#6-anti-goals), [§7](#7-tracer-bullet-tickets) |
+| **Quality / Verification Agent (Critic)** | [§3](#3-goal-and-falsifiable-hypotheses), [features/](features/) |
 
 ---
 
 ## 2. At a Glance
 
-| Pillar | Decision | Settled Node | Governing ADR |
+| Pillar | Decision | Governing ADR | Evidence |
 | :--- | :--- | :--- | :--- |
-| **Control Topology** | Interactive `Main Copilot` in `pi` + deterministic subprocess runner; zero LLM pane-polling | `control.topology` | [ADR-001](adr/ADR-001-copilot-deterministic-topology.md) |
-| **State Store** | Single out-of-repo `todo` store (`~/.cache/agent-skills/todos/<repo_slug>/`) + `batches/<id>.md` + `trajectories.jsonl` | `state.backlog-store` | [ADR-002](adr/ADR-002-single-out-of-repo-todo-store.md) |
-| **Wave Batching** | Deterministic `todo batch` groups 2–5 cohesive tasks (1 ACP commit per task); max 3 `Transient Worktrees` with `Disjoint Codemap Lock` and `Prefix Salvage` | `work.batching`, `waf.worktree-concurrency`, `waf.partial-batch-salvage` | [ADR-003](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md) |
-| **Verification & Merge** | `Tiered Critic Gate`: Builder self-review + deterministic rebase/test gate by default; independent Adversarial Critic on high-risk or wave boundaries | `control.topology.subagent-pipeline` | [ADR-004](adr/ADR-004-risk-tiered-critic-gate.md) |
-| **Context Hygiene** | `<= 25`-line `Batch Receipt` with `Context Pointers` (`git:`, `todo:`, `file://`); wave-boundary `Knowledge Checkpoint` with `codemap diff` and human ack at 60% budget | `context.hygiene`, `waf.context-drift-guard` | [ADR-005](adr/ADR-005-context-hygiene-and-pointer-receipts.md) |
-| **Learning Loop** | `Proportional Telemetry` + 3 streams (`Forward Refinement`, `Course Correction`, `Rule Synthesizer`) with $N \ge 20$ cold-start floor and warn-only canary rules | `learning.loop-mechanism`, `waf.rl-cold-start-safety` | [ADR-006](adr/ADR-006-three-stream-learning-loop.md) |
-| **Intent Governance** | Two-stage `Intent Governor` (`Ingress Admission Filter` -> `Observations` -> `Observation Heat` WSJF -> `Convergence Ratio` pruner) | `learning.loop-mechanism.intent-governor` | [ADR-007](adr/ADR-007-two-stage-intent-governor.md) |
+| **Intent** | One Goal Contract per branch, with a Done-check locked before work starts | [ADR-008](adr/ADR-008-branch-scoped-goal-contract.md), [ADR-009](adr/ADR-009-precommitted-done-check-gates-closure.md) | H5 pending |
+| **Control Topology** | Interactive `Main Copilot` in `pi` + deterministic subprocess runner; no LLM pane-polling | [ADR-001](adr/ADR-001-copilot-deterministic-topology.md) | Used by H4 runner |
+| **State Store** | Single out-of-repo `todo` store: `TODO.md`, `tasks/`, `goals/`, `trajectories.jsonl` | [ADR-002](adr/ADR-002-single-out-of-repo-todo-store.md) | Gap: no closure timestamps (TB-8) |
+| **Wave Scheduling** | One task per Transient Worktree; ≤ 3 in parallel; Disjoint Codemap Lock over code **and test** files | [ADR-003 Am. 1](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md#amendment-1-2026-10-31-h1-evidence) | H1 killed batching |
+| **Verification & Merge** | Rebase first, then deterministic gate; Critic by default; deterministic-only earned at holdout ≥ 0.85 | [ADR-004 Am. 1](adr/ADR-004-risk-tiered-critic-gate.md#amendment-1-2026-10-31-tb-3-evidence) | H3 killed for todo-navigator |
+| **Context Hygiene** | ≤ 25-line receipt with Context Pointers; one `verify-receipt` call per receipt; no prose attestation | [ADR-005 Am. 1](adr/ADR-005-context-hygiene-and-pointer-receipts.md#amendment-1-2026-10-31-h2-evidence) | H2: ctx ≤ 7%; Sonnet C pending |
+| **Learning & Governance** | Findings verified before folding; non-urgent findings logged as Observations; pruning and three-stream learning accepted, unbuilt | [ADR-006](adr/ADR-006-three-stream-learning-loop.md), [ADR-007 Am. 1](adr/ADR-007-two-stage-intent-governor.md#amendment-1-2026-10-31-tb-4-evidence) | H4 passes; necessity unproven |
 
 ---
 
 ## 3. Goal and Falsifiable Hypotheses
 
-The system keeps a human and a `Main Copilot` in a tight, high-signal design loop over long sessions while delegating cohesive `Work Batches` to subagents in `Transient Worktrees`. Every wave reduces uncertainty in the remaining backlog and consolidates verified atomic commits into the `Feature Worktree` without polluting the `Main Copilot` context window or causing runaway backlog bloat.
+The system keeps a human and a `Main Copilot` in a tight design loop over long sessions, against a stored, checkable goal. It delegates single tasks to parallel Builders in Transient Worktrees and lands verified atomic commits on the Feature Worktree, without polluting the Copilot's context or growing the backlog without limit. Work stops when the goal's Done-check is green.
 
-Every major architectural pillar is bound to a [Falsifiable Hypothesis](GLOSSARY.md) tested in a tracer spike before full build-out ([ADR-003](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md) through [ADR-007](adr/ADR-007-two-stage-intent-governor.md)):
+| ID | Hypothesis | Pass | Kill / Simplify | Status (2026-11-01) |
+| :--- | :--- | :--- | :--- | :--- |
+| **H1** | A 3-task batch in one worktree beats 3 single-task runs | < 65% tokens and time | ≥ 85%: 1 task per worktree | **Killed.** 1 task per worktree adopted ([ADR-003 Am. 1](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md#amendment-1-2026-10-31-h1-evidence)) |
+| **H2** | ≤ 25-line pointer receipts keep the Copilot lean | < 50% context; re-scoped to calls per receipt and tokens vs plain receipts | > 1 verification call per receipt alongside `verify-receipt`: gate-signed result in receipt | **Context passes; `verify-receipt` passes on Gemini; Sonnet pending** |
+| **H3** | The deterministic gate catches low-risk defects without a second LLM | ≥ 85% holdout catch rate | Escaped > 15%: narrow low-risk | **Killed for todo-navigator.** Critic by default ([ADR-004 Am. 1](adr/ADR-004-risk-tiered-critic-gate.md#amendment-1-2026-10-31-tb-3-evidence)) |
+| **H4** | The Intent Governor prevents runaway backlog | Ratio < 1.0 by wave 2; 0 open P0/P1 | Monotonic growth over 3 waves | **Passes; necessity unproven.** Re-test with high-finding work, ≥ 5 waves |
+| **H5** | With `/goal` active, sessions stop within 1 turn of a green Done-check, and < 10% of commits fall outside the Scope Anchors | Both, vs sessions without `/goal` | No difference: downgrade `/goal` to a notes file | **New, untested** ([ADR-009](adr/ADR-009-precommitted-done-check-gates-closure.md)) |
 
-| ID | Hypothesis | Pass Threshold | Kill / Simplify Criterion |
-| :--- | :--- | :--- | :--- |
-| **H1** | Cohesive `Work Batch` (3 tasks in 1 `Transient Worktree`) beats 3 single-task worktree runs | $< 65\%$ total tokens and wall-clock time of 3 single-task runs | If $\ge 85\%$, drop multi-task batching and execute 1 task per worktree or sequentially in place . **2026-10-31: KILLED** (4 replicates, 2 repos, 2 models: tokens 0.68–1.94×, always slower than parallel singles at equal quality; default is now 1 task per worktree, see [ADR-003 Amendment 1](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md#amendment-1-2026-10-31-h1-evidence)) |
-| **H2** | `Batch Receipt` (`<= 25` lines) + `Context Pointers` prevent `Main Copilot` context pollution | `< 50%` context occupancy across 10 batches (~30 tasks) and `< 15%` pointer dereference rate | If dereference rate `> 40%`, inline the changed contract signature directly in the receipt . **2026-10-31: MODEL-DEPENDENT** (context ≤ 7% passes everywhere; Sonnet verifies `git:` pointers (0.32, 0.41 with asserted attestation), Gemini reads files (0.14). Fix: one-call `verify-receipt` → 1 call/receipt, 0.44× tokens. See [ADR-005 Amendment 1](adr/ADR-005-context-hygiene-and-pointer-receipts.md#amendment-1-2026-10-31-h2-evidence)) |
-| **H3** | `Tiered Critic Gate` catches defects on routine batches without spawning a second LLM | $\ge 85\%$ defect catch rate on low-risk batches at $< 50\%$ review token cost | If escaped defect rate on low-risk batches `> 15%`, narrow the low-risk classifier. **2026-10-31: KILLED for `todo-navigator`** (holdout 0.63 after test hardening; classifier narrowed, see [ADR-004 Amendment 1](adr/ADR-004-risk-tiered-critic-gate.md#amendment-1-2026-10-31-tb-3-evidence)) |
-| **H4** | Two-stage `Intent Governor` prevents runaway backlog inventory | `Convergence Ratio` $< 1.0$ by Wave 2; reaches 0 open P0/P1 tasks without manual cleanup | If open backlog grows monotonically across 3 waves, restrict autonomous task creation to P0 regressions only . **2026-10-31: PASSES, necessity unproven** (governed 6→3→0 open; control 6→4→4; findings rare at 3/27 runs, so both converge; see [ADR-007 Amendment 1](adr/ADR-007-two-stage-intent-governor.md#amendment-1-2026-10-31-tb-4-evidence)) |
+Evidence: `~/shalomb/agentic-falsify/runs/FINDINGS.md`.
 
 ---
 
@@ -74,254 +80,219 @@ Every major architectural pillar is bound to a [Falsifiable Hypothesis](GLOSSARY
 
 ```mermaid
 C4Container
-  title Container Diagram - Agentic Coding System
+  title Container Diagram - Agentic Coding System (v1.1)
 
-  Person(human, "Human Partner", "Defines North Star intent and acknowledges wave checkpoints")
+  Person(human, "Human Partner", "Sets and locks the Goal Contract; approves Done-check changes")
 
   System_Boundary(system, "Agentic Coding System") {
-    Container(copilot, "Main Copilot", "pi Interactive Session", "Captures intent, steers design, reviews <=25-line Batch Receipts")
-    ContainerDb(todoStore, "todo Backlog & Ledger", "Markdown + JSONL in ~/.cache", "Stores TODO.md, tasks/*.md, batches/*.md, trajectories.jsonl")
-    Container(planner, "Batch Planner & Intent Governor", "todo CLI + Optional LRM Subagent", "Computes WSJF + Observation Heat, Disjoint Codemap Lock, and Convergence Pruning")
-    Container(runner, "Deterministic Wave Runner", "pi bg_run / CLI Supervisor", "Provisions up to 3 Transient Worktrees with shared build cache")
-    Container(worktree, "Transient Worktree Worker", "Builder + Tiered Critic Gate", "Executes 2-5 tasks (1 ACP commit each), rebases, verifies, and salvages prefixes")
-    ContainerDb(featWt, "Feature Worktree", "Git Worktree", "Holds active feature branch receiving fast-forward batch merges")
+    Container(copilot, "Main Copilot", "pi Interactive Session", "Steers design; one-line goal reminder per turn; verifies receipts in one call")
+    ContainerDb(todoStore, "todo Backlog Store", "Markdown + JSONL in ~/.cache", "TODO.md, tasks/*.md, goals/<branch>.md, trajectories.jsonl")
+    Container(scheduler, "Wave Scheduler", "todo CLI", "Picks <= 3 ready tasks by WSJF whose code and test files are disjoint")
+    Container(runner, "Deterministic Wave Runner", "pi bg_run / CLI Supervisor", "Provisions one Transient Worktree per task; 2 retries then OHECI")
+    Container(worker, "Task Run", "Builder in Transient Worktree", "One task, one ACP commit")
+    Container(gate, "Tiered Critic Gate", "Deterministic gate + Adversarial Critic", "Rebase, test, ACP, tier; Critic unless low risk is earned")
+    ContainerDb(featWt, "Feature Worktree", "Git Worktree", "Receives fast-forward merges")
   }
 
-  Rel(human, copilot, "Steers intent and acknowledges checkpoints", "TUI / vi popup")
-  Rel(copilot, todoStore, "Logs intent and reads wave brief", "todo CLI")
-  Rel(planner, todoStore, "Reads Observation Heat and writes Work Batches", "flock + JSONL")
+  Rel(human, copilot, "Sets goal, confirms Done-check", "TUI / vi popup")
+  Rel(copilot, todoStore, "Reads goal and backlog brief", "todo CLI")
+  Rel(scheduler, todoStore, "Reads ready tasks, writes wave", "flock")
   Rel(copilot, runner, "Dispatches approved wave", "bg_run")
-  Rel(runner, worktree, "Spawns with sentinel and shared cache", "Subprocess")
-  Rel(worktree, featWt, "Rebases onto and fast-forwards verified commits", "git merge --ff-only")
-  Rel(worktree, todoStore, "Appends Trajectory Signals and Observations", "JSONL")
-  Rel(runner, copilot, "Delivers <=25-line Batch Receipt with Context Pointers", "Notification")
+  Rel(runner, worker, "Spawns, <= 3 in parallel", "Subprocess")
+  Rel(worker, gate, "Hands over commit", "git")
+  Rel(gate, featWt, "Fast-forwards verified commit", "git merge --ff-only")
+  Rel(gate, todoStore, "Marks done (with timestamp); logs Observations", "todo CLI / JSONL")
+  Rel(runner, copilot, "Delivers <= 25-line receipt", "Notification")
 ```
 
 ---
 
 ## 5. Spec Units
 
-### 5.1 Spec Unit 1: Deterministic Wave Batching and Disjoint Codemap Lock
+### 5.1 Spec Unit 1: Goal Contract and Done-check
 
-**Who / When:** The `Batch Planner` (`todo batch` CLI by default; LRM subagent on ambiguity) when preparing the next execution wave from ready `todo` tasks.
+**Who / When:** The Human Partner and Main Copilot, at the start of work on a branch and at its end.
 
 ```mermaid
 flowchart TD
-    Ready["Ready Tasks in todo"]
-    Heat["Compute WSJF + Observation Heat\nfrom trajectories.jsonl"]
-    Lock["Build Codemap Fan-In/Out Sets"]
-    Group["Group 2-5 Cohesive Tasks\ninto Work Batches"]
-    Filter["Enforce Disjoint Codemap Lock\n(max 3 concurrent batches per wave)"]
-    Emit["Write batches/<id>.md"]
-
-    Ready --> Heat
-    Heat --> Lock
-    Lock --> Group
-    Group --> Filter
-    Filter --> Emit
+    Set["/goal &lt;outcome&gt;"] --> Draft["Copilot drafts contract:\noutcome, anti-goals, Done-check,\nscope anchors, spec links"]
+    Draft --> Base{"Done-check fails\non base commit?"}
+    Base -->|"No"| Draft
+    Base -->|"Yes"| Lock["Human confirms -> locked"]
+    Lock --> Work["Waves run; tasks auto-linked [goal: id]"]
+    Work --> Check{"/goal done:\nDone-check green?"}
+    Check -->|"No"| Work
+    Check -->|"Yes"| Close["Close + /persist + lessons"]
 ```
 
 **Contract:**
-- The `Batch Planner` MUST compute task priority using WSJF plus `Observation Heat` from `trajectories.jsonl`.
-- The `Batch Planner` MUST group between 2 and 5 ready tasks that share files or direct `codemap` module neighborhoods into a single `Work Batch`.
-- The `Batch Planner` MUST enforce a `Disjoint Codemap Lock` so no two concurrent `Work Batches` in the same wave share modified files or direct `codemap` fan-out dependencies.
-- The `Batch Planner` MUST run deterministically with zero LLM tokens unless a task card is flagged ambiguous or a Wave-Boundary `Course Correction` requires an LRM planning pass.
+- Each branch MUST have at most one active Goal Contract, stored at `${XDG_CACHE_HOME:-~/.cache}/agent-skills/todos/<repo_slug>/goals/<branch-slug>.md`.
+- A Goal Contract MUST contain an outcome and a Done-check. It SHOULD contain anti-goals, Scope Anchors and spec links.
+- A Done-check MUST fail on the base commit before it can be locked. Only the Human Partner can lock it.
+- A locked Done-check MUST change only with Human Partner approval. Each change is recorded with who, when and why.
+- `/goal done` MUST refuse to close while the Done-check fails. On close it MUST write a `/persist` hand-off and a lessons capture.
+- A goal with no command check MAY use a human-confirm check. Its closure MUST be recorded as `closed_by: assertion`.
+- Tasks created on a branch with an active goal MUST carry `[goal: <id>]`.
+- Each turn, the Copilot's prompt MUST carry a one-line reminder (`Goal: <id> <outcome>; run /goal to refresh`), not the full contract.
+- At session start, a goal whose branch is merged or deleted MUST be flagged for the human to close or drop.
 
 <details>
 <summary>Machine-readable contract (YAML)</summary>
 
 ```yaml
-unit: wave_batching
-actor: Batch Planner
+unit: goal_contract
+actors: [Human Partner, Main Copilot]
 invariants:
-  batch_size_min: 1
-  batch_size_target_min: 2
-  batch_size_max: 5
-  max_concurrent_worktrees: 3
-  disjoint_codemap_lock: true
-  default_llm_passes: 0
+  goals_per_branch_max: 1
+  store: "${XDG_CACHE_HOME}/agent-skills/todos/${repo_slug}/goals/${branch_slug}.md"
+  required_fields: [outcome, done_check]
+  optional_fields: [anti_goals, scope_anchors, spec_links]
+  lock_requires: [fails_on_base_commit, human_confirmation]
+  change_requires: human_approval
+  close_requires: done_check_green
+  close_actions: [persist_handoff, lessons_capture]
+  fallback_check: human_confirm   # recorded as closed_by: assertion
+  task_link: auto
+  prompt_injection: one_line_reminder
 artifacts:
-  batch_card: "${XDG_CACHE_HOME}/agent-skills/todos/${repo_slug}/batches/${batch_id}.md"
+  goal_card: "goals/${branch_slug}.md"
 ```
 </details>
 
 ---
 
-### 5.2 Spec Unit 2: Work Batch Execution, Tiered Critic Gate, and Prefix Salvage
+### 5.2 Spec Unit 2: Wave Scheduling and Disjoint Codemap Lock
 
-**Who / When:** The Builder subagent and `Tiered Critic Gate` inside a `Transient Worktree` during `Work Batch` execution.
-
-```mermaid
-flowchart TD
-    Start["Transient Worktree\n(shared build cache)"]
-    TaskLoop["Builder executes Task k via TDD\nand creates 1 ACP Commit"]
-    RetryCheck{"Pass local tests?\n(<= 2 retries)"}
-    OHECI["Run OHECI Classification"]
-    Salvage["Prefix Salvage:\nFast-forward green commits 1..k-1\nRelease k..n as blocked"]
-    DetGate["Deterministic Gate:\nRebase onto Feature Worktree +\nTest + Lint + ACP + Risk Score"]
-    RiskCheck{"High risk or\nwave boundary?"}
-    Critic["Independent Adversarial Critic (Bart)\nverifies rebased diff"]
-    Merge["Fast-forward Feature Worktree +\nEmit <= 25-line Batch Receipt"]
-
-    Start --> TaskLoop
-    TaskLoop --> RetryCheck
-    RetryCheck -->|"Yes (more tasks)"| TaskLoop
-    RetryCheck -->|"Yes (batch complete)"| DetGate
-    RetryCheck -->|"No (> 2 retries)"| OHECI
-    OHECI --> Salvage
-    DetGate --> RiskCheck
-    RiskCheck -->|"Low risk & green"| Merge
-    RiskCheck -->|"High risk / warning"| Critic
-    Critic -->|"Approved"| Merge
-    Critic -->|"Rejected (<= 2 retries)"| TaskLoop
-```
+**Who / When:** The Wave Scheduler (`todo batch`), before each wave.
 
 **Contract:**
-- The runner MUST provision each `Transient Worktree` from the `Feature Worktree` HEAD and mount or link shared dependency caches (`.venv`, `node_modules`, build cache).
-- The Builder MUST create one atomic commit per task in the `Work Batch` in accordance with the Atomic Commit Protocol (ACP).
-- If a task fails verification after 2 local retries, the Builder MUST run the OHECI loop and halt execution of the remaining tasks in the batch.
-- When a `Work Batch` halts at task $K$ ($K > 1$), the gate MUST execute `Prefix Salvage`: rebase and fast-forward the verified commits $1 \dots K-1$ into the `Feature Worktree`, mark tasks $1 \dots K-1$ `done` in `todo`, and release tasks $K \dots N$ with the blocker `Context Pointer`.
-- The `Tiered Critic Gate` MUST rebase the `Transient Worktree` onto the `Feature Worktree` and run the deterministic test and ACP suite before merge.
-- The `Tiered Critic Gate` MUST spawn an independent Adversarial Critic subagent only when the batch modifies hub files, changes public API/security boundaries, tests a proposed ADR hypothesis, or closes a wave.
+- The Wave Scheduler MUST pick at most 3 ready tasks per wave, ordered by WSJF.
+- No two tasks in a wave MAY share a modified file, a test file, or direct `codemap` fan-out (ADR-003 Amendment 1).
+- The Wave Scheduler MUST be deterministic and use zero LLM tokens.
+- Each task runs alone in its own Transient Worktree. Tasks are never packed together.
 
 <details>
 <summary>Machine-readable contract (YAML)</summary>
 
 ```yaml
-unit: batch_execution_and_gate
-actors:
-  - Builder
-  - Tiered Critic Gate
+unit: wave_scheduling
+actor: Wave Scheduler
+invariants:
+  tasks_per_worktree: 1
+  max_parallel_task_runs: 3
+  ordering: wsjf
+  disjoint_over: [modified_files, test_files, codemap_fanout_1]
+  llm_passes: 0
+```
+</details>
+
+---
+
+### 5.3 Spec Unit 3: Task Run and Tiered Critic Gate
+
+**Who / When:** The Builder in a Transient Worktree, then the Tiered Critic Gate.
+
+```mermaid
+flowchart TD
+    Start["Transient Worktree from Feature Worktree HEAD"] --> Build["Builder: TDD, 1 ACP commit"]
+    Build --> Retry{"Tests pass?\n(<= 2 retries)"}
+    Retry -->|"No, after 2"| OHECI["OHECI: classify; blocked receipt"]
+    Retry -->|"Yes"| Gate["Rebase onto Feature Worktree;\ntest + lint + ACP + hygiene"]
+    Gate --> Tier{"All touched modules earned low risk\n(holdout >= 0.85) and no hub/API/security?"}
+    Tier -->|"Yes"| Merge["Fast-forward; mark done with timestamp"]
+    Tier -->|"No (default)"| Critic["Adversarial Critic on rebased diff"]
+    Critic -->|"Approved"| Merge
+    Critic -->|"Rejected (<= 2)"| Build
+    Merge --> Receipt["<= 25-line receipt"]
+```
+
+**Contract:**
+- The runner MUST create each Transient Worktree from Feature Worktree HEAD and share dependency caches.
+- The Builder MUST produce exactly one ACP commit per task.
+- After 2 failed local retries, the Builder MUST stop, run OHECI, and return a blocked receipt with a pointer to the failing hypothesis.
+- The gate MUST rebase onto Feature Worktree HEAD before verification.
+- The Adversarial Critic MUST review every Task Run unless every touched module has a recorded holdout mutation score ≥ 0.85 and no hub, public API or security path is touched. Unmeasured modules count as high risk.
+- The Feature Worktree MUST accept only `git merge --ff-only`.
+- A merged task MUST be marked done in `todo` with a closure timestamp.
+
+<details>
+<summary>Machine-readable contract (YAML)</summary>
+
+```yaml
+unit: task_run_and_gate
+actors: [Builder, Tiered Critic Gate]
 invariants:
   commits_per_task: 1
   commit_protocol: ACP
   max_local_retries: 2
   escalation_loop: OHECI
-  prefix_salvage_on_partial_block: true
   rebase_before_verification: true
-  independent_critic_triggers:
-    - high_fanout_hub_file
-    - public_api_or_security_path
-    - proposed_adr_hypothesis
-    - deterministic_gate_warning
-    - wave_boundary
+  critic_default: true
+  critic_skip_requires:
+    all_modules_holdout_min: 0.85
+    no_paths: [hub, public_api, security]
+  unmeasured_module_tier: 2
+  merge: ff_only
+  closure_timestamp: required
 ```
 </details>
 
 ---
 
-### 5.3 Spec Unit 3: Pointer-Rich Batch Receipts and Wave Checkpoints
+### 5.4 Spec Unit 4: Receipts and verify-receipt
 
-**Who / When:** The runner and `Main Copilot` upon completion of each `Work Batch` and at wave or context-budget boundaries.
-
-```mermaid
-flowchart TD
-    Done["Work Batch Complete / Blocked"]
-    Format["Render Batch Receipt (<= 25 lines)\nwith Context Pointers"]
-    Deliver["Deliver Receipt to Main Copilot"]
-    Exception{"Blocked or\nhuman query?"}
-    Dereference["Follow specific Context Pointer\n(file:line, git SHA, todo ID)"]
-    WaveEnd{"Wave end or\ncontext >= 60%?"}
-    Checkpoint["Write Knowledge Checkpoint +\ndeterministic codemap diff"]
-    HumanAck["Human acknowledges reset\n-> Main Copilot resets context"]
-
-    Done --> Format
-    Format --> Deliver
-    Deliver --> Exception
-    Exception -->|"Yes"| Dereference
-    Exception -->|"No"| WaveEnd
-    Dereference --> WaveEnd
-    WaveEnd -->|"Yes"| Checkpoint
-    Checkpoint --> HumanAck
-```
+**Who / When:** The runner and Main Copilot, when each Task Run ends.
 
 **Contract:**
-- Every completed or blocked `Work Batch` MUST return a `Batch Receipt` of at most 25 lines to the `Main Copilot`.
-- The `Batch Receipt` MUST replace inline diffs and raw logs with `Context Pointers` (`git:<sha>`, `todo:<id>`, `file:///path#L<line>`, and report URIs).
-- The `Main Copilot` MUST NOT read raw subagent logs or full diffs unless a `Work Batch` blocks, an assumption breaks, or the human asks.
-- At the end of each wave or when `Main Copilot` context occupancy reaches 60%, the system MUST write a `Knowledge Checkpoint` containing the North Star intent, settled architectural anchors, active backlog wave state, and a deterministic `codemap diff`.
-- The `Main Copilot` MUST obtain human acknowledgement before resetting its context window from a `Knowledge Checkpoint`.
+- Every Task Run MUST return a Batch Receipt of at most 25 lines, with Context Pointers (`git:`, `todo:`, `file://`) instead of diffs or logs.
+- A receipt MUST NOT carry prose attestations such as "verified by gate".
+- The Copilot MUST verify a receipt with one `verify-receipt <receipt>` call. It follows a pointer only for content it needs, such as reviewing an escalated diff.
+- *Accepted, unbuilt:* Knowledge Checkpoint at wave end or 60% context, with `codemap diff` and human acknowledgement. **Build trigger:** Copilot context exceeds 30% in a real session (H2 peak was 7%).
 
 <details>
 <summary>Machine-readable contract (YAML)</summary>
 
 ```yaml
-unit: context_hygiene
+unit: receipts
 actor: Main Copilot
 invariants:
-  batch_receipt_max_lines: 25
-  pointer_schemes:
-    - "git:"
-    - "todo:"
-    - "file://"
-  checkpoint_triggers:
-    - wave_boundary
-    - context_occupancy_percent >= 60
-  checkpoint_requires_codemap_diff: true
-  reset_requires_human_ack: true
+  receipt_max_lines: 25
+  pointer_schemes: ["git:", "todo:", "file://"]
+  prose_attestation: forbidden
+  verification: one_verify_receipt_call
+accepted_unbuilt:
+  knowledge_checkpoint: {trigger: "copilot context > 30% in a real session"}
 ```
 </details>
 
 ---
 
-### 5.4 Spec Unit 4: Three-Stream Learning Loop and Two-Stage Intent Governor
+### 5.5 Spec Unit 5: Findings, Observations and Learning
 
-**Who / When:** The `Tiered Critic Gate`, `Intent Governor`, and `Rule Synthesizer` across `Work Batch` completions and wave boundaries.
-
-```mermaid
-flowchart TD
-    BatchOut["Batch Finishes\n(Proportional Telemetry)"]
-    Stream1["Class 1: Forward Refinement\n(anchors & constraints)"]
-    Stream2["Class 2: Course Correction\n(defects & assumption breaks)"]
-    Stream3["Class 3: Harness Metrics\n(Farley/Adzic/ACP, retries)"]
-    Ingress{"Ingress Admission Filter"}
-    Fold["Micro-fix (<15 lines):\nFold into active/next Batch"]
-    Admit["P0/P1 or North Star blocker:\nCreate todo card or Escalate"]
-    Observe["Non-urgent / P2-P3:\nAppend Observation to trajectories.jsonl"]
-    Replan["Wave Boundary: todo replan +\nObservation Heat + Convergence Pruner"]
-    Synth["Rule Synthesizer:\n>=2 hits -> warn-only canary check"]
-
-    BatchOut --> Stream1
-    BatchOut --> Stream2
-    BatchOut --> Stream3
-    Stream1 --> Replan
-    Stream2 --> Ingress
-    Ingress -->|"Micro-fix"| Fold
-    Ingress -->|"Blocker / Design break"| Admit
-    Ingress -->|"Non-urgent"| Observe
-    Observe --> Replan
-    Observe --> Synth
-    Stream3 --> Synth
-```
+**Who / When:** The gate and runner when a Builder reports a finding; the scheduler at wave boundaries.
 
 **Contract:**
-- Telemetry MUST follow `Proportional Telemetry`: Tier 0 trivial batches emit zero-LLM deterministic metrics; Tier 1 standard batches add a 3-line Builder delta note; Tier 2 high-risk and wave-boundary runs execute full 3-stream pattern mining over `trajectories.jsonl`.
-- The `Ingress Admission Filter` MUST fold micro-fixes ($< 15$ lines in touched files) into active batches and record non-urgent P2/P3 findings as anchored `Observations` in `trajectories.jsonl` rather than creating immediate `todo` cards.
-- Severe `Course Correction` signals that invalidate an architectural assumption or the North Star MUST pause dependent batches and present a decision option to the `Main Copilot` and human.
-- At each wave boundary, `todo replan` MUST add an `Observation Heat` bonus to the Cost of Delay (WSJF) of open tasks whose anchors match recurring `Observations`.
-- Unassigned `Observation` clusters ($\ge 2$ occurrences across waves) MAY promote to new `todo` tasks only when the wave `Convergence Ratio` is $\le 1.0$.
-- When the `Convergence Ratio` exceeds $1.0$, the `Intent Governor` MUST block standalone P2/P3 task creation, merge tasks sharing module anchors, and prune low-WSJF leaf tasks with no North Star link.
-- The `Rule Synthesizer` MUST keep routing static until at least 20 cross-session trajectories exist and MUST deploy newly synthesized `ast-grep` or lint checks in warn-only canary mode until human approval.
+- Before a finding is folded into a task or promoted, the runner MUST run one deterministic check where one exists (for example the command the Builder cites). An unverified finding MUST be logged only as an Observation.
+- Verified micro-fixes (< 15 lines in touched files) MAY fold into the next task on the same anchor. Verified P0/P1 findings or goal blockers become tasks or escalate to the human. Everything else is logged as an Observation in `trajectories.jsonl`.
+- A finding that breaks a goal's anti-goal or outcome MUST pause dependent tasks and go to the human.
+- *Accepted, unbuilt:* Observation Heat WSJF bonus, Convergence Ratio pruning, three-stream learning (Forward Refinement, Rule Synthesizer), bandit routing with N ≥ 20 cold-start floor, warn-only canary rules. **Build trigger:** the H4 re-test (high-finding work, ≥ 5 waves) shows the control arm diverging.
 
 <details>
 <summary>Machine-readable contract (YAML)</summary>
 
 ```yaml
-unit: learning_and_intent_governor
-actors:
-  - Intent Governor
-  - Batch Planner
-  - Rule Synthesizer
+unit: findings
+actors: [Tiered Critic Gate, Wave Runner]
 invariants:
-  telemetry_tiers:
-    tier_0_trivial: deterministic_only
-    tier_1_standard: deterministic_plus_3_line_builder_note
-    tier_2_high_risk_or_wave: full_critic_and_wave_miner
-  ingress_microfix_max_lines: 15
-  observation_promotion_min_occurrences: 2
-  convergence_ratio_prune_threshold: 1.0
-  min_trajectories_for_bandit_routing: 20
-  new_synthesized_rules_mode: warn_only_canary
+  verify_before_fold: true
+  unverified_finding: observation_only
+  microfix_max_lines: 15
+  goal_break: pause_and_escalate
+accepted_unbuilt:
+  observation_heat: {trigger: "H4 re-test diverges"}
+  convergence_pruning: {trigger: "H4 re-test diverges"}
+  three_stream_learning: {trigger: "H4 re-test diverges"}
+  rule_synthesizer: {trigger: ">= 20 trajectories and a recurring pattern", mode: warn_only_canary}
 ```
 </details>
 
@@ -329,60 +300,70 @@ invariants:
 
 ## 6. Anti-Goals
 
-The implementation MUST NOT do any of the following:
+The implementation MUST NOT:
 
-1. **No LLM Pane-Polling or Process Supervision:** Never use an LLM to poll `tmux` panes, parse shell prompts, or watch PIDs. Process management is 100% deterministic.
-2. **No Multi-Persona LLM Chains on Routine Batches:** Never spin up separate Planner, Builder, Critic, Miner, and Release LLM sessions for a routine low-risk batch. Default to 1 LLM pass (Builder) plus deterministic gates.
-3. **No Repo-Polluting State Files:** Never commit `TODO.md`, `FEEDBACK.md`, or `.todos/issues.db` into target code repositories. All backlog cards, batch manifests, and `trajectories.jsonl` stay in `~/.cache/agent-skills/todos/<repo_slug>/`.
-4. **No Raw Log or Diff Dumps in the Main Copilot:** Never stream full subagent transcripts, test logs, or git diffs into the `Main Copilot` context window by default; always return a `<= 25`-line `Batch Receipt` with `Context Pointers`.
-5. **No Unfiltered Backlog Creation from Subagents:** Subagents must never create standalone P2/P3 `todo` tasks directly without passing the `Ingress Admission Filter` and `Convergence Ratio` check.
-6. **No Un-Gated Hard Auto-Rules or Cold-Start Bandits:** Never let a synthesized lint/`ast-grep` rule fail a build without canary verification and human promotion, and never update routing weights on fewer than 20 recorded trajectories.
+1. **Poll with an LLM.** No LLM watches `tmux` panes, shell prompts or PIDs.
+2. **Pack tasks.** No multi-task Work Batches in one worktree (H1).
+3. **Assume low risk.** No module skips the Critic without a recorded holdout score ≥ 0.85 (H3).
+4. **Assert trust.** No prose attestations in receipts; trust comes from `verify-receipt` (H2).
+5. **Fold unverified findings.** No finding becomes work without a deterministic check, where one exists (H4).
+6. **Pollute repositories.** No `TODO.md`, goal files or ledgers in target repos (ADR-002).
+7. **Dump logs into the Copilot.** No raw transcripts, test logs or diffs by default.
+8. **Let the agent move the goal.** No change to a locked Done-check without human approval (ADR-009).
+9. **Build ahead of evidence.** No accepted-unbuilt mechanism before its build trigger is met.
 
 ---
 
 ## 7. Tracer-Bullet Tickets
 
-Execute the four falsification spikes (**TB-1** to **TB-4**) before building the full wave runner:
+| Ticket | Goal | Status |
+| :--- | :--- | :--- |
+| TB-1 (H1) | Batch vs single-task runs | **Done** — killed |
+| TB-2 (H2) | Receipts and pointers | **Done** — context passes; `verify-receipt` built |
+| TB-3 (H3) | Deterministic gate | **Done** — killed for todo-navigator; gate built in `agentic-falsify` |
+| TB-4 (H4) | Wave runner and governor | **Done** — passes; necessity unproven |
+| TB-5 | `todo batch` as Wave Scheduler (≤ 3 disjoint single tasks; test files included) | Open |
+| TB-6 | Knowledge Checkpoint | Accepted, unbuilt (trigger in §5.4) |
+| TB-7 | `/goal`: Goal Contract, lock, fail-first, closure gate, reminder | Open — **next** |
+| TB-8 | Closure timestamps in `todo` (enables H4 re-test and H5) | Open — **first** |
+| RT-1 | Re-test H2 variant C on Sonnet (`VERIFY=1 MODEL=<sonnet> spikes/h2/run.sh`) | Pending quota |
+| RT-2 | Re-test H4 with review-task seeds, ≥ 5 waves (`spikes/h4/seeds-review.txt`) | Pending |
+| H5 | Score `/goal` sessions vs sessions without it | After TB-7 |
 
-1. **TB-1 (Spike H1 — Cohesive Work Batch vs. Single-Task Runs):**
-   - *Goal:* Benchmark a 3-task cohesive `Work Batch` (3 ACP commits in 1 `Transient Worktree`) against 3 isolated single-task worktree runs on a real repo backlog.
-   - *Verification:* Confirm total token spend and wall-clock time are $< 65\%$ of the 3 single-task runs.
-2. **TB-2 (Spike H2 — `<= 25`-Line `Batch Receipt` & `Context Pointers`):**
-   - *Goal:* Define the `Batch Receipt` validator and URI/anchor pointer format (`git:`, `todo:`, `file://`) and replay 10 batch completions into a `Main Copilot` session.
-   - *Verification:* Confirm `Main Copilot` context stays $< 50\%$ with $< 15\%$ pointer dereferences.
-3. **TB-3 (Spike H3 — Deterministic Gate + `Prefix Salvage`):**
-   - *Goal:* Build the deterministic rebase, test, ACP-commit, and risk-score gate with `Prefix Salvage` when task $K$ fails after green commits $1 \dots K-1$.
-   - *Verification:* Run `features/batch-execution-and-merge.feature` and `features/waf-guardrails-and-recovery.feature` scenarios.
-4. **TB-4 (Spike H4 — `trajectories.jsonl`, `Observation Heat`, and `Intent Governor`):**
-   - *Goal:* Extend `todo` with `trajectories.jsonl` `Observation` logging, `Observation Heat` WSJF bonuses in `todo replan`, and `Convergence Ratio` pruning.
-   - *Verification:* Run `features/learning-and-intent-governor.feature` scenarios across a simulated 3-wave backlog.
-5. **TB-5 (Core — Deterministic `todo batch` + `Disjoint Codemap Lock`):**
-   - *Goal:* Add `todo batch` subcommand combining WSJF waves with `codemap` fan-in/fan-out disjointness (max 3 concurrent batches).
-6. **TB-6 (Core — Wave Checkpoint + `codemap diff` + `Rule Synthesizer` Canary):**
-   - *Goal:* Implement wave-boundary `Knowledge Checkpoint` generation with `codemap diff` and warn-only canary rule synthesis.
+**Build order:** TB-8, then TB-7, then the H5 scorer in `agentic-falsify`, then TB-5.
 
 ---
 
-## 8. Open Decisions
+## 8. Commitment Ledger
 
-None. All 21 decision nodes in [decision-tree.md](decision-tree.md) are `settled`.
+| Node | Status |
+| :--- | :--- |
+| `control.topology`, `merge-authority`, `state.backlog-store`, `context.hygiene` | Stands |
+| `waf.worktree-concurrency` | Stands, widened to test files |
+| `batch-planner` | Amended: Wave Scheduler |
+| `pointer-contract` | Amended: `verify-receipt`, no attestation |
+| ADR-007 admission filter | Amended: verify before fold |
+| `subagent-pipeline` | Inverted: Critic by default |
+| `work.batching` | Invalidated |
+| `waf.partial-batch-salvage`, batch cards | Moot |
+| `retry-escalation` | Kept; built with the runner |
+| Checkpoint trigger, drift guard, three-stream learning, Rule Synthesizer, cold-start safety, governor pruning | Accepted, unbuilt |
+| `intent.north-star` | New: ADR-008, ADR-009 |
+
+Full tree: [decision-tree.md](decision-tree.md).
 
 ---
 
-## 9. Links
+## 9. Open Decisions
 
-- **Decision Tree:** [decision-tree.md](decision-tree.md)
-- **Domain Glossary:** [GLOSSARY.md](GLOSSARY.md)
-- **ADRs (1 Single Architectural Decision per Document, Y-Statement + Matrix):**
-  - [ADR-001: Interactive Main Copilot with Deterministic Subagent Lifecycle Supervision](adr/ADR-001-copilot-deterministic-topology.md)
-  - [ADR-002: Out-of-Repo Single Backlog Store and Trajectory Ledger (`todo`)](adr/ADR-002-single-out-of-repo-todo-store.md)
-  - [ADR-003: Cohesive Wave Batching with Disjoint Codemap Locks and Prefix Salvage](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md)
-  - [ADR-004: Risk-Tiered Critic Gate with Unified Rebase-Before-Verify](adr/ADR-004-risk-tiered-critic-gate.md)
-  - [ADR-005: Context Hygiene via Pointer-Rich Batch Receipts and Wave Checkpoints](adr/ADR-005-context-hygiene-and-pointer-receipts.md)
-  - [ADR-006: Three-Stream Learning Loop with Cold-Start Guards](adr/ADR-006-three-stream-learning-loop.md)
-  - [ADR-007: Two-Stage Intent Governor (Ingress Observations, Observation Heat WSJF, and Convergence Pruner)](adr/ADR-007-two-stage-intent-governor.md)
-- **Acceptance Scenarios (BDD):**
-  - [features/batch-execution-and-merge.feature](features/batch-execution-and-merge.feature)
-  - [features/learning-and-intent-governor.feature](features/learning-and-intent-governor.feature)
-  - [features/waf-guardrails-and-recovery.feature](features/waf-guardrails-and-recovery.feature)
-- **Round Replies:** [rounds/](rounds/) (`round-01.md` through `round-08.md`)
+None blocking. Pending evidence: RT-1, RT-2, H5.
+
+---
+
+## 10. Links
+
+- [decision-tree.md](decision-tree.md), [GLOSSARY.md](GLOSSARY.md)
+- ADRs: [001](adr/ADR-001-copilot-deterministic-topology.md), [002](adr/ADR-002-single-out-of-repo-todo-store.md), [003](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md), [004](adr/ADR-004-risk-tiered-critic-gate.md), [005](adr/ADR-005-context-hygiene-and-pointer-receipts.md), [006](adr/ADR-006-three-stream-learning-loop.md), [007](adr/ADR-007-two-stage-intent-governor.md), [008](adr/ADR-008-branch-scoped-goal-contract.md), [009](adr/ADR-009-precommitted-done-check-gates-closure.md)
+- Scenarios: [goal-contract](features/goal-contract.feature), [batch-execution-and-merge](features/batch-execution-and-merge.feature), [learning-and-intent-governor](features/learning-and-intent-governor.feature), [waf-guardrails-and-recovery](features/waf-guardrails-and-recovery.feature)
+- Rounds: [rounds/](rounds/) (v1.0), [rounds/v1.1/](rounds/v1.1/)
+- Evidence: `~/shalomb/agentic-falsify/runs/FINDINGS.md`

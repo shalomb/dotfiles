@@ -1,28 +1,33 @@
-Feature: Work Batch Execution and Tiered Critic Gate
+Feature: Task Run and Tiered Critic Gate
   As the Main Copilot
-  I want cohesive Work Batches executed in Transient Worktrees and verified by a Tiered Critic Gate
-  So that each task lands as an atomic commit on the Feature Worktree without polluting my context window
+  I want each task built alone in its own Transient Worktree and verified before it lands
+  So that every task lands as one verified atomic commit without polluting my context
 
-  Scenario: Low-risk Work Batch merges via Deterministic Gate without a second subagent
+  Scenario: A task touching only modules that earned low risk merges without a Critic
     Given the Feature Worktree is clean at commit "base-sha"
-    And the Batch Planner creates Work Batch "batch-01" with tasks "t-01" and "t-02"
-    And "batch-01" does not touch hub files, public APIs, or proposed ADRs
-    When the Builder completes "batch-01" in Transient Worktree "wt-batch-01"
-    Then "wt-batch-01" contains 2 ACP commits corresponding to "t-01" and "t-02"
-    And the Deterministic Gate rebases "wt-batch-01" onto the Feature Worktree and runs the test suite
-    And no separate Adversarial Critic subagent is spawned
-    And the Feature Worktree fast-forwards to the head of "wt-batch-01"
-    And the Main Copilot receives a Batch Receipt of at most 25 lines with Context Pointers
+    And task "t-01" touches only modules with a recorded holdout score of at least 0.85
+    And "t-01" touches no hub, public API or security path
+    When the Builder completes "t-01" in its own Transient Worktree with one ACP commit
+    Then the gate rebases the commit onto the Feature Worktree and the tests pass
+    And no Adversarial Critic is spawned
+    And the Feature Worktree fast-forwards to the commit
+    And "t-01" is marked done with a closure timestamp
 
-  Scenario: High-risk Work Batch triggers the independent Adversarial Critic
-    Given Work Batch "batch-02" modifies a high-fan-out hub module
-    When the Builder completes "batch-02" and the Deterministic Gate passes
-    Then the runner spawns an independent Adversarial Critic in "wt-batch-02"
-    And the Adversarial Critic verifies the rebased diff against the Feature Worktree
-    And the Feature Worktree fast-forwards only after the Adversarial Critic records an approved verdict
+  Scenario: A task touching an unmeasured module is reviewed by the Critic
+    Given task "t-02" touches a module with no recorded holdout score
+    When the Builder completes "t-02" and the deterministic gate passes
+    Then the Adversarial Critic reviews the rebased diff
+    And the Feature Worktree fast-forwards only after the Critic approves
 
-  Scenario: Builder escalates an assumption break after 2 failed local retries
-    Given the Builder is executing Work Batch "batch-03"
-    When a test or constraint fails twice consecutively during local retries
-    Then the Builder runs the OHECI loop to classify the failure
-    And the Builder halts further retries and emits a blocked Batch Receipt with a Context Pointer to the failing hypothesis
+  Scenario: The Builder stops after 2 failed retries
+    Given the Builder is running task "t-03"
+    When its tests fail twice in a row
+    Then the Builder classifies the failure with OHECI
+    And returns a blocked receipt with a pointer to the failing hypothesis
+    And nothing from "t-03" lands on the Feature Worktree
+
+  Scenario: The Copilot verifies a receipt in one call
+    Given task "t-01" has merged and its receipt has been delivered
+    When the Main Copilot checks the receipt
+    Then it makes exactly one verify-receipt call
+    And the receipt carries no prose claim that it was verified
