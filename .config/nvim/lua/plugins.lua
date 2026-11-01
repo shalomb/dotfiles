@@ -220,6 +220,17 @@ return {
     ft = { "markdown" },
     dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
     opts = {},
+    config = function(_, opts)
+      -- Stale parse trees (e.g. right after `J` joins lines) make get_node_text
+      -- throw "Index out of bounds" inside render-markdown's vim.schedule
+      -- callback. Degrade to an empty string instead of a persistent error popup.
+      local orig = vim.treesitter.get_node_text
+      vim.treesitter.get_node_text = function(...)
+        local ok, res = pcall(orig, ...)
+        return ok and res or ""
+      end
+      require("render-markdown").setup(opts)
+    end,
   },
 
   { -- Inline diagrams in markdown (mermaid fences -> PNG -> kitty protocol).
