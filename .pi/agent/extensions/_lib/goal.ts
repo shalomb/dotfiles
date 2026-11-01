@@ -234,11 +234,20 @@ export function canLock(baseCheckExit: number | undefined): { ok: true } | { ok:
 	return { ok: true };
 }
 
+/** A command is stored on one line, so newlines and control characters are refused rather than rewritten into a different command. */
+const CONTROL_CHAR = /[\u0000-\u001f\u007f]/;
+const badCommand = (commands: string[]): string | undefined => {
+	const bad = commands.find((c) => CONTROL_CHAR.test(c));
+	return bad === undefined ? undefined : `A check command may not contain a newline or control character (write one command per entry): ${JSON.stringify(bad)}`;
+};
+
 export interface DraftFields { doneCheck?: CheckSpec; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
 
 /** Agent-reachable: set draft fields. Never locks; refuses once the goal is no longer a draft. */
 export function fillDraft(g: Goal, f: DraftFields): Result {
 	if (g.status !== "draft") return refuse(`The goal is ${g.status}; only a draft is filled directly. Propose a change to a locked done-check instead.`);
+	const bad = f.doneCheck && badCommand(f.doneCheck.commands);
+	if (bad) return refuse(bad);
 	return {
 		ok: true,
 		goal: {
@@ -280,6 +289,8 @@ export function applyLock(g: Goal, input: { now: Date; baseCommit: string; baseE
 export function proposeChange(g: Goal, input: { now: Date; by: string; reason: string; check: CheckSpec }): Result {
 	if (g.status !== "active") return refuse(`Changes to a done-check are proposed only for an active goal (the goal is ${g.status}).`);
 	if (!oneLine(input.reason)) return refuse("A proposed change needs a reason.");
+	const bad = badCommand(input.check.commands);
+	if (bad) return refuse(bad);
 	const commands = input.check.commands.map(oneLine).filter(Boolean);
 	if (input.check.kind === "command" && !commands.length) return refuse("A command check needs at least one command.");
 	return {

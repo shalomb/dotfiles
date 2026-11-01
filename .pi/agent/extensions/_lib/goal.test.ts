@@ -164,6 +164,16 @@ test("filling a draft sets contract fields but never locks", () => {
 	expect(r.ok && r.goal.antiGoals).toEqual(["no deps"]);
 });
 
+test("a check command with a newline or control character is refused, not rewritten", () => {
+	for (const bad of ["make t\nrm -rf x", "make t\r", "make t\u0000", "make\tt", "make t\u001b[0m"]) {
+		const f = fillDraft(draftWithCheck(), { doneCheck: { kind: "command", commands: ["ok", bad] } });
+		expect(f.ok).toBe(false);
+		if (!f.ok) expect(f.reason).toMatch(/newline|control/i);
+		expect(proposeChange(locked(), { now: LATER, by: "agent", reason: "r", check: { kind: "command", commands: [bad] } }).ok).toBe(false);
+	}
+	expect(fillDraft(draftWithCheck(), { doneCheck: { kind: "command", commands: ["make  t", " ok "] } }).ok).toBe(true);
+});
+
 test("filling an active goal is refused: a locked contract is changed through proposeChange", () => {
 	expect(fillDraft(locked(), { antiGoals: ["x"] }).ok).toBe(false);
 });
