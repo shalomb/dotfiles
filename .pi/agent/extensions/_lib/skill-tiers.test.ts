@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { formatLoadNotice, inventory, mergeManifests, onDemandSection, parseManifest, pickerOrder, resolveUserManifestPath, savings, tierOf, tok, visible } from "./skill-tiers";
+import { formatLoadNotice, inventory, mergeManifests, onDemandSection, parseManifest, pickerOrder, resolveUserManifestPath, savings, searchSkills, signalSkills, tierOf, tok, visible } from "./skill-tiers";
 
 let root: string;
 beforeEach(() => { root = mkdtempSync(join(tmpdir(), "skill-tiers-")); });
@@ -163,4 +163,47 @@ test("shipped user skill-tiers.json: design-thinking is tier 2, brainstorming an
 	expect(tierOf("pi-sub-agent", m)).toBe(3);
 });
 
+const cat = [
+	{ name: "terraform-dev", description: "Watch and validate Terraform files continuously" },
+	{ name: "tfc-api", description: "Query Terraform Cloud workspaces, runs, plans" },
+	{ name: "adzic-bdd", description: "Gherkin feature files and Specification by Example" },
+	{ name: "git-forensics", description: "Churn, bus factor and pickaxe archaeology" },
+];
 
+test("searchSkills: name hits outrank description hits; zero-score skills are dropped", () => {
+	expect(searchSkills(cat, "terraform").map((s) => s.name)).toEqual(["terraform-dev", "tfc-api"]);
+	expect(searchSkills(cat, "gherkin")[0].name).toBe("adzic-bdd");
+	expect(searchSkills(cat, "zzz-nothing")).toEqual([]);
+});
+
+test("searchSkills: an exact name wins, and limit caps the result", () => {
+	expect(searchSkills(cat, "tfc-api")[0].name).toBe("tfc-api");
+	expect(searchSkills(cat, "terraform", 1)).toHaveLength(1);
+});
+
+test("signalSkills: exact names and *.ext globs map repo files to skills", () => {
+	const signals = { "*.tf": ["terraform-dev", "tfc-api"], "TODO.md": ["todo-navigator"], justfile: ["justfile-assistant"] };
+	expect(signalSkills(["main.tf", "README.md"], signals)).toEqual(["terraform-dev", "tfc-api"]);
+	expect(signalSkills(["TODO.md", "justfile"], signals).sort()).toEqual(["justfile-assistant", "todo-navigator"]);
+	expect(signalSkills(["README.md"], signals)).toEqual([]);
+	expect(signalSkills(["a.tf", "b.tf"], signals)).toEqual(["terraform-dev", "tfc-api"]);
+});
+
+test("parseManifest/mergeManifests: signals are parsed, junk dropped, and a project adds to them", () => {
+	const m = parseManifest(JSON.stringify({ signals: { "*.tf": ["a", 1], bad: "x" } }));
+	expect(m.signals).toEqual({ "*.tf": ["a"] });
+	const merged = mergeManifests(m, parseManifest(JSON.stringify({ signals: { "*.tf": ["b"], "go.mod": ["c"] } })));
+	expect(merged.signals).toEqual({ "*.tf": ["a", "b"], "go.mod": ["c"] });
+});
+
+test("onDemandSection points the model at skill_search for the rest", () => {
+	const skills = ["a", "b", "c"].map((name) => ({ name }));
+	expect(onDemandSection(skills, { tier1: ["a"], tier2: [], tier3: [], hide: [] }, new Set(), "/s")).toContain("skill_search");
+});
+
+test("shipped manifest: modern-cli-overrides is not duplicated in tier 1 (its body is injected), and signals exist", () => {
+	const m = parseManifest(require("node:fs").readFileSync(join(import.meta.dir, "..", "..", "skill-tiers.json"), "utf8"));
+	expect(m.tier1).not.toContain("modern-cli-overrides");
+	expect(m.tier1).toContain("git-safety-guardrails");
+	expect(m.signals?.["*.tf"]).toContain("terraform-dev");
+});

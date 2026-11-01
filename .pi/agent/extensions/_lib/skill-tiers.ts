@@ -13,6 +13,8 @@ export interface Manifest {
 	tier2: string[];
 	tier3: string[];
 	hide: string[];
+	/** Repo-file pattern -> skills promoted into the prompt when the cwd holds a matching file. */
+	signals?: Record<string, string[]>;
 	role?: string;
 	model?: string;
 	thinkingLevel?: string;
@@ -22,12 +24,23 @@ export interface Inventory { scripts: string[]; references: string[]; assets: st
 
 export const tok = (s: string) => Math.ceil(s.length / 4);
 const strs = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+const sigs = (v: unknown): Record<string, string[]> | undefined => {
+	if (!v || typeof v !== "object" || Array.isArray(v)) return undefined;
+	const out: Record<string, string[]> = {};
+	for (const [k, val] of Object.entries(v)) {
+		const list = strs(val);
+		if (list.length) out[k] = list;
+	}
+	return Object.keys(out).length ? out : undefined;
+};
 const strOrUndef = (v: unknown): string | undefined => (typeof v === "string" && v.trim() ? v.trim() : undefined);
 
 export function parseManifest(raw: string): Manifest {
 	try {
 		const j = JSON.parse(raw);
 		const m: Manifest = { tier1: strs(j?.tier1), tier2: strs(j?.tier2), tier3: strs(j?.tier3), hide: strs(j?.hide) };
+		const signals = sigs(j?.signals);
+		if (signals) m.signals = signals;
 		if (strOrUndef(j?.role)) m.role = strOrUndef(j?.role);
 		if (strOrUndef(j?.model)) m.model = strOrUndef(j?.model);
 		if (strOrUndef(j?.thinkingLevel)) m.thinkingLevel = strOrUndef(j?.thinkingLevel);
@@ -57,7 +70,46 @@ export function resolveUserManifestPath(env: Record<string, string | undefined>,
 export function mergeManifests(user: Manifest, project: Manifest): Manifest {
 	const demote = new Set(project.tier3);
 	const u = (a: string[], b: string[]) => [...new Set([...a, ...b])].filter((n) => !demote.has(n));
-	return { tier1: u(user.tier1, project.tier1), tier2: u(user.tier2, project.tier2), tier3: [...new Set([...user.tier3, ...project.tier3])], hide: [...new Set([...user.hide, ...project.hide])] };
+	const merged: Manifest = { tier1: u(user.tier1, project.tier1), tier2: u(user.tier2, project.tier2), tier3: [...new Set([...user.tier3, ...project.tier3])], hide: [...new Set([...user.hide, ...project.hide])] };
+	if (user.signals || project.signals) {
+		const out: Record<string, string[]> = {};
+		for (const src of [user.signals ?? {}, project.signals ?? {}])
+			for (const [k, v] of Object.entries(src)) out[k] = [...new Set([...(out[k] ?? []), ...v])];
+		merged.signals = out;
+	}
+	return merged;
+}
+
+/** Skills a repo asks for by the files at its top level: exact file name, or `*.ext`. */
+export function signalSkills(entries: string[], signals: Record<string, string[]> = {}): string[] {
+	const out = new Set<string>();
+	for (const [pattern, skills] of Object.entries(signals)) {
+		const hit = pattern.startsWith("*.") ? entries.some((e) => e.endsWith(pattern.slice(1))) : entries.includes(pattern);
+		if (hit) for (const n of skills) out.add(n);
+	}
+	return [...out];
+}
+
+const words = (s: string) => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+
+/** Rank skills for a query: exact name 100, name substring 10, each query word in the name 5 / in the description 1. Zero scores are dropped. */
+export function searchSkills<T extends { name: string; description: string }>(skills: T[], query: string, limit = 5): T[] {
+	const q = query.trim().toLowerCase();
+	const qw = [...new Set(words(q))];
+	const score = (s: T) => {
+		const name = s.name.toLowerCase();
+		const nw = new Set(words(name));
+		const dw = new Set(words(s.description));
+		let n = name === q ? 100 : q && name.includes(q) ? 10 : 0;
+		for (const w of qw) n += (nw.has(w) ? 5 : name.includes(w) ? 2 : 0) + (dw.has(w) ? 1 : 0);
+		return n;
+	};
+	return skills
+		.map((s) => ({ s, n: score(s) }))
+		.filter((x) => x.n > 0)
+		.sort((a, b) => b.n - a.n || a.s.name.localeCompare(b.s.name))
+		.slice(0, limit)
+		.map((x) => x.s);
 }
 
 /** Skills not hidden by the manifest. Hidden ones stay on disk and loadable by name; they just leave the picker and index. */
@@ -104,8 +156,8 @@ export function onDemandSection(skills: { name: string }[], m: Manifest, loaded:
 	const t3 = hidden.length - t2.length;
 	const lines = ["Skills not listed above are available on demand."];
 	if (t2.length) lines.push(`Frequently used: ${t2.join(", ")}.`);
-	if (t3) lines.push(`${t3} more are rarely needed; list them with: fd SKILL.md ${skillsDir}`);
-	lines.push("To use one, read its SKILL.md (<skills dir>/<name>/SKILL.md) and follow it. The user can also run /skills:loader.");
+	if (t3) lines.push(`${t3} more are rarely needed; find them with the skill_search tool.`);
+	lines.push(`To use one, call skill_search (it loads the best match), or read ${skillsDir}/<name>/SKILL.md and follow it. The user can also run /skills:loader.`);
 	return lines.join("\n");
 }
 

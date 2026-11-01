@@ -9,12 +9,13 @@
  * SKILLS_TIERS=off disables all filtering (baseline for measurements). SKILLS_LOG=<file> logs events as JSONL.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { appendFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverRepoSkills } from "./_lib/repo-skills";
-import { type Manifest, formatLoadNotice, inventory, loadManifest, mergeManifests, onDemandSection, pickerOrder, resolveUserManifestPath, savings, tierOf, tok, visible } from "./_lib/skill-tiers";
+import { Type } from "typebox";
+import { type Manifest, formatLoadNotice, inventory, loadManifest, mergeManifests, onDemandSection, pickerOrder, resolveUserManifestPath, savings, searchSkills, signalSkills, tierOf, tok, visible } from "./_lib/skill-tiers";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PICKER = join(HERE, "_lib", "skills-picker.sh");
@@ -26,6 +27,11 @@ const log = (o: unknown) => process.env.SKILLS_LOG && appendFileSync(process.env
 const userManifestPath = () => resolveUserManifestPath(process.env, AGENT_DIR);
 const manifestFor = (cwd?: string): Manifest =>
 	mergeManifests(loadManifest(userManifestPath()), cwd ? loadManifest(join(cwd, ".pi", "skill-tiers.json")) : { tier1: [], tier2: [], tier3: [], hide: [] });
+/** Skills the repo at `cwd` asks for through the manifest `signals` (top-level file names only; no tree walk). */
+const promotedFor = (m: Manifest, cwd?: string): string[] => {
+	if (!cwd || !m.signals) return [];
+	try { return signalSkills(readdirSync(cwd), m.signals); } catch { return []; }
+};
 
 export default function (pi: ExtensionAPI) {
 	let all: any[] = []; // full catalog, captured before filtering
@@ -38,16 +44,19 @@ export default function (pi: ExtensionAPI) {
 		log({ ev: "session_start", restored: [...loaded] });
 	});
 
-	const shown = (m: Manifest) => new Set(all.filter((s) => tierOf(s.name, m) === 1 || loaded.has(s.name)).map((s) => s.name));
+	const shown = (m: Manifest, cwd?: string) => {
+		const promoted = new Set(promotedFor(m, cwd));
+		return new Set(all.filter((s) => tierOf(s.name, m) === 1 || loaded.has(s.name) || promoted.has(s.name)).map((s) => s.name));
+	};
 
 	pi.on("before_agent_start", async (e: any) => {
 		const o = e.systemPromptOptions;
 		if ((o.skills ?? []).length > all.length) all = [...o.skills];
 		if (off()) return log({ ev: "before_agent_start", tiers: "off", catalog: all.length });
 		const m = manifestFor(o.cwd);
-		const keep = shown(m);
+		const keep = shown(m, o.cwd);
 		o.skills = all.filter((s) => keep.has(s.name));
-		const section = onDemandSection(all, m, loaded, SKILLS_DIR);
+		const section = onDemandSection(all, m, new Set([...loaded, ...keep]), SKILLS_DIR);
 		if (section) o.sections = { ...o.sections, skills_on_demand: section };
 		log({ ev: "before_agent_start", catalog: all.length, inPrompt: o.skills.map((s: any) => s.name), sectionTok: tok(section) });
 	});
@@ -107,8 +116,8 @@ export default function (pi: ExtensionAPI) {
 	const status = (ctx: any) => {
 		const userM = loadManifest(userManifestPath());
 		const m = manifestFor(ctx.cwd);
-		const keep = off() ? new Set(all.map((s) => s.name)) : shown(m);
-		const section = off() ? "" : onDemandSection(all, m, loaded, SKILLS_DIR);
+		const keep = off() ? new Set(all.map((s) => s.name)) : shown(m, ctx.cwd);
+		const section = off() ? "" : onDemandSection(all, m, new Set([...loaded, ...keep]), SKILLS_DIR);
 		const sv = savings(all, keep, section);
 		const vis = visible(all, m);
 		const n = (t: number) => vis.filter((s) => tierOf(s.name, m) === t).length;
@@ -118,10 +127,42 @@ export default function (pi: ExtensionAPI) {
 			`${roleLine}skills catalog: ${keep.size}/${all.length} in prompt${off() ? " (tiers OFF)" : ""}\n` +
 				`tiers: T1 ${n(1)} · T2 ${n(2)} · T3 ${n(3)} · hidden ${all.length - vis.length}\n` +
 				`catalog cost ~${sv.nowTok}t now vs ~${sv.fullTok}t full → saving ~${sv.savedTok}t per turn\n` +
+				`promoted by repo files: ${promotedFor(m, ctx.cwd).join(", ") || "-"}\n` +
 				`loaded: ${[...loaded].join(", ") || "-"}`,
 			"info",
 		);
 	};
+
+	pi.registerTool({
+		name: "skill_search",
+		label: "Skill search",
+		description:
+			"Find a skill that is not in the prompt catalog and load it. Searches every skill's name and description " +
+			"(including repo-local ones). With load=true (default) the best match's SKILL.md is returned in full.",
+		promptSnippet: "Find and load a skill that is not listed in the catalog",
+		promptGuidelines: ["When a task matches a skill that is not listed, call skill_search instead of listing the skills directory."],
+		parameters: Type.Object({
+			query: Type.String({ description: "What you need, e.g. 'terraform plan', 'c4 diagram', 'adr'" }),
+			load: Type.Optional(Type.Boolean({ description: "Load the best match (default true). False lists matches only." })),
+		}),
+		async execute(_id, params, _signal, _onUpdate, ctx) {
+			ensureAll(ctx);
+			const text = (t: string) => ({ content: [{ type: "text" as const, text: t }], details: {} });
+			const hits = searchSkills(visible(candidates(ctx), manifestFor(ctx.cwd)), params.query, 5);
+			if (!hits.length) return text(`No skill matches "${params.query}". The user can run /skills:loader to browse.`);
+			const list = hits.map((s: any) => `- ${s.name}: ${String(s.description).replace(/\s+/g, " ").slice(0, 160)}`).join("\n");
+			if (params.load === false) return text(`Matches:\n${list}`);
+			const best = hits[0];
+			loaded.add(best.name);
+			pi.appendEntry("skills-loader", { loaded: [...loaded] });
+			log({ ev: "skill_search", query: params.query, best: best.name, hits: hits.map((s: any) => s.name) });
+			const body = readFileSync(best.filePath, "utf8");
+			const inv = inventory(best.baseDir ?? dirname(best.filePath));
+			const bundled = [["scripts", inv.scripts], ["references", inv.references], ["assets", inv.assets]].filter(([, f]: any) => f.length).map(([n, f]: any) => `${n}: ${f.join(", ")}`).join("; ");
+			const others = hits.slice(1).map((s: any) => s.name).join(", ");
+			return text(`Skill loaded: ${best.name} (${best.filePath})\n${bundled ? `Bundled (read on demand): ${bundled}\n` : ""}${others ? `Other matches: ${others}\n` : ""}\n${body}`);
+		},
+	});
 
 	pi.registerCommand("skills:loader", {
 		description: "Load skills on demand (fzf picker with no args, incl. repo-local .claude/.gemini/.github/.agent skills; `status` shows tiers and savings; or skill names)",

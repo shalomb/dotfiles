@@ -1,7 +1,6 @@
 {
-  "_comment": "tier1 = always in the prompt catalog (policy: mandated by AGENTS.md). tier2 = hidden, named in an on-demand index (usage-ranked from session history). Anything unlisted = tier3. Project overrides: <repo>/.pi/skill-tiers.json (adds to tiers; its tier3 demotes). hide = duplicates removed from the picker and on-demand index (still on disk; /skill:name works).",
+  "_comment": "tier1 = always in the prompt catalog. modern-cli-overrides is NOT listed: modern-cli-guard.ts injects its full body every turn. tier2 = hidden, named in an on-demand index. Anything unlisted = tier3; find it with the skill_search tool. signals = repo file (exact name or *.ext at the cwd top level) -> skills promoted into the prompt for that session. Project overrides: <repo>/.pi/skill-tiers.json (adds to tiers and signals; its tier3 demotes). hide = removed from picker and index.",
   "tier1": [
-    "modern-cli-overrides",
     "git-commit-formatter",
     "git-safety-guardrails",
     "test-driven-development",
@@ -24,5 +23,30 @@
     "test-accordion",
     "systematic-debugging"
   ],
-  "hide": []
+  "hide": [],
+  "signals": {
+    "*.tf": [
+      "terraform-dev",
+      "tfc-api"
+    ],
+    "*.feature": [
+      "adzic-bdd"
+    ],
+    "TODO.md": [
+      "todo-navigator"
+    ],
+    "justfile": [
+      "justfile-assistant"
+    ],
+    "pyproject.toml": [
+      "uv"
+    ],
+    ".harness": [
+      "harness-idp",
+      "harness-pipeline"
+    ],
+    "GLOSSARY.md": [
+      "domain-modeling"
+    ]
+  }
 }
