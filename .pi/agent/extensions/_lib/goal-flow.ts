@@ -4,7 +4,7 @@
 
 import {
 	type CheckSpec, type DraftFields, type Goal, type Result,
-	applyApprovedChange, applyClose, applyLock, applyReject, closeDecision, dropGoal, fillDraft, newDraft, oneLine,
+	applyApprovedChange, applyClose, applyLock, canLock, applyReject, closeDecision, dropGoal, fillDraft, newDraft, oneLine,
 	proposeChange, reminderLine, staleGoal,
 } from "./goal.ts";
 import { type Exec, branchState, listGoals, loadGoal, loadGoalFile, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
@@ -169,13 +169,34 @@ export async function lockGoal(d: Deps): Promise<void> {
 	commit(d, applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit }), `Goal ${g.id} locked.`);
 }
 
+const sameSpec = (a: CheckSpec, b: CheckSpec) => a.kind === b.kind && a.commands.length === b.commands.length && a.commands.every((c, i) => c === b.commands[i]);
+
+/** A change weakens the check when it drops a command or swaps commands for a human confirmation. */
+const weakens = (old: CheckSpec, next: CheckSpec) => old.kind === "command" && (next.kind === "human" || old.commands.some((c) => !next.commands.includes(c)));
+
+/**
+ * `/goal approve`: same rule as lock. The new check must fail at the base commit, and the human is shown
+ * the live current check; a proposal made against a different check is refused.
+ */
 export async function approveChange(d: Deps): Promise<void> {
 	const g = current(d);
 	if (!g) return;
-	if (!g.pending?.new) return d.ui.notify("No change is pending.", "info");
+	const p = g.pending;
+	if (!p?.new) return d.ui.notify("No change is pending.", "info");
+	const live: CheckSpec = { kind: g.doneCheck.kind, commands: g.doneCheck.commands };
+	if (!p.old || !sameSpec(p.old, live))
+		return d.ui.notify("The pending change no longer matches the current done-check (it changed since the proposal). /goal reject discards it; ask the agent to propose again.", "error");
+	let evidence = "(human-confirm check; no command runs)";
+	if (p.new.kind === "command") {
+		const run = await runChecksAtCommit(d.exec, d.root, g.doneCheck.baseCommit, p.new.commands, d.tmpParent);
+		const refused = canLock(run.exit);
+		if (!refused.ok) return d.ui.notify(`${refused.reason}\n${run.output}`, "error");
+		evidence = `On base ${g.doneCheck.baseCommit} the new check fails (exit ${run.exit}).`;
+	}
+	const weakening = weakens(live, p.new);
 	const ok = await d.ui.confirm(
-		`Approve the change to the done-check of ${g.id}?`,
-		`Proposed by ${g.pending.by}: ${g.pending.reason}\nOld:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...g.pending.old } }).join("\n")}\nNew:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...g.pending.new } }).join("\n")}`);
+		`${weakening ? "WEAKENING: approve" : "Approve"} the change to the done-check of ${g.id}?`,
+		`Proposed by ${p.by}: ${p.reason}\nCurrent:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...live } }).join("\n")}\nNew:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...p.new } }).join("\n")}\n${evidence}`);
 	if (!ok) return d.ui.notify("Not approved. The change stays pending; /goal reject discards it.", "info");
 	commit(d, applyApprovedChange(g, { now: d.now() }), `Change approved and recorded in ${g.id}.`);
 }

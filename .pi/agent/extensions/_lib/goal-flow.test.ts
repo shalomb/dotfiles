@@ -201,7 +201,7 @@ test("approve applies the pending change after the human confirms, and records w
 
 test("approve leaves the check unchanged when the human declines; reject discards the proposal", async () => {
 	const d = await activeGoal();
-	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["true"] }, reason: "weaker" });
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason: "renamed output" });
 	answers.push(false);
 	await approveChange(d);
 	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv"]);
@@ -403,4 +403,64 @@ test("a branch whose name collides with another branch's goal slug sees no goal 
 	await dropCurrentGoal(dash, "x");
 	expect(readFileSync(file, "utf8")).toBe(before);
 	expect(loadGoal(store, "feat/x")!.outcome).toBe("slash outcome");
+});
+
+// P1: approving a change is held to the same fail-on-base rule as lock.
+test("approve refuses a new check that passes on the base commit: nothing changes, no confirm is asked", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["true"] }, reason: "weaker" });
+	confirms.length = 0;
+	answers.push(true);
+	await approveChange(d);
+	expect(confirms).toEqual([]);
+	expect(lastNote()).toMatch(/must fail before the work starts/);
+	const g = loadGoal(store, "feat/export")!;
+	expect(g.doneCheck.commands).toEqual(["test -f export.csv"]);
+	expect(g.pending).toBeDefined();
+	expect(worktrees()).toBe(1);
+});
+
+test("approve refuses when the new check could not be run on the base commit (killed)", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason: "renamed" });
+	confirms.length = 0;
+	answers.push(true);
+	await approveChange({ ...d, exec: killedBash });
+	expect(confirms).toEqual([]);
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv"]);
+});
+
+test("approve shows the live current check, and refuses when the pending proposal was made against a different one", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason: "renamed" });
+	confirms.length = 0;
+	answers.push(true);
+	await approveChange(d);
+	expect(confirms[0]).toContain("Current:\n  $ test -f export.csv");
+	// A pending change whose old no longer matches the live check (the check moved on since the proposal).
+	const g = loadGoal(store, "feat/export")!;
+	saveGoal(store, { ...g, pending: { at: "2026-11-01T10:00:00Z", by: "agent", reason: "stale", old: { kind: "command", commands: ["test -f export.csv"] }, new: { kind: "command", commands: ["test -f third.csv"] } } });
+	confirms.length = 0;
+	confirms.length = 0;
+	answers.push(true);
+	await approveChange(d);
+	expect(confirms).toEqual([]);
+	expect(lastNote()).toMatch(/no longer matches|changed since/i);
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f other.csv"]);
+});
+
+test("approve labels a change that removes commands as WEAKENING in the prompt title, and an additive change not", async () => {
+	const d = await draftWithCheck(["test -f export.csv", "test -f never.csv"]);
+	answers.push(true);
+	await lockGoal(d);
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f other.csv"] }, reason: "swap" });
+	confirms.length = 0;
+	answers.push(false);
+	await approveChange(d);
+	expect(confirms[0]).toMatch(/^[^\n]*WEAKENING/);
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f never.csv", "test -f more.csv"] }, reason: "stricter" });
+	confirms.length = 0;
+	answers.push(false);
+	await approveChange(d);
+	expect(confirms[0].split("\n")[0]).not.toMatch(/WEAKENING/);
 });
