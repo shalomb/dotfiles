@@ -7,7 +7,7 @@ import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { branchState, loadGoal, saveGoal, type Exec } from "./goal-io.ts";
-import { approveChange, checkGoal, dropCurrentGoal, doneGoal, lockGoal, promptReminder, proposeFromAgent, rejectChange, showGoal, staleWarning, startGoal, type Deps } from "./goal-flow.ts";
+import { approveChange, checkGoal, parseGoalArgs, dropCurrentGoal, doneGoal, lockGoal, promptReminder, proposeFromAgent, rejectChange, showGoal, staleWarning, startGoal, type Deps } from "./goal-flow.ts";
 
 const exec: Exec = (cmd, args, o) =>
 	new Promise((res) => execFile(cmd, args, { cwd: o?.cwd, timeout: o?.timeout }, (e: any, stdout, stderr) => res({ code: e ? (typeof e.code === "number" ? e.code : 1) : 0, stdout, stderr })));
@@ -325,4 +325,14 @@ test("staleWarning scans the store, so a session on main still sees the goal of 
 	expect(w).toMatch(/deleted/);
 	expect(w).toContain("g-feat-export");
 	expect((await branchState(exec, root, "feat/export", d.head)).exists).toBe(false);
+});
+
+test("parseGoalArgs: bare subcommand words are subcommands, anything else is an outcome", () => {
+	expect(parseGoalArgs("")).toEqual({ kind: "show" });
+	expect(parseGoalArgs("  lock ")).toEqual({ kind: "lock" });
+	for (const w of ["check", "approve", "reject", "done", "drop"]) expect(parseGoalArgs(w)).toEqual({ kind: w } as any);
+	expect(parseGoalArgs("Users can export a backlog")).toEqual({ kind: "start", outcome: "Users can export a backlog" });
+	// an outcome that merely begins with a subcommand word is still an outcome
+	expect(parseGoalArgs("drop the legacy cache")).toEqual({ kind: "start", outcome: "drop the legacy cache" });
+	expect(parseGoalArgs("done")).toEqual({ kind: "done" });
 });

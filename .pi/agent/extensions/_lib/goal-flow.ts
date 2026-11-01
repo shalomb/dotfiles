@@ -24,7 +24,20 @@ export interface Deps {
 	/** Send the agent a user message. */
 	tellAgent(message: string): void;
 	/** Run a slash command (such as /persist) as if the human typed it. */
-	runCommand(command: string): void;
+	runCommand(command: string): Promise<void> | void;
+}
+
+export type GoalArgs =
+	| { kind: "show" | "lock" | "check" | "approve" | "reject" | "done" | "drop" }
+	| { kind: "start"; outcome: string };
+
+export const SUBCOMMANDS = ["lock", "check", "approve", "reject", "done", "drop"] as const;
+
+/** A subcommand is the whole argument. Anything longer is an outcome, even if its first word is a subcommand. */
+export function parseGoalArgs(raw: string): GoalArgs {
+	const a = raw.trim();
+	if (!a) return { kind: "show" };
+	return (SUBCOMMANDS as readonly string[]).includes(a) ? ({ kind: a } as GoalArgs) : { kind: "start", outcome: a };
 }
 
 const NEEDS_BRANCH = "No goal on a detached HEAD. Switch to a branch first.";
@@ -189,7 +202,7 @@ export async function doneGoal(d: Deps): Promise<void> {
 	if (!decision.close) return d.ui.notify(decision.reason, "error");
 	const closed = commit(d, applyClose(g, { now: d.now(), closedBy: decision.closedBy }), `Goal ${g.id} closed (${decision.closedBy}).`);
 	if (!closed) return;
-	d.runCommand(`/persist goal ${g.id} closed (${decision.closedBy}): ${g.outcome}`);
+	await d.runCommand(`/persist goal ${g.id} closed (${decision.closedBy}): ${g.outcome}`);
 	d.tellAgent(
 		`/goal done: goal ${g.id} is closed (${decision.closedBy}). After the /persist hand-off, capture the lessons learned from this goal ` +
 		"(lessons-learned skill): what worked, what cost time, what to change next time. Keep it short.");
