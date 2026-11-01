@@ -49,7 +49,13 @@ closed_by: ""            # check | assertion
 - 2026-11-01T10:05:00Z human: locked (base a1b2c3d failed: exit 1)
 ```
 
-Rules: front matter is YAML; sections are optional except none are required by `todo`.
+## Pending change
+- (optional; one entry, written by goal_propose on an active goal; `todo` ignores it)
+
+Rules: a draft MAY have an empty done-check; `/goal lock` refuses until it has one.
+History and pending entries are encoded so free text cannot break parsing.
+`loadGoal` treats a file whose `branch` differs from the current branch as no goal
+(slug collisions such as `feat/x` vs `feat-x`). Front matter is YAML; sections are optional except none are required by `todo`.
 `todo` only **reads** `id` and `status`. Only `/goal` writes goal files.
 
 ## 3. Task metadata (todo-navigator)
@@ -67,7 +73,12 @@ Rules: front matter is YAML; sections are optional except none are required by `
 - `todo list --goal <id>` (filter) — optional for TB-8, used later by H5.
 - Exit codes unchanged.
 
-## 5. Test seams
+## 5. Known limits (accepted)
+- Stores keyed by the old per-worktree slug are not migrated; they stay in the cache, unused.
+- Store sharing needs a `.git` common dir; bare-repo layouts (`.bare`, `foo.git`) and a symlinked `.git` fall back to per-checkout.
+- `/persist` (`_lib/persist.ts repoSlug`) still keys hand-offs per checkout: follow-up.
+
+## 6. Test seams
 
 - Store root override: env `XDG_CACHE_HOME` (existing). Tests MUST NOT touch the real cache.
 - Clock: functions accept `now` (existing pattern in `claims.py`).

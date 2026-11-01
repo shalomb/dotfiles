@@ -48,6 +48,7 @@ The agent drafts the done-check; the human confirms it before work starts; it is
 - **Lock state:** `goal.md` records `done_check.locked_at`, `locked_by` and the base commit it failed on.
 - **Fail-first gate:** `/goal lock` runs the check on the base commit and refuses to lock on exit 0.
 - **Change log:** every change appends `{at, by, reason, old, new}` to the goal's history section.
+- **Change gate:** an approved change must also fail on the base commit; a change that removes commands is labelled as weakening.
 - **Closure gate:** `/goal done` runs the check; on non-zero exit it refuses and reports the output pointer.
 - **Assertion marker:** human-confirm closures are written as `closed_by: assertion` so H5 can exclude or compare them.
 
@@ -63,6 +64,8 @@ The agent drafts the done-check; the human confirms it before work starts; it is
 - Fail-on-base proves the check can fail, not that it covers the outcome; a narrow check can still pass early.
 - Human-confirm goals keep done-by-assertion, so they get no protection from this ADR.
 - A check that is slow or flaky blocks closure until fixed.
+- The fail-on-base proof runs in a clean temporary worktree with no installed dependencies or build outputs, so a check can fail there for an environment reason and still lock. A check could also detect that worktree and behave differently. Only the human review of the failing output at lock time guards against this.
+- A killed or timed-out check is never green and never counts as "failed on base"; it must be re-run.
 
 ## Alternatives Considered
 
