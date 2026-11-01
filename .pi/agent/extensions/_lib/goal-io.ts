@@ -53,6 +53,7 @@ const tail = (s: string) => s.split("\n").slice(-OUTPUT_TAIL_LINES).join("\n").t
  * A killed (timed-out) command reports code 0 in pi's exec, so `killed` is checked first: exit is then undefined.
  */
 export async function runChecks(exec: Exec, commands: string[], cwd: string): Promise<CheckRun> {
+	if (!commands.length) return { exit: undefined, output: "No commands to run: an empty check is never green." };
 	let output = "";
 	for (const command of commands) {
 		const r = await exec("bash", ["-c", command], { cwd, timeout: CHECK_TIMEOUT_MS });

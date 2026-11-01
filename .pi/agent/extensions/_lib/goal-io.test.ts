@@ -54,6 +54,12 @@ test("runChecks: all commands green gives exit 0; the first failing command give
 	expect(r.output).not.toContain("never");
 });
 
+test("runChecks: an empty command list is never green", async () => {
+	const r = await runChecks(exec, [], root);
+	expect(r.exit).toBeUndefined();
+	expect(r.output).toMatch(/no commands/i);
+});
+
 // Scenario: A Done-check that fails on the base commit is locked / one that passes is refused
 test("runChecksAtCommit runs the check in a detached worktree at that commit, then removes it", async () => {
 	const base = git("rev-parse", "--short", "HEAD");
