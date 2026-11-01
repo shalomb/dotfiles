@@ -74,6 +74,7 @@ mlocate
 mosh
 ncurses-term
 netcat-traditional
+network-manager  # manages the network on this VM; otherwise only a dependency of tlp-rdw
 nftables
 openssh-client
 openssh-server
