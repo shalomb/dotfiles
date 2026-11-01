@@ -70,3 +70,11 @@ Stance: long horizon
   - [settled] horizon.reopen-scope -- Reopen only nodes the evidence touched; control.topology stays.
   - [settled] retest.gate -- v1.1 does not wait for re-tests.
 - [open] intent.north-star -- /goal: goal contract with executable done-check. Round v1.1-03.
+- [settled] intent.north-star -- /goal: Goal Contract with a locked executable Done-check. Round v1.1-03.
+  - [settled] goal.store -- `goal.md` in the out-of-repo todo store (ADR-002).
+  - [settled] goal.contract -- Outcome, anti-goals, done-check commands, scope anchors, spec links.
+  - [settled] goal.done-check.author -- Agent drafts, human confirms, then locked (H3 overfit lesson).
+  - [settled] goal.done-check.change -- Agent proposes, human approves; each change recorded.
+  - [settled] goal.scope -- One goal per branch.
+  - [settled] goal.task-link -- Tasks created while a goal is active get `[goal: <id>]` automatically.
+  - [settled] goal.close -- `/goal done` requires a green done-check, then `/persist` + lessons capture.

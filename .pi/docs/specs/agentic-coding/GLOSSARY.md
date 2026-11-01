@@ -91,3 +91,19 @@ _Avoid_: prompt append
 **Falsifiable Hypothesis**:
 A quantitative prediction paired with a disconfirmation threshold (kill criterion) that a design mechanism must pass in a tracer spike before full implementation.
 _Avoid_: subjective goal
+
+**Goal Contract**:
+The stored record of one goal for one branch: outcome, anti-goals, done-check commands, scope anchors and spec links, kept as `goal.md` in the todo store.
+_Avoid_: North Star (as an unstored term), objective note
+
+**Done-check**:
+An executable command that proves a goal is met. The agent drafts it, the human confirms it before work starts, and it is then locked.
+_Avoid_: acceptance criteria (prose), definition of done
+
+**Scope Anchor**:
+A path the goal's work is expected to touch; used for drift and out-of-scope checks.
+_Avoid_: focus area
+
+**Wave Scheduler**:
+The deterministic `todo batch` step that selects at most 3 ready single tasks per wave whose code and test files are disjoint.
+_Avoid_: Batch Planner, batch packer
