@@ -35,7 +35,8 @@
     "npm:@narumitw/pi-github-pr",
     "npm:pi-antigravity",
     "npm:pi-mobile",
-    "npm:pi-cursor-agent"
+    "npm:pi-cursor-agent",
+    "git:github.com/microsoft/TokenEconomizer@c53a4a6dcdebaeb9df6fcaa5c7026f0401cd8f23"
   ],
   "powerline": {
     "welcome": false
