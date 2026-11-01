@@ -1,0 +1,328 @@
+// Run: bun test ~/.pi/agent/extensions/_lib/goal-flow.test.ts
+// The /goal command flows against a real git repo in a temp dir, with an injected store, clock, UI and agent channel.
+// Scenario names refer to docs/specs/agentic-coding/features/goal-contract.feature.
+import { afterEach, beforeEach, expect, test } from "bun:test";
+import { execFile, execFileSync } from "node:child_process";
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { branchState, loadGoal, saveGoal, type Exec } from "./goal-io.ts";
+import { approveChange, checkGoal, dropCurrentGoal, doneGoal, lockGoal, promptReminder, proposeFromAgent, rejectChange, showGoal, staleWarning, startGoal, type Deps } from "./goal-flow.ts";
+
+const exec: Exec = (cmd, args, o) =>
+	new Promise((res) => execFile(cmd, args, { cwd: o?.cwd, timeout: o?.timeout }, (e: any, stdout, stderr) => res({ code: e ? (typeof e.code === "number" ? e.code : 1) : 0, stdout, stderr })));
+
+let root: string;
+let store: string;
+let tmp: string;
+let notes: string[];
+let toAgent: string[];
+let commands: string[];
+let answers: boolean[];
+let confirms: string[];
+
+const git = (...a: string[]) => execFileSync("git", ["-C", root, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", ...a], { encoding: "utf8" }).trim();
+const commitFile = (name: string) => {
+	writeFileSync(join(root, name), "x\n");
+	git("add", name);
+	git("commit", "-q", "-m", `add ${name}`);
+};
+const deps = (branch = "feat/export"): Deps => ({
+	exec, store, root, branch, head: git("rev-parse", "--short", "HEAD"),
+	now: () => new Date("2026-11-01T10:00:00Z"), tmpParent: tmp,
+	ui: { notify: (m) => notes.push(m), confirm: async (title, message) => { confirms.push(`${title}\n${message}`); return answers.shift() ?? false; } },
+	tellAgent: (m) => toAgent.push(m),
+	runCommand: (c) => commands.push(c),
+});
+const worktrees = () => git("worktree", "list", "--porcelain").match(/^worktree /gm)?.length;
+const lastNote = () => notes.at(-1) ?? "";
+
+/** A draft for feat/export whose check is `test -f export.csv`: red at base, green once the work exists. */
+async function draftWithCheck(commandsList = ["test -f export.csv"]) {
+	const d = deps();
+	await startGoal(d, "Users can export a backlog as CSV");
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: commandsList } });
+	return d;
+}
+async function activeGoal() {
+	const d = await draftWithCheck();
+	answers.push(true);
+	await lockGoal(d);
+	return d;
+}
+
+beforeEach(() => {
+	root = realpathSync(mkdtempSync(join(tmpdir(), "goalflow-repo-")));
+	store = realpathSync(mkdtempSync(join(tmpdir(), "goalflow-store-")));
+	tmp = realpathSync(mkdtempSync(join(tmpdir(), "goalflow-tmp-")));
+	execFileSync("git", ["init", "-q", "-b", "main", root]);
+	commitFile("a.txt");
+	git("switch", "-q", "-c", "feat/export");
+	notes = []; toAgent = []; commands = []; answers = []; confirms = [];
+});
+afterEach(() => {
+	for (const d of [root, store, tmp]) rmSync(d, { recursive: true, force: true });
+});
+
+test("/goal <outcome> saves a draft at HEAD and asks the agent to fill it through goal_propose, without locking", async () => {
+	const d = deps();
+	await startGoal(d, "Users can export a backlog as CSV");
+	const g = loadGoal(store, "feat/export")!;
+	expect(g).toMatchObject({ id: "g-feat-export", status: "draft", outcome: "Users can export a backlog as CSV" });
+	expect(g.doneCheck.baseCommit).toBe(d.head);
+	expect(g.doneCheck.lockedAt).toBe("");
+	expect(toAgent.join("\n")).toMatch(/goal_propose/);
+	expect(toAgent.join("\n")).toMatch(/fail on the base commit/);
+});
+
+test("/goal <outcome> refuses to replace a draft or active goal", async () => {
+	await startGoal(deps(), "first");
+	await startGoal(deps(), "second");
+	expect(loadGoal(store, "feat/export")!.outcome).toBe("first");
+	expect(lastNote()).toMatch(/\/goal drop/);
+});
+
+test("/goal <outcome> may replace a closed goal", async () => {
+	expect(loadGoal(store, "feat/export")).toBeUndefined();
+	await draftWithCheck();
+	const saved = loadGoal(store, "feat/export")!;
+	saveGoal(store, { ...saved, status: "closed" });
+	await startGoal(deps(), "second");
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft", outcome: "second" });
+});
+
+test("detached HEAD has no goal: start explains instead of writing", async () => {
+	const d = { ...deps(), branch: undefined };
+	await startGoal(d, "x");
+	expect(lastNote()).toMatch(/branch/);
+});
+
+// Scenario: A Done-check that already passes on the base commit is refused
+test("lock refuses when the check passes on the base commit: nothing locked, the human is told it must fail first, no confirm is asked", async () => {
+	const d = await draftWithCheck(["true"]);
+	answers.push(true);
+	await lockGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+	expect(lastNote()).toMatch(/must fail before the work starts/);
+	expect(confirms).toEqual([]);
+	expect(worktrees()).toBe(1);
+});
+
+// Scenario: A Done-check that fails on the base commit is locked
+test("lock on a failing check asks the human, then locks with the base commit it failed on", async () => {
+	const d = await draftWithCheck();
+	answers.push(true);
+	await lockGoal(d);
+	const g = loadGoal(store, "feat/export")!;
+	expect(confirms).toHaveLength(1);
+	expect(confirms[0]).toContain("test -f export.csv");
+	expect(g.status).toBe("active");
+	expect(g.doneCheck).toMatchObject({ lockedBy: "human", lockedAt: "2026-11-01T10:00:00Z", baseCommit: d.head });
+	expect(g.history[0].reason).toMatch(new RegExp(`base ${d.head} failed: exit 1`));
+	expect(worktrees()).toBe(1);
+});
+
+test("lock stays a draft when the human declines", async () => {
+	const d = await draftWithCheck();
+	answers.push(false);
+	await lockGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+});
+
+test("the check runs at the base commit, not at HEAD: work done since then does not make it count as passing", async () => {
+	const d = await draftWithCheck();
+	commitFile("export.csv"); // HEAD now passes the check; base does not
+	answers.push(true);
+	await lockGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+});
+
+test("lock refuses a draft with no done-check yet", async () => {
+	await startGoal(deps(), "x");
+	answers.push(true);
+	await lockGoal(deps());
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+	expect(lastNote()).toMatch(/done-check/);
+});
+
+test("a human-confirm check locks on the human's confirmation alone", async () => {
+	const d = deps("design/sync");
+	await startGoal(d, "Sync design agreed");
+	await proposeFromAgent(d, { doneCheck: { kind: "human", commands: [] } });
+	answers.push(true);
+	await lockGoal(d);
+	expect(loadGoal(store, "design/sync")!.status).toBe("active");
+});
+
+test("goal_propose on a draft fills fields and cannot lock", async () => {
+	const d = deps();
+	await startGoal(d, "o");
+	const r = await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["make t"] }, antiGoals: ["no deps"], scopeAnchors: ["src/"], specLinks: ["spec.md"] });
+	expect(r.ok).toBe(true);
+	const g = loadGoal(store, "feat/export")!;
+	expect(g).toMatchObject({ status: "draft", antiGoals: ["no deps"], scopeAnchors: ["src/"], specLinks: ["spec.md"] });
+	expect(g.doneCheck).toMatchObject({ commands: ["make t"], lockedAt: "" });
+});
+
+test("goal_propose with no goal on the branch says so", async () => {
+	const r = await proposeFromAgent(deps(), { antiGoals: ["x"] });
+	expect(r.ok).toBe(false);
+});
+
+// Scenario: The Main Copilot proposes a change to a locked Done-check
+test("goal_propose on an active goal parks a pending change; the locked check is unchanged and the human is told", async () => {
+	const d = await activeGoal();
+	const before = loadGoal(store, "feat/export")!;
+	const r = await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["true"] }, reason: "the csv check is flaky" });
+	expect(r.ok).toBe(true);
+	const g = loadGoal(store, "feat/export")!;
+	expect(g.doneCheck).toEqual(before.doneCheck);
+	expect(g.pending).toMatchObject({ by: "agent", reason: "the csv check is flaky" });
+	expect(lastNote()).toMatch(/\/goal approve/);
+});
+
+test("goal_propose on an active goal needs a reason, and a plain field edit is refused", async () => {
+	const d = await activeGoal();
+	expect((await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["true"] } })).ok).toBe(false);
+	expect((await proposeFromAgent(d, { antiGoals: ["new anti-goal"] })).ok).toBe(false);
+	expect(loadGoal(store, "feat/export")!.pending).toBeUndefined();
+});
+
+test("approve applies the pending change after the human confirms, and records who and why", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason: "renamed output" });
+	answers.push(true);
+	await approveChange(d);
+	const g = loadGoal(store, "feat/export")!;
+	expect(g.doneCheck.commands).toEqual(["test -f other.csv"]);
+	expect(g.pending).toBeUndefined();
+	expect(g.history.at(-1)).toMatchObject({ by: "human", reason: "renamed output", old: { commands: ["test -f export.csv"] }, new: { commands: ["test -f other.csv"] } });
+});
+
+test("approve leaves the check unchanged when the human declines; reject discards the proposal", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["true"] }, reason: "weaker" });
+	answers.push(false);
+	await approveChange(d);
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv"]);
+	expect(loadGoal(store, "feat/export")!.pending).toBeDefined();
+	await rejectChange(d);
+	expect(loadGoal(store, "feat/export")!.pending).toBeUndefined();
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv"]);
+});
+
+test("approve with nothing pending says so", async () => {
+	const d = await activeGoal();
+	await approveChange(d);
+	expect(lastNote()).toMatch(/No change is pending/);
+});
+
+test("check reports red then green as the work lands", async () => {
+	const d = await activeGoal();
+	await checkGoal(d);
+	expect(lastNote()).toMatch(/red/i);
+	commitFile("export.csv");
+	await checkGoal(d);
+	expect(lastNote()).toMatch(/green/i);
+});
+
+// Scenario: Closing a goal while its Done-check fails is refused
+test("done refuses on a red check: the goal stays active and the output is offered as a pointer", async () => {
+	const d = await activeGoal();
+	await doneGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	expect(lastNote()).toMatch(/stays active/);
+	expect(lastNote()).toMatch(/test -f export\.csv/);
+	expect(commands).toEqual([]);
+});
+
+// Scenario: Closing a goal with a green Done-check records the hand-off
+test("done on a green check closes as check, then runs /persist and asks the agent for lessons", async () => {
+	const d = await activeGoal();
+	commitFile("export.csv");
+	await doneGoal(d);
+	const g = loadGoal(store, "feat/export")!;
+	expect(g).toMatchObject({ status: "closed", closedBy: "check", closedAt: "2026-11-01T10:00:00Z" });
+	expect(commands).toHaveLength(1);
+	expect(commands[0]).toMatch(/^\/persist .*g-feat-export/);
+	expect(toAgent.join("\n")).toMatch(/lessons/i);
+});
+
+// Scenario: A design goal without a command check closes as an assertion
+test("done on a human-confirm check closes as assertion after the human confirms", async () => {
+	const d = deps("design/sync");
+	await startGoal(d, "Sync design agreed");
+	await proposeFromAgent(d, { doneCheck: { kind: "human", commands: [] } });
+	answers.push(true); // lock
+	await lockGoal(d);
+	answers.push(true); // outcome met
+	await doneGoal(d);
+	expect(loadGoal(store, "design/sync")).toMatchObject({ status: "closed", closedBy: "assertion" });
+	expect(commands).toHaveLength(1);
+});
+
+test("done on a human-confirm check stays active when the human does not confirm", async () => {
+	const d = deps("design/sync");
+	await startGoal(d, "Sync design agreed");
+	await proposeFromAgent(d, { doneCheck: { kind: "human", commands: [] } });
+	answers.push(true);
+	await lockGoal(d);
+	answers.push(false);
+	await doneGoal(d);
+	expect(loadGoal(store, "design/sync")!.status).toBe("active");
+	expect(commands).toEqual([]);
+});
+
+test("drop marks the goal dropped", async () => {
+	const d = await activeGoal();
+	await dropCurrentGoal(d, "abandoned");
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "dropped" });
+});
+
+test("show prints the contract summary, or tells how to start", async () => {
+	await showGoal(deps());
+	expect(lastNote()).toMatch(/\/goal <outcome>/);
+	const d = await activeGoal();
+	await showGoal(d);
+	expect(lastNote()).toContain("g-feat-export");
+	expect(lastNote()).toContain("Users can export a backlog as CSV");
+	expect(lastNote()).toContain("test -f export.csv");
+	expect(lastNote()).toMatch(/active/);
+});
+
+// Contract: one-line reminder only for an active goal on the current branch
+test("the prompt reminder is one line for an active goal, and absent for a draft, no goal, or another branch", async () => {
+	expect(promptReminder(deps())).toBeUndefined();
+	const draft = await draftWithCheck();
+	expect(promptReminder(draft)).toBeUndefined();
+	answers.push(true);
+	await lockGoal(draft);
+	expect(promptReminder(draft)).toBe("Goal: g-feat-export Users can export a backlog as CSV; run /goal to refresh");
+	expect(promptReminder(deps("feat/other"))).toBeUndefined();
+});
+
+// Scenario: The goal of a merged branch is flagged at session start
+test("session start asks the human to close or drop the goal of a merged branch, and says nothing for a live one", async () => {
+	const d = await activeGoal();
+	expect(await staleWarning(d)).toBeUndefined();
+	commitFile("export.csv");
+	git("switch", "-q", "main");
+	git("merge", "-q", "--no-ff", "-m", "merge", "feat/export");
+	const onMain = { ...d, root };
+	const w = await staleWarning(onMain);
+	expect(w).toMatch(/merged/);
+	expect(w).toMatch(/close or drop/);
+	expect(w).toContain("feat/export");
+});
+
+test("staleWarning scans the store, so a session on main still sees the goal of a deleted branch", async () => {
+	const d = await activeGoal();
+	commitFile("export.csv");
+	git("switch", "-q", "main");
+	git("merge", "-q", "--no-ff", "-m", "merge", "feat/export");
+	git("branch", "-q", "-d", "feat/export");
+	const w = await staleWarning({ ...d, branch: "main" });
+	expect(w).toMatch(/deleted/);
+	expect(w).toContain("g-feat-export");
+	expect((await branchState(exec, root, "feat/export", d.head)).exists).toBe(false);
+});
