@@ -1,7 +1,7 @@
 // File and git side of /goal (goal-command.ts): load/save goals, run done-checks, branch state.
 // Everything takes its paths and its exec function as arguments, so tests use temp dirs. Tested in goal-io.test.ts.
 
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { type Goal, goalPath, goalsDir, parseGoal, renderGoal, storeDir, validateGoal } from "./goal.ts";
 
@@ -87,16 +87,31 @@ export async function runChecks(exec: Exec, commands: string[], cwd: string): Pr
  */
 export async function runChecksAtCommit(exec: Exec, repoRoot: string, commit: string, commands: string[], tmpParent: string): Promise<CheckRun> {
 	const dir = mkdtempSync(join(tmpParent, "goal-base-"));
-	const added = await exec("git", ["-C", repoRoot, "worktree", "add", "--detach", "--force", dir, commit]);
+	const git = (...args: string[]) => exec("git", ["-C", repoRoot, ...args]);
+	let added: Awaited<ReturnType<Exec>>;
+	try {
+		added = await git("worktree", "add", "--detach", "--force", dir, commit);
+	} catch (e) {
+		added = { code: 1, stdout: "", stderr: e instanceof Error ? e.message : String(e) };
+	}
 	if (added.code !== 0) {
-		await exec("git", ["-C", repoRoot, "worktree", "prune"]);
+		await removeWorktree(git, dir);
 		return { exit: undefined, output: `git worktree add failed at ${commit}: ${added.stderr.trim()}` };
 	}
 	try {
 		return await runChecks(exec, commands, dir);
 	} finally {
-		await exec("git", ["-C", repoRoot, "worktree", "remove", "--force", dir]);
+		await removeWorktree(git, dir);
 	}
+}
+
+/** Remove the temporary worktree. If git cannot, prune its record and delete the directory. Never throws: it must not mask the check result. */
+async function removeWorktree(git: (...args: string[]) => ReturnType<Exec>, dir: string): Promise<void> {
+	try {
+		if ((await git("worktree", "remove", "--force", dir)).code === 0) return;
+	} catch { /* fall back below */ }
+	try { rmSync(dir, { recursive: true, force: true }); } catch { /* best effort */ }
+	try { await git("worktree", "prune"); } catch { /* best effort */ }
 }
 
 export interface BranchState { exists: boolean; merged: boolean }

@@ -114,6 +114,42 @@ test("an unknown commit gives no exit code, so it can never count as 'failed on 
 	}
 });
 
+test("a failed `worktree add` leaves no temp directory behind", async () => {
+	const tmp = realpathSync(mkdtempSync(join(tmpdir(), "goal-tmp-")));
+	try {
+		const failAdd: Exec = (cmd, args, o) => (args.includes("add") ? Promise.resolve({ code: 128, stdout: "", stderr: "boom" }) : exec(cmd, args, o));
+		const r = await runChecksAtCommit(failAdd, root, "HEAD", ["true"], tmp);
+		expect(r.exit).toBeUndefined();
+		expect(readdirSync(tmp)).toEqual([]);
+	} finally {
+		rmSync(tmp, { recursive: true, force: true });
+	}
+});
+
+test("when `worktree remove` fails or throws, the temp worktree is still pruned and removed, and the check result is kept", async () => {
+	for (const mode of ["code", "throw"]) {
+		const tmp = realpathSync(mkdtempSync(join(tmpdir(), "goal-tmp-")));
+		try {
+			const calls: string[] = [];
+			const badRemove: Exec = async (cmd, args, o) => {
+				calls.push(args.join(" "));
+				if (args.includes("remove")) {
+					if (mode === "throw") throw new Error("spawn failed");
+					return { code: 1, stdout: "", stderr: "locked" };
+				}
+				return exec(cmd, args, o);
+			};
+			const r = await runChecksAtCommit(badRemove, root, "HEAD", ["exit 7"], tmp);
+			expect(r.exit).toBe(7);
+			expect(readdirSync(tmp)).toEqual([]);
+			expect(calls.some((c) => c.includes("worktree prune"))).toBe(true);
+			expect(git("worktree", "list", "--porcelain").match(/^worktree /gm)?.length).toBe(1);
+		} finally {
+			rmSync(tmp, { recursive: true, force: true });
+		}
+	}
+});
+
 // Scenario: The goal of a merged branch is flagged at session start
 test("branchState: live unmerged, merged, and deleted branches", async () => {
 	const base = git("rev-parse", "--short", "HEAD");
