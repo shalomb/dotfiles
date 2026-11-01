@@ -2,7 +2,7 @@
 // Real git and the real filesystem, in temp directories. The store is injected; ~/.cache is never touched.
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { execFile, execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { newDraft } from "./goal.ts";
@@ -38,6 +38,12 @@ test("a saved goal loads back; a missing goal loads as undefined", () => {
 	saveGoal(store, g);
 	expect(existsSync(join(store, "goals", "feat-x.md"))).toBe(true);
 	expect(loadGoal(store, "feat/x")).toEqual(g);
+});
+
+test("loadGoal throws for an existing file it cannot parse instead of reporting no goal", () => {
+	mkdirSync(join(store, "goals"), { recursive: true });
+	writeFileSync(join(store, "goals", "feat-x.md"), "garbage, not a goal\n");
+	expect(() => loadGoal(store, "feat/x")).toThrow(/cannot be parsed/);
 });
 
 test("saving refuses a goal with no outcome and writes nothing", () => {

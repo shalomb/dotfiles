@@ -10,12 +10,22 @@ export type Exec = (cmd: string, args: string[], opts?: { cwd?: string; timeout?
 const CHECK_TIMEOUT_MS = 600_000;
 const OUTPUT_TAIL_LINES = 40;
 
+/**
+ * The goal of `branch`, or undefined when there is no file. An existing file that cannot be parsed throws:
+ * "no goal" must never be reported for a file that is there, or /goal <outcome> could overwrite a locked goal.
+ */
 export function loadGoal(store: string, branch: string): Goal | undefined {
+	const path = goalPath(store, branch);
+	let text: string;
 	try {
-		return parseGoal(readFileSync(goalPath(store, branch), "utf8"));
-	} catch {
-		return undefined;
+		text = readFileSync(path, "utf8");
+	} catch (e: any) {
+		if (e?.code === "ENOENT") return undefined;
+		throw new Error(`Goal file ${path} cannot be read: ${e?.message ?? e}`);
 	}
+	const g = parseGoal(text);
+	if (!g) throw new Error(`Goal file ${path} cannot be parsed. Fix or remove it by hand; /goal will not overwrite it.`);
+	return g;
 }
 
 /** Every goal file in the store that parses, whatever its branch. */

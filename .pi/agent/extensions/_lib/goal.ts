@@ -93,23 +93,34 @@ function unquote(raw: string): string {
 	return v;
 }
 
-const jsonOrNull = (c: CheckSpec | undefined) => JSON.stringify(c ?? null);
+const isCheckSpec = (c: unknown): c is CheckSpec =>
+	!!c && typeof c === "object" && ((c as CheckSpec).kind === "command" || (c as CheckSpec).kind === "human") &&
+	Array.isArray((c as CheckSpec).commands) && (c as CheckSpec).commands.every((x) => typeof x === "string");
 
+/**
+ * A change entry is one JSON object per line, so free text (a reason) cannot break the parse.
+ * An entry without a change stays a plain `- <at> <by>: <reason>` line; a degraded entry (no at/by) is just its text.
+ */
 function renderEntry(e: HistoryEntry): string {
-	const base = `- ${e.at} ${e.by}: ${oneLine(e.reason)}`;
-	return e.old || e.new ? `${base} | old: ${jsonOrNull(e.old)} | new: ${jsonOrNull(e.new)}` : base;
+	if (e.old || e.new) return `- ${JSON.stringify({ at: e.at, by: e.by, reason: oneLine(e.reason), ...(e.old ? { old: e.old } : {}), ...(e.new ? { new: e.new } : {}) })}`;
+	return e.at || e.by ? `- ${e.at} ${e.by}: ${oneLine(e.reason)}` : `- ${oneLine(e.reason)}`;
 }
 
-function parseEntry(line: string): HistoryEntry | undefined {
-	const m = line.match(/^- (\S+) (\S+): (.*?)(?: \| old: (null|\{.*?\}) \| new: (null|\{.*\}))?$/);
-	if (!m) return undefined;
-	const e: HistoryEntry = { at: m[1], by: m[2], reason: m[3] };
-	// Greedy-last split: a reason that itself contains " | old: " is rare; JSON must parse or the line stays plain text.
-	const old = m[4] && JSON.parse(m[4]);
-	const next = m[5] && JSON.parse(m[5]);
-	if (old) e.old = old;
-	if (next) e.new = next;
-	return e;
+/** `line` is the text after "- ". Never throws: a line that is not a valid entry degrades to a plain-text reason. */
+function parseEntry(line: string): HistoryEntry {
+	if (line.startsWith("{")) {
+		try {
+			const j = JSON.parse(line);
+			if (typeof j?.at === "string" && typeof j.by === "string" && typeof j.reason === "string" &&
+				(j.old === undefined || isCheckSpec(j.old)) && (j.new === undefined || isCheckSpec(j.new))) {
+				return { at: j.at, by: j.by, reason: j.reason, ...(j.old ? { old: j.old } : {}), ...(j.new ? { new: j.new } : {}) };
+			}
+		} catch { /* degrade below */ }
+	} else {
+		const m = line.match(/^(\S+) (\S+): (.*)$/);
+		if (m) return { at: m[1], by: m[2], reason: m[3] };
+	}
+	return { at: "", by: "", reason: line };
 }
 
 export function renderGoal(g: Goal): string {
@@ -173,7 +184,7 @@ export function parseGoal(text: string): Goal | undefined {
 	if (!top.id || !STATUSES.includes(status)) return undefined;
 	const sections = splitSections(fm[2]);
 	const bullets = (title: string) => (sections[title] ?? []).flatMap((l) => (l.startsWith("- ") ? [l.slice(2)] : []));
-	const entries = (title: string) => bullets(title).flatMap((b) => parseEntry(`- ${b}`) ?? []);
+	const entries = (title: string) => bullets(title).map(parseEntry);
 	return {
 		id: top.id,
 		branch: top.branch ?? "",

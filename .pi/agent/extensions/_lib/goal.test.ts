@@ -66,6 +66,23 @@ test("parse(render(goal)) returns the same goal, including awkward characters", 
 	expect(parseGoal(renderGoal(g))).toEqual(g);
 });
 
+test("a hostile reason cannot break the History or Pending line parse", () => {
+	const reason = 'x | old: null | new: {"a":1}';
+	const check = { kind: "command" as const, commands: ["a"] };
+	const g = full();
+	g.history.push({ at: "2026-11-01T11:00:00Z", by: "human", reason, old: check, new: { kind: "command", commands: ["b"] } });
+	g.history.push({ at: "2026-11-01T11:01:00Z", by: "human", reason });
+	g.pending = { at: "2026-11-01T12:00:00Z", by: "agent", reason, old: check, new: { kind: "command", commands: ["c"] } };
+	expect(parseGoal(renderGoal(g))).toEqual(g);
+});
+
+test("a corrupt history line degrades to a plain-text entry instead of failing the whole parse", () => {
+	const text = renderGoal(full()).replace("## History\n", '## History\n- {"at": broken | old: {oops\n');
+	const g = parseGoal(text)!;
+	expect(g.history.map((h) => h.reason)).toEqual(['{"at": broken | old: {oops', "locked (base a1b2c3d failed: exit 1)"]);
+	expect(parseGoal(renderGoal(g))).toEqual(g);
+});
+
 test("a goal with empty lists and a human-confirm check round-trips", () => {
 	const g = newDraft({ branch: "design/sync", outcome: "Sync design agreed", baseCommit: "" }, NOW);
 	g.doneCheck.kind = "human";

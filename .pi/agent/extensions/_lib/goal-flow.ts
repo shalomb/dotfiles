@@ -46,14 +46,23 @@ const NO_GOAL = "No goal for this branch. Start one with /goal <outcome>.";
 const checkLines = (g: Goal) => (g.doneCheck.kind === "human" ? ["(human-confirm check: you confirm the outcome yourself)"] : g.doneCheck.commands.map((c) => `  $ ${c}`));
 const bullets = (items: string[]) => (items.length ? items.map((i) => `  - ${i}`).join("\n") : "  (none)");
 
-function current(d: Deps): Goal | undefined {
-	if (!d.branch) {
-		d.ui.notify(NEEDS_BRANCH, "error");
-		return undefined;
+const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/** The branch's goal. On failure `error` says why: no goal, or a goal file that cannot be read. */
+function load(d: Deps): { goal?: Goal; error?: string } {
+	if (!d.branch) return { error: NEEDS_BRANCH };
+	try {
+		const goal = loadGoal(d.store, d.branch);
+		return goal ? { goal } : { error: NO_GOAL };
+	} catch (e) {
+		return { error: errorText(e) };
 	}
-	const g = loadGoal(d.store, d.branch);
-	if (!g) d.ui.notify(NO_GOAL, "error");
-	return g;
+}
+
+function current(d: Deps): Goal | undefined {
+	const { goal, error } = load(d);
+	if (error) d.ui.notify(error, "error");
+	return goal;
 }
 
 /** Save the result of a transition, or tell the human why it was refused. */
@@ -82,15 +91,15 @@ export function summary(g: Goal): string {
 }
 
 export async function showGoal(d: Deps): Promise<void> {
-	if (!d.branch) return d.ui.notify(NEEDS_BRANCH, "error");
-	const g = loadGoal(d.store, d.branch);
-	d.ui.notify(g ? summary(g) : NO_GOAL, "info");
+	const { goal, error } = load(d);
+	d.ui.notify(goal ? summary(goal) : error!, goal ? "info" : "error");
 }
 
 /** `/goal <outcome>`: save a draft at the current HEAD and ask the agent to fill in the contract. */
 export async function startGoal(d: Deps, outcome: string): Promise<void> {
 	if (!d.branch) return d.ui.notify(NEEDS_BRANCH, "error");
-	const existing = loadGoal(d.store, d.branch);
+	const { goal: existing, error } = load(d);
+	if (error && error !== NO_GOAL) return d.ui.notify(error, "error");
 	if (existing && (existing.status === "draft" || existing.status === "active"))
 		return d.ui.notify(`This branch already has a ${existing.status} goal (${existing.id}). /goal drop ends it first.`, "error");
 	const g = newDraft({ branch: d.branch, outcome, baseCommit: d.head }, d.now());
@@ -112,8 +121,8 @@ export interface Proposal { doneCheck?: CheckSpec; antiGoals?: string[]; scopeAn
 export async function proposeFromAgent(d: Deps, p: Proposal): Promise<{ ok: boolean; message: string }> {
 	const out = (ok: boolean, message: string) => ({ ok, message });
 	if (!d.branch) return out(false, NEEDS_BRANCH);
-	const g = loadGoal(d.store, d.branch);
-	if (!g) return out(false, `${NO_GOAL} Only the user starts a goal.`);
+	const { goal: g, error } = load(d);
+	if (!g) return out(false, error === NO_GOAL ? `${NO_GOAL} Only the user starts a goal.` : error!);
 	let r: Result;
 	if (g.status === "draft") {
 		const f: DraftFields = { doneCheck: p.doneCheck, antiGoals: p.antiGoals, scopeAnchors: p.scopeAnchors, specLinks: p.specLinks };
@@ -217,8 +226,8 @@ export async function dropCurrentGoal(d: Deps, reason: string): Promise<void> {
 /** The one-line reminder for the prompt, or undefined unless the current branch has an active goal. */
 export function promptReminder(d: Deps): string | undefined {
 	if (!d.branch) return undefined;
-	const g = loadGoal(d.store, d.branch);
-	return g ? reminderLine(g) : undefined;
+	const { goal } = load(d);
+	return goal ? reminderLine(goal) : undefined;
 }
 
 /** Session start: the goals (draft or active) whose branch is merged or deleted, as one message; undefined if none. */

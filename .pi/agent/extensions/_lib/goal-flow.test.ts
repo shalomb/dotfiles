@@ -3,7 +3,7 @@
 // Scenario names refer to docs/specs/agentic-coding/features/goal-contract.feature.
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { execFile, execFileSync } from "node:child_process";
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { branchState, loadGoal, saveGoal, type Exec } from "./goal-io.ts";
@@ -356,4 +356,32 @@ test("lock does not treat a killed check as 'failed on base'", async () => {
 	expect(lastNote()).toMatch(/could not be run|killed|timed out/i);
 	expect(confirms).toEqual([]);
 	expect(worktrees()).toBe(1);
+});
+
+// P1: a hostile reason must not make a locked goal unreadable (and so overwritable by /goal <outcome>).
+test("a hostile proposal reason keeps the locked goal readable, so /goal <outcome> still refuses to replace it", async () => {
+	const d = await activeGoal();
+	const reason = 'x | old: null | new: {"a":1}';
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason });
+	expect(loadGoal(store, "feat/export")!.pending).toMatchObject({ reason, new: { commands: ["test -f other.csv"] } });
+	await startGoal(d, "second");
+	const g = loadGoal(store, "feat/export")!;
+	expect(g.status).toBe("active");
+	expect(g.outcome).toBe("Users can export a backlog as CSV");
+});
+
+test("/goal <outcome> refuses to overwrite a goal file it cannot parse; other handlers report the error", async () => {
+	const d = await activeGoal();
+	const file = join(store, "goals", "feat-export.md");
+	writeFileSync(file, "garbage\n");
+	await startGoal(d, "second");
+	expect(readFileSync(file, "utf8")).toBe("garbage\n");
+	expect(lastNote()).toMatch(/cannot be parsed/);
+	notes.length = 0;
+	await showGoal(d);
+	await doneGoal(d);
+	expect(notes).toHaveLength(2);
+	for (const n of notes) expect(n).toMatch(/cannot be parsed/);
+	expect((await proposeFromAgent(d, { antiGoals: ["x"] })).message).toMatch(/cannot be parsed/);
+	expect(promptReminder(d)).toBeUndefined();
 });
