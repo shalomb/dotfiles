@@ -6,7 +6,6 @@ bottom-arm64
 busybox
 cabextract
 catdoc
-chromium-headless-shell
 cpulimit
 deborphan
 dictionaries-common
@@ -23,7 +22,6 @@ grc
 httping
 iamerican
 ibritish
-imagemagick
 jpegoptim
 lynx
 mariadb-client
@@ -31,8 +29,6 @@ nginx-common
 nginx-light
 optipng
 p7zip
-pandoc
-pandoc-data
 pkexec
 poppler-utils
 qrencode

@@ -4,6 +4,7 @@ autoconf
 automake
 binutils
 build-essential
+chromium-headless-shell  # skills: understand, agilquest-reservations, outlook-headless
 clang
 cmake
 cpanminus
@@ -20,6 +21,7 @@ gdb
 gettext
 golang
 golang-go
+imagemagick  # nvim plugin (plugins.lua)
 libacl1-dev
 libc6-dbg
 libelf-dev
@@ -59,6 +61,8 @@ ninja-build
 nodejs
 npm
 openjdk-26-jdk-headless
+pandoc  # skills: web-presentation, docx-word-processor, web-to-markdown
+pandoc-data  # pandoc runtime data
 parallel
 patch
 pkg-config
