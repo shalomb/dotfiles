@@ -6,7 +6,7 @@ import { existsSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSy
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { newDraft } from "./goal.ts";
-import { branchState, isGoalStorePath, loadGoal, runChecks, runChecksAtCommit, saveGoal, type Exec } from "./goal-io.ts";
+import { agentWouldWriteGoalStore, branchState, isGoalStorePath, listGoals, loadGoal, resolveRepo, runChecks, runChecksAtCommit, saveGoal, type Exec } from "./goal-io.ts";
 
 const exec: Exec = (cmd, args, o) =>
 	new Promise((res) => execFile(cmd, args, { cwd: o?.cwd, timeout: o?.timeout }, (e: any, stdout, stderr) => res({ code: e ? (typeof e.code === "number" ? e.code : 1) : 0, stdout, stderr })));
@@ -113,4 +113,51 @@ test("isGoalStorePath flags writes under any goals dir of the todo store, not ot
 	expect(isGoalStorePath("/home/u/.cache/agent-skills/todos/r-app/goals/feat-x.md")).toBe(true);
 	expect(isGoalStorePath("/home/u/.cache/agent-skills/todos/r-app/TODO.md")).toBe(false);
 	expect(isGoalStorePath("/repo/goals/x.md")).toBe(false);
+});
+
+test("agentWouldWriteGoalStore blocks write/edit into the goals store and shell writes to it, but not reads", () => {
+	const dir = "/home/u/.cache/agent-skills/todos/r-app/goals/feat-x.md";
+	expect(agentWouldWriteGoalStore("write", { path: dir })).toBe(true);
+	expect(agentWouldWriteGoalStore("edit", { path: dir })).toBe(true);
+	expect(agentWouldWriteGoalStore("write", { path: "/repo/src/a.ts" })).toBe(false);
+	expect(agentWouldWriteGoalStore("bash", { command: `sed -i s/draft/active/ ${dir}` })).toBe(true);
+	expect(agentWouldWriteGoalStore("bash", { command: `echo x > ~/.cache/agent-skills/todos/r-app/goals/feat-x.md` })).toBe(true);
+	expect(agentWouldWriteGoalStore("bash", { command: `cat ${dir}` })).toBe(false);
+	expect(agentWouldWriteGoalStore("bash", { command: "ls src" })).toBe(false);
+	expect(agentWouldWriteGoalStore("read", { path: dir })).toBe(false);
+});
+
+// Contract section 1: all linked worktrees of one repo share one store.
+test("resolveRepo gives the same store from the main checkout and a linked worktree, and reports branch and head", async () => {
+	git("switch", "-q", "-c", "feat/export");
+	const linked = join(root, ".worktrees", "other");
+	git("worktree", "add", "-q", "-b", "feat/other", linked);
+	const env = { XDG_CACHE_HOME: store };
+	const a = await resolveRepo(exec, root, env, "/nohome");
+	const b = await resolveRepo(exec, linked, env, "/nohome");
+	expect(a && b && a.store).toBe(b!.store);
+	expect(a!.store.startsWith(store)).toBe(true);
+	expect(a).toMatchObject({ root, branch: "feat/export", head: git("rev-parse", "--short", "HEAD") });
+	expect(b).toMatchObject({ root: linked, branch: "feat/other" });
+});
+
+test("resolveRepo: detached HEAD has no branch; a non-git directory is undefined", async () => {
+	git("checkout", "-q", "--detach");
+	expect((await resolveRepo(exec, root, { XDG_CACHE_HOME: store }, "/nohome"))?.branch).toBeUndefined();
+	const plain = realpathSync(mkdtempSync(join(tmpdir(), "goal-plain-")));
+	try {
+		expect(await resolveRepo(exec, plain, { XDG_CACHE_HOME: store }, "/nohome")).toBeUndefined();
+	} finally {
+		rmSync(plain, { recursive: true, force: true });
+	}
+});
+
+test("listGoals returns every goal of the store whatever its branch, and skips files that are not goals", () => {
+	expect(listGoals(store)).toEqual([]);
+	const a = newDraft({ branch: "feat/a", outcome: "a", baseCommit: "1" }, new Date("2026-11-01T10:00:00Z"));
+	const b = newDraft({ branch: "feat/b", outcome: "b", baseCommit: "2" }, new Date("2026-11-01T10:00:00Z"));
+	saveGoal(store, a);
+	saveGoal(store, b);
+	writeFileSync(join(store, "goals", "notes.md"), "# not a goal\n");
+	expect(listGoals(store).map((g) => g.id).sort()).toEqual(["g-feat-a", "g-feat-b"]);
 });

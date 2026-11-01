@@ -1,9 +1,9 @@
 // File and git side of /goal (goal-command.ts): load/save goals, run done-checks, branch state.
 // Everything takes its paths and its exec function as arguments, so tests use temp dirs. Tested in goal-io.test.ts.
 
-import { mkdirSync, mkdtempSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { type Goal, goalPath, goalsDir, parseGoal, renderGoal, validateGoal } from "./goal.ts";
+import { type Goal, goalPath, goalsDir, parseGoal, renderGoal, storeDir, validateGoal } from "./goal.ts";
 
 export type Exec = (cmd: string, args: string[], opts?: { cwd?: string; timeout?: number }) => Promise<{ code: number; stdout: string; stderr: string }>;
 
@@ -16,6 +16,21 @@ export function loadGoal(store: string, branch: string): Goal | undefined {
 	} catch {
 		return undefined;
 	}
+}
+
+/** Every goal file in the store that parses, whatever its branch. */
+export function listGoals(store: string): Goal[] {
+	const dir = goalsDir(store);
+	if (!existsSync(dir)) return [];
+	return readdirSync(dir)
+		.filter((f) => f.endsWith(".md"))
+		.flatMap((f) => {
+			try {
+				return parseGoal(readFileSync(join(dir, f), "utf8")) ?? [];
+			} catch {
+				return [];
+			}
+		});
 }
 
 /** Write the goal atomically. Throws, writing nothing, if it has no outcome or (once not a draft) no done-check. */
@@ -88,4 +103,39 @@ export async function branchState(exec: Exec, repoRoot: string, branch: string, 
 /** True for a path inside a goals directory of the todo store. The agent may reach those only through goal_propose. */
 export function isGoalStorePath(path: string): boolean {
 	return /\/agent-skills\/todos\/[^/]+\/goals(\/|$)/.test(resolve("/", path));
+}
+
+const GOAL_STORE_IN_COMMAND = /agent-skills\/todos\/[^\s'"]*\/goals\b/;
+const SHELL_WRITE = /(?:^|[\s;&|])(?:tee|sed\s+-\S*i|mv|cp|rm|truncate|install|dd|perl\s+-\S*i|python3?|node|bun)\b|>/;
+
+/**
+ * True when an agent tool call would write the goal store behind /goal's back. Best effort for bash:
+ * a command that names a goals directory and contains a write verb or redirect. The rule is
+ * "only /goal handlers and goal_propose write goal files"; this guard catches the direct routes.
+ */
+export function agentWouldWriteGoalStore(toolName: string, input: { path?: string; command?: string }): boolean {
+	if (toolName === "write" || toolName === "edit") return isGoalStorePath(String(input.path ?? ""));
+	if (toolName === "bash") {
+		const command = String(input.command ?? "");
+		return GOAL_STORE_IN_COMMAND.test(command) && SHELL_WRITE.test(command);
+	}
+	return false;
+}
+
+export interface RepoContext { root: string; branch: string | undefined; head: string; store: string }
+
+/** Where /goal works: this checkout's root, branch (undefined when detached), HEAD, and the shared store. */
+export async function resolveRepo(exec: Exec, cwd: string, env: Record<string, string | undefined>, home: string): Promise<RepoContext | undefined> {
+	const git = async (...args: string[]) => {
+		const r = await exec("git", ["-C", cwd, ...args]);
+		return r.code === 0 ? r.stdout.trim() : undefined;
+	};
+	const [root, common, head, branch] = await Promise.all([
+		git("rev-parse", "--show-toplevel"),
+		git("rev-parse", "--path-format=absolute", "--git-common-dir"),
+		git("rev-parse", "--short", "HEAD"),
+		git("symbolic-ref", "--short", "-q", "HEAD"),
+	]);
+	if (!root || !common) return undefined;
+	return { root, branch: branch || undefined, head: head ?? "", store: storeDir(env, home, realpathSync(common)) };
 }
