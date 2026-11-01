@@ -78,3 +78,13 @@ Stance: long horizon
   - [settled] goal.scope -- One goal per branch.
   - [settled] goal.task-link -- Tasks created while a goal is active get `[goal: <id>]` automatically.
   - [settled] goal.close -- `/goal done` requires a green done-check, then `/persist` + lessons capture.
+- [settled] waf.h5 -- H5: with /goal active, sessions stop within 1 turn of a green done-check and < 10% of commits fall outside scope anchors.
+- [settled] waf.h5-kill -- If H5 fails, downgrade /goal to a notes file (keep goal.md; drop injection, lock and done gate).
+- [settled] waf.weak-check -- A done-check must fail on the base commit before it can be locked.
+- [settled] waf.no-command -- A goal may use a human-confirm check; closure is then recorded as an assertion.
+- [settled] waf.injection-cost -- Inject a one-line pointer reminder every turn ("Goal: <id> <outcome>; run `/goal` to refresh"), not the full contract.
+    Reason: Round v1.1-04 note: pointer + refresher balances cost against drift (consistent with H2).
+- [settled] waf.stale-goal -- Warn at session start when the goal's branch is merged or deleted; human chooses close or drop.
+    ADR: adr/ADR-008-branch-scoped-goal-contract.md (store, scope, fields, task link)
+    ADR: adr/ADR-009-precommitted-done-check-gates-closure.md (lock, fail-first, change, closure, H5)
+    Scenarios: features/goal-contract.feature
