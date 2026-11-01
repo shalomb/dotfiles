@@ -31,16 +31,17 @@
   interactive editors, prompts suppressed).
 - Use `using-git-worktrees` for feature work needing isolation, parallel
   branches, sub-agent writers, or before executing a plan. Work in a worktree,
-  not by switching branches in the main checkout. Close out with
-  `finishing-a-development-branch`.
+  not by switching branches in the main checkout. Close out with the
+  cleanup step of `using-git-worktrees` and `branch-doctor`.
 
 ## Skills to apply by situation
 
 - **Design/planning**: `design-thinking` (`/grill-me`) before creative work;
-  `writing-plans` for multi-step tasks; `executing-plans` to run them;
-  `architecture-decision-records` for significant decisions.
+  `to-tickets` to slice a plan; `todo-navigator` (`/next`) and
+  `ralph-build-agent` to run it; `architecture-decision-records` for
+  significant decisions.
 - **Debugging**: `systematic-debugging` before proposing any fix.
-- **Review**: `requesting-code-review` before merging;
+- **Review**: `bart-adversarial-reviewer` (`/review`) before merging;
   `receiving-code-review` before acting on feedback; `test-design-review` for
   reviewing tests.
 - **Code exploration**: `codemap`, `ast-grep` (`sg`), `git-forensics`,
