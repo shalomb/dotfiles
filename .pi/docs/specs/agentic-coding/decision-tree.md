@@ -63,3 +63,10 @@ Stance: long horizon
 - [settled] ledger.retry-escalation -- Keep 2 retries then OHECI; build it with the runner.
 - [settled] ledger.backlog-gap -- Add closure timestamps to the todo store in v1.1 scope.
 - [settled] ledger.version -- 1.1.0, status Revising.
+- [settled] ledger.confirm -- Ledger stands; v1.1 ships with re-test nodes marked "pending evidence".
+    Reason: Round v1.1-02.
+  - [settled] retest.which -- Re-test H2 variant C on Sonnet (after quota) and H4 with high-finding tasks (>= 5 waves).
+  - [settled] retest.h1-reopen -- No H1 re-test; ADR-003 re-open trigger (setup > 50% of a run) stands.
+  - [settled] horizon.reopen-scope -- Reopen only nodes the evidence touched; control.topology stays.
+  - [settled] retest.gate -- v1.1 does not wait for re-tests.
+- [open] intent.north-star -- /goal: goal contract with executable done-check. Round v1.1-03.
