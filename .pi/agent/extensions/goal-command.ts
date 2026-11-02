@@ -96,6 +96,7 @@ export default function (pi: ExtensionAPI) {
 		promptGuidelines: [
 			"A done_check must fail on the base commit and pass only when the outcome is met; a check that already passes is refused at lock time.",
 			"Never edit files in the goals directory directly; use goal_propose.",
+			"/goal is opt-in. You may suggest the user run /goal only when the work spans more than one task; never start, lock, approve or close a goal yourself.",
 		],
 		parameters: Params,
 		async execute(_id: string, params: any, _signal: any, _onUpdate: any, ctx: any) {
