@@ -2,11 +2,11 @@
 // Real git and the real filesystem, in temp directories. The store is injected; ~/.cache is never touched.
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { execFile, execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { newDraft } from "./goal.ts";
-import { agentWouldWriteGoalStore, branchState, goalRefName, isGoalStorePath, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, resolveRepo, runChecks, runChecksAtCommit, saveGoal, type Exec } from "./goal-io.ts";
+import { agentWouldWriteGoalStore, branchState, appendGoalEvent, goalRefName, isGoalStorePath, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, resolveRepo, runChecks, runChecksAtCommit, saveGoal, type Exec } from "./goal-io.ts";
 
 const exec: Exec = (cmd, args, o) =>
 	new Promise((res) => execFile(cmd, args, { cwd: o?.cwd, timeout: o?.timeout }, (e: any, stdout, stderr) => res({ code: e ? (typeof e.code === "number" ? e.code : 1) : 0, stdout, stderr })));
@@ -289,4 +289,17 @@ test("the agent guard blocks any command or path that names refs/goals/", () => 
 	expect(agentWouldWriteGoalStore("bash", { command: "git log --oneline" })).toBe(false);
 	expect(agentWouldWriteGoalStore("bash", { command: "git update-ref refs/heads/x HEAD" })).toBe(false);
 	expect(agentWouldWriteGoalStore("read", { path: "/repo/.git/refs/goals/feat-export" })).toBe(false);
+});
+
+// ---- Events (ADR-009 Amendment 1) ----
+
+test("appendGoalEvent appends one JSON line per event to <store>/trajectories.jsonl, creating the store if needed", () => {
+	const nested = join(store, "not", "yet");
+	appendGoalEvent(nested, { at: "2026-11-01T10:00:00Z", event: "goal_locked", goal: "g-feat-export", branch: "feat/export", checkHash: HASH_A });
+	appendGoalEvent(nested, { at: "2026-11-01T11:00:00Z", event: "goal_dropped", goal: "g-feat-export", branch: "feat/export", reason: "multi\nline" });
+	const lines = readFileSync(join(nested, "trajectories.jsonl"), "utf8").split("\n");
+	expect(lines).toHaveLength(3);
+	expect(lines[2]).toBe("");
+	expect(JSON.parse(lines[0])).toEqual({ at: "2026-11-01T10:00:00Z", event: "goal_locked", goal: "g-feat-export", branch: "feat/export", checkHash: HASH_A });
+	expect(JSON.parse(lines[1]).reason).toBe("multi\nline");
 });

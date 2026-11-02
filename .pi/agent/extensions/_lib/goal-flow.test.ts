@@ -778,3 +778,51 @@ test("the ref is shared by a linked worktree: lock in one checkout, done in the 
 	await doneGoal({ ...d, root: linked });
 	expect(loadGoal(store, "feat/export")!.status).toBe("closed");
 });
+
+// ---- Events (ADR-009 Amendment 1) ----
+
+const events = (): any[] => {
+	try { return readFileSync(join(store, "trajectories.jsonl"), "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)); } catch { return []; }
+};
+
+test("lock, approved change, close and drop each append exactly one event with at, event, goal and branch", async () => {
+	const d = await activeGoal();
+	expect(events()).toEqual([{ at: "2026-11-01T10:00:00Z", event: "goal_locked", goal: "g-feat-export", branch: "feat/export", kind: "command", checkHash: checkHash(loadGoal(store, "feat/export")!.doneCheck) }]);
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f more.csv"] }, reason: "stricter" });
+	expect(events()).toHaveLength(1); // a proposal is not a change
+	answers.push(true);
+	await approveChange(d);
+	expect(events()).toHaveLength(2);
+	expect(events()[1]).toMatchObject({ event: "goal_changed", goal: "g-feat-export", branch: "feat/export", reason: "stricter", weakening: false, checkHash: checkHash(loadGoal(store, "feat/export")!.doneCheck) });
+	commitFile("export.csv");
+	commitFile("more.csv");
+	await doneGoal(d);
+	expect(events()).toHaveLength(3);
+	expect(events()[2]).toMatchObject({ event: "goal_closed", goal: "g-feat-export", branch: "feat/export", closedBy: "check" });
+	await startGoal(d, "again");
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f again.csv"] } });
+	await dropCurrentGoal(d, "abandoned");
+	expect(events().map((e) => e.event)).toEqual(["goal_locked", "goal_changed", "goal_closed", "goal_dropped"]);
+	expect(events()[3]).toMatchObject({ goal: "g-feat-export", branch: "feat/export", reason: "abandoned" });
+});
+
+test("a weakening change is flagged in its event", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason: "swap" });
+	typed.push("g-feat-export");
+	await approveChange(d);
+	expect(events().at(-1)).toMatchObject({ event: "goal_changed", weakening: true });
+});
+
+test("refused or declined transitions append no event", async () => {
+	const d = await draftWithCheck(["true"]);
+	answers.push(true);
+	await lockGoal(d); // passes on base: refused
+	answers.push(false);
+	await doneGoal(d); // not active
+	expect(events()).toEqual([]);
+	const a = await activeGoal();
+	notes.length = 0;
+	await doneGoal(a); // red check
+	expect(events()).toHaveLength(1);
+});

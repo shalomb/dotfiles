@@ -5,9 +5,9 @@
 import {
 	type CheckSpec, type DraftFields, type Goal, type Result,
 	applyApprovedChange, applyClose, applyLock, canLock, checkHash, applyReject, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft, oneLine,
-	proposeChange, reminderLine, staleGoal,
+	proposeChange, reminderLine, stamp, staleGoal,
 } from "./goal.ts";
-import { type Exec, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
+import { type Exec, type GoalEvent, appendGoalEvent, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
 
 export interface Deps {
 	exec: Exec;
@@ -72,14 +72,21 @@ function current(d: Deps): Goal | undefined {
 	return goal;
 }
 
-/** Save the result of a transition, or tell the human why it was refused. */
-function commit(d: Deps, r: Result, done: string): Goal | undefined {
+/** Save the result of a transition, or tell the human why it was refused. `event` is appended once the goal is saved. */
+function commit(d: Deps, r: Result, done: string, event?: (g: Goal) => Pick<GoalEvent, "event"> & Record<string, unknown>): Goal | undefined {
 	if (!r.ok) {
 		d.ui.notify(r.reason, "error");
 		return undefined;
 	}
 	saveGoal(d.store, r.goal);
 	d.ui.notify(done, "info");
+	if (event) {
+		try {
+			appendGoalEvent(d.store, { at: stamp(d.now()), goal: r.goal.id, branch: r.goal.branch, ...event(r.goal) } as GoalEvent);
+		} catch (e) {
+			d.ui.notify(`The event could not be appended to trajectories.jsonl: ${errorText(e)}`, "warning");
+		}
+	}
 	return r.goal;
 }
 
@@ -87,14 +94,14 @@ function commit(d: Deps, r: Result, done: string): Goal | undefined {
  * Lock and approve: record the new done-check hash on the private ref (ADR-010) before saving the goal,
  * so a goal is never active without its record. If the ref cannot be written nothing is saved.
  */
-async function commitRecorded(d: Deps, r: Result, done: string, message: (g: Goal) => string): Promise<Goal | undefined> {
+async function commitRecorded(d: Deps, r: Result, done: string, message: (g: Goal) => string, event: (g: Goal) => Pick<GoalEvent, "event"> & Record<string, unknown>): Promise<Goal | undefined> {
 	if (!r.ok) return commit(d, r, done);
 	const rec = await recordCheckHash(d.exec, d.root, r.goal.branch, checkHash(r.goal.doneCheck), message(r.goal));
 	if (!rec.ok) {
 		d.ui.notify(`Not saved: the approved done-check could not be recorded on ${goalRefName(r.goal.branch)}: ${rec.error}`, "error");
 		return undefined;
 	}
-	return commit(d, r, done);
+	return commit(d, r, done, event);
 }
 
 /**
@@ -228,7 +235,8 @@ export async function lockGoal(d: Deps): Promise<void> {
 		`Lock the done-check of ${g.id}?`,
 		`${g.outcome}\n${checkLines(g).join("\n")}\n${evidence}\nOnce locked, only you can change it.`);
 	if (!ok) return d.ui.notify("Not locked. The goal stays a draft.", "info");
-	await commitRecorded(d, applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit, outcomeChecks }), `Goal ${g.id} locked.`, () => `lock ${g.id}`);
+	await commitRecorded(d, applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit, outcomeChecks }), `Goal ${g.id} locked.`, () => `lock ${g.id}`,
+		(locked) => ({ event: "goal_locked", kind: locked.doneCheck.kind, checkHash: checkHash(locked.doneCheck) }));
 }
 
 const sameSpec = (a: CheckSpec, b: CheckSpec) => a.kind === b.kind && a.commands.length === b.commands.length && a.commands.every((c, i) => c === b.commands[i]);
@@ -270,7 +278,8 @@ export async function approveChange(d: Deps): Promise<void> {
 		? (await d.ui.input(`${title} Type ${g.id} to approve.`, body))?.trim() === g.id
 		: await d.ui.confirm(title, body);
 	if (!ok) return d.ui.notify(weakening ? "Not approved: the goal id was not typed. The change stays pending; /goal reject discards it." : "Not approved. The change stays pending; /goal reject discards it.", "info");
-	await commitRecorded(d, applyApprovedChange(g, { now: d.now(), outcomeChecks }), `Change approved and recorded in ${g.id}.`, () => `approve ${g.id}: ${oneLine(p.reason)}`);
+	await commitRecorded(d, applyApprovedChange(g, { now: d.now(), outcomeChecks }), `Change approved and recorded in ${g.id}.`, () => `approve ${g.id}: ${oneLine(p.reason)}`,
+		(changed) => ({ event: "goal_changed", reason: oneLine(p.reason), weakening, checkHash: checkHash(changed.doneCheck) }));
 }
 
 export async function rejectChange(d: Deps): Promise<void> {
@@ -311,7 +320,7 @@ export async function doneGoal(d: Deps): Promise<void> {
 	}
 	const decision = closeDecision(exit, g.doneCheck.kind);
 	if (!decision.close) return d.ui.notify(decision.reason, "error");
-	const closed = commit(d, applyClose(g, { now: d.now(), closedBy: decision.closedBy }), `Goal ${g.id} closed (${decision.closedBy}).`);
+	const closed = commit(d, applyClose(g, { now: d.now(), closedBy: decision.closedBy }), `Goal ${g.id} closed (${decision.closedBy}).`, () => ({ event: "goal_closed", closedBy: decision.closedBy }));
 	if (!closed) return;
 	await d.runCommand(`/persist goal ${g.id} closed (${decision.closedBy}): ${g.outcome}`);
 	d.tellAgent(
@@ -322,7 +331,7 @@ export async function doneGoal(d: Deps): Promise<void> {
 export async function dropCurrentGoal(d: Deps, reason: string): Promise<void> {
 	const g = current(d);
 	if (!g) return;
-	commit(d, dropGoal(g, { now: d.now(), reason }), `Goal ${g.id} dropped.`);
+	commit(d, dropGoal(g, { now: d.now(), reason }), `Goal ${g.id} dropped.`, () => ({ event: "goal_dropped", reason }));
 }
 
 /** The one-line reminder for the prompt, or undefined unless the current branch has an active goal. */

@@ -1,7 +1,7 @@
 // File and git side of /goal (goal-command.ts): load/save goals, run done-checks, branch state.
 // Everything takes its paths and its exec function as arguments, so tests use temp dirs. Tested in goal-io.test.ts.
 
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { type Goal, branchSlug, goalPath, goalsDir, parseGoal, renderGoal, storeDir, validateGoal } from "./goal.ts";
 
@@ -135,6 +135,17 @@ export async function branchState(exec: Exec, repoRoot: string, branch: string, 
 		return { exists: true, merged: (await git("merge-base", "--is-ancestor", tipSha, target)).code === 0 };
 	}
 	return { exists: true, merged: false };
+}
+
+// ---- events (ADR-009 Amendment 1) ----
+
+export type GoalEventName = "goal_locked" | "goal_changed" | "goal_closed" | "goal_dropped";
+export interface GoalEvent { at: string; event: GoalEventName; goal: string; branch: string; [extra: string]: unknown }
+
+/** Append one JSON line to `<store>/trajectories.jsonl` (kept for the H5 review of drop and assertion-closure rates). */
+export function appendGoalEvent(store: string, e: GoalEvent): void {
+	mkdirSync(store, { recursive: true });
+	appendFileSync(join(store, "trajectories.jsonl"), `${JSON.stringify(e)}\n`);
 }
 
 // ---- tamper evidence (ADR-010): the hash of the approved done-check on a private ref ----
