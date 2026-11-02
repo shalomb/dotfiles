@@ -2,7 +2,7 @@
 // Scenario names refer to docs/specs/agentic-coding/features/goal-contract.feature.
 import { expect, test } from "bun:test";
 import {
-	applyApprovedChange, applyClose, applyLock, applyReject, branchSlug, canLock, closeDecision, dropGoal, fillDraft, goalPath, goalsDir,
+	applyApprovedChange, applyClose, checkHash, applyLock, applyReject, branchSlug, canLock, closeDecision, dropGoal, fillDraft, goalPath, goalsDir,
 	isEnvironmentFailure, newDraft, parseGoal, proposeChange, reminderLine, renderGoal, staleGoal, storeDir, validateGoal,
 } from "./goal.ts";
 
@@ -375,4 +375,21 @@ test("isEnvironmentFailure: exit 126/127 or a missing-command/module output is e
 		[undefined, "command killed", false],
 	];
 	for (const [exit, output, expected] of table) expect([exit, output, isEnvironmentFailure(exit, output)]).toEqual([exit, output, expected]);
+});
+
+// ---- Tamper evidence (ADR-010) ----
+
+test("checkHash: a sha256 of the kind, the ordered commands and the Outcome Check marks, nothing else", () => {
+	const g = locked();
+	const h = checkHash(g.doneCheck);
+	expect(h).toMatch(/^[0-9a-f]{64}$/);
+	// lock metadata and the goal's other fields are not part of the hash
+	expect(checkHash({ ...g.doneCheck, lockedAt: "later", lockedBy: "x", baseCommit: "y" })).toBe(h);
+	expect(checkHash({ ...g.doneCheck, kind: "human" })).not.toBe(h);
+	expect(checkHash({ ...g.doneCheck, commands: ["make test-csv", "make test-unit"] })).not.toBe(h);
+	expect(checkHash({ ...g.doneCheck, commands: ["make test-unit"] })).not.toBe(h);
+	expect(checkHash({ ...g.doneCheck, outcomeChecks: ["make test-unit"] })).not.toBe(h);
+	expect(checkHash({ ...g.doneCheck, outcomeChecks: [] })).not.toBe(h);
+	// no two different lists collapse into one string
+	expect(checkHash({ ...g.doneCheck, commands: ["a b"], outcomeChecks: [] })).not.toBe(checkHash({ ...g.doneCheck, commands: ["a", "b"], outcomeChecks: [] }));
 });

@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { newDraft } from "./goal.ts";
-import { agentWouldWriteGoalStore, branchState, isGoalStorePath, listGoals, loadGoal, loadGoalFile, resolveRepo, runChecks, runChecksAtCommit, saveGoal, type Exec } from "./goal-io.ts";
+import { agentWouldWriteGoalStore, branchState, goalRefName, isGoalStorePath, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, resolveRepo, runChecks, runChecksAtCommit, saveGoal, type Exec } from "./goal-io.ts";
 
 const exec: Exec = (cmd, args, o) =>
 	new Promise((res) => execFile(cmd, args, { cwd: o?.cwd, timeout: o?.timeout }, (e: any, stdout, stderr) => res({ code: e ? (typeof e.code === "number" ? e.code : 1) : 0, stdout, stderr })));
@@ -216,4 +216,77 @@ test("listGoals returns every goal of the store whatever its branch, and skips f
 	saveGoal(store, b);
 	writeFileSync(join(store, "goals", "notes.md"), "# not a goal\n");
 	expect(listGoals(store).map((g) => g.id).sort()).toEqual(["g-feat-a", "g-feat-b"]);
+});
+
+// ---- Tamper evidence (ADR-010) ----
+
+const HASH_A = "a".repeat(64);
+const HASH_B = "b".repeat(64);
+const status = () => git("status", "--porcelain=v1", "--untracked-files=all");
+
+test("goalRefName is refs/goals/<branch-slug>", () => {
+	expect(goalRefName("feat/export")).toBe("refs/goals/feat-export");
+});
+
+test("no ref yet reads as none", async () => {
+	expect(await readRecordedHash(exec, root, "feat/export")).toEqual({ kind: "none" });
+});
+
+test("recordCheckHash commits check.sha256 to the private ref, leaving the working tree, index and branches untouched", async () => {
+	const head = git("rev-parse", "HEAD");
+	const index = git("ls-files", "--stage");
+	expect(await recordCheckHash(exec, root, "feat/export", HASH_A, "lock g-feat-export")).toEqual({ ok: true });
+	expect(await readRecordedHash(exec, root, "feat/export")).toEqual({ kind: "hash", hash: HASH_A });
+	expect(git("show", "refs/goals/feat-export:check.sha256")).toBe(HASH_A);
+	expect(git("log", "-1", "--format=%s", "refs/goals/feat-export")).toBe("lock g-feat-export");
+	expect(git("ls-tree", "--name-only", "refs/goals/feat-export")).toBe("check.sha256");
+	expect(status()).toBe("");
+	expect(git("rev-parse", "HEAD")).toBe(head);
+	expect(git("ls-files", "--stage")).toBe(index);
+	expect(git("for-each-ref", "--format=%(refname)")).toBe("refs/goals/feat-export\nrefs/heads/main");
+});
+
+test("each record adds a commit on top of the last, and the tip's hash is the one that counts", async () => {
+	await recordCheckHash(exec, root, "feat/export", HASH_A, "lock g-feat-export");
+	await recordCheckHash(exec, root, "feat/export", HASH_B, "approve g-feat-export: stricter");
+	expect(await readRecordedHash(exec, root, "feat/export")).toEqual({ kind: "hash", hash: HASH_B });
+	expect(git("log", "--format=%s", "refs/goals/feat-export")).toBe("approve g-feat-export: stricter\nlock g-feat-export");
+});
+
+test("the ref lives in the common git dir: written from a linked worktree, read from the main checkout (and the other way round)", async () => {
+	git("switch", "-q", "-c", "feat/export");
+	const linked = join(root, ".worktrees", "other");
+	git("worktree", "add", "-q", "-b", "feat/other", linked);
+	expect(await recordCheckHash(exec, linked, "feat/export", HASH_A, "lock g-feat-export")).toEqual({ ok: true });
+	expect(await readRecordedHash(exec, root, "feat/export")).toEqual({ kind: "hash", hash: HASH_A });
+	expect(git("rev-parse", "--verify", "refs/goals/feat-export")).toMatch(/^[0-9a-f]{40}$/);
+	await recordCheckHash(exec, root, "feat/export", HASH_B, "approve g-feat-export: x");
+	expect(await readRecordedHash(exec, linked, "feat/export")).toEqual({ kind: "hash", hash: HASH_B });
+	expect(execFileSync("git", ["-C", linked, "status", "--porcelain"], { encoding: "utf8" })).toBe("");
+});
+
+test("a ref whose tip lacks check.sha256 reads as an error, not as none", async () => {
+	git("update-ref", "refs/goals/feat-export", git("rev-parse", "HEAD"));
+	const r = await readRecordedHash(exec, root, "feat/export");
+	expect(r.kind).toBe("error");
+});
+
+test("recordCheckHash reports a git failure instead of throwing", async () => {
+	const r = await recordCheckHash(exec, join(root, "no-such-dir"), "feat/export", HASH_A, "lock x");
+	expect(r.ok).toBe(false);
+});
+
+test("the agent guard blocks any command or path that names refs/goals/", () => {
+	for (const command of [
+		"git update-ref refs/goals/feat-export HEAD",
+		"git update-ref -d refs/goals/feat-export",
+		"git log refs/goals/feat-export",
+		"echo abc > .git/refs/goals/feat-export",
+		"git push origin :refs/goals/x",
+	]) expect([command, agentWouldWriteGoalStore("bash", { command })]).toEqual([command, true]);
+	expect(agentWouldWriteGoalStore("write", { path: "/repo/.git/refs/goals/feat-export" })).toBe(true);
+	expect(agentWouldWriteGoalStore("edit", { path: "/repo/.git/refs/goals/feat-export" })).toBe(true);
+	expect(agentWouldWriteGoalStore("bash", { command: "git log --oneline" })).toBe(false);
+	expect(agentWouldWriteGoalStore("bash", { command: "git update-ref refs/heads/x HEAD" })).toBe(false);
+	expect(agentWouldWriteGoalStore("read", { path: "/repo/.git/refs/goals/feat-export" })).toBe(false);
 });

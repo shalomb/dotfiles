@@ -3,7 +3,7 @@
 
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { type Goal, goalPath, goalsDir, parseGoal, renderGoal, storeDir, validateGoal } from "./goal.ts";
+import { type Goal, branchSlug, goalPath, goalsDir, parseGoal, renderGoal, storeDir, validateGoal } from "./goal.ts";
 
 export type Exec = (cmd: string, args: string[], opts?: { cwd?: string; timeout?: number }) => Promise<{ code: number; stdout: string; stderr: string; killed?: boolean }>;
 
@@ -137,12 +137,62 @@ export async function branchState(exec: Exec, repoRoot: string, branch: string, 
 	return { exists: true, merged: false };
 }
 
+// ---- tamper evidence (ADR-010): the hash of the approved done-check on a private ref ----
+
+/** The private ref that holds the approved done-check hash of a branch's goal; never pushed (outside refs/heads and refs/tags). */
+export const goalRefName = (branch: string): string => `refs/goals/${branchSlug(branch)}`;
+
+/**
+ * hash-object -> mktree -> commit-tree -> update-ref, so the working tree, the index and the branches stay untouched.
+ * Positional args: repo root, ref, hash, commit message. The new commit sits on top of the ref's old tip, if any.
+ */
+const RECORD_SCRIPT = `set -e
+root=$1 ref=$2 hash=$3 msg=$4
+blob=$(printf '%s\\n' "$hash" | git -C "$root" hash-object -w --stdin)
+tree=$(printf '100644 blob %s\\tcheck.sha256\\n' "$blob" | git -C "$root" mktree)
+old=$(git -C "$root" rev-parse --verify --quiet "$ref^{commit}" || true)
+if [ -n "$old" ]; then
+  commit=$(git -C "$root" commit-tree "$tree" -p "$old" -m "$msg")
+  git -C "$root" update-ref -m "$msg" "$ref" "$commit" "$old"
+else
+  commit=$(git -C "$root" commit-tree "$tree" -m "$msg")
+  git -C "$root" update-ref -m "$msg" "$ref" "$commit"
+fi`;
+
+/** Commit `hash` to the goal's private ref in the repo's common git dir. Never throws. */
+export async function recordCheckHash(exec: Exec, root: string, branch: string, hash: string, message: string): Promise<{ ok: true } | { ok: false; error: string }> {
+	try {
+		const r = await exec("bash", ["-c", RECORD_SCRIPT, "goal-ref", root, goalRefName(branch), hash, message]);
+		return r.code === 0 ? { ok: true } : { ok: false, error: (r.stderr || r.stdout).trim() || `git exited ${r.code}` };
+	} catch (e) {
+		return { ok: false, error: e instanceof Error ? e.message : String(e) };
+	}
+}
+
+export type RecordedHash = { kind: "none" } | { kind: "hash"; hash: string } | { kind: "error"; error: string };
+
+/** The hash at the tip of the goal's private ref: none when the ref does not exist, error when it exists but cannot be read. */
+export async function readRecordedHash(exec: Exec, root: string, branch: string): Promise<RecordedHash> {
+	const ref = goalRefName(branch);
+	try {
+		const tip = await exec("git", ["-C", root, "rev-parse", "--verify", "--quiet", `${ref}^{commit}`]);
+		if (tip.code !== 0) return { kind: "none" };
+		const blob = await exec("git", ["-C", root, "cat-file", "blob", `${ref}:check.sha256`]);
+		if (blob.code !== 0) return { kind: "error", error: `${ref} has no check.sha256 at its tip` };
+		return { kind: "hash", hash: blob.stdout.trim() };
+	} catch (e) {
+		return { kind: "error", error: e instanceof Error ? e.message : String(e) };
+	}
+}
+
 /** True for a path inside a goals directory of the todo store. The agent may reach those only through goal_propose. */
 export function isGoalStorePath(path: string): boolean {
 	return /\/agent-skills\/todos\/[^/]+\/goals(\/|$)/.test(resolve("/", path));
 }
 
 const GOAL_STORE_IN_COMMAND = /agent-skills\/todos\/[^\s'"]*\/goals\b/;
+/** The private ref of ADR-010: any command or path naming it is blocked for the agent, reads included. */
+const GOAL_REF = /refs\/goals\//;
 const SHELL_WRITE = /(?:^|[\s;&|])(?:tee|sed\s+-\S*i|mv|cp|rm|truncate|install|dd|perl\s+-\S*i|python3?|node|bun)\b|>/;
 
 /**
@@ -151,10 +201,10 @@ const SHELL_WRITE = /(?:^|[\s;&|])(?:tee|sed\s+-\S*i|mv|cp|rm|truncate|install|d
  * "only /goal handlers and goal_propose write goal files"; this guard catches the direct routes.
  */
 export function agentWouldWriteGoalStore(toolName: string, input: { path?: string; command?: string }): boolean {
-	if (toolName === "write" || toolName === "edit") return isGoalStorePath(String(input.path ?? ""));
+	if (toolName === "write" || toolName === "edit") return isGoalStorePath(String(input.path ?? "")) || GOAL_REF.test(String(input.path ?? ""));
 	if (toolName === "bash") {
 		const command = String(input.command ?? "");
-		return GOAL_STORE_IN_COMMAND.test(command) && SHELL_WRITE.test(command);
+		return GOAL_REF.test(command) || (GOAL_STORE_IN_COMMAND.test(command) && SHELL_WRITE.test(command));
 	}
 	return false;
 }

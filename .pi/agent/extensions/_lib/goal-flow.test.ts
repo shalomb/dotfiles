@@ -6,7 +6,8 @@ import { execFile, execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { branchState, loadGoal, saveGoal, type Exec } from "./goal-io.ts";
+import { branchState, loadGoal, readRecordedHash, saveGoal, type Exec } from "./goal-io.ts";
+import { checkHash } from "./goal.ts";
 import { approveChange, checkGoal, parseGoalArgs, dropCurrentGoal, doneGoal, lockGoal, promptReminder, proposeFromAgent, rejectChange, showGoal, staleWarning, startGoal, type Deps } from "./goal-flow.ts";
 
 const exec: Exec = (cmd, args, o) =>
@@ -655,4 +656,125 @@ test("a strengthening change keeps the yes/no confirm and asks no goal id", asyn
 	expect(inputs).toEqual([]);
 	expect(confirms).toHaveLength(1);
 	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv", "test -f more.csv"]);
+});
+
+// ---- Tamper evidence (ADR-010) ----
+
+const refTip = () => git("for-each-ref", "--format=%(objectname)", "refs/goals/feat-export");
+const refLog = () => git("log", "--format=%s", "refs/goals/feat-export").split("\n");
+const editLockedCheck = (commandsList: string[]) => {
+	const g = loadGoal(store, "feat/export")!;
+	saveGoal(store, { ...g, doneCheck: { ...g.doneCheck, commands: commandsList } });
+};
+
+test("lock commits the hash of the approved check to refs/goals/<branch-slug>, leaving the working tree and index clean", async () => {
+	const d = await activeGoal();
+	const g = loadGoal(store, "feat/export")!;
+	expect(await readRecordedHash(exec, root, "feat/export")).toEqual({ kind: "hash", hash: checkHash(g.doneCheck) });
+	expect(refLog()).toEqual(["lock g-feat-export"]);
+	expect(git("status", "--porcelain=v1", "--untracked-files=all")).toBe("");
+	expect(git("branch", "--list")).not.toMatch(/goals/);
+	expect(d.head).toBeTruthy();
+});
+
+test("a declined lock records nothing; a draft has no ref", async () => {
+	const d = await draftWithCheck();
+	answers.push(false);
+	await lockGoal(d);
+	expect(refTip()).toBe("");
+});
+
+test("approve adds a commit with the new hash, so done passes on the approved check and refuses the old one", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f more.csv"] }, reason: "stricter" });
+	answers.push(true);
+	await approveChange(d);
+	const g = loadGoal(store, "feat/export")!;
+	expect(await readRecordedHash(exec, root, "feat/export")).toEqual({ kind: "hash", hash: checkHash(g.doneCheck) });
+	expect(refLog()).toEqual(["approve g-feat-export: stricter", "lock g-feat-export"]);
+});
+
+test("a change that is not approved leaves the ref where it was", async () => {
+	const d = await activeGoal();
+	const tip = refTip();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f more.csv"] }, reason: "stricter" });
+	answers.push(false);
+	await approveChange(d);
+	await rejectChange(d);
+	expect(refTip()).toBe(tip);
+});
+
+// Scenario: A locked Done-check edited outside /goal blocks closure
+test("done and check refuse when the goal file's check differs from the ref tip; the goal stays active and nothing runs", async () => {
+	const d = await activeGoal();
+	commitFile("export.csv");
+	editLockedCheck(["true"]);
+	notes.length = 0;
+	await doneGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	expect(lastNote()).toMatch(/differs from the approved one/);
+	expect(lastNote()).toContain("git log refs/goals/feat-export");
+	expect(commands).toEqual([]);
+	notes.length = 0;
+	await checkGoal(d);
+	expect(notes).toHaveLength(1);
+	expect(lastNote()).toMatch(/differs from the approved one/);
+	expect(lastNote()).not.toMatch(/green|red/i);
+});
+
+test("moving an Outcome Check mark outside /goal also blocks closure", async () => {
+	const d = await draftWithCheck(["test -f export.csv", "test -f never.csv"]);
+	answers.push(true);
+	await lockGoal(d);
+	commitFile("export.csv");
+	const g = loadGoal(store, "feat/export")!;
+	saveGoal(store, { ...g, doneCheck: { ...g.doneCheck, outcomeChecks: ["test -f never.csv"] } });
+	await doneGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	expect(lastNote()).toMatch(/differs/);
+});
+
+test("done refuses an active goal that has no ref (deleted, or locked before refs existed)", async () => {
+	const d = await activeGoal();
+	commitFile("export.csv");
+	git("update-ref", "-d", "refs/goals/feat-export");
+	await doneGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	expect(lastNote()).toMatch(/no approved record|no record/i);
+	await checkGoal(d);
+	expect(lastNote()).toMatch(/no approved record|no record/i);
+});
+
+test("done on an untouched check still closes, and a human-confirm goal is verified the same way", async () => {
+	const d = await activeGoal();
+	commitFile("export.csv");
+	await doneGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("closed");
+	const h = deps("design/sync");
+	await startGoal(h, "Sync design agreed");
+	await proposeFromAgent(h, { doneCheck: { kind: "human", commands: [] } });
+	answers.push(true);
+	await lockGoal(h);
+	const g = loadGoal(store, "design/sync")!;
+	saveGoal(store, { ...g, doneCheck: { ...g.doneCheck, kind: "command", commands: ["true"] } });
+	await doneGoal(h);
+	expect(loadGoal(store, "design/sync")!.status).toBe("active");
+});
+
+test("lock does not lock when the ref cannot be written", async () => {
+	const d = await draftWithCheck();
+	const noRef: Exec = (cmd, args, o) => (cmd === "bash" && args[1].includes("commit-tree") ? Promise.resolve({ code: 1, stdout: "", stderr: "boom" }) : exec(cmd, args, o));
+	answers.push(true);
+	await lockGoal({ ...d, exec: noRef });
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+	expect(lastNote()).toMatch(/boom/);
+});
+
+test("the ref is shared by a linked worktree: lock in one checkout, done in the other", async () => {
+	const d = await activeGoal();
+	const linked = join(root, ".worktrees", "other");
+	git("worktree", "add", "-q", "--detach", linked, "feat/export");
+	writeFileSync(join(linked, "export.csv"), "x\n");
+	await doneGoal({ ...d, root: linked });
+	expect(loadGoal(store, "feat/export")!.status).toBe("closed");
 });

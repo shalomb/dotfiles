@@ -4,10 +4,10 @@
 
 import {
 	type CheckSpec, type DraftFields, type Goal, type Result,
-	applyApprovedChange, applyClose, applyLock, canLock, applyReject, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft, oneLine,
+	applyApprovedChange, applyClose, applyLock, canLock, checkHash, applyReject, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft, oneLine,
 	proposeChange, reminderLine, staleGoal,
 } from "./goal.ts";
-import { type Exec, branchState, listGoals, loadGoal, loadGoalFile, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
+import { type Exec, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
 
 export interface Deps {
 	exec: Exec;
@@ -81,6 +81,34 @@ function commit(d: Deps, r: Result, done: string): Goal | undefined {
 	saveGoal(d.store, r.goal);
 	d.ui.notify(done, "info");
 	return r.goal;
+}
+
+/**
+ * Lock and approve: record the new done-check hash on the private ref (ADR-010) before saving the goal,
+ * so a goal is never active without its record. If the ref cannot be written nothing is saved.
+ */
+async function commitRecorded(d: Deps, r: Result, done: string, message: (g: Goal) => string): Promise<Goal | undefined> {
+	if (!r.ok) return commit(d, r, done);
+	const rec = await recordCheckHash(d.exec, d.root, r.goal.branch, checkHash(r.goal.doneCheck), message(r.goal));
+	if (!rec.ok) {
+		d.ui.notify(`Not saved: the approved done-check could not be recorded on ${goalRefName(r.goal.branch)}: ${rec.error}`, "error");
+		return undefined;
+	}
+	return commit(d, r, done);
+}
+
+/**
+ * Why an active goal's done-check cannot be trusted, or undefined when it equals the hash at the tip of its private ref.
+ * Used by /goal check and /goal done: a check edited outside /goal, or a goal with no record, is not run.
+ */
+async function integrityProblem(d: Deps, g: Goal): Promise<string | undefined> {
+	const ref = goalRefName(g.branch);
+	const recorded = await readRecordedHash(d.exec, d.root, g.branch);
+	if (recorded.kind === "error") return `The approved done-check of ${g.id} cannot be read: ${recorded.error}. Inspect it with: git log ${ref}`;
+	if (recorded.kind === "none") return `${g.id} is active but has no approved record on ${ref}, so its done-check cannot be verified. Drop the goal and start it again.`;
+	if (recorded.hash !== checkHash(g.doneCheck))
+		return `The done-check of ${g.id} differs from the approved one (it was changed without /goal), so it is not run. See the approvals with: git log ${ref}`;
+	return undefined;
 }
 
 export function summary(g: Goal): string {
@@ -200,7 +228,7 @@ export async function lockGoal(d: Deps): Promise<void> {
 		`Lock the done-check of ${g.id}?`,
 		`${g.outcome}\n${checkLines(g).join("\n")}\n${evidence}\nOnce locked, only you can change it.`);
 	if (!ok) return d.ui.notify("Not locked. The goal stays a draft.", "info");
-	commit(d, applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit, outcomeChecks }), `Goal ${g.id} locked.`);
+	await commitRecorded(d, applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit, outcomeChecks }), `Goal ${g.id} locked.`, () => `lock ${g.id}`);
 }
 
 const sameSpec = (a: CheckSpec, b: CheckSpec) => a.kind === b.kind && a.commands.length === b.commands.length && a.commands.every((c, i) => c === b.commands[i]);
@@ -242,7 +270,7 @@ export async function approveChange(d: Deps): Promise<void> {
 		? (await d.ui.input(`${title} Type ${g.id} to approve.`, body))?.trim() === g.id
 		: await d.ui.confirm(title, body);
 	if (!ok) return d.ui.notify(weakening ? "Not approved: the goal id was not typed. The change stays pending; /goal reject discards it." : "Not approved. The change stays pending; /goal reject discards it.", "info");
-	commit(d, applyApprovedChange(g, { now: d.now(), outcomeChecks }), `Change approved and recorded in ${g.id}.`);
+	await commitRecorded(d, applyApprovedChange(g, { now: d.now(), outcomeChecks }), `Change approved and recorded in ${g.id}.`, () => `approve ${g.id}: ${oneLine(p.reason)}`);
 }
 
 export async function rejectChange(d: Deps): Promise<void> {
@@ -255,6 +283,10 @@ export async function rejectChange(d: Deps): Promise<void> {
 export async function checkGoal(d: Deps): Promise<void> {
 	const g = current(d);
 	if (!g) return;
+	if (g.status === "active") {
+		const problem = await integrityProblem(d, g);
+		if (problem) return d.ui.notify(problem, "error");
+	}
 	if (g.doneCheck.kind === "human") return d.ui.notify("Human-confirm check: no command to run. /goal done asks you to confirm.", "info");
 	if (!g.doneCheck.commands.length) return d.ui.notify("The draft has no done-check yet.", "error");
 	const run = await runChecks(d.exec, g.doneCheck.commands, d.root);
@@ -266,6 +298,8 @@ export async function doneGoal(d: Deps): Promise<void> {
 	const g = current(d);
 	if (!g) return;
 	if (g.status !== "active") return d.ui.notify(`Only an active goal can be closed (the goal is ${g.status}).`, "error");
+	const problem = await integrityProblem(d, g);
+	if (problem) return d.ui.notify(problem, "error");
 	let exit: number | undefined;
 	if (g.doneCheck.kind === "command") {
 		const run = await runChecks(d.exec, g.doneCheck.commands, d.root);

@@ -2,6 +2,7 @@
 // Contract: docs/specs/agentic-coding/contracts/goal-todo-contract.md sections 1 and 2.
 // Tested in goal.test.ts. File I/O lives in goal-store.ts; the command wiring in ../goal-command.ts.
 
+import { createHash } from "node:crypto";
 import { isAbsolute, join } from "node:path";
 import { repoSlug } from "./persist.ts";
 
@@ -74,6 +75,15 @@ export function validateGoal(g: Goal): string | undefined {
 	if (!g.outcome.trim()) return "a goal needs an outcome";
 	if (g.status !== "draft" && g.doneCheck.kind === "command" && !g.doneCheck.commands.length) return "a goal needs a done-check (at least one command, or kind human)";
 	return undefined;
+}
+
+/**
+ * SHA-256 of the canonical done-check: kind, the commands in order, and the Outcome Check marks (sorted).
+ * Lock metadata is not part of it. /goal records it on a private git ref at lock and approve (ADR-010).
+ */
+export function checkHash(d: Pick<DoneCheck, "kind" | "commands" | "outcomeChecks">): string {
+	const canonical = JSON.stringify({ kind: d.kind, commands: d.commands, outcomeChecks: [...d.outcomeChecks].sort() });
+	return createHash("sha256").update(canonical).digest("hex");
 }
 
 export const oneLine = (s: string): string => s.replace(/\s+/g, " ").trim();
