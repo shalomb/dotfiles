@@ -2,7 +2,7 @@
 // Scenario names refer to docs/specs/agentic-coding/features/goal-contract.feature.
 import { expect, test } from "bun:test";
 import {
-	applyApprovedChange, applyClose, checkHash, applyLock, applyReject, branchSlug, canLock, closeDecision, dropGoal, fillDraft, goalPath, goalsDir,
+	applyApprovedChange, applyClose, checkHash, applyLock, applyReject, branchSlug, goalCheckHash, canLock, closeDecision, dropGoal, fillDraft, goalPath, goalsDir,
 	isEnvironmentFailure, newDraft, parseGoal, proposeChange, reminderLine, renderGoal, staleGoal, storeDir, validateGoal,
 } from "./goal.ts";
 
@@ -394,4 +394,15 @@ test("checkHash: a sha256 of the kind, the ordered commands and the Outcome Chec
 	expect(checkHash({ ...g.doneCheck, outcomeChecks: [] })).not.toBe(h);
 	// no two different lists collapse into one string
 	expect(checkHash({ ...g.doneCheck, commands: ["a b"], outcomeChecks: [] })).not.toBe(checkHash({ ...g.doneCheck, commands: ["a", "b"], outcomeChecks: [] }));
+});
+
+test("goalCheckHash: the hash of a goal equals the hash of its rendered-then-parsed form, even for awkward commands", () => {
+	const g = full();
+	g.status = "active";
+	g.doneCheck.commands = ["echo  a\tb", "  lead and trail  ", "x: y", "'q' \"d\"", "# c", "a #b", "-", "true", "123", "[]", "line1\nline2", "- item", "{\"k\": 1}"];
+	g.doneCheck.outcomeChecks = ["x: y", "line1\nline2"];
+	const parsed = parseGoal(renderGoal(g))!;
+	expect(checkHash(g.doneCheck)).not.toBe(checkHash(parsed.doneCheck)); // the in-memory hash alone would mismatch
+	expect(goalCheckHash(g)).toBe(checkHash(parsed.doneCheck));
+	expect(goalCheckHash(g)).toBe(goalCheckHash(parsed));
 });

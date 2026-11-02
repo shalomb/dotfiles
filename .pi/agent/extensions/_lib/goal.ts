@@ -86,6 +86,16 @@ export function checkHash(d: Pick<DoneCheck, "kind" | "commands" | "outcomeCheck
 	return createHash("sha256").update(canonical).digest("hex");
 }
 
+/**
+ * The hash of what the goal file will hold: the done-check of parseGoal(renderGoal(g)). /goal records and compares
+ * this one, so a render quirk (whitespace folded to one line, say) can never make a stored file look edited.
+ */
+export function goalCheckHash(g: Goal): string {
+	const stored = parseGoal(renderGoal(g));
+	if (!stored) throw new Error(`Goal ${g.id} does not survive being written and read back`);
+	return checkHash(stored.doneCheck);
+}
+
 export const oneLine = (s: string): string => s.replace(/\s+/g, " ").trim();
 
 // ---- file format ----

@@ -4,7 +4,7 @@
 
 import {
 	type CheckSpec, type DraftFields, type Goal, type Result,
-	applyApprovedChange, applyClose, applyLock, canLock, checkHash, applyReject, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft, oneLine,
+	applyApprovedChange, applyClose, applyLock, canLock, goalCheckHash, applyReject, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft, oneLine,
 	proposeChange, reminderLine, stamp, staleGoal,
 } from "./goal.ts";
 import { type Exec, type GoalEvent, appendGoalEvent, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
@@ -96,7 +96,7 @@ function commit(d: Deps, r: Result, done: string, event?: (g: Goal) => Pick<Goal
  */
 async function commitRecorded(d: Deps, r: Result, done: string, message: (g: Goal) => string, event: (g: Goal) => Pick<GoalEvent, "event"> & Record<string, unknown>): Promise<Goal | undefined> {
 	if (!r.ok) return commit(d, r, done);
-	const rec = await recordCheckHash(d.exec, d.root, r.goal.branch, checkHash(r.goal.doneCheck), message(r.goal));
+	const rec = await recordCheckHash(d.exec, d.root, r.goal.branch, goalCheckHash(r.goal), message(r.goal));
 	if (!rec.ok) {
 		d.ui.notify(`Not saved: the approved done-check could not be recorded on ${goalRefName(r.goal.branch)}: ${rec.error}`, "error");
 		return undefined;
@@ -113,7 +113,7 @@ async function integrityProblem(d: Deps, g: Goal): Promise<string | undefined> {
 	const recorded = await readRecordedHash(d.exec, d.root, g.branch);
 	if (recorded.kind === "error") return `The approved done-check of ${g.id} cannot be read: ${recorded.error}. Inspect it with: git log ${ref}`;
 	if (recorded.kind === "none") return `${g.id} is active but has no approved record on ${ref}, so its done-check cannot be verified. Drop the goal and start it again.`;
-	if (recorded.hash !== checkHash(g.doneCheck))
+	if (recorded.hash !== goalCheckHash(g))
 		return `The done-check of ${g.id} differs from the approved one (it was changed without /goal), so it is not run. See the approvals with: git log ${ref}`;
 	return undefined;
 }
@@ -236,7 +236,7 @@ export async function lockGoal(d: Deps): Promise<void> {
 		`${g.outcome}\n${checkLines(g).join("\n")}\n${evidence}\nOnce locked, only you can change it.`);
 	if (!ok) return d.ui.notify("Not locked. The goal stays a draft.", "info");
 	await commitRecorded(d, applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit, outcomeChecks }), `Goal ${g.id} locked.`, () => `lock ${g.id}`,
-		(locked) => ({ event: "goal_locked", kind: locked.doneCheck.kind, checkHash: checkHash(locked.doneCheck) }));
+		(locked) => ({ event: "goal_locked", kind: locked.doneCheck.kind, checkHash: goalCheckHash(locked) }));
 }
 
 const sameSpec = (a: CheckSpec, b: CheckSpec) => a.kind === b.kind && a.commands.length === b.commands.length && a.commands.every((c, i) => c === b.commands[i]);
@@ -279,7 +279,7 @@ export async function approveChange(d: Deps): Promise<void> {
 		: await d.ui.confirm(title, body);
 	if (!ok) return d.ui.notify(weakening ? "Not approved: the goal id was not typed. The change stays pending; /goal reject discards it." : "Not approved. The change stays pending; /goal reject discards it.", "info");
 	await commitRecorded(d, applyApprovedChange(g, { now: d.now(), outcomeChecks }), `Change approved and recorded in ${g.id}.`, () => `approve ${g.id}: ${oneLine(p.reason)}`,
-		(changed) => ({ event: "goal_changed", reason: oneLine(p.reason), weakening, checkHash: checkHash(changed.doneCheck) }));
+		(changed) => ({ event: "goal_changed", reason: oneLine(p.reason), weakening, checkHash: goalCheckHash(changed) }));
 }
 
 /**
@@ -291,7 +291,7 @@ export async function rejectChange(d: Deps): Promise<void> {
 	if (!g) return;
 	const r = applyReject(g, { now: d.now() });
 	if (r.ok && g.status === "active") {
-		const hash = checkHash(g.doneCheck);
+		const hash = goalCheckHash(g);
 		const recorded = await readRecordedHash(d.exec, d.root, g.branch);
 		if (recorded.kind === "hash" && recorded.hash !== hash) {
 			const rec = await recordCheckHash(d.exec, d.root, g.branch, hash, `reject ${g.id}`);
