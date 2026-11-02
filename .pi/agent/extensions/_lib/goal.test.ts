@@ -3,7 +3,7 @@
 import { expect, test } from "bun:test";
 import {
 	applyApprovedChange, applyClose, applyLock, applyReject, branchSlug, canLock, closeDecision, dropGoal, fillDraft, goalPath, goalsDir,
-	newDraft, parseGoal, proposeChange, reminderLine, renderGoal, staleGoal, storeDir, validateGoal,
+	isEnvironmentFailure, newDraft, parseGoal, proposeChange, reminderLine, renderGoal, staleGoal, storeDir, validateGoal,
 } from "./goal.ts";
 
 const NOW = new Date("2026-11-01T10:00:00Z");
@@ -354,4 +354,25 @@ test("approving a change that drops every marked command is refused until the hu
 	expect(applyApprovedChange(g0, { now: LATER, outcomeChecks: ["nope"] }).ok).toBe(false);
 	const r = applyApprovedChange(g0, { now: LATER, outcomeChecks: ["make lint"] });
 	expect(r.ok && r.goal.doneCheck.outcomeChecks).toEqual(["make lint"]);
+});
+
+// ---- Environment failures (ADR-009 Amendment 1) ----
+
+// Scenario: A base failure caused by the environment does not lock by default
+test("isEnvironmentFailure: exit 126/127 or a missing-command/module output is environmental, an ordinary failure is not", () => {
+	const table: [number | undefined, string, boolean][] = [
+		[126, "", true],
+		[127, "", true],
+		[1, "bash: foo: command not found", true],
+		[1, "ModuleNotFoundError: No module named 'x'", true],
+		[2, "ImportError: cannot import name y", true],
+		[1, "", false],
+		[1, "FAILED tests/test_x.py::test_export - assert 1 == 2", false],
+		[2, "make: *** [test] Error 1", false],
+		[125, "", false],
+		[128, "fatal: bad object", false],
+		[0, "", false],
+		[undefined, "command killed", false],
+	];
+	for (const [exit, output, expected] of table) expect([exit, output, isEnvironmentFailure(exit, output)]).toEqual([exit, output, expected]);
 });

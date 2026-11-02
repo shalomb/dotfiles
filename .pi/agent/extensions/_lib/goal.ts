@@ -240,6 +240,16 @@ export function canLock(baseCheckExit: number | undefined): { ok: true } | { ok:
 	return { ok: true };
 }
 
+const ENVIRONMENT_OUTPUT = /command not found|ModuleNotFoundError|ImportError/;
+
+/**
+ * True when a failed base run looks like a broken environment, not a check that tests the outcome:
+ * exit 126 (not executable) or 127 (not found), or output naming a missing command or module. A heuristic.
+ */
+export function isEnvironmentFailure(exit: number | undefined, output: string): boolean {
+	return exit === 126 || exit === 127 || ENVIRONMENT_OUTPUT.test(output);
+}
+
 /** A command is stored on one line, so newlines and control characters are refused rather than rewritten into a different command. */
 const CONTROL_CHAR = /[\u0000-\u001f\u007f]/;
 const badCommand = (commands: string[]): string | undefined => {

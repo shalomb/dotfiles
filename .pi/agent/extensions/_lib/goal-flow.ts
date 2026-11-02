@@ -4,7 +4,7 @@
 
 import {
 	type CheckSpec, type DraftFields, type Goal, type Result,
-	applyApprovedChange, applyClose, applyLock, canLock, applyReject, closeDecision, dropGoal, fillDraft, newDraft, oneLine,
+	applyApprovedChange, applyClose, applyLock, canLock, applyReject, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft, oneLine,
 	proposeChange, reminderLine, staleGoal,
 } from "./goal.ts";
 import { type Exec, branchState, listGoals, loadGoal, loadGoalFile, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
@@ -162,6 +162,20 @@ async function askOutcomeCheck(d: Deps, g: Goal, commands: string[]): Promise<st
 	return picked === undefined ? undefined : [picked];
 }
 
+/**
+ * An environment-looking base failure is refused unless the human types the goal id exactly.
+ * Returns true when the lock or approval may go on.
+ */
+async function environmentFailureOverridden(d: Deps, g: Goal, run: { exit: number | undefined; output: string }): Promise<boolean> {
+	if (!isEnvironmentFailure(run.exit, run.output)) return true;
+	const typed = await d.ui.input(
+		`The check fails on the base commit, but it looks like an environment problem, not the missing work. Type ${g.id} to go on anyway.`,
+		`${run.output}\n(exit ${run.exit})`);
+	if (typed?.trim() === g.id) return true;
+	d.ui.notify(`Not done: the base failure looks environmental (exit 126/127, command not found, ModuleNotFoundError or ImportError), so the check proves nothing. Fix the environment, or type the goal id ${g.id} to override.\n${run.output}`, "error");
+	return false;
+}
+
 /** `/goal lock`: run the check at the base commit; refuse when it passes; else ask the human which command is the Outcome Check, ask to confirm, and lock. */
 export async function lockGoal(d: Deps): Promise<void> {
 	const g = current(d);
@@ -176,6 +190,7 @@ export async function lockGoal(d: Deps): Promise<void> {
 		baseExit = run.exit;
 		const refused = canLock(baseExit);
 		if (!refused.ok) return d.ui.notify(`${refused.reason}\n${run.output}`, "error");
+		if (!(await environmentFailureOverridden(d, g, run))) return;
 		evidence = `On base ${g.doneCheck.baseCommit} it fails (exit ${baseExit}):\n${run.output}`;
 		outcomeChecks = await askOutcomeCheck(d, g, g.doneCheck.commands);
 		if (!outcomeChecks) return d.ui.notify("Not locked: mark one command as the Outcome Check. The goal stays a draft.", "error");
@@ -210,6 +225,7 @@ export async function approveChange(d: Deps): Promise<void> {
 		const run = await runChecksAtCommit(d.exec, d.root, g.doneCheck.baseCommit, p.new.commands, d.tmpParent);
 		const refused = canLock(run.exit);
 		if (!refused.ok) return d.ui.notify(`${refused.reason}\n${run.output}`, "error");
+		if (!(await environmentFailureOverridden(d, g, run))) return;
 		evidence = `On base ${g.doneCheck.baseCommit} the new check fails (exit ${run.exit}).`;
 	}
 	let outcomeChecks: string[] | undefined;

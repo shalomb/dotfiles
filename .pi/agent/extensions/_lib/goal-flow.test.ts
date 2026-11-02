@@ -547,3 +547,57 @@ test("approve of a change that keeps the marked command asks no select", async (
 	expect(selects).toEqual([]);
 	expect(loadGoal(store, "feat/export")!.doneCheck.outcomeChecks).toEqual(["test -f export.csv"]);
 });
+
+// ---- Environment failures (ADR-009 Amendment 1) ----
+
+// Scenario: A base failure caused by the environment does not lock by default
+test("lock refuses a base failure caused by the environment: nothing locked, no Outcome Check or confirm asked, until the human types the goal id", async () => {
+	const d = await draftWithCheck(["definitely-not-a-command-xyz"]);
+	typed.push("nope");
+	answers.push(true);
+	await lockGoal(d);
+	expect(inputs).toHaveLength(1);
+	expect(inputs[0]).toContain("g-feat-export");
+	expect(inputs[0]).toMatch(/command not found/);
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+	expect(lastNote()).toMatch(/environment/i);
+	expect(selects).toEqual([]);
+	expect(confirms).toEqual([]);
+	expect(worktrees()).toBe(1);
+	typed.length = 0;
+	await lockGoal(d); // human cancels the input
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+});
+
+test("lock goes on past an environment failure only when the goal id is typed exactly", async () => {
+	const d = await draftWithCheck(["definitely-not-a-command-xyz"]);
+	typed.push("g-feat-export");
+	answers.push(true);
+	await lockGoal(d);
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "active", doneCheck: { outcomeChecks: ["definitely-not-a-command-xyz"] } });
+});
+
+test("an ordinary base failure asks no goal id at lock", async () => {
+	const d = await draftWithCheck();
+	answers.push(true);
+	await lockGoal(d);
+	expect(inputs).toEqual([]);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+});
+
+test("approve refuses a new check whose base failure is environmental unless the goal id is typed", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["definitely-not-a-command-xyz", "test -f export.csv"] }, reason: "stricter" });
+	typed.push("wrong");
+	answers.push(true);
+	confirms.length = 0;
+	await approveChange(d);
+	expect(inputs).toHaveLength(1);
+	expect(confirms).toEqual([]);
+	expect(lastNote()).toMatch(/environment/i);
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv"]);
+	typed.push("g-feat-export");
+	answers.push(true);
+	await approveChange(d);
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["definitely-not-a-command-xyz", "test -f export.csv"]);
+});
