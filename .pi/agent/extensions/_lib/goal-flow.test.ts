@@ -815,6 +815,63 @@ test("the ref is shared by a linked worktree: lock in one checkout, done in the 
 	expect(loadGoal(store, "feat/export")!.status).toBe("closed");
 });
 
+test("close and drop each write a tombstone commit on the ref: status closed|dropped and no check hash", async () => {
+	const d = await activeGoal();
+	commitFile("export.csv");
+	await doneGoal(d);
+	expect(refLog()[0]).toBe("closed g-feat-export");
+	expect(git("show", "refs/goals/feat-export:status")).toBe("closed");
+	expect(git("ls-tree", "--name-only", "refs/goals/feat-export")).toBe("status");
+	expect(await readRecordedHash(exec, root, "feat/export")).toEqual({ kind: "tombstone", status: "closed" });
+	await startGoal(d, "again");
+	await dropCurrentGoal(d, "abandoned"); // an empty draft: dropping still tombstones
+	expect(git("show", "refs/goals/feat-export:status")).toBe("dropped");
+	expect(git("ls-tree", "--name-only", "refs/goals/feat-export")).toBe("status");
+	expect(refLog().slice(0, 2)).toEqual(["dropped g-feat-export", "closed g-feat-export"]);
+});
+
+test("a hand-made active file cannot match an old hash: done and check refuse while the ref tip is a tombstone, and a fresh lock works again", async () => {
+	const d = await activeGoal();
+	const closedFile = loadGoal(store, "feat/export")!;
+	commitFile("export.csv");
+	await doneGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("closed");
+	saveGoal(store, { ...closedFile, status: "active" }); // same check as the one approved before: the old hash
+	notes.length = 0; commands.length = 0;
+	await doneGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	expect(lastNote()).toMatch(/closed|tombstone/i);
+	expect(lastNote()).toContain("git log refs/goals/feat-export");
+	expect(commands).toEqual([]);
+	notes.length = 0;
+	await checkGoal(d);
+	expect(notes).toHaveLength(1);
+	expect(lastNote()).toMatch(/closed|tombstone/i);
+	expect(lastNote()).not.toMatch(/green|red/i);
+	// the human can still start over: drop the forged file, then start and lock again
+	await dropCurrentGoal(d, "forged");
+	await startGoal(d, "again");
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f later.csv"] } });
+	answers.push(true);
+	await lockGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	commitFile("later.csv");
+	await doneGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("closed");
+});
+
+test("close and drop save nothing when the tombstone cannot be written", async () => {
+	const d = await activeGoal();
+	commitFile("export.csv");
+	const noRef: Exec = (cmd, args, o) => (cmd === "bash" && args[1].includes("commit-tree") ? Promise.resolve({ code: 1, stdout: "", stderr: "boom" }) : exec(cmd, args, o));
+	await doneGoal({ ...d, exec: noRef });
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	expect(lastNote()).toMatch(/boom/);
+	await dropCurrentGoal({ ...d, exec: noRef }, "x");
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	expect(lastNote()).toMatch(/boom/);
+});
+
 // ---- Events (ADR-009 Amendment 1) ----
 
 const events = (): any[] => {

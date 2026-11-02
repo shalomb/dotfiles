@@ -7,7 +7,7 @@ import {
 	applyApprovedChange, applyClose, applyLock, canLock, goalCheckHash, applyReject, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft, oneLine,
 	proposeChange, reminderLine, stamp, staleGoal,
 } from "./goal.ts";
-import { type Exec, type GoalEvent, appendGoalEvent, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
+import { type Exec, type GoalEvent, appendGoalEvent, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, recordTombstone, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
 
 export interface Deps {
 	exec: Exec;
@@ -104,6 +104,17 @@ async function commitRecorded(d: Deps, r: Result, done: string, message: (g: Goa
 	return commit(d, r, done, event);
 }
 
+/** Close and drop: write the tombstone (ADR-010) before saving the goal. If the ref cannot be written nothing is saved. */
+async function commitTombstoned(d: Deps, r: Result, status: "closed" | "dropped", done: string, event: () => Pick<GoalEvent, "event"> & Record<string, unknown>): Promise<Goal | undefined> {
+	if (!r.ok) return commit(d, r, done);
+	const rec = await recordTombstone(d.exec, d.root, r.goal.branch, status, `${status} ${r.goal.id}`);
+	if (!rec.ok) {
+		d.ui.notify(`Not saved: the ${status} tombstone could not be recorded on ${goalRefName(r.goal.branch)}: ${rec.error}`, "error");
+		return undefined;
+	}
+	return commit(d, r, done, event);
+}
+
 /**
  * Why an active goal's done-check cannot be trusted, or undefined when it equals the hash at the tip of its private ref.
  * Used by /goal check and /goal done: a check edited outside /goal, or a goal with no record, is not run.
@@ -112,6 +123,7 @@ async function integrityProblem(d: Deps, g: Goal): Promise<string | undefined> {
 	const ref = goalRefName(g.branch);
 	const recorded = await readRecordedHash(d.exec, d.root, g.branch);
 	if (recorded.kind === "error") return `The approved done-check of ${g.id} cannot be read: ${recorded.error}. Inspect it with: git log ${ref}`;
+	if (recorded.kind === "tombstone") return `The record of ${g.id} on ${ref} says it was ${recorded.status}, so an active goal file here was not made by /goal and its done-check is not run. See: git log ${ref}`;
 	if (recorded.kind === "none") return `${g.id} is active but has no approved record on ${ref}, so its done-check cannot be verified. Drop the goal and start it again.`;
 	if (recorded.hash !== goalCheckHash(g))
 		return `The done-check of ${g.id} differs from the approved one (it was changed without /goal), so it is not run. See the approvals with: git log ${ref}`;
@@ -333,7 +345,7 @@ export async function doneGoal(d: Deps): Promise<void> {
 	}
 	const decision = closeDecision(exit, g.doneCheck.kind);
 	if (!decision.close) return d.ui.notify(decision.reason, "error");
-	const closed = commit(d, applyClose(g, { now: d.now(), closedBy: decision.closedBy }), `Goal ${g.id} closed (${decision.closedBy}).`, () => ({ event: "goal_closed", closedBy: decision.closedBy }));
+	const closed = await commitTombstoned(d, applyClose(g, { now: d.now(), closedBy: decision.closedBy }), "closed", `Goal ${g.id} closed (${decision.closedBy}).`, () => ({ event: "goal_closed", closedBy: decision.closedBy }));
 	if (!closed) return;
 	await d.runCommand(`/persist goal ${g.id} closed (${decision.closedBy}): ${g.outcome}`);
 	d.tellAgent(
@@ -344,7 +356,7 @@ export async function doneGoal(d: Deps): Promise<void> {
 export async function dropCurrentGoal(d: Deps, reason: string): Promise<void> {
 	const g = current(d);
 	if (!g) return;
-	commit(d, dropGoal(g, { now: d.now(), reason }), `Goal ${g.id} dropped.`, () => ({ event: "goal_dropped", reason }));
+	await commitTombstoned(d, dropGoal(g, { now: d.now(), reason }), "dropped", `Goal ${g.id} dropped.`, () => ({ event: "goal_dropped", reason }));
 }
 
 /** Run one /goal command. A handler that throws (a goal file that cannot be written, say) is reported to the human, never thrown. */

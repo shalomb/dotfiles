@@ -155,12 +155,12 @@ export const goalRefName = (branch: string): string => `refs/goals/${branchSlug(
 
 /**
  * hash-object -> mktree -> commit-tree -> update-ref, so the working tree, the index and the branches stay untouched.
- * Positional args: repo root, ref, hash, commit message. The new commit sits on top of the ref's old tip, if any.
+ * Positional args: repo root, ref, file name in the tree, file content, commit message. The new commit sits on top of the ref's old tip, if any.
  */
 const RECORD_SCRIPT = `set -e
-root=$1 ref=$2 hash=$3 msg=$4
-blob=$(printf '%s\\n' "$hash" | git -C "$root" hash-object -w --stdin)
-tree=$(printf '100644 blob %s\\tcheck.sha256\\n' "$blob" | git -C "$root" mktree)
+root=$1 ref=$2 name=$3 content=$4 msg=$5
+blob=$(printf '%s\\n' "$content" | git -C "$root" hash-object -w --stdin)
+tree=$(printf '100644 blob %s\\t%s\\n' "$blob" "$name" | git -C "$root" mktree)
 old=$(git -C "$root" rev-parse --verify --quiet "$ref^{commit}" || true)
 if [ -n "$old" ]; then
   commit=$(git -C "$root" commit-tree "$tree" -p "$old" -m "$msg")
@@ -170,27 +170,34 @@ else
   git -C "$root" update-ref -m "$msg" "$ref" "$commit"
 fi`;
 
-/** Commit `hash` to the goal's private ref in the repo's common git dir. Never throws. */
-export async function recordCheckHash(exec: Exec, root: string, branch: string, hash: string, message: string): Promise<{ ok: true } | { ok: false; error: string }> {
+async function recordOnRef(exec: Exec, root: string, branch: string, name: string, content: string, message: string): Promise<{ ok: true } | { ok: false; error: string }> {
 	try {
-		const r = await exec("bash", ["-c", RECORD_SCRIPT, "goal-ref", root, goalRefName(branch), hash, message]);
+		const r = await exec("bash", ["-c", RECORD_SCRIPT, "goal-ref", root, goalRefName(branch), name, content, message]);
 		return r.code === 0 ? { ok: true } : { ok: false, error: (r.stderr || r.stdout).trim() || `git exited ${r.code}` };
 	} catch (e) {
 		return { ok: false, error: e instanceof Error ? e.message : String(e) };
 	}
 }
 
-export type RecordedHash = { kind: "none" } | { kind: "hash"; hash: string } | { kind: "error"; error: string };
+/** Commit `hash` to the goal's private ref in the repo's common git dir. Never throws. */
+export const recordCheckHash = (exec: Exec, root: string, branch: string, hash: string, message: string) => recordOnRef(exec, root, branch, "check.sha256", hash, message);
 
-/** The hash at the tip of the goal's private ref: none when the ref does not exist, error when it exists but cannot be read. */
+/** Commit a tombstone (a tree with `status` only, no check hash) when the goal is closed or dropped, so an old hash cannot vouch for a later file. Never throws. */
+export const recordTombstone = (exec: Exec, root: string, branch: string, status: "closed" | "dropped", message: string) => recordOnRef(exec, root, branch, "status", status, message);
+
+export type RecordedHash = { kind: "none" } | { kind: "hash"; hash: string } | { kind: "tombstone"; status: string } | { kind: "error"; error: string };
+
+/** The tip of the goal's private ref: its hash, a tombstone (closed or dropped), none when the ref does not exist, error when it exists but cannot be read. */
 export async function readRecordedHash(exec: Exec, root: string, branch: string): Promise<RecordedHash> {
 	const ref = goalRefName(branch);
 	try {
 		const tip = await exec("git", ["-C", root, "rev-parse", "--verify", "--quiet", `${ref}^{commit}`]);
 		if (tip.code !== 0) return { kind: "none" };
 		const blob = await exec("git", ["-C", root, "cat-file", "blob", `${ref}:check.sha256`]);
-		if (blob.code !== 0) return { kind: "error", error: `${ref} has no check.sha256 at its tip` };
-		return { kind: "hash", hash: blob.stdout.trim() };
+		if (blob.code === 0) return { kind: "hash", hash: blob.stdout.trim() };
+		const status = await exec("git", ["-C", root, "cat-file", "blob", `${ref}:status`]);
+		if (status.code === 0) return { kind: "tombstone", status: status.stdout.trim() };
+		return { kind: "error", error: `${ref} has neither check.sha256 nor status at its tip` };
 	} catch (e) {
 		return { kind: "error", error: e instanceof Error ? e.message : String(e) };
 	}
