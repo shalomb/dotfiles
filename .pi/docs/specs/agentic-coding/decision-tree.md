@@ -106,3 +106,14 @@ Stance: long horizon
 - [settled] waf.measure -- Log goal_locked / goal_changed / goal_closed / goal_dropped events to trajectories.jsonl.
 - [settled] waf.friction-kill -- Review friction after 10 goals (drop and assertion rates); no fixed threshold.
     ADR: adr/ADR-009 Amendment 1 (lock integrity rules)
+- [settled] goal2.final-review -- Approved. Round goal-v2-04.
+
+## Raised by appraisals (2026-11-02), not yet decided
+
+- [open] goal.outcome-check-realistic-input -- Must an Outcome Check run on a realistic input chosen at lock, not only fixtures?
+    Reason: `/understand` lesson: 300+ green tests over an empty deliverable ("fixture echo chamber").
+- [open] critic.grounded-in-raw-outcome -- Does the Critic always receive the goal's raw outcome and anti-goals?
+- [open] goal.check-labels -- Label done-check commands by kind (outcome, quality). Appraisal P2.
+- [open] goal.uncovered-scenarios -- Report scenarios the check does not exercise, at lock (report-only). Appraisal P5.
+- [open] goal.typed-links -- Typed, warn-only `spec_links`. Appraisal P4.
+- [deferred] goal.hierarchy -- Parent goals. Appraisal P1; ADR-008 revisit criterion.

@@ -22,6 +22,7 @@ promotes_to:
   - adr/ADR-007-two-stage-intent-governor.md
   - adr/ADR-008-branch-scoped-goal-contract.md
   - adr/ADR-009-precommitted-done-check-gates-closure.md
+  - adr/ADR-010-goal-lock-tamper-evidence-on-private-ref.md
 ---
 
 # Handoff Specification: Agentic Coding System
@@ -50,7 +51,7 @@ promotes_to:
 
 | Pillar | Decision | Governing ADR | Evidence |
 | :--- | :--- | :--- | :--- |
-| **Intent** | One Goal Contract per branch, with a Done-check locked before work starts | [ADR-008](adr/ADR-008-branch-scoped-goal-contract.md), [ADR-009](adr/ADR-009-precommitted-done-check-gates-closure.md) | H5 pending |
+| **Intent** | One Goal Contract per branch, with a Done-check locked before work starts | [ADR-008](adr/ADR-008-branch-scoped-goal-contract.md), [ADR-009](adr/ADR-009-precommitted-done-check-gates-closure.md) (+Am. 1), [ADR-010](adr/ADR-010-goal-lock-tamper-evidence-on-private-ref.md) | H5 pending |
 | **Control Topology** | Interactive `Main Copilot` in `pi` + deterministic subprocess runner; no LLM pane-polling | [ADR-001](adr/ADR-001-copilot-deterministic-topology.md) | Used by H4 runner |
 | **State Store** | Single out-of-repo `todo` store: `TODO.md`, `tasks/`, `goals/`, `trajectories.jsonl` | [ADR-002](adr/ADR-002-single-out-of-repo-todo-store.md) | Gap: no closure timestamps (TB-8) |
 | **Wave Scheduling** | One task per Transient Worktree; ≤ 3 in parallel; Disjoint Codemap Lock over code **and test** files | [ADR-003 Am. 1](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md#amendment-1-2026-10-31-h1-evidence) | H1 killed batching |
@@ -135,6 +136,13 @@ flowchart TD
 - Tasks created on a branch with an active goal MUST carry `[goal: <id>]`.
 - Each turn, the Copilot's prompt MUST carry a one-line reminder (`Goal: <id> <outcome>; run /goal to refresh`), not the full contract.
 - At session start, a goal whose branch is merged or deleted MUST be flagged for the human to close or drop.
+- **Lock integrity (ADR-009 Amendment 1, ADR-010):**
+  - A command goal MUST have at least one Outcome Check; the human marks it at lock.
+  - `/goal lock` MUST refuse when the base failure looks environmental (exit 126/127, `command not found`, `ModuleNotFoundError`, `ImportError`), unless the human types the goal id.
+  - A Weakening Change MUST be approved only by typing the goal id; strengthening changes, lock and close stay yes/no.
+  - Every lock and approved change MUST commit a hash of the done-check to the private ref `refs/goals/<branch-slug>` (never pushed). `/goal done` MUST refuse when the current check's hash differs from the ref tip.
+  - Lock, change, close and drop MUST each append one event to `trajectories.jsonl`.
+- `/goal` is opt-in. The agent MAY suggest it only when the work spans more than one task.
 
 <details>
 <summary>Machine-readable contract (YAML)</summary>
@@ -154,6 +162,12 @@ invariants:
   fallback_check: human_confirm   # recorded as closed_by: assertion
   task_link: auto
   prompt_injection: one_line_reminder
+  outcome_check_required: true          # human marks it at lock
+  env_failure_lock: refuse_unless_typed_id
+  weakening_change_confirm: typed_goal_id
+  tamper_ref: "refs/goals/${branch_slug}"  # hash of done-check per lock/approve; compared at close
+  events: [goal_locked, goal_changed, goal_closed, goal_dropped]
+  suggest_when: "work spans > 1 task"
 artifacts:
   goal_card: "goals/${branch_slug}.md"
 ```
@@ -324,13 +338,14 @@ The implementation MUST NOT:
 | TB-4 (H4) | Wave runner and governor | **Done** — passes; necessity unproven |
 | TB-5 | `todo batch` as Wave Scheduler (≤ 3 disjoint single tasks; test files included) | Open |
 | TB-6 | Knowledge Checkpoint | Accepted, unbuilt (trigger in §5.4) |
-| TB-7 | `/goal`: Goal Contract, lock, fail-first, closure gate, reminder | Open — **next** |
-| TB-8 | Closure timestamps in `todo` (enables H4 re-test and H5) | Open — **first** |
+| TB-7 | `/goal`: Goal Contract, lock, fail-first, closure gate, reminder | **Built, reviewed** (`feat/goal-tb7`, not integrated) |
+| TB-7b | `/goal` lock integrity: Outcome Check marking, env-failure refusal, typed weakening, `refs/goals` tamper hash, events, suggestion line | Open — **next** |
+| TB-8 | Store shared across worktrees, `created`, `[goal:]` link, `done_at` on all closures, `brief.goal` | **Built; fix round in progress** (`feat/todo-tb8`) |
 | RT-1 | Re-test H2 variant C on Sonnet (`VERIFY=1 MODEL=<sonnet> spikes/h2/run.sh`) | Pending quota |
 | RT-2 | Re-test H4 with review-task seeds, ≥ 5 waves (`spikes/h4/seeds-review.txt`) | Pending |
 | H5 | Score `/goal` sessions vs sessions without it | After TB-7 |
 
-**Build order:** TB-8, then TB-7, then the H5 scorer in `agentic-falsify`, then TB-5.
+**Build order:** finish TB-8, integrate TB-7 and TB-8, then TB-7b, then the H5 scorer in `agentic-falsify`, then TB-5.
 
 ---
 
@@ -348,7 +363,7 @@ The implementation MUST NOT:
 | `waf.partial-batch-salvage`, batch cards | Moot |
 | `retry-escalation` | Kept; built with the runner |
 | Checkpoint trigger, drift guard, three-stream learning, Rule Synthesizer, cold-start safety, governor pruning | Accepted, unbuilt |
-| `intent.north-star` | New: ADR-008, ADR-009 |
+| `intent.north-star` | New: ADR-008, ADR-009 (+Am. 1), ADR-010 |
 
 Full tree: [decision-tree.md](decision-tree.md).
 
@@ -358,12 +373,14 @@ Full tree: [decision-tree.md](decision-tree.md).
 
 None blocking. Pending evidence: RT-1, RT-2, H5.
 
+Raised by the 2026-11-02 appraisals and not yet decided (tracked in [decision-tree.md](decision-tree.md)): Outcome Checks run on a realistic input, the Critic is grounded in the raw outcome, command labels by kind (outcome, quality), an uncovered-scenario report at lock, typed spec links, goal hierarchy.
+
 ---
 
 ## 10. Links
 
 - [decision-tree.md](decision-tree.md), [GLOSSARY.md](GLOSSARY.md)
-- ADRs: [001](adr/ADR-001-copilot-deterministic-topology.md), [002](adr/ADR-002-single-out-of-repo-todo-store.md), [003](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md), [004](adr/ADR-004-risk-tiered-critic-gate.md), [005](adr/ADR-005-context-hygiene-and-pointer-receipts.md), [006](adr/ADR-006-three-stream-learning-loop.md), [007](adr/ADR-007-two-stage-intent-governor.md), [008](adr/ADR-008-branch-scoped-goal-contract.md), [009](adr/ADR-009-precommitted-done-check-gates-closure.md)
+- ADRs: [001](adr/ADR-001-copilot-deterministic-topology.md), [002](adr/ADR-002-single-out-of-repo-todo-store.md), [003](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md), [004](adr/ADR-004-risk-tiered-critic-gate.md), [005](adr/ADR-005-context-hygiene-and-pointer-receipts.md), [006](adr/ADR-006-three-stream-learning-loop.md), [007](adr/ADR-007-two-stage-intent-governor.md), [008](adr/ADR-008-branch-scoped-goal-contract.md), [009](adr/ADR-009-precommitted-done-check-gates-closure.md), [010](adr/ADR-010-goal-lock-tamper-evidence-on-private-ref.md)
 - Scenarios: [goal-contract](features/goal-contract.feature), [batch-execution-and-merge](features/batch-execution-and-merge.feature), [learning-and-intent-governor](features/learning-and-intent-governor.feature), [waf-guardrails-and-recovery](features/waf-guardrails-and-recovery.feature)
-- Rounds: [rounds/](rounds/) (v1.0), [rounds/v1.1/](rounds/v1.1/)
+- Rounds: [rounds/](rounds/) (v1.0), [rounds/v1.1/](rounds/v1.1/), [rounds/goal-v2/](rounds/goal-v2/)
 - Evidence: `~/shalomb/agentic-falsify/runs/FINDINGS.md`
