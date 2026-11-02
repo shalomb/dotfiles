@@ -35,6 +35,7 @@ const Params = Type.Object({
 			commands: Type.Array(Type.String(), { description: "Shell commands that exit non-zero until the outcome is met. Run in order from the repo root." }),
 		}),
 	),
+	outcome_checks: Type.Optional(Type.Array(Type.String(), { description: "Draft only: suggest which done_check command tests the outcome from outside. The user marks the real Outcome Check at /goal lock." })),
 	anti_goals: Type.Optional(Type.Array(Type.String(), { description: "What this work must not do" })),
 	scope_anchors: Type.Optional(Type.Array(Type.String(), { description: "Repo paths the work belongs to" })),
 	spec_links: Type.Optional(Type.Array(Type.String(), { description: "Specs, ADRs or issues that define the outcome" })),
@@ -59,6 +60,8 @@ export default function (pi: ExtensionAPI) {
 			ui: {
 				notify: (m, l) => ctx.ui.notify(m, l ?? "info"),
 				confirm: async (title, message) => (ctx.hasUI ? ctx.ui.confirm(title, message) : false),
+				select: async (title, options) => (ctx.hasUI ? ctx.ui.select(title, options) : undefined),
+				input: async (title, message) => (ctx.hasUI ? ctx.ui.input(title, message) : undefined),
 			},
 			tellAgent: (m) => void send(m, false),
 			runCommand: (c) => send(c, true),
@@ -99,6 +102,7 @@ export default function (pi: ExtensionAPI) {
 			const d = await depsFor(ctx);
 			const r = d ? await proposeFromAgent(d, {
 				doneCheck: params.done_check,
+				outcomeChecks: params.outcome_checks,
 				antiGoals: params.anti_goals,
 				scopeAnchors: params.scope_anchors,
 				specLinks: params.spec_links,

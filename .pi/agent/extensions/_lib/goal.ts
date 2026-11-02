@@ -11,7 +11,11 @@ export type CheckKind = "command" | "human";
 /** The part of a done-check that a change replaces. */
 export interface CheckSpec { kind: CheckKind; commands: string[] }
 
-export interface DoneCheck extends CheckSpec { lockedAt: string; lockedBy: string; baseCommit: string }
+/**
+ * `outcomeChecks` are the commands (a subset of `commands`) the human marked as testing the outcome from outside.
+ * On a draft they are only an agent suggestion; applyLock replaces them with the human's marks.
+ */
+export interface DoneCheck extends CheckSpec { lockedAt: string; lockedBy: string; baseCommit: string; outcomeChecks: string[] }
 
 /** `old` and `new` are set on a done-check change; a pending proposal has `new` only. */
 export interface HistoryEntry { at: string; by: string; reason: string; old?: CheckSpec; new?: CheckSpec }
@@ -54,7 +58,7 @@ export function newDraft(input: { branch: string; outcome: string; baseCommit: s
 		branch: input.branch,
 		status: "draft",
 		outcome: oneLine(input.outcome),
-		doneCheck: { kind: "command", commands: [], lockedAt: "", lockedBy: "", baseCommit: input.baseCommit },
+		doneCheck: { kind: "command", commands: [], lockedAt: "", lockedBy: "", baseCommit: input.baseCommit, outcomeChecks: [] },
 		createdAt: stamp(now),
 		closedAt: "",
 		closedBy: "",
@@ -127,7 +131,7 @@ export function renderGoal(g: Goal): string {
 	const d = g.doneCheck;
 	const list = (items: string[]) => items.map((i) => `- ${oneLine(i)}`).join("\n");
 	const section = (title: string, body: string) => `## ${title}\n${body ? `${body}\n` : ""}\n`;
-	const commands = d.commands.length ? `\n${d.commands.map((c) => `    - ${quoteIfNeeded(oneLine(c))}`).join("\n")}` : " []";
+	const itemList = (items: string[]) => (items.length ? `\n${items.map((c) => `    - ${quoteIfNeeded(oneLine(c))}`).join("\n")}` : " []");
 	const front = [
 		"---",
 		`id: ${quoteIfNeeded(g.id)}`,
@@ -136,7 +140,8 @@ export function renderGoal(g: Goal): string {
 		`outcome: ${quoteIfNeeded(oneLine(g.outcome))}`,
 		"done_check:",
 		`  kind: ${d.kind}`,
-		`  commands:${commands}`,
+		`  commands:${itemList(d.commands)}`,
+		`  outcome_checks:${itemList(d.outcomeChecks)}`,
 		`  locked_at: ${quoteIfNeeded(d.lockedAt)}`,
 		`  locked_by: ${quoteIfNeeded(d.lockedBy)}`,
 		`  base_commit: ${quoteIfNeeded(d.baseCommit)}`,
@@ -163,14 +168,14 @@ export function parseGoal(text: string): Goal | undefined {
 	if (!fm) return undefined;
 	const top: Record<string, string> = {};
 	const check: Record<string, string> = {};
-	const commands: string[] = [];
-	let scope: "top" | "check" | "commands" = "top";
+	const lists: Record<"commands" | "outcome_checks", string[]> = { commands: [], outcome_checks: [] };
+	let scope: "top" | "check" | "commands" | "outcome_checks" = "top";
 	for (const line of fm[1].split("\n")) {
 		let m: RegExpMatchArray | null;
-		if (scope === "commands" && (m = line.match(/^ {4}- (.*)$/))) { commands.push(unquote(m[1])); continue; }
+		if ((scope === "commands" || scope === "outcome_checks") && (m = line.match(/^ {4}- (.*)$/))) { lists[scope].push(unquote(m[1])); continue; }
 		if (scope !== "top" && (m = line.match(/^ {2}([a-z_]+):(?: (.*))?$/))) {
-			if (m[1] === "commands") {
-				scope = "commands";
+			if (m[1] === "commands" || m[1] === "outcome_checks") {
+				scope = m[1];
 				if ((m[2] ?? "").trim() !== "[]" && m[2]) return undefined; // flow lists other than [] are not part of the format
 			} else { scope = "check"; check[m[1]] = unquote(m[2] ?? ""); }
 			continue;
@@ -192,10 +197,11 @@ export function parseGoal(text: string): Goal | undefined {
 		outcome: top.outcome ?? "",
 		doneCheck: {
 			kind: check.kind === "human" ? "human" : "command",
-			commands,
+			commands: lists.commands,
 			lockedAt: check.locked_at ?? "",
 			lockedBy: check.locked_by ?? "",
 			baseCommit: check.base_commit ?? "",
+			outcomeChecks: lists.outcome_checks,
 		},
 		createdAt: top.created_at ?? "",
 		closedAt: top.closed_at ?? "",
@@ -241,18 +247,21 @@ const badCommand = (commands: string[]): string | undefined => {
 	return bad === undefined ? undefined : `A check command may not contain a newline or control character (write one command per entry): ${JSON.stringify(bad)}`;
 };
 
-export interface DraftFields { doneCheck?: CheckSpec; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
+export interface DraftFields { doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
 
-/** Agent-reachable: set draft fields. Never locks; refuses once the goal is no longer a draft. */
+/** Agent-reachable: set draft fields (an Outcome Check is only a suggestion). Never locks; refuses once the goal is no longer a draft. */
 export function fillDraft(g: Goal, f: DraftFields): Result {
 	if (g.status !== "draft") return refuse(`The goal is ${g.status}; only a draft is filled directly. Propose a change to a locked done-check instead.`);
 	const bad = f.doneCheck && badCommand(f.doneCheck.commands);
 	if (bad) return refuse(bad);
+	const commands = f.doneCheck ? f.doneCheck.commands.map(oneLine).filter(Boolean) : g.doneCheck.commands;
+	const suggested = (f.outcomeChecks ?? g.doneCheck.outcomeChecks).map(oneLine);
+	if (f.outcomeChecks && suggested.some((c) => !commands.includes(c))) return refuse("An Outcome Check must be one of the done-check commands.");
 	return {
 		ok: true,
 		goal: {
 			...g,
-			doneCheck: f.doneCheck ? { ...g.doneCheck, kind: f.doneCheck.kind, commands: f.doneCheck.commands.map(oneLine).filter(Boolean) } : g.doneCheck,
+			doneCheck: { ...g.doneCheck, kind: f.doneCheck?.kind ?? g.doneCheck.kind, commands, outcomeChecks: suggested.filter((c) => commands.includes(c)) },
 			antiGoals: f.antiGoals?.map(oneLine).filter(Boolean) ?? g.antiGoals,
 			scopeAnchors: f.scopeAnchors?.map(oneLine).filter(Boolean) ?? g.scopeAnchors,
 			specLinks: f.specLinks?.map(oneLine).filter(Boolean) ?? g.specLinks,
@@ -262,15 +271,25 @@ export function fillDraft(g: Goal, f: DraftFields): Result {
 
 const specOf = (d: DoneCheck): CheckSpec => ({ kind: d.kind, commands: [...d.commands] });
 
+/** Why `marks` cannot be the Outcome Checks of a command check with `commands`, or undefined. */
+function outcomeCheckProblem(marks: string[], commands: string[]): string | undefined {
+	if (!marks.length) return "mark at least one command as the Outcome Check (the command that tests the outcome from outside).";
+	return marks.every((m) => commands.includes(m)) ? undefined : "an Outcome Check must be one of the done-check commands.";
+}
+
 /** Human only: lock a draft. A command check needs `baseExit` from a run on the base commit, and it must be non-zero. */
-export function applyLock(g: Goal, input: { now: Date; baseCommit: string; baseExit?: number }): Result {
+export function applyLock(g: Goal, input: { now: Date; baseCommit: string; baseExit?: number; outcomeChecks?: string[] }): Result {
 	if (g.status !== "draft") return refuse(`Only a draft can be locked (the goal is ${g.status}).`);
 	const why = validateGoal({ ...g, status: "active" });
 	if (why) return refuse(`Not locked: ${why}.`);
 	let reason = "locked (human-confirm check)";
+	let outcomeChecks: string[] = [];
 	if (g.doneCheck.kind === "command") {
 		const c = canLock(input.baseExit);
 		if (!c.ok) return refuse(c.reason);
+		outcomeChecks = input.outcomeChecks ?? [];
+		const bad = outcomeCheckProblem(outcomeChecks, g.doneCheck.commands);
+		if (bad) return refuse(`Not locked: ${bad}`);
 		reason = `locked (base ${input.baseCommit} failed: exit ${input.baseExit})`;
 	}
 	const at = stamp(input.now);
@@ -279,7 +298,7 @@ export function applyLock(g: Goal, input: { now: Date; baseCommit: string; baseE
 		goal: {
 			...g,
 			status: "active",
-			doneCheck: { ...g.doneCheck, lockedAt: at, lockedBy: "human", baseCommit: input.baseCommit },
+			doneCheck: { ...g.doneCheck, lockedAt: at, lockedBy: "human", baseCommit: input.baseCommit, outcomeChecks },
 			history: [...g.history, { at, by: "human", reason }],
 		},
 	};
@@ -300,14 +319,20 @@ export function proposeChange(g: Goal, input: { now: Date; by: string; reason: s
 }
 
 /** Human only: apply the pending change and record it. */
-export function applyApprovedChange(g: Goal, input: { now: Date }): Result {
+export function applyApprovedChange(g: Goal, input: { now: Date; outcomeChecks?: string[] }): Result {
 	const p = g.pending;
 	if (!p?.new) return refuse("No change is pending.");
+	let outcomeChecks: string[] = [];
+	if (p.new.kind === "command") {
+		outcomeChecks = input.outcomeChecks ?? g.doneCheck.outcomeChecks.filter((c) => p.new!.commands.includes(c));
+		const bad = outcomeCheckProblem(outcomeChecks, p.new.commands);
+		if (bad) return refuse(`Not approved: ${bad}`);
+	}
 	return {
 		ok: true,
 		goal: {
 			...g,
-			doneCheck: { ...g.doneCheck, kind: p.new.kind, commands: [...p.new.commands] },
+			doneCheck: { ...g.doneCheck, kind: p.new.kind, commands: [...p.new.commands], outcomeChecks },
 			pending: undefined,
 			history: [...g.history, { at: stamp(input.now), by: "human", reason: p.reason, old: p.old, new: p.new }],
 		},

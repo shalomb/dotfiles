@@ -20,7 +20,14 @@ export interface Deps {
 	now: () => Date;
 	/** Parent directory for the temporary detached worktree. */
 	tmpParent: string;
-	ui: { notify(message: string, level?: "info" | "warning" | "error"): void; confirm(title: string, message: string): Promise<boolean> };
+	ui: {
+		notify(message: string, level?: "info" | "warning" | "error"): void;
+		confirm(title: string, message: string): Promise<boolean>;
+		/** The chosen option, or undefined when the human cancels. */
+		select(title: string, options: string[]): Promise<string | undefined>;
+		/** What the human typed, or undefined when they cancel. */
+		input(title: string, message: string): Promise<string | undefined>;
+	};
 	/** Send the agent a user message. */
 	tellAgent(message: string): void;
 	/** Run a slash command (such as /persist) as if the human typed it. */
@@ -81,6 +88,7 @@ export function summary(g: Goal): string {
 		`${g.id} [${g.status}] ${g.outcome}`,
 		`Done-check (${g.doneCheck.kind}${g.doneCheck.lockedAt ? `, locked ${g.doneCheck.lockedAt}, failed on base ${g.doneCheck.baseCommit}` : ", not locked"}):`,
 		...checkLines(g),
+		...(g.doneCheck.outcomeChecks.length ? [`Outcome Check: ${g.doneCheck.outcomeChecks.join(", ")}`] : []),
 		"Anti-goals:", bullets(g.antiGoals),
 		"Scope anchors:", bullets(g.scopeAnchors),
 		"Spec links:", bullets(g.specLinks),
@@ -115,7 +123,7 @@ export async function startGoal(d: Deps, outcome: string): Promise<void> {
 		"You cannot lock the contract: the user reviews it and runs /goal lock. Reply with a 3-line summary of what you drafted.");
 }
 
-export interface Proposal { doneCheck?: CheckSpec; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[]; reason?: string }
+export interface Proposal { doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[]; reason?: string }
 
 /**
  * The goal_propose tool. On a draft: fill the contract fields. On an active goal: park a change to the
@@ -128,9 +136,10 @@ export async function proposeFromAgent(d: Deps, p: Proposal): Promise<{ ok: bool
 	if (!g) return out(false, error === NO_GOAL ? `${NO_GOAL} Only the user starts a goal.` : error!);
 	let r: Result;
 	if (g.status === "draft") {
-		const f: DraftFields = { doneCheck: p.doneCheck, antiGoals: p.antiGoals, scopeAnchors: p.scopeAnchors, specLinks: p.specLinks };
+		const f: DraftFields = { doneCheck: p.doneCheck, outcomeChecks: p.outcomeChecks, antiGoals: p.antiGoals, scopeAnchors: p.scopeAnchors, specLinks: p.specLinks };
 		r = fillDraft(g, f);
 	} else if (g.status === "active") {
+		if (p.outcomeChecks) return out(false, "The goal is locked. Only the user marks the Outcome Check (at /goal lock or /goal approve).");
 		if (!p.doneCheck) return out(false, "The goal is locked. Only a change to the done-check can be proposed: pass done_check and a reason.");
 		if (p.antiGoals || p.scopeAnchors || p.specLinks) return out(false, "The goal is locked. Propose a done-check change only; ask the user to change anti-goals, scope anchors or spec links.");
 		r = proposeChange(g, { now: d.now(), by: "agent", reason: p.reason ?? "", check: p.doneCheck });
@@ -147,26 +156,36 @@ export async function proposeFromAgent(d: Deps, p: Proposal): Promise<{ ok: bool
 	return out(true, "Change recorded as pending. The locked done-check is unchanged until the user runs /goal approve.");
 }
 
-/** `/goal lock`: run the check at the base commit; refuse when it passes; else ask the human and lock. */
+/** The human picks which of `commands` is the Outcome Check (the one that tests the outcome from outside); undefined when they cancel. */
+async function askOutcomeCheck(d: Deps, g: Goal, commands: string[]): Promise<string[] | undefined> {
+	const picked = await d.ui.select(`${g.id}: which command is the Outcome Check (tests the outcome from outside)?`, commands);
+	return picked === undefined ? undefined : [picked];
+}
+
+/** `/goal lock`: run the check at the base commit; refuse when it passes; else ask the human which command is the Outcome Check, ask to confirm, and lock. */
 export async function lockGoal(d: Deps): Promise<void> {
 	const g = current(d);
 	if (!g) return;
 	if (g.status !== "draft") return d.ui.notify(`Only a draft can be locked (the goal is ${g.status}).`, "error");
 	let baseExit: number | undefined;
+	let outcomeChecks: string[] | undefined;
 	let evidence = "(human-confirm check; no command runs)";
 	if (g.doneCheck.kind === "command") {
 		if (!g.doneCheck.commands.length) return d.ui.notify("Not locked: the draft has no done-check yet (ask the agent, or use goal_propose).", "error");
 		const run = await runChecksAtCommit(d.exec, d.root, g.doneCheck.baseCommit, g.doneCheck.commands, d.tmpParent);
 		baseExit = run.exit;
-		const refused = applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit });
+		const refused = canLock(baseExit);
 		if (!refused.ok) return d.ui.notify(`${refused.reason}\n${run.output}`, "error");
 		evidence = `On base ${g.doneCheck.baseCommit} it fails (exit ${baseExit}):\n${run.output}`;
+		outcomeChecks = await askOutcomeCheck(d, g, g.doneCheck.commands);
+		if (!outcomeChecks) return d.ui.notify("Not locked: mark one command as the Outcome Check. The goal stays a draft.", "error");
+		evidence += `\nOutcome Check: ${outcomeChecks.join(", ")}`;
 	}
 	const ok = await d.ui.confirm(
 		`Lock the done-check of ${g.id}?`,
 		`${g.outcome}\n${checkLines(g).join("\n")}\n${evidence}\nOnce locked, only you can change it.`);
 	if (!ok) return d.ui.notify("Not locked. The goal stays a draft.", "info");
-	commit(d, applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit }), `Goal ${g.id} locked.`);
+	commit(d, applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit, outcomeChecks }), `Goal ${g.id} locked.`);
 }
 
 const sameSpec = (a: CheckSpec, b: CheckSpec) => a.kind === b.kind && a.commands.length === b.commands.length && a.commands.every((c, i) => c === b.commands[i]);
@@ -193,12 +212,18 @@ export async function approveChange(d: Deps): Promise<void> {
 		if (!refused.ok) return d.ui.notify(`${refused.reason}\n${run.output}`, "error");
 		evidence = `On base ${g.doneCheck.baseCommit} the new check fails (exit ${run.exit}).`;
 	}
+	let outcomeChecks: string[] | undefined;
+	if (p.new.kind === "command" && !g.doneCheck.outcomeChecks.some((c) => p.new!.commands.includes(c))) {
+		outcomeChecks = await askOutcomeCheck(d, g, p.new.commands);
+		if (!outcomeChecks) return d.ui.notify("Not approved: the change drops the Outcome Check, so mark one of the new commands as the Outcome Check. The change stays pending.", "error");
+		evidence += `\nOutcome Check: ${outcomeChecks.join(", ")}`;
+	}
 	const weakening = weakens(live, p.new);
 	const ok = await d.ui.confirm(
 		`${weakening ? "WEAKENING: approve" : "Approve"} the change to the done-check of ${g.id}?`,
 		`Proposed by ${p.by}: ${p.reason}\nCurrent:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...live } }).join("\n")}\nNew:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...p.new } }).join("\n")}\n${evidence}`);
 	if (!ok) return d.ui.notify("Not approved. The change stays pending; /goal reject discards it.", "info");
-	commit(d, applyApprovedChange(g, { now: d.now() }), `Change approved and recorded in ${g.id}.`);
+	commit(d, applyApprovedChange(g, { now: d.now(), outcomeChecks }), `Change approved and recorded in ${g.id}.`);
 }
 
 export async function rejectChange(d: Deps): Promise<void> {

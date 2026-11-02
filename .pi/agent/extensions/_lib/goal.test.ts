@@ -112,7 +112,7 @@ const draftWithCheck = () => {
 	return g;
 };
 const locked = () => {
-	const r = applyLock(draftWithCheck(), { now: LATER, baseCommit: "a1b2c3d", baseExit: 1 });
+	const r = applyLock(draftWithCheck(), { now: LATER, baseCommit: "a1b2c3d", baseExit: 1, outcomeChecks: ["make test-csv"] });
 	if (!r.ok) throw new Error(r.reason);
 	return r.goal;
 };
@@ -205,7 +205,7 @@ test("a change without a reason is refused", () => {
 test("approving applies the new check and records who approved it, when, why, old and new", () => {
 	const proposed = proposeChange(locked(), { now: LATER, by: "agent", reason: "csv check is flaky", check: { kind: "command", commands: ["make test-unit"] } });
 	const g0 = proposed.ok ? proposed.goal : locked();
-	const approved = applyApprovedChange(g0, { now: new Date("2026-11-01T11:00:00Z") });
+	const approved = applyApprovedChange(g0, { now: new Date("2026-11-01T11:00:00Z"), outcomeChecks: ["make test-unit"] });
 	expect(approved.ok).toBe(true);
 	const g = approved.ok ? approved.goal : g0;
 	expect(g.doneCheck.commands).toEqual(["make test-unit"]);
@@ -286,4 +286,72 @@ test("a deleted or merged branch makes the goal stale; a live unmerged one does 
 	expect(staleGoal(false, false)).toMatch(/deleted/);
 	expect(staleGoal(true, true)).toMatch(/merged/);
 	expect(staleGoal(true, false)).toBeUndefined();
+});
+
+// ---- Outcome Check (ADR-009 Amendment 1) ----
+
+// Scenario: Locking needs an Outcome Check
+test("lock refuses a command goal until the human marks an Outcome Check among its commands", () => {
+	for (const outcomeChecks of [undefined, [], ["make nonsense"]]) {
+		const r = applyLock(draftWithCheck(), { now: LATER, baseCommit: "a1b2c3d", baseExit: 1, outcomeChecks });
+		expect(r.ok).toBe(false);
+		if (!r.ok) expect(r.reason).toMatch(/Outcome Check/);
+	}
+	const ok = applyLock(draftWithCheck(), { now: LATER, baseCommit: "a1b2c3d", baseExit: 1, outcomeChecks: ["make test-csv"] });
+	expect(ok.ok && ok.goal.doneCheck.outcomeChecks).toEqual(["make test-csv"]);
+});
+
+test("the lock takes the human's marks, not an agent suggestion already on the draft", () => {
+	const suggested = fillDraft(draftWithCheck(), { outcomeChecks: ["make test-unit"] });
+	const draft = suggested.ok ? suggested.goal : draftWithCheck();
+	const r = applyLock(draft, { now: LATER, baseCommit: "a1b2c3d", baseExit: 1, outcomeChecks: ["make test-csv"] });
+	expect(r.ok && r.goal.doneCheck.outcomeChecks).toEqual(["make test-csv"]);
+	expect(applyLock(draft, { now: LATER, baseCommit: "a1b2c3d", baseExit: 1 }).ok).toBe(false);
+});
+
+test("a human-confirm check needs no Outcome Check and keeps none", () => {
+	const g = newDraft({ branch: "design/sync", outcome: "Sync design agreed", baseCommit: "b" }, NOW);
+	g.doneCheck.kind = "human";
+	const r = applyLock(g, { now: LATER, baseCommit: "b", outcomeChecks: ["x"] });
+	expect(r.ok && r.goal.doneCheck.outcomeChecks).toEqual([]);
+});
+
+test("Outcome Check marks round-trip through the goal file, awkward commands included; an old file without them parses as none", () => {
+	const g = locked();
+	g.doneCheck.commands = ["make test-unit", `grep -q "a: b" out.csv # header`];
+	g.doneCheck.outcomeChecks = [`grep -q "a: b" out.csv # header`];
+	const text = renderGoal(g);
+	expect(text).toContain("  outcome_checks:\n    - ");
+	expect(parseGoal(text)).toEqual(g);
+	expect(parseGoal(renderGoal({ ...g, doneCheck: { ...g.doneCheck, outcomeChecks: [] } }))!.doneCheck.outcomeChecks).toEqual([]);
+	const old = text.replace(/  outcome_checks:\n    - .*\n/, "");
+	expect(old).not.toContain("outcome_checks");
+	expect(parseGoal(old)!.doneCheck.outcomeChecks).toEqual([]);
+});
+
+test("an agent may suggest an Outcome Check on a draft, only among its commands; replacing the commands drops a stale suggestion", () => {
+	const d = draftWithCheck();
+	expect(fillDraft(d, { outcomeChecks: ["make test-csv"] })).toMatchObject({ ok: true, goal: { doneCheck: { outcomeChecks: ["make test-csv"] } } });
+	expect(fillDraft(d, { outcomeChecks: ["nope"] }).ok).toBe(false);
+	const withMark = fillDraft(d, { outcomeChecks: ["make test-csv"] });
+	const replaced = fillDraft(withMark.ok ? withMark.goal : d, { doneCheck: { kind: "command", commands: ["make other"] } });
+	expect(replaced.ok && replaced.goal.doneCheck.outcomeChecks).toEqual([]);
+});
+
+test("a proposed change never carries or alters the Outcome Check marks; approving keeps the marks that still exist", () => {
+	const before = locked();
+	const proposed = proposeChange(before, { now: LATER, by: "agent", reason: "add", check: { kind: "command", commands: ["make test-csv", "make lint"] } });
+	const g0 = proposed.ok ? proposed.goal : before;
+	expect(g0.doneCheck.outcomeChecks).toEqual(["make test-csv"]);
+	const approved = applyApprovedChange(g0, { now: LATER });
+	expect(approved.ok && approved.goal.doneCheck.outcomeChecks).toEqual(["make test-csv"]);
+});
+
+test("approving a change that drops every marked command is refused until the human marks one of the new commands", () => {
+	const proposed = proposeChange(locked(), { now: LATER, by: "agent", reason: "swap", check: { kind: "command", commands: ["make lint"] } });
+	const g0 = proposed.ok ? proposed.goal : locked();
+	expect(applyApprovedChange(g0, { now: LATER }).ok).toBe(false);
+	expect(applyApprovedChange(g0, { now: LATER, outcomeChecks: ["nope"] }).ok).toBe(false);
+	const r = applyApprovedChange(g0, { now: LATER, outcomeChecks: ["make lint"] });
+	expect(r.ok && r.goal.doneCheck.outcomeChecks).toEqual(["make lint"]);
 });

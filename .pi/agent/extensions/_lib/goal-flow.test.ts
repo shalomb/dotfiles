@@ -20,6 +20,11 @@ let toAgent: string[];
 let commands: string[];
 let answers: boolean[];
 let confirms: string[];
+let selects: { title: string; options: string[] }[];
+let typed: (string | undefined)[];
+let inputs: string[];
+/** What the human picks in a select: the option at this index, or nothing (a cancel). */
+let pick: number | undefined;
 
 const git = (...a: string[]) => execFileSync("git", ["-C", root, "-c", "user.name=t", "-c", "user.email=t@t", "-c", "commit.gpgsign=false", ...a], { encoding: "utf8" }).trim();
 const commitFile = (name: string) => {
@@ -30,7 +35,12 @@ const commitFile = (name: string) => {
 const deps = (branch = "feat/export"): Deps => ({
 	exec, store, root, branch, head: git("rev-parse", "--short", "HEAD"),
 	now: () => new Date("2026-11-01T10:00:00Z"), tmpParent: tmp,
-	ui: { notify: (m) => notes.push(m), confirm: async (title, message) => { confirms.push(`${title}\n${message}`); return answers.shift() ?? false; } },
+	ui: {
+		notify: (m) => notes.push(m),
+		confirm: async (title, message) => { confirms.push(`${title}\n${message}`); return answers.shift() ?? false; },
+		select: async (title, options) => { selects.push({ title, options }); return pick === undefined ? undefined : options[pick]; },
+		input: async (title, message) => { inputs.push(`${title}\n${message}`); return typed.shift(); },
+	},
 	tellAgent: (m) => toAgent.push(m),
 	runCommand: (c) => commands.push(c),
 });
@@ -58,7 +68,7 @@ beforeEach(() => {
 	execFileSync("git", ["init", "-q", "-b", "main", root]);
 	commitFile("a.txt");
 	git("switch", "-q", "-c", "feat/export");
-	notes = []; toAgent = []; commands = []; answers = []; confirms = [];
+	notes = []; toAgent = []; commands = []; answers = []; confirms = []; selects = []; typed = []; inputs = []; pick = 0;
 });
 afterEach(() => {
 	for (const d of [root, store, tmp]) rmSync(d, { recursive: true, force: true });
@@ -463,4 +473,77 @@ test("approve labels a change that removes commands as WEAKENING in the prompt t
 	answers.push(false);
 	await approveChange(d);
 	expect(confirms[0].split("\n")[0]).not.toMatch(/WEAKENING/);
+});
+
+// ---- Outcome Check (ADR-009 Amendment 1) ----
+
+// Scenario: Locking needs an Outcome Check
+test("lock asks the human which command is the Outcome Check and records the pick", async () => {
+	const d = await draftWithCheck(["test -f never.csv", "test -f export.csv"]);
+	pick = 1;
+	answers.push(true);
+	await lockGoal(d);
+	expect(selects).toHaveLength(1);
+	expect(selects[0].options).toEqual(["test -f never.csv", "test -f export.csv"]);
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "active", doneCheck: { outcomeChecks: ["test -f export.csv"] } });
+});
+
+test("lock without a human-marked Outcome Check leaves the draft unlocked and asks no confirm", async () => {
+	const d = await draftWithCheck();
+	pick = undefined;
+	answers.push(true);
+	await lockGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+	expect(lastNote()).toMatch(/Outcome Check/);
+	expect(confirms).toEqual([]);
+	expect(worktrees()).toBe(1);
+});
+
+test("an agent-suggested Outcome Check does not stand in for the human's mark", async () => {
+	const d = await draftWithCheck(["test -f export.csv", "test -f never.csv"]);
+	const r = await proposeFromAgent(d, { outcomeChecks: ["test -f never.csv"] });
+	expect(r.ok).toBe(true);
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft", doneCheck: { outcomeChecks: ["test -f never.csv"] } });
+	pick = undefined;
+	answers.push(true);
+	await lockGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+	pick = 0;
+	answers.push(true);
+	await lockGoal(d);
+	expect(loadGoal(store, "feat/export")!.doneCheck.outcomeChecks).toEqual(["test -f export.csv"]);
+});
+
+test("goal_propose cannot set the Outcome Check of an active goal", async () => {
+	const d = await activeGoal();
+	const before = loadGoal(store, "feat/export")!;
+	const r = await proposeFromAgent(d, { outcomeChecks: ["test -f export.csv"], doneCheck: { kind: "command", commands: ["test -f export.csv", "true"] }, reason: "x" });
+	expect(r.ok).toBe(false);
+	expect(r.message).toMatch(/Outcome Check/);
+	expect(loadGoal(store, "feat/export")).toEqual(before);
+});
+
+test("approve asks the human to mark an Outcome Check when the change drops every marked command, and refuses without one", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason: "renamed output" });
+	selects.length = 0;
+	pick = undefined;
+	answers.push(true);
+	await approveChange(d);
+	expect(selects).toHaveLength(1);
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv"]);
+	pick = 0;
+	answers.push(true);
+	await approveChange(d);
+	expect(loadGoal(store, "feat/export")!.doneCheck).toMatchObject({ commands: ["test -f other.csv"], outcomeChecks: ["test -f other.csv"] });
+});
+
+test("approve of a change that keeps the marked command asks no select", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f more.csv"] }, reason: "stricter" });
+	selects.length = 0;
+	answers.push(true);
+	await approveChange(d);
+	expect(selects).toEqual([]);
+	expect(loadGoal(store, "feat/export")!.doneCheck.outcomeChecks).toEqual(["test -f export.csv"]);
 });
