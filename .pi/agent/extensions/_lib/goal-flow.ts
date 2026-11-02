@@ -282,10 +282,23 @@ export async function approveChange(d: Deps): Promise<void> {
 		(changed) => ({ event: "goal_changed", reason: oneLine(p.reason), weakening, checkHash: checkHash(changed.doneCheck) }));
 }
 
+/**
+ * `/goal reject`: discard the pending change. If a failed approve left the ref on the rejected hash, record the
+ * current check's hash again (before saving) so the ref and the goal file agree; an agreeing ref is left alone.
+ */
 export async function rejectChange(d: Deps): Promise<void> {
 	const g = current(d);
 	if (!g) return;
-	commit(d, applyReject(g, { now: d.now() }), "Pending change discarded; the done-check is unchanged.");
+	const r = applyReject(g, { now: d.now() });
+	if (r.ok && g.status === "active") {
+		const hash = checkHash(g.doneCheck);
+		const recorded = await readRecordedHash(d.exec, d.root, g.branch);
+		if (recorded.kind === "hash" && recorded.hash !== hash) {
+			const rec = await recordCheckHash(d.exec, d.root, g.branch, hash, `reject ${g.id}`);
+			if (!rec.ok) return d.ui.notify(`Not discarded: the current done-check could not be re-recorded on ${goalRefName(g.branch)}: ${rec.error}`, "error");
+		}
+	}
+	commit(d, r, "Pending change discarded; the done-check is unchanged.");
 }
 
 /** `/goal check`: run the done-check now, from this checkout. */

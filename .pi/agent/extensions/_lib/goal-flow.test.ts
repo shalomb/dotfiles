@@ -720,6 +720,26 @@ test("a change that is not approved leaves the ref where it was", async () => {
 	expect(refTip()).toBe(tip);
 });
 
+test("reject after an approve that recorded the new hash but could not save the goal re-records the current check, so ref and file agree", async () => {
+	const d = await activeGoal();
+	const approved = refTip();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f more.csv"] }, reason: "stricter" });
+	const taken = join(store, "goals", "feat-export.md.tmp");
+	mkdirSync(taken); // the ref is written first, then saving the goal throws
+	answers.push(true);
+	await expect(approveChange(d)).rejects.toThrow();
+	expect(refTip()).not.toBe(approved);
+	rmSync(taken, { recursive: true });
+	await rejectChange(d);
+	const g = loadGoal(store, "feat/export")!;
+	expect(g.pending).toBeUndefined();
+	expect(await readRecordedHash(exec, root, "feat/export")).toEqual({ kind: "hash", hash: checkHash(g.doneCheck) });
+	expect(refLog()[0]).toBe("reject g-feat-export");
+	commitFile("export.csv");
+	await doneGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("closed");
+});
+
 // Scenario: A locked Done-check edited outside /goal blocks closure
 test("done and check refuse when the goal file's check differs from the ref tip; the goal stays active and nothing runs", async () => {
 	const d = await activeGoal();
