@@ -235,10 +235,13 @@ export async function approveChange(d: Deps): Promise<void> {
 		evidence += `\nOutcome Check: ${outcomeChecks.join(", ")}`;
 	}
 	const weakening = weakens(live, p.new);
-	const ok = await d.ui.confirm(
-		`${weakening ? "WEAKENING: approve" : "Approve"} the change to the done-check of ${g.id}?`,
-		`Proposed by ${p.by}: ${p.reason}\nCurrent:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...live } }).join("\n")}\nNew:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...p.new } }).join("\n")}\n${evidence}`);
-	if (!ok) return d.ui.notify("Not approved. The change stays pending; /goal reject discards it.", "info");
+	const title = `${weakening ? "WEAKENING: approve" : "Approve"} the change to the done-check of ${g.id}?`;
+	const body = `Proposed by ${p.by}: ${p.reason}\nCurrent:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...live } }).join("\n")}\nNew:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...p.new } }).join("\n")}\n${evidence}`;
+	// A weakening change needs the goal id typed, so a reflex "yes" cannot approve it.
+	const ok = weakening
+		? (await d.ui.input(`${title} Type ${g.id} to approve.`, body))?.trim() === g.id
+		: await d.ui.confirm(title, body);
+	if (!ok) return d.ui.notify(weakening ? "Not approved: the goal id was not typed. The change stays pending; /goal reject discards it." : "Not approved. The change stays pending; /goal reject discards it.", "info");
 	commit(d, applyApprovedChange(g, { now: d.now(), outcomeChecks }), `Change approved and recorded in ${g.id}.`);
 }
 

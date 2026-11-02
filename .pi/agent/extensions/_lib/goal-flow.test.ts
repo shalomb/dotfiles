@@ -201,7 +201,7 @@ test("goal_propose on an active goal needs a reason, and a plain field edit is r
 test("approve applies the pending change after the human confirms, and records who and why", async () => {
 	const d = await activeGoal();
 	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason: "renamed output" });
-	answers.push(true);
+	typed.push("g-feat-export"); // replacing a command is a weakening change
 	await approveChange(d);
 	const g = loadGoal(store, "feat/export")!;
 	expect(g.doneCheck.commands).toEqual(["test -f other.csv"]);
@@ -212,7 +212,7 @@ test("approve applies the pending change after the human confirms, and records w
 test("approve leaves the check unchanged when the human declines; reject discards the proposal", async () => {
 	const d = await activeGoal();
 	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason: "renamed output" });
-	answers.push(false);
+	typed.push(undefined);
 	await approveChange(d);
 	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv"]);
 	expect(loadGoal(store, "feat/export")!.pending).toBeDefined();
@@ -443,18 +443,17 @@ test("approve refuses when the new check could not be run on the base commit (ki
 test("approve shows the live current check, and refuses when the pending proposal was made against a different one", async () => {
 	const d = await activeGoal();
 	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason: "renamed" });
-	confirms.length = 0;
-	answers.push(true);
+	inputs.length = 0;
+	typed.push("g-feat-export");
 	await approveChange(d);
-	expect(confirms[0]).toContain("Current:\n  $ test -f export.csv");
+	expect(inputs[0]).toContain("Current:\n  $ test -f export.csv");
 	// A pending change whose old no longer matches the live check (the check moved on since the proposal).
 	const g = loadGoal(store, "feat/export")!;
 	saveGoal(store, { ...g, pending: { at: "2026-11-01T10:00:00Z", by: "agent", reason: "stale", old: { kind: "command", commands: ["test -f export.csv"] }, new: { kind: "command", commands: ["test -f third.csv"] } } });
-	confirms.length = 0;
-	confirms.length = 0;
-	answers.push(true);
+	inputs.length = 0;
+	typed.push("g-feat-export");
 	await approveChange(d);
-	expect(confirms).toEqual([]);
+	expect(inputs).toEqual([]);
 	expect(lastNote()).toMatch(/no longer matches|changed since/i);
 	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f other.csv"]);
 });
@@ -464,10 +463,10 @@ test("approve labels a change that removes commands as WEAKENING in the prompt t
 	answers.push(true);
 	await lockGoal(d);
 	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f other.csv"] }, reason: "swap" });
-	confirms.length = 0;
-	answers.push(false);
+	inputs.length = 0;
+	typed.push(undefined);
 	await approveChange(d);
-	expect(confirms[0]).toMatch(/^[^\n]*WEAKENING/);
+	expect(inputs[0]).toMatch(/^[^\n]*WEAKENING/);
 	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f never.csv", "test -f more.csv"] }, reason: "stricter" });
 	confirms.length = 0;
 	answers.push(false);
@@ -528,12 +527,12 @@ test("approve asks the human to mark an Outcome Check when the change drops ever
 	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f other.csv"] }, reason: "renamed output" });
 	selects.length = 0;
 	pick = undefined;
-	answers.push(true);
+	typed.push("g-feat-export");
 	await approveChange(d);
 	expect(selects).toHaveLength(1);
 	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv"]);
 	pick = 0;
-	answers.push(true);
+	typed.push("g-feat-export");
 	await approveChange(d);
 	expect(loadGoal(store, "feat/export")!.doneCheck).toMatchObject({ commands: ["test -f other.csv"], outcomeChecks: ["test -f other.csv"] });
 });
@@ -600,4 +599,60 @@ test("approve refuses a new check whose base failure is environmental unless the
 	answers.push(true);
 	await approveChange(d);
 	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["definitely-not-a-command-xyz", "test -f export.csv"]);
+});
+
+// ---- Typed weakening (ADR-009 Amendment 1) ----
+
+// Scenario: A Weakening Change needs the goal id typed
+test("a weakening change is approved only by typing the goal id; yes/no confirm is not asked and a wrong id leaves it pending", async () => {
+	const d = await draftWithCheck(["test -f export.csv", "test -f never.csv"]);
+	answers.push(true);
+	await lockGoal(d);
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv"] }, reason: "drop the never check" });
+	confirms.length = 0; inputs.length = 0;
+	answers.push(true);
+	typed.push("yes");
+	await approveChange(d);
+	expect(confirms).toEqual([]);
+	expect(inputs).toHaveLength(1);
+	expect(inputs[0]).toMatch(/WEAKENING/);
+	expect(inputs[0]).toContain("g-feat-export");
+	expect(inputs[0]).toContain("test -f never.csv");
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv", "test -f never.csv"]);
+	expect(loadGoal(store, "feat/export")!.pending).toBeDefined();
+	typed.push(undefined); // cancel
+	await approveChange(d);
+	expect(loadGoal(store, "feat/export")!.pending).toBeDefined();
+	typed.push("g-feat-export");
+	await approveChange(d);
+	const g = loadGoal(store, "feat/export")!;
+	expect(g.doneCheck.commands).toEqual(["test -f export.csv"]);
+	expect(g.history.at(-1)).toMatchObject({ by: "human", reason: "drop the never check" });
+});
+
+test("a change that only adds a command stays yes/no, and a move to a human-confirm check is a weakening change", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f other.csv"] }, reason: "stricter" });
+	inputs.length = 0; confirms.length = 0;
+	answers.push(true);
+	await approveChange(d);
+	expect(inputs).toEqual([]);
+	expect(confirms).toHaveLength(1);
+	await proposeFromAgent(d, { doneCheck: { kind: "human", commands: [] }, reason: "no command fits" });
+	answers.push(true);
+	typed.push("no");
+	await approveChange(d);
+	expect(inputs).toHaveLength(1);
+	expect(loadGoal(store, "feat/export")!.doneCheck.kind).toBe("command");
+});
+
+test("a strengthening change keeps the yes/no confirm and asks no goal id", async () => {
+	const d = await activeGoal();
+	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f export.csv", "test -f more.csv"] }, reason: "stricter" });
+	inputs.length = 0; confirms.length = 0;
+	answers.push(true);
+	await approveChange(d);
+	expect(inputs).toEqual([]);
+	expect(confirms).toHaveLength(1);
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv", "test -f more.csv"]);
 });
