@@ -253,8 +253,16 @@ export async function lockGoal(d: Deps): Promise<void> {
 
 const sameSpec = (a: CheckSpec, b: CheckSpec) => a.kind === b.kind && a.commands.length === b.commands.length && a.commands.every((c, i) => c === b.commands[i]);
 
-/** A change weakens the check when it drops a command or swaps commands for a human confirmation. */
-const weakens = (old: CheckSpec, next: CheckSpec) => old.kind === "command" && (next.kind === "human" || old.commands.some((c) => !next.commands.includes(c)));
+/**
+ * A change weakens the check when it drops a command, swaps commands for a human confirmation, or adds a command
+ * anywhere but at the end of the old list (prepended, inserted or replacing): an earlier command can short-circuit the rest.
+ */
+const weakens = (old: CheckSpec, next: CheckSpec) => {
+	if (old.kind !== "command") return false;
+	if (next.kind === "human" || old.commands.some((c) => !next.commands.includes(c))) return true;
+	const pureAppend = old.commands.every((c, i) => next.commands[i] === c);
+	return !pureAppend && next.commands.some((c) => !old.commands.includes(c));
+};
 
 /**
  * `/goal approve`: same rule as lock. The new check must fail at the base commit, and the human is shown

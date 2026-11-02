@@ -612,7 +612,7 @@ test("approve refuses a new check whose base failure is environmental unless the
 	expect(confirms).toEqual([]);
 	expect(lastNote()).toMatch(/environment/i);
 	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv"]);
-	typed.push("g-feat-export");
+	typed.push("g-feat-export", "g-feat-export"); // the environment override, then the prepended command's weakening prompt
 	answers.push(true);
 	await approveChange(d);
 	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["definitely-not-a-command-xyz", "test -f export.csv"]);
@@ -661,6 +661,36 @@ test("a change that only adds a command stays yes/no, and a move to a human-conf
 	await approveChange(d);
 	expect(inputs).toHaveLength(1);
 	expect(loadGoal(store, "feat/export")!.doneCheck.kind).toBe("command");
+});
+
+test("a new command that is not a pure append after the old list needs the goal id typed: prepended, inserted, or replacing", async () => {
+	const cases: { commands: string[]; reason: string }[] = [
+		{ commands: ["true", "test -f export.csv"], reason: "prepend a no-op" },
+		{ commands: ["test -f export.csv", "true", "test -f more.csv"], reason: "insert" },
+		{ commands: ["test -f export.csv", "test -f other.csv"], reason: "pure append" },
+	];
+	for (const [i, c] of cases.entries()) {
+		notes = []; confirms = []; inputs = []; typed = []; answers = [];
+		rmSync(join(store, "goals"), { recursive: true, force: true });
+		git("update-ref", "-d", "refs/goals/feat-export");
+		const d = await draftWithCheck(i === 1 ? ["test -f export.csv", "test -f more.csv"] : ["test -f export.csv"]);
+		answers.push(true);
+		await lockGoal(d);
+		confirms.length = 0;
+		await proposeFromAgent(d, { doneCheck: { kind: "command", commands: c.commands }, reason: c.reason });
+		answers.push(true);
+		typed.push("g-feat-export");
+		await approveChange(d);
+		if (i < 2) {
+			expect(inputs).toHaveLength(1);
+			expect(inputs[0]).toMatch(/WEAKENING/);
+			expect(confirms).toEqual([]);
+		} else {
+			expect(inputs).toEqual([]);
+			expect(confirms).toHaveLength(1);
+		}
+		expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(c.commands);
+	}
 });
 
 test("a strengthening change keeps the yes/no confirm and asks no goal id", async () => {
