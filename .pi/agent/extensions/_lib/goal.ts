@@ -70,10 +70,10 @@ export function newDraft(input: { branch: string; outcome: string; baseCommit: s
 	};
 }
 
-/** Why the goal may not be saved, or undefined. A draft may still lack its done-check; an active goal may not. */
+/** Why the goal may not be saved, or undefined. A draft, or a goal dropped from one, may lack its done-check; an active or closed goal may not. */
 export function validateGoal(g: Goal): string | undefined {
 	if (!g.outcome.trim()) return "a goal needs an outcome";
-	if (g.status !== "draft" && g.doneCheck.kind === "command" && !g.doneCheck.commands.length) return "a goal needs a done-check (at least one command, or kind human)";
+	if ((g.status === "active" || g.status === "closed") && g.doneCheck.kind === "command" && !g.doneCheck.commands.length) return "a goal needs a done-check (at least one command, or kind human)";
 	return undefined;
 }
 

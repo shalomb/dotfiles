@@ -22,8 +22,7 @@ import { Type } from "typebox";
 import { homedir, tmpdir } from "node:os";
 import { type Exec, agentWouldWriteGoalStore, resolveRepo } from "./_lib/goal-io.ts";
 import {
-	type Deps, SUBCOMMANDS, approveChange, checkGoal, doneGoal, dropCurrentGoal, lockGoal, parseGoalArgs, promptReminder,
-	proposeFromAgent, rejectChange, showGoal, staleWarning, startGoal,
+	type Deps, SUBCOMMANDS, promptReminder, proposeFromAgent, runGoalCommand, staleWarning,
 } from "./_lib/goal-flow.ts";
 
 const TOOL = "goal_propose";
@@ -122,17 +121,7 @@ export default function (pi: ExtensionAPI) {
 		handler: async (args: string, ctx: any) => {
 			const d = await depsFor(ctx);
 			if (!d) return ctx.ui.notify("/goal needs a git repository.", "error");
-			const a = parseGoalArgs(args);
-			switch (a.kind) {
-				case "show": return showGoal(d);
-				case "start": return startGoal(d, a.outcome);
-				case "lock": return lockGoal(d);
-				case "check": return checkGoal(d);
-				case "approve": return approveChange(d);
-				case "reject": return rejectChange(d);
-				case "done": return doneGoal(d);
-				case "drop": return dropCurrentGoal(d, "dropped by the user");
-			}
+			await runGoalCommand(d, args);
 		},
 	});
 }

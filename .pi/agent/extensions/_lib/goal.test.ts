@@ -99,6 +99,8 @@ test("a goal without an outcome is refused; a draft may lack a done-check but an
 	expect(validateGoal(g)).toBeUndefined();
 	expect(validateGoal({ ...g, outcome: "  " })).toMatch(/outcome/);
 	expect(validateGoal({ ...g, status: "active" })).toMatch(/done-check/);
+	expect(validateGoal({ ...g, status: "closed" })).toMatch(/done-check/);
+	expect(validateGoal({ ...g, status: "dropped" })).toBeUndefined();
 	expect(validateGoal({ ...g, status: "active", doneCheck: { ...g.doneCheck, commands: ["true"] } })).toBeUndefined();
 	expect(validateGoal({ ...g, status: "active", doneCheck: { ...g.doneCheck, kind: "human" } })).toBeUndefined();
 });

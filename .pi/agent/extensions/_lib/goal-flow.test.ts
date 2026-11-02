@@ -3,12 +3,12 @@
 // Scenario names refer to docs/specs/agentic-coding/features/goal-contract.feature.
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { execFile, execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { branchState, loadGoal, readRecordedHash, saveGoal, type Exec } from "./goal-io.ts";
 import { checkHash } from "./goal.ts";
-import { approveChange, checkGoal, parseGoalArgs, dropCurrentGoal, doneGoal, lockGoal, promptReminder, proposeFromAgent, rejectChange, showGoal, staleWarning, startGoal, type Deps } from "./goal-flow.ts";
+import { approveChange, checkGoal, parseGoalArgs, runGoalCommand, dropCurrentGoal, doneGoal, lockGoal, promptReminder, proposeFromAgent, rejectChange, showGoal, staleWarning, startGoal, type Deps } from "./goal-flow.ts";
 
 const exec: Exec = (cmd, args, o) =>
 	new Promise((res) => execFile(cmd, args, { cwd: o?.cwd, timeout: o?.timeout }, (e: any, stdout, stderr) => res({ code: e ? (typeof e.code === "number" ? e.code : 1) : 0, stdout, stderr })));
@@ -282,6 +282,22 @@ test("done on a human-confirm check stays active when the human does not confirm
 	await doneGoal(d);
 	expect(loadGoal(store, "design/sync")!.status).toBe("active");
 	expect(commands).toEqual([]);
+});
+
+test("/goal x then /goal drop on an empty draft succeeds: a draft with no done-check can be dropped", async () => {
+	const d = deps();
+	await startGoal(d, "Users can export a backlog as CSV");
+	await dropCurrentGoal(d, "dropped by the user");
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "dropped", doneCheck: { commands: [] } });
+	expect(lastNote()).toMatch(/dropped/);
+});
+
+test("the /goal command reports an error thrown by a flow handler instead of throwing", async () => {
+	const d = deps();
+	await startGoal(d, "x");
+	mkdirSync(join(store, "goals", "feat-export.md.tmp")); // saveGoal's temp file path is taken: the write throws
+	await runGoalCommand(d, "drop");
+	expect(notes.at(-1)).toMatch(/^\/goal drop failed: /);
 });
 
 test("drop marks the goal dropped", async () => {

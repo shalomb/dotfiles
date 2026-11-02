@@ -334,6 +334,25 @@ export async function dropCurrentGoal(d: Deps, reason: string): Promise<void> {
 	commit(d, dropGoal(g, { now: d.now(), reason }), `Goal ${g.id} dropped.`, () => ({ event: "goal_dropped", reason }));
 }
 
+/** Run one /goal command. A handler that throws (a goal file that cannot be written, say) is reported to the human, never thrown. */
+export async function runGoalCommand(d: Deps, raw: string): Promise<void> {
+	const a = parseGoalArgs(raw);
+	try {
+		switch (a.kind) {
+			case "show": return await showGoal(d);
+			case "start": return await startGoal(d, a.outcome);
+			case "lock": return await lockGoal(d);
+			case "check": return await checkGoal(d);
+			case "approve": return await approveChange(d);
+			case "reject": return await rejectChange(d);
+			case "done": return await doneGoal(d);
+			case "drop": return await dropCurrentGoal(d, "dropped by the user");
+		}
+	} catch (e) {
+		d.ui.notify(`/goal ${a.kind === "start" ? "<outcome>" : a.kind} failed: ${errorText(e)}`, "error");
+	}
+}
+
 /** The one-line reminder for the prompt, or undefined unless the current branch has an active goal. */
 export function promptReminder(d: Deps): string | undefined {
 	if (!d.branch) return undefined;
