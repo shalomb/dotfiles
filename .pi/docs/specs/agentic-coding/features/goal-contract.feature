@@ -56,3 +56,29 @@ Feature: Goal Contract with a locked Done-check
       And "feat/export" has been merged and deleted
       When a new session starts in the repository
       Then the Human Partner is asked to close or drop the goal of "feat/export"
+
+  Rule: A lock is only as strong as what it checks
+
+    Scenario: Locking needs an Outcome Check
+      Given branch "feat/export" has a draft goal whose Done-check fails on the base commit
+      When the Human Partner locks it without marking any command as the Outcome Check
+      Then the Done-check is not locked
+
+    Scenario: A base failure caused by the environment does not lock by default
+      Given the draft Done-check fails on the base commit with "command not found"
+      When the Human Partner tries to lock the Done-check
+      Then the Done-check is not locked
+      And the Human Partner may lock it only by typing the goal id
+
+    Scenario: A Weakening Change needs the goal id typed
+      Given branch "feat/export" has a locked Done-check with two commands
+      And the Main Copilot proposes to remove one of them
+      When the Human Partner answers yes without typing the goal id
+      Then the Done-check stays unchanged
+
+    Scenario: A locked Done-check edited outside /goal blocks closure
+      Given branch "feat/export" has a locked Done-check
+      And the goal file's Done-check was changed without /goal
+      When the Human Partner asks to close the goal
+      Then the goal stays active
+      And the Human Partner is told the Done-check differs from the approved one

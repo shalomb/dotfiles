@@ -111,3 +111,15 @@ _Avoid_: attestation, trust line
 **Accepted, unbuilt**:
 A settled design node that has no build until its build trigger (evidence) is met.
 _Avoid_: deferred, backlog
+
+**Outcome Check**:
+A done-check command that tests the outcome from outside (CLI output, written files, a scenario), not unit internals.
+_Avoid_: unit suite as done-check
+
+**Weakening Change**:
+A change that removes or loosens a command in a locked done-check; it needs the goal id typed to approve.
+_Avoid_: check edit
+
+**Tamper Check**:
+A hash of the locked done-check stored outside the goals directory and compared at close; a mismatch blocks closure.
+_Avoid_: lock file

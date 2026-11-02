@@ -102,3 +102,18 @@ The agent drafts the done-check; the human confirms it before work starts; it is
 
 - **H5 (kill rule):** if sessions with `/goal` do not stop within 1 turn of a green check more often than sessions without it, or out-of-scope commits are not below 10%, downgrade `/goal` to a notes file (keep `goal.md`; drop injection, lock and closure gate).
 - Fail-on-base proves too weak in practice (goals close green while the outcome is unmet): add mutation scoring of the check where supported.
+
+## Amendment 1 (2026-11-01): Lock Integrity Rules
+
+**Context.** A review of the built `/goal` and a design round (`rounds/goal-v2/`) showed three ways a lock can still mislead: a check that tests too little (narrow check), approvals given by reflex (rubber-stamping), and a base check that fails for an environment reason.
+
+**Amended decision.**
+1. **Outcome Check.** A command goal needs at least one Outcome Check, which tests the outcome from outside. At lock, the human marks which command it is.
+2. **Typed weakening.** A Weakening Change (one that removes or loosens a command) is approved only when the human types the goal id. Strengthening changes, locks and closes stay yes/no.
+3. **Environment failures.** `/goal lock` refuses when the base failure looks environmental (exit 126/127, `command not found`, `ModuleNotFoundError`, `ImportError`). The human may override by typing the goal id.
+4. **Events.** Lock, change, close and drop each append one event to `trajectories.jsonl` for H5.
+5. **When to use.** `/goal` is opt-in. The agent suggests it only when work spans more than one task.
+
+**Trade-offs.** These rules add friction at the points that matter. They still depend on the human reading the prompt. Classifying failures from their output is a heuristic, so it will miss some cases and wrongly flag others.
+
+**Revisit.** After 10 goals, review drop and assertion-closure rates. If the friction drives the human away from `/goal`, relax the typed-id rule.

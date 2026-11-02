@@ -88,3 +88,21 @@ Stance: long horizon
     ADR: adr/ADR-008-branch-scoped-goal-contract.md (store, scope, fields, task link)
     ADR: adr/ADR-009-precommitted-done-check-gates-closure.md (lock, fail-first, change, closure, H5)
     Scenarios: features/goal-contract.feature
+
+## /goal v2 (2026-11-01) — rounds/goal-v2/
+
+- [settled] goal2.stance -- Mid-execution: the reviewed TB-7 code is the authority.
+- [settled] goal2.narrow-check -- Human review plus at least one Outcome Check per command goal.
+- [settled] goal2.rubber-stamp -- Weakening Changes need the goal id typed; other confirms stay yes/no.
+- [settled] goal2.git-lock -- Keep the goal.md lock (no git red-commit lock).
+- [settled] goal2.enforcement -- Best-effort guard plus a Tamper Check (hash of the locked check outside the goals dir, compared at close).
+- [settled] goal2.base-env -- Classify base failures; refuse to lock on environment failures (command not found, import/module errors).
+- [settled] goal2.when -- Opt-in; the agent suggests /goal only when work spans more than one task.
+- [settled] waf.outcome-check-enforce -- The lock prompt asks the human which command is the Outcome Check.
+- [settled] waf.tamper-store -- Tamper Check hash kept as commits on a private ref `refs/goals/<branch-slug>` (not pushed). Round goal-v2-03 (user idea).
+    Reason: Git history makes every edit visible and survives sessions; same trust level as a guarded dir (agent has git and the GPG agent).
+    ADR: adr/ADR-010-goal-lock-tamper-evidence-on-private-ref.md
+- [settled] waf.base-classify -- Refuse to lock on environmental base failures (exit 126/127, command not found, ModuleNotFoundError/ImportError); human may override by typing the goal id.
+- [settled] waf.measure -- Log goal_locked / goal_changed / goal_closed / goal_dropped events to trajectories.jsonl.
+- [settled] waf.friction-kill -- Review friction after 10 goals (drop and assertion rates); no fixed threshold.
+    ADR: adr/ADR-009 Amendment 1 (lock integrity rules)
