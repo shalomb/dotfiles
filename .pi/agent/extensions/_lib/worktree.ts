@@ -9,12 +9,16 @@ import { splitArgs } from "./args";
 export type Exec = (cmd: string, args: string[], opts?: { cwd?: string }) => Promise<{ code: number; stdout: string; stderr: string }>;
 
 /** `target` = first word when no --branch: the command resolves it as an existing worktree; `text` is then the rest. */
-export interface Parsed { back: boolean; target?: string; branch?: string; base?: string; text: string; error?: string }
+export interface Parsed { back: boolean; search?: boolean; target?: string; branch?: string; base?: string; text: string; error?: string }
 
 export function parseWorktreeArgs(raw: string): Parsed {
 	const t = splitArgs(raw);
 	const out: Parsed = { back: false, text: "" };
 	if (t.length === 1 && t[0] === "back") return { ...out, back: true };
+	if (t[0] === "switch" || t[0] === "find") {
+		const q = t.slice(1).join(" ");
+		return q ? { ...out, search: true, text: q } : { ...out, error: `usage: /worktree ${t[0]} <instructions describing the worktree, branch or PR>` };
+	}
 	const words: string[] = [];
 	for (let i = 0; i < t.length; i++) {
 		if (t[i] === "--branch" || t[i] === "--base") {
@@ -96,4 +100,57 @@ export async function findWorktree(exec: Exec, cwd: string, target: string): Pro
 	const hit = wts.find((w) => paths.has(w.dir)) ?? wts.find((w) => w.branch === t || basename(w.dir) === t);
 	if (hit) return { ok: true, ...hit };
 	return { ok: false, error: `no worktree matches "${target}". Known:\n${wts.map((w) => `  ${w.dir} [${w.branch}]`).join("\n")}` };
+}
+
+export interface Candidate { kind: "worktree" | "branch" | "pr"; label: string; branch: string; dir?: string }
+
+const tokens = (q: string) => [...new Set(q.toLowerCase().split(/[^a-z0-9#]+/).filter((w) => w.length > 1))];
+
+/** Worktrees, local branches and open PRs (via gh, optional) matching the free-text query; best-scoring tier only. */
+export async function searchCandidates(exec: Exec, cwd: string, query: string): Promise<Candidate[] | { error: string }> {
+	const list = await exec("git", ["worktree", "list", "--porcelain"], { cwd });
+	if (list.code !== 0) return { error: `not a git repository (git: ${list.stderr.trim()})` };
+	const all: Candidate[] = [];
+	const byBranch = new Map<string, string>();
+	for (const block of list.stdout.split(/\n\n+/)) {
+		const dir = /^worktree (.+)$/m.exec(block)?.[1];
+		if (!dir) continue;
+		const branch = /^branch refs\/heads\/(.+)$/m.exec(block)?.[1] ?? "(detached)";
+		byBranch.set(branch, dir);
+		all.push({ kind: "worktree", label: `worktree ${dir} [${branch}]`, branch, dir });
+	}
+	const br = await exec("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads"], { cwd });
+	for (const b of br.stdout.split("\n").filter(Boolean)) if (!byBranch.has(b)) all.push({ kind: "branch", label: `branch ${b} (no worktree)`, branch: b });
+	const pr = await exec("gh", ["pr", "list", "--state", "open", "--limit", "100", "--json", "number,title,headRefName"], { cwd }).catch(() => undefined);
+	if (pr && pr.code === 0) {
+		try {
+			for (const x of JSON.parse(pr.stdout) as { number: number; title: string; headRefName: string }[]) {
+				const dir = byBranch.get(x.headRefName);
+				all.push({ kind: "pr", label: `PR #${x.number} ${x.title} [${x.headRefName}]${dir ? "" : " (no worktree)"}`, branch: x.headRefName, dir });
+			}
+		} catch { /* ignore malformed gh output */ }
+	}
+	const ts = tokens(query);
+	const scored = all.map((c) => ({ c, n: ts.filter((w) => `${c.label} ${c.dir ?? ""}`.toLowerCase().includes(w)).length })).filter((x) => x.n > 0);
+	const best = Math.max(0, ...scored.map((x) => x.n));
+	const top = scored.filter((x) => x.n === best).map((x) => x.c);
+	// One worktree per branch: collapse PR/branch/worktree entries that point at the same branch, preferring the worktree entry.
+	const seen = new Map<string, Candidate>();
+	for (const c of top) { const k = c.branch; if (!seen.has(k) || (c.kind === "worktree" && seen.get(k)!.kind !== "worktree")) seen.set(k, c); }
+	return [...seen.values()].slice(0, 15);
+}
+
+/** Add a worktree for an existing local (or origin) branch that has none. */
+export async function addWorktreeForBranch(exec: Exec, cwd: string, branch: string): Promise<SetupResult> {
+	const common = await exec("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { cwd });
+	if (common.code !== 0) return { ok: false, error: `not a git repository (git: ${common.stderr.trim()})` };
+	const commonDir = common.stdout.trim();
+	const commonRoot = dirname(commonDir);
+	const status = (await exec("git", ["status", "--short"], { cwd })).stdout.trimEnd();
+	const dir = join(commonRoot, ".worktrees", dirNameFor(branch));
+	mkdirSync(join(commonRoot, ".worktrees"), { recursive: true });
+	let add = await exec("git", ["worktree", "add", dir, branch], { cwd: commonRoot });
+	if (add.code !== 0) add = await exec("git", ["worktree", "add", dir, "-b", branch, `origin/${branch}`], { cwd: commonRoot });
+	if (add.code !== 0) return { ok: false, error: `git worktree add failed: ${add.stderr.trim()}` };
+	return { ok: true, dir, base: "(existing branch)", branch, status, commonRoot };
 }

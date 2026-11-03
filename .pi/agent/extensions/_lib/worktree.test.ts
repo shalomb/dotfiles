@@ -94,3 +94,23 @@ test("findWorktree: unknown target lists the known worktrees", async () => {
 	expect(f.ok).toBe(false);
 	if (!f.ok) expect(f.error).toContain("feat/x");
 });
+
+import { searchCandidates } from "./worktree";
+
+test("parseWorktreeArgs: switch/find take free-text instructions", () => {
+	expect(parseWorktreeArgs("switch the auth fix")).toMatchObject({ search: true, text: "the auth fix" });
+	expect(parseWorktreeArgs("find login").search).toBe(true);
+	expect(parseWorktreeArgs("find").error).toMatch(/usage/);
+});
+
+test("searchCandidates: ranks worktrees, branches and PRs; collapses by branch", async () => {
+	const exec: any = async (cmd: string, a: string[]) => {
+		if (cmd === "gh") return { code: 0, stderr: "", stdout: JSON.stringify([{ number: 7, title: "Fix login bug", headRefName: "fix/login" }]) };
+		if (a[0] === "worktree") return { code: 0, stderr: "", stdout: "worktree /r\\nbranch refs/heads/main\\n\\nworktree /r/.worktrees/fix-login\\nbranch refs/heads/fix/login\\n".replace(/\\n/g, "\n") };
+		return { code: 0, stderr: "", stdout: "main\nfix/login\nfeat/other\n" };
+	};
+	const r: any = await searchCandidates(exec, "/r", "login fix");
+	expect(r).toHaveLength(1);
+	expect(r[0]).toMatchObject({ kind: "worktree", dir: "/r/.worktrees/fix-login" });
+	expect(await searchCandidates(exec, "/r", "zzz")).toEqual([]);
+});

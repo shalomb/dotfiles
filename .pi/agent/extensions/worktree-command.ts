@@ -10,11 +10,11 @@
 import { existsSync } from "node:fs";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
-import { buildBrief, findWorktree, parseWorktreeArgs, setupWorktree } from "./_lib/worktree";
+import { addWorktreeForBranch, buildBrief, findWorktree, searchCandidates, parseWorktreeArgs, setupWorktree } from "./_lib/worktree";
 
 export default function (pi: ExtensionAPI) {
 	pi.registerCommand("worktree", {
-		description: "Hop into a worktree: --branch <type/name> [--base <ref>] <instructions> (new) | <existing path|dir|branch> [instructions] | back",
+		description: "Hop into a worktree: --branch <type/name> [--base <ref>] <instructions> (new) | <existing path|dir|branch> [instructions] | back | switch|find <instructions>",
 		handler: async (args: string, ctx: any) => {
 			const p = parseWorktreeArgs(args);
 			if (p.back) {
@@ -28,7 +28,24 @@ export default function (pi: ExtensionAPI) {
 			const origin: string = ctx.cwd;
 			const exec = (cmd: string, a: string[], o: unknown) => pi.exec(cmd, a, o as any) as any;
 			let r: any;
-			if (p.target) {
+			if (p.search) {
+				const found = await searchCandidates(exec, origin, p.text);
+				if (!Array.isArray(found)) return ctx.ui.notify(`/worktree: ${found.error}`, "error");
+				if (!found.length) return ctx.ui.notify(`/worktree: nothing matches "${p.text}" (worktrees, branches, open PRs)`, "warning");
+				let pick = found[0];
+				if (found.length > 1) {
+					const choice: string | undefined = await ctx.ui.select(`/worktree: ${found.length} candidates for "${p.text}"`, found.map((c) => c.label));
+					if (!choice) return ctx.ui.notify("/worktree: selection cancelled", "info");
+					pick = found.find((c) => c.label === choice)!;
+				}
+				if (pick.dir) r = { ok: true, dir: pick.dir, base: "(existing worktree)", branch: pick.branch, status: "" };
+				else {
+					r = await addWorktreeForBranch(exec, origin, pick.branch);
+					if (!r.ok) return ctx.ui.notify(`/worktree: ${r.error}`, "error");
+				}
+				p.text = "";
+			}
+			if (!r && p.target) {
 				const f = await findWorktree(exec, origin, p.target);
 				if (!f.ok) return ctx.ui.notify(`/worktree: ${f.error}\n(to create a new worktree use --branch <type/name>)`, "error");
 				r = { ok: true, dir: f.dir, base: "(existing worktree)", branch: f.branch, status: "" };
