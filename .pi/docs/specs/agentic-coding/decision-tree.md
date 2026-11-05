@@ -117,3 +117,22 @@ Stance: long horizon
 - [open] goal.uncovered-scenarios -- Report scenarios the check does not exercise, at lock (report-only). Appraisal P5.
 - [open] goal.typed-links -- Typed, warn-only `spec_links`. Appraisal P4.
 - [deferred] goal.hierarchy -- Parent goals. Appraisal P1; ADR-008 revisit criterion.
+
+## /goal drafting UX (TB-7c) — rounds/goal-ux/
+
+Evidence: first live run g-develop (2026-11-03).
+
+- [settled] goalux.stance -- Mid-execution: ADR-008/009/010 and the live code stay; only drafting changes. Round goal-ux-01.
+- [settled] goalux.discover -- Discovery always runs before a draft and reports already true / partly true / not there. Round goal-ux-01.
+- [settled] goalux.clarify -- The agent asks at most 2 questions, only on a gap (owning repo or path unknown, no observable done, outcome already true). Round goal-ux-01.
+- [settled] goalux.draft-lint -- Draft Lint runs at save and only warns; the lock still enforces. Round goal-ux-01.
+- [settled] goalux.shared-branch -- On the default or a shared branch, /goal warns and offers a worktree. Round goal-ux-01.
+- [settled] goalux.review-card -- The extension prints a fixed Review Card that ends with one next-step line. Round goal-ux-01.
+- [settled] goalux.cross-repo -- The goal moves to the Owning Repo; ADR-008 is unchanged. Round goal-ux-01.
+- [settled] goalux.noise -- One quiet line; the injected prompt is hidden. Round goal-ux-02.
+- [settled] goalux.retest -- Replay g-develop and the --version goal, before and after, against 4 fixed pass rules. Round goal-ux-02.
+- [settled] waf.discover-false-claim -- Every Discovery claim cites a path and a command that the Review Card shows. Round goal-ux-02.
+- [settled] waf.lint-fatigue -- Draft Lint has 4 rules only: missing command or script, anchor outside the repo, anchor under an install dir, shared branch. Round goal-ux-02.
+- [settled] waf.lint-runs-commands -- Draft Lint is static; no draft command runs before review. The base run stays at lock. Amends goalux.draft-lint. Round goal-ux-02.
+- [settled] waf.kill-rule -- If both replays fail 2 or more of the 4 pass rules, remove Discovery and keep the Review Card. Round goal-ux-02.
+- [settled] goalux.final-review -- Approved. Round goal-ux-03.

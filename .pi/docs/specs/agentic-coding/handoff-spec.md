@@ -23,6 +23,7 @@ promotes_to:
   - adr/ADR-008-branch-scoped-goal-contract.md
   - adr/ADR-009-precommitted-done-check-gates-closure.md
   - adr/ADR-010-goal-lock-tamper-evidence-on-private-ref.md
+  - adr/ADR-011-discovery-before-goal-draft.md
 ---
 
 # Handoff Specification: Agentic Coding System
@@ -143,6 +144,13 @@ flowchart TD
   - Every lock and approved change MUST commit a hash of the done-check to the private ref `refs/goals/<branch-slug>` (never pushed). `/goal done` MUST refuse when the current check's hash differs from the ref tip.
   - Lock, change, close and drop MUST each append one event to `trajectories.jsonl`.
 - `/goal` is opt-in. The agent MAY suggest it only when the work spans more than one task.
+- **Drafting (ADR-011):**
+  - Before drafting, the agent MUST run Discovery and report *already true*, *partly true* or *not there*. Each claim cites a path and a command.
+  - The agent MAY ask at most 2 questions before drafting, and only on a gap (Owning Repo or path unknown, no observable done, outcome already true).
+  - If the Owning Repo is not the current repo, the agent MUST propose starting the goal there. It MUST NOT start that goal itself.
+  - On every save, `/goal` MUST run Draft Lint: static, warn only, 4 rules (missing command or script, anchor outside the repo, anchor under an install dir, shared branch). No draft command runs before review.
+  - `/goal` MUST print a Review Card that ends with one next-step line, and MUST show the injected draft prompt as one quiet line.
+  - On the default or a shared branch, `/goal` MUST warn and offer a worktree.
 
 <details>
 <summary>Machine-readable contract (YAML)</summary>
@@ -338,14 +346,15 @@ The implementation MUST NOT:
 | TB-4 (H4) | Wave runner and governor | **Done** — passes; necessity unproven |
 | TB-5 | `todo batch` as Wave Scheduler (≤ 3 disjoint single tasks; test files included) | Open |
 | TB-6 | Knowledge Checkpoint | Accepted, unbuilt (trigger in §5.4) |
-| TB-7 | `/goal`: Goal Contract, lock, fail-first, closure gate, reminder | **Built, reviewed** (`feat/goal-tb7`, not integrated) |
-| TB-7b | `/goal` lock integrity: Outcome Check marking, env-failure refusal, typed weakening, `refs/goals` tamper hash, events, suggestion line | Open — **next** |
-| TB-8 | Store shared across worktrees, `created`, `[goal:]` link, `done_at` on all closures, `brief.goal` | **Built; fix round in progress** (`feat/todo-tb8`) |
+| TB-7 | `/goal`: Goal Contract, lock, fail-first, closure gate, reminder | **Built, merged, live** |
+| TB-7b | `/goal` lock integrity: Outcome Check marking, env-failure refusal, typed weakening, `refs/goals` tamper hash, events, suggestion line | **Built, merged, live** |
+| TB-7c | `/goal` drafting UX: Discovery, gap questions, Draft Lint, Review Card, shared-branch worktree offer; replay + kill rule (ADR-011) | Open — **next** |
+| TB-8 | Store shared across worktrees, `created`, `[goal:]` link, `done_at` on all closures, `brief.goal` | **Built, merged** |
 | RT-1 | Re-test H2 variant C on Sonnet (`VERIFY=1 MODEL=<sonnet> spikes/h2/run.sh`) | Pending quota |
 | RT-2 | Re-test H4 with review-task seeds, ≥ 5 waves (`spikes/h4/seeds-review.txt`) | Pending |
 | H5 | Score `/goal` sessions vs sessions without it | After TB-7 |
 
-**Build order:** finish TB-8, integrate TB-7 and TB-8, then TB-7b, then the H5 scorer in `agentic-falsify`, then TB-5.
+**Build order:** TB-7c, then the H5 scorer in `agentic-falsify`, then TB-5.
 
 ---
 
@@ -380,7 +389,7 @@ Raised by the 2026-11-02 appraisals and not yet decided (tracked in [decision-tr
 ## 10. Links
 
 - [decision-tree.md](decision-tree.md), [GLOSSARY.md](GLOSSARY.md)
-- ADRs: [001](adr/ADR-001-copilot-deterministic-topology.md), [002](adr/ADR-002-single-out-of-repo-todo-store.md), [003](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md), [004](adr/ADR-004-risk-tiered-critic-gate.md), [005](adr/ADR-005-context-hygiene-and-pointer-receipts.md), [006](adr/ADR-006-three-stream-learning-loop.md), [007](adr/ADR-007-two-stage-intent-governor.md), [008](adr/ADR-008-branch-scoped-goal-contract.md), [009](adr/ADR-009-precommitted-done-check-gates-closure.md), [010](adr/ADR-010-goal-lock-tamper-evidence-on-private-ref.md)
+- ADRs: [001](adr/ADR-001-copilot-deterministic-topology.md), [002](adr/ADR-002-single-out-of-repo-todo-store.md), [003](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md), [004](adr/ADR-004-risk-tiered-critic-gate.md), [005](adr/ADR-005-context-hygiene-and-pointer-receipts.md), [006](adr/ADR-006-three-stream-learning-loop.md), [007](adr/ADR-007-two-stage-intent-governor.md), [008](adr/ADR-008-branch-scoped-goal-contract.md), [009](adr/ADR-009-precommitted-done-check-gates-closure.md), [010](adr/ADR-010-goal-lock-tamper-evidence-on-private-ref.md), [011](adr/ADR-011-discovery-before-goal-draft.md)
 - Scenarios: [goal-contract](features/goal-contract.feature), [batch-execution-and-merge](features/batch-execution-and-merge.feature), [learning-and-intent-governor](features/learning-and-intent-governor.feature), [waf-guardrails-and-recovery](features/waf-guardrails-and-recovery.feature)
-- Rounds: [rounds/](rounds/) (v1.0), [rounds/v1.1/](rounds/v1.1/), [rounds/goal-v2/](rounds/goal-v2/)
+- Rounds: [rounds/](rounds/) (v1.0), [rounds/v1.1/](rounds/v1.1/), [rounds/goal-v2/](rounds/goal-v2/), [rounds/goal-ux/](rounds/goal-ux/)
 - Evidence: `~/shalomb/agentic-falsify/runs/FINDINGS.md`

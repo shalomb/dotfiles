@@ -82,3 +82,46 @@ Feature: Goal Contract with a locked Done-check
       When the Human Partner asks to close the goal
       Then the goal stays active
       And the Human Partner is told the Done-check differs from the approved one
+
+  # ADR-011; rounds/goal-ux/
+  Rule: A draft starts from what already exists
+
+    Scenario: An outcome that is partly true is reported before any check
+      Given the code already shares one todo store across worktrees
+      When the Human Partner starts a goal "todo is cognizant of worktrees"
+      Then the draft reports the outcome as partly true
+      And each claim names a path and a command the Human Partner can rerun
+
+    Scenario: A goal whose code is in another repo is proposed there
+      Given the code for the outcome is in repo "agent-skills"
+      When the Human Partner starts the goal in repo "dotfiles"
+      Then the draft proposes to start the goal in "agent-skills" on a new branch
+      And no goal is started in "agent-skills" without the Human Partner
+
+    Scenario: A clear goal is drafted without questions
+      Given the outcome names its repo and an observable result
+      When the Human Partner starts the goal
+      Then the Main Copilot drafts the contract without asking questions
+
+  Rule: Draft problems are shown at save, without running the draft
+
+    Scenario: A check that names a missing script is flagged at save
+      Given a draft check runs a script that does not exist
+      When the draft is saved
+      Then the Review Card warns that the script is missing
+      And no draft command has run
+
+    Scenario: An anchor under an install directory is flagged at save
+      Given a draft anchor is a path under the uv tools directory
+      When the draft is saved
+      Then the Review Card warns that the anchor is not source
+
+    Scenario: A goal started on a shared branch offers a worktree
+      Given the current branch is "develop"
+      When the Human Partner starts a goal
+      Then the Human Partner is offered a new worktree for the goal
+      And the goal is started where the Human Partner chooses
+
+    Scenario: Every draft ends with one next step
+      When a draft is saved
+      Then the Review Card ends with one line naming lock, change and drop

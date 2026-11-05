@@ -123,3 +123,10 @@ _Avoid_: check edit
 **Tamper Check**:
 A hash of the locked done-check stored outside the goals directory and compared at close; a mismatch blocks closure.
 _Avoid_: lock file
+
+## /goal drafting UX
+
+- **Discovery** — The step before a draft: the agent finds existing code, tests and docs for the outcome and reports *already true*, *partly true* or *not there*. Avoid: "research", "pre-check".
+- **Draft Lint** — Warnings `/goal` shows when a draft is saved, before lock. It never refuses a save; the lock still enforces. Avoid: "validation".
+- **Review Card** — The fixed view of a draft that the extension prints (outcome, checks with kind and base result, anti-goals, anchors, warnings), ending with one next-step line. Avoid: "summary".
+- **Owning Repo** — The repository that holds the code a goal changes. A goal lives in its Owning Repo. Avoid: "target repo".
