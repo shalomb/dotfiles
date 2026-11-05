@@ -88,7 +88,7 @@ class FakeGpgAgent:
                 out.append("OK")
             elif command.lower().startswith("getinfo std_startup_env"):
                 if self.startup_tty:
-                    out.append(f"D GPG_TTY={self.startup_tty} ")
+                    out.append(f"D GPG_TTY={self.startup_tty}\x00")  # real gpg-connect-agent NUL-terminates
                 out.append("OK")
             elif word == "keyinfo":
                 cached = "1" if self.ssh_key_cached else "-"

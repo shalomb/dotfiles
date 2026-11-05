@@ -570,7 +570,9 @@ class AgentManager:
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
         output = result.stdout.decode('utf-8', errors='replace')
-        return any(line.split() == ['D', f'GPG_TTY={tty}'] for line in output.splitlines())
+        # gpg-connect-agent NUL-terminates D lines; split() leaves the NUL behind.
+        return any(line.replace('\x00', ' ').split() == ['D', f'GPG_TTY={tty}']
+                   for line in output.splitlines())
 
     def recover_ssh_agent(self) -> bool:
         """Recover SSH agent specifically."""
