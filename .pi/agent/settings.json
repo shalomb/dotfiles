@@ -12,11 +12,10 @@
     "anthropic/claude-*-[0-9]",
     "github-copilot/claude-*-[0-9]",
     "github-copilot/claude-*-[4-9].[0-9]",
-    "antigravity/*",
-    "cursor-agent/*"
+    "antigravity/*"
   ],
   "hideThinkingBlock": false,
-  "lastChangelogVersion": "1.4.0",
+  "lastChangelogVersion": "1.5.0",
   "markdown": {
     "mermaid": "streaming"
   },
@@ -32,10 +31,8 @@
     "npm:pi-vimmode",
     "npm:@tmustier/pi-usage-extension",
     "npm:@narumitw/pi-tool",
-    "npm:@narumitw/pi-github-pr",
     "npm:pi-antigravity",
     "npm:pi-mobile",
-    "npm:pi-cursor-agent",
     "git:github.com/microsoft/TokenEconomizer@c53a4a6dcdebaeb9df6fcaa5c7026f0401cd8f23"
   ],
   "powerline": {
@@ -51,5 +48,11 @@
   },
   "theme": "system",
   "transport": "auto",
-  "tuiMode": "regular"
+  "tuiMode": "regular",
+  "extensionChangelogVersions": {
+    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.4.8",
+    "{\"source\":\"npm:pi-powerline-footer\",\"scope\":\"user\"}": "0.22.0",
+    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.84.0",
+    "{\"source\":\"npm:@tmustier/pi-usage-extension\",\"scope\":\"user\"}": "0.10.1"
+  }
 }
