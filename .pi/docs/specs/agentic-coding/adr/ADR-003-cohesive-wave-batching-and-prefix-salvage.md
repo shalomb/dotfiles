@@ -118,3 +118,9 @@ Evidence lives in `~/shalomb/agentic-falsify/runs/h1/`, `runs/h1b/` and `runs/FI
 **Lock evidence (TB-4, 2026-10-31).** Without the `Disjoint Codemap Lock`, 1 of 9 control-arm merges failed the gate with a rebase conflict: two parallel tasks in one wave both edited `test_claims.py`. Disjointness must cover *test* files as well as production fan-out.
 
 **Re-open only if** provisioning dominates agent time (e.g. > 50% of a single run, as with heavy container builds or very large dependency installs), and then re-run `spikes/h1b` with ≥ 3 replicates per model.
+
+**Amendment 2 (implementation of `todo batch`, agent-skills `17128ac`).**
+1. **Scope declaration.** Disjointness is computed from a `[scope: path,dir/,glob]` tag on each task (`todo add --scope`), which must list test files as well as production files (TB-4 evidence). A task with no scope is assumed to touch everything and runs alone. Not yet implemented: automatic widening by `codemap` fan-out; today the lock covers declared scope only.
+2. **Resource cap.** The wave size is `min(--max, floor(free GB / 2), nproc / 2)`, and 1 when 1-minute load is at least 70% of `nproc`. Resources can lower the cap, never raise it above 3. `--no-resources` disables it for tests.
+3. **In-flight claims** hold their scope and a slot, so a later `todo batch` cannot admit a colliding task.
+4. **Per-builder claims.** `--claim` claims each chosen task as `<owner>/<id>`.
