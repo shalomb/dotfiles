@@ -122,5 +122,5 @@ grep -qv -- "--continue\|--name" "$PI_LOG" || { echo "FAIL 5b: unexpected flags"
 type pi-work >/dev/null 2>&1 || { echo "FAIL 6a: pi-work missing"; exit 1; }
 type pi-personal >/dev/null 2>&1 || { echo "FAIL 6b: pi-personal missing"; exit 1; }
 
-echo "ALL TESTS PASSED (unexpected - should be RED phase)"
-exit 1
+echo "ALL TESTS PASSED"
+exit 0

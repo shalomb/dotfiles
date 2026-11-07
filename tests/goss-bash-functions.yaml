@@ -68,6 +68,17 @@ command:
       - "ISOLATED"
     timeout: 5000
 
+  # Shortcuts and worktree resume chooser (flow tested with stubs)
+  "setsid bash -i -c 'type pi-work pi-personal >/dev/null' </dev/null 2>&1":
+    exit-status: 0
+    timeout: 5000
+
+  "tests/pi-profile-resume.sh":
+    exit-status: 0
+    stdout:
+      - "ALL TESTS PASSED"
+    timeout: 20000
+
   # TokenEconomizer pi extension spawns $TE_PYTHON (default python, absent)
   "setsid bash -i -c 'command -v \"$TE_PYTHON\"' </dev/null 2>&1":
     exit-status: 0

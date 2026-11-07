@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # AGENT_CONTEXT: pi-profile <personal|work> [pi args...] (mirrors claude-profile)
+#   Worktree resume chooser: no extra args + TTY + git repo + no --no-resume => fzf picker
 # ARCHITECTURE: PI_CODING_AGENT_DIR -> ~/.pi/profiles/<name>, which holds its
 #   own auth.json and symlinks every other ~/.pi/agent entry (shared config)
 # DESIGN_PATTERN: single function with subcommands; env restored on exit
 
 PI_AGENT_DIR="${PI_AGENT_DIR:-$HOME/.pi/agent}"
-PI_PROFILE_DIR="$HOME/.pi/profiles"
+PI_PROFILE_DIR="${PI_PROFILE_DIR:-$HOME/.pi/profiles}"
 
 # TokenEconomizer pi extension spawns $TE_PYTHON (default "python"); only python3 exists
 export TE_PYTHON="${TE_PYTHON:-python3}"
@@ -56,23 +57,203 @@ _pi_profile_prepare() {
   done
 }
 
+# Encode path for session dir: / -> ->--
+_pi_encode_path() {
+  local p="$1"
+  p="--${p//\//-\>--}--"
+  printf '%s\n' "$p"
+}
+
+# Find newest session timestamp for a worktree path
+_pi_newest_session() {
+  local wt_path="$1" profile_dir="$2" enc session_dir newest=0 ts
+  enc="$(_pi_encode_path "$wt_path")"
+  session_dir="$profile_dir/sessions/$enc"
+  [[ -d "$session_dir" ]] || return 0
+  for f in "$session_dir"/*.jsonl; do
+    [[ -f "$f" ]] || continue
+    ts="${f##*/}"
+    ts="${ts%%_*}"
+    [[ "$ts" =~ ^[0-9]+$ ]] || continue
+    ((ts > newest)) && newest="$ts"
+  done
+  echo "$newest"
+}
+
+# Format session age (seconds -> human readable)
+_pi_age_str() {
+  local ts="$1" now age days
+  [[ "$ts" -eq 0 ]] && {
+    echo "new"
+    return
+  }
+  now="$(date +%s)"
+  age=$((now - ts))
+  days=$((age / 86400))
+  if ((days > 0)); then
+    echo "${days}d"
+  elif ((age > 3600)); then
+    echo "$((age / 3600))h"
+  elif ((age > 60)); then
+    echo "$((age / 60))m"
+  else
+    echo "${age}s"
+  fi
+}
+
+# Worktree chooser: fzf picker for session-aware worktree selection
+_pi_worktree_chooser() {
+  local profile="$1" profile_dir common_dir line wt_path wt_branch
+  local rows=() pwd_abs newest age_str label
+  shift
+
+  profile_dir="$(_pi_profile_dir "$profile")"
+  common_dir="$(git rev-parse --git-common-dir 2>/dev/null)" || return 1
+  pwd_abs="$(pwd -P)"
+
+  # Build fzf menu
+  rows+=("here")
+  rows+=("+ new worktree")
+
+  # Parse worktree list
+  while IFS= read -r line; do
+    if [[ "$line" == worktree\ * ]]; then
+      [[ -n "${wt_path:-}" ]] && {
+        [[ "$wt_path" != "$pwd_abs" ]] && {
+          newest="$(_pi_newest_session "$wt_path" "$profile_dir")"
+          age_str="$(_pi_age_str "$newest")"
+          label="${wt_branch:-HEAD}  ($age_str)"
+          rows+=("$label	$wt_path")
+        }
+      }
+      wt_path="${line#worktree }"
+      wt_branch=""
+    elif [[ "$line" == branch\ * ]]; then
+      wt_branch="${line#branch }"
+      wt_branch="${wt_branch#refs/heads/}"
+    elif [[ "$line" == prunable\ * ]]; then
+      wt_path="" # Skip prunable worktrees
+    fi
+  done < <(git worktree list --porcelain)
+
+  # Last worktree
+  [[ -n "${wt_path:-}" && "$wt_path" != "$pwd_abs" ]] && {
+    newest="$(_pi_newest_session "$wt_path" "$profile_dir")"
+    age_str="$(_pi_age_str "$newest")"
+    label="${wt_branch:-HEAD}  ($age_str)"
+    rows+=("$label	$wt_path")
+  }
+
+  # Invoke fzf
+  local choice tab_idx wt_target
+  choice="$(printf '%s\n' "${rows[@]}" | fzf --with-nth=1 --delimiter=$'\t')" || return 1
+
+  # Parse selection
+  if [[ "$choice" == "here" ]]; then
+    # Plain pi in current directory
+    (
+      _pi_profile_prepare "$profile" || return 1
+      export PI_CODING_AGENT_DIR
+      PI_CODING_AGENT_DIR="$profile_dir"
+      pi "$@"
+    )
+  elif [[ "$choice" == "+ new worktree" ]]; then
+    # Create new worktree
+    local new_branch new_wt_name new_wt_path worktrees_root repo_root
+    new_branch="${PI_PROFILE_NEW_BRANCH:-}"
+    if [[ -z "$new_branch" ]]; then
+      read -rp "Branch name (e.g. feat/foo): " new_branch
+      [[ -n "$new_branch" ]] || return 1
+    fi
+    new_wt_name="${new_branch//\//-}"
+
+    # Get repo root (parent of .git dir)
+    if [[ "$common_dir" == /* ]]; then
+      repo_root="${common_dir%/.git}"
+    else
+      repo_root="$(pwd -P)"
+    fi
+    worktrees_root="$repo_root/.worktrees"
+    new_wt_path="$worktrees_root/$new_wt_name"
+
+    # Ensure .worktrees in git exclude
+    mkdir -p "$worktrees_root"
+    local exclude_file="${common_dir}/info/exclude"
+    mkdir -p "${common_dir}/info"
+    if ! grep -qxF ".worktrees" "$exclude_file" 2>/dev/null; then
+      echo ".worktrees" >>"$exclude_file"
+    fi
+
+    # Create worktree
+    git worktree add -b "$new_branch" "$new_wt_path" || return 1
+
+    # Run pi --name in new worktree
+    (
+      cd "$new_wt_path" || return 1
+      _pi_profile_prepare "$profile" || return 1
+      export PI_CODING_AGENT_DIR
+      PI_CODING_AGENT_DIR="$profile_dir"
+      pi --name "$new_branch" "$@"
+    )
+  else
+    # Existing worktree
+    tab_idx="${choice#*	}"
+    wt_target="$tab_idx"
+    newest="$(_pi_newest_session "$wt_target" "$profile_dir")"
+    (
+      cd "$wt_target" || return 1
+      _pi_profile_prepare "$profile" || return 1
+      export PI_CODING_AGENT_DIR
+      PI_CODING_AGENT_DIR="$profile_dir"
+      if [[ "$newest" -gt 0 ]]; then
+        pi --continue "$@"
+      else
+        pi "$@"
+      fi
+    )
+  fi
+}
+
 _pi_profile_usage() {
   echo "Usage: pi-profile <personal|work> [pi args...]" >&2
   echo "       pi-profile switch <name> | status" >&2
 }
 
 pi-profile() {
-  local profile rc prev_set=0 prev_dir
+  local profile rc prev_set=0 prev_dir args=() no_resume=0
   case "$1" in
   personal | work)
     profile="$1"
     shift
+
+    # Strip --no-resume flag, track it
+    for arg in "$@"; do
+      if [[ "$arg" == "--no-resume" ]]; then
+        no_resume=1
+      else
+        args+=("$arg")
+      fi
+    done
+
+    # Decide if we should show chooser:
+    # - No extra args (or only --no-resume which is now stripped)
+    # - TTY on stdin and stdout (or PI_PROFILE_FORCE_TTY=1)
+    # - Inside a git repo
+    # - no_resume not set
+    if [[ ${#args[@]} -eq 0 && $no_resume -eq 0 ]] &&
+      { [[ -n "${PI_PROFILE_FORCE_TTY:-}" ]] || { [[ -t 0 && -t 1 ]]; }; } &&
+      git rev-parse --git-dir &>/dev/null; then
+      _pi_worktree_chooser "$profile" "${args[@]}"
+      return $?
+    fi
+
+    # Pass-through mode
     _pi_profile_prepare "$profile" || return 1
     [[ -n "${PI_CODING_AGENT_DIR+x}" ]] && prev_set=1
     prev_dir="${PI_CODING_AGENT_DIR:-}"
     export PI_CODING_AGENT_DIR
     PI_CODING_AGENT_DIR="$(_pi_profile_dir "$profile")"
-    pi "$@"
+    pi "${args[@]}"
     rc=$?
     if ((prev_set)); then
       PI_CODING_AGENT_DIR="$prev_dir"
@@ -111,3 +292,7 @@ pi-profile() {
     ;;
   esac
 }
+
+# Convenience wrappers
+pi-work() { pi-profile work "$@"; }
+pi-personal() { pi-profile personal "$@"; }
