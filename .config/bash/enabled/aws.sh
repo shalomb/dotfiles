@@ -79,6 +79,22 @@ aws-sso-profile() {
   echo "$profile"
 }
 
+# Render URLs from stdin as short OSC 8 hyperlinks and copy the last one to the
+# clipboard via OSC 52. Survives terminal/tmux line wrapping (wezterm only
+# links the first row of a wrapped plain URL). Plain passthrough if not a tty.
+_aws_osc_urls() {
+  local line
+  while IFS= read -r line; do
+    if [[ -t 2 && "$line" =~ ^https?:// ]]; then
+      printf '\e]8;;%s\a[ Open AWS SSO login (ctrl+click) ]\e]8;;\a\n' "$line" >&2
+      printf '\e]52;c;%s\a' "$(printf %s "$line" | base64 -w0)" >&2
+      echo "(URL also copied to clipboard)" >&2
+    else
+      printf '%s\n' "$line" >&2
+    fi
+  done
+}
+
 # AWS Login Function
 # REQUIRES: aws-sso v2.0.0+ (login command added in v2.0.0)
 aws-login() {
@@ -158,7 +174,11 @@ aws-login() {
     aws-sso eval -p "$profile" | grep -Ev "^(\+|gpg:)" > "$AWS_SSO_CACHE"
   else
     echo "Getting AWS SSO credentials..." >&2
-    aws-sso login --url-action=print
+    aws-sso login --url-action=print 2>&1 | _aws_osc_urls
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+      echo "ERROR: aws-sso login failed." >&2
+      return 1
+    fi
     aws-sso eval -p "$profile" | grep -Ev "^(\+|gpg:)" > "$AWS_SSO_CACHE"
   fi
 
