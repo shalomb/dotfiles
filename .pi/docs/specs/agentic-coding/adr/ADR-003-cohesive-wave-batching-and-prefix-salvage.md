@@ -124,3 +124,5 @@ Evidence lives in `~/shalomb/agentic-falsify/runs/h1/`, `runs/h1b/` and `runs/FI
 2. **Resource cap.** The wave size is `min(--max, floor(free GB / 2), nproc / 2)`, and 1 when 1-minute load is at least 70% of `nproc`. Resources can lower the cap, never raise it above 3. `--no-resources` disables it for tests.
 3. **In-flight claims** hold their scope and a slot, so a later `todo batch` cannot admit a colliding task.
 4. **Per-builder claims.** `--claim` claims each chosen task as `<owner>/<id>`.
+
+**Amendment 3 (cap 0, agent-skills `b84357c`).** The resource cap can now be 0: `todo batch` returns no tasks, claims nothing and reports why when the machine cannot carry one agent. Triggers: under 1 GB free, 1-minute load at least 2x cores, memory stall pressure (`/proc/pressure/memory` some avg10) at least 10%, or swap at least 80% used. This replaces the earlier "never below one" floor, which let a thrashing host start a builder. `--no-resources` and `TODO_RESOURCES` override it.
