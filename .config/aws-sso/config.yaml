@@ -15,3 +15,5 @@ UrlExecCommand:
 LogLevel: info #debug
 HistoryLimit: 1024
 HistoryMinutes: 1440
+# Use device-code flow (poll AWS) instead of PKCE localhost callback; needed when browser runs on a different host than this VM
+AuthWorkflow: device_code
