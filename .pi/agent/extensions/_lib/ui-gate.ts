@@ -66,3 +66,13 @@ export async function openPopup(exec: Exec, o: PopupOpts, env = process.env, has
   const r = await exec("tmux", args);
   return { status: "shown", code: r.code, stdout: r.stdout, stderr: r.stderr };
 }
+
+export type SplitResult = { status: "shown" | "parked" | "skip"; paneId?: string; code?: number; stderr?: string };
+
+/** Gated split pane beside the origin pane (non-blocking, so the normal timeout applies). */
+export async function openSplit(exec: Exec, o: { name: string; cwd: string; cmd: string }, env = process.env, hasUI = true): Promise<SplitResult> {
+  const s = await surface(exec, `${o.name} ready`, env, hasUI);
+  if (s !== "show") return { status: s };
+  const r = await exec("tmux", splitArgs(env.TMUX_PANE!, o.cwd, o.cmd), { timeout: 5000 });
+  return { status: "shown", paneId: r.stdout.trim(), code: r.code, stderr: r.stderr };
+}
