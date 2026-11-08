@@ -163,10 +163,10 @@ cd "$REPO_MAIN"
 export FZF_PICK_ROW=3  # Pick first worktree with session
 pi-profile work
 
-# Verify pi-find was called with --json --worktree
+# Verify pi-find was called with --json
 [[ -f "$PI_FIND_LOG" ]] || { echo "FAIL 7a: pi-find not called"; exit 1; }
 grep -q "\--json" "$PI_FIND_LOG" || { echo "FAIL 7b: missing --json"; exit 1; }
-grep -q "\--worktree" "$PI_FIND_LOG" || { echo "FAIL 7c: missing --worktree"; exit 1; }
+grep -q "\--json" "$PI_FIND_LOG" || { echo "FAIL 7c: missing --json"; exit 1; }
 
 # Verify fzf input shows status (errored/lost)
 [[ -f "$FZF_LOG" ]] || { echo "FAIL 7d: fzf not invoked"; exit 1; }

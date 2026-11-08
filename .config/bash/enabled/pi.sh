@@ -105,7 +105,7 @@ _pi_age_str() {
 _pi_worktree_chooser() {
   local profile="$1" profile_dir common_dir line wt_path wt_branch
   local rows=() pwd_abs newest age_str label
-  local use_registry=0 sessions_json session_data
+  local use_registry=0 sessions_json cwd uuid status
   shift
 
   profile_dir="$(_pi_profile_dir "$profile")"
@@ -113,8 +113,8 @@ _pi_worktree_chooser() {
   pwd_abs="$(pwd -P)"
 
   # Try pi-find if available
-  if command -v bun >/dev/null 2>&1 && command -v pi-find >/dev/null 2>&1; then
-    if sessions_json="$(pi-find --json --worktree 2>/dev/null)"; then
+  if command -v bun >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && command -v pi-find >/dev/null 2>&1; then
+    if sessions_json="$(pi-find --json --limit 500 2>/dev/null)"; then
       use_registry=1
     fi
   fi
@@ -127,16 +127,13 @@ _pi_worktree_chooser() {
     # Registry-based: parse JSON sessions
     local -A wt_sessions wt_status
     # Flatten JSON to single line and parse each object
-    while IFS= read -r session_data; do
-      [[ -z "$session_data" ]] && continue
-      local cwd status uuid
-      cwd="$(echo "$session_data" | grep -o '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')"
-      status="$(echo "$session_data" | grep -o '"status"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')"
-      uuid="$(echo "$session_data" | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')"
+    # Newest session per cwd wins (pi-find output is newest-first)
+    while IFS=$'\t' read -r cwd uuid status; do
       [[ -n "$cwd" && -n "$uuid" ]] || continue
+      [[ -n "${wt_sessions[$cwd]:-}" ]] && continue
       wt_sessions["$cwd"]="$uuid"
       wt_status["$cwd"]="$status"
-    done < <(echo "$sessions_json" | tr -d '\n' | grep -o '{[^}]*}' || true)
+    done < <(jq -r '.[] | [.cwd, .id, .status] | @tsv' <<<"$sessions_json" 2>/dev/null || true)
 
     # Parse worktree list and annotate with status
     while IFS= read -r line; do
