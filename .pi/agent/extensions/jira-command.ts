@@ -10,6 +10,7 @@
  * Config: ~/.config/jiratui/config.yaml (shared with the bash `jiratui` wrapper).
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { notShownNote, openPopup } from "./_lib/ui-gate.ts";
 import { existsSync, mkdtempSync, rmSync, writeFileSync, copyFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -137,11 +138,10 @@ export default function (pi: ExtensionAPI) {
       if (r.code !== 0) { rmSync(dir, { recursive: true, force: true }); return notify(`/jira: yq failed: ${r.stderr.trim()}`, "error"); }
     }
     try {
-      const res = await pi.exec("tmux", [
-        "display-popup", "-E", "-d", ctx.cwd, "-w", "95%", "-h", "95%", "-T", " JiraTUI ",
-        "-e", `JIRA_TUI_CONFIG_FILE=${cfg}`, ...bin, ...uiArgs,
-      ]);
-      if (res.code !== 0) notify(`/jira popup failed (${res.code}): ${res.stderr.trim() || "is jiratui installed?"}`, "error");
+      const res = await openPopup(pi.exec.bind(pi) as any, { name: "JiraTUI", cwd: ctx.cwd, width: "95%", height: "95%",
+        argv: ["-e", `JIRA_TUI_CONFIG_FILE=${cfg}`, ...bin, ...uiArgs] }, process.env, ctx.hasUI !== false);
+      if (res.status !== "shown") notify(notShownNote(res, "/jira"));
+      else if (res.code !== 0) notify(`/jira popup failed (${res.code}): ${res.stderr?.trim() || "is jiratui installed?"}`, "error");
     } finally {
       if (dir) rmSync(dir, { recursive: true, force: true });
     }
