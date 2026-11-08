@@ -5,10 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const ALLOW = new Set([
-	"grill-me-command.ts", "skills-loader-command.ts", "help-command.ts", "jira-command.ts",
-	"yazi-command.ts", "git-command.ts", "gb-command.ts", "since-command.ts",
-]);
+const ALLOW = new Set<string>([]);
 
 test("no raw tmux popup/split outside ui-gate.ts and the allowlist", () => {
 	const offenders = readdirSync(root)
