@@ -50,3 +50,19 @@ export async function surface(exec: Exec, reason: string, env = process.env, has
   for (const a of parkArgs(pane, reason)) await exec("tmux", a, { timeout: 5000 });
   return "park";
 }
+
+export type PopupOpts = { name: string; cwd: string; width?: string; height?: string; argv: string[] };
+export type PopupResult = { status: "shown" | "parked" | "skip"; code?: number; stdout?: string; stderr?: string };
+
+/** The one path for popups: gate on focus, target the origin pane, no timeout (display-popup -E blocks). */
+export async function openPopup(exec: Exec, o: PopupOpts, env = process.env, hasUI = true): Promise<PopupResult> {
+  const s = await surface(exec, `${o.name} ready`, env, hasUI);
+  if (s === "skip") return { status: "skip" };
+  if (s === "park") return { status: "parked" };
+  const pane = env.TMUX_PANE!;
+  const w = await exec("tmux", originQuery(pane), { timeout: 5000 });
+  const origin = w.code === 0 && w.stdout.trim() ? w.stdout.trim() : pane;
+  const args = ["display-popup", "-t", pane, "-E", "-d", o.cwd, "-w", o.width ?? "98%", "-h", o.height ?? "98%", "-T", popupTitle(o.name, origin), ...o.argv];
+  const r = await exec("tmux", args);
+  return { status: "shown", code: r.code, stdout: r.stdout, stderr: r.stderr };
+}
