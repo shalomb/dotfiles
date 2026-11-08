@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Start the Keybase service (if needed) and mount KBFS at ~/keybase. Undo with kb-umount.
+set -euo pipefail
+MNT="${KB_MOUNT:-$HOME/keybase}"
+LOG="${XDG_CACHE_HOME:-$HOME/.cache}/keybase"
+mkdir -p "$MNT" "$LOG"
+mountpoint -q "$MNT" && { echo "already mounted: $MNT"; exit 0; }
+
+keybase status >/dev/null 2>&1 || setsid keybase service --auto-forked=false >"$LOG/service.out" 2>&1 </dev/null &
+for _ in $(seq 30); do
+  keybase status 2>/dev/null | rg -q 'Logged in: +yes' && break
+  sleep 1
+done
+keybase status 2>/dev/null | rg -q 'Logged in: +yes' || { echo "not logged in: run keybase login" >&2; exit 1; }
+
+setsid kbfsfuse -mount-type=required "$MNT" >"$LOG/kbfsfuse.out" 2>&1 </dev/null &
+for _ in $(seq 30); do mountpoint -q "$MNT" && { echo "mounted: $MNT"; exit 0; }; sleep 1; done
+echo "mount failed; see $LOG/kbfsfuse.out" >&2; exit 1

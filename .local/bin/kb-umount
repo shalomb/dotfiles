@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Unmount KBFS at ~/keybase and stop kbfsfuse and the Keybase service to free ~500 MB RAM.
+set -uo pipefail
+MNT="${KB_MOUNT:-$HOME/keybase}"
+if mountpoint -q "$MNT"; then
+  fusermount -u "$MNT" 2>/dev/null || fusermount -uz "$MNT" || { echo "busy: $MNT" >&2; exit 1; }
+fi
+pkill -u "$USER" -x kbfsfuse 2>/dev/null
+keybase ctl stop >/dev/null 2>&1 || pkill -u "$USER" -x keybase 2>/dev/null
+echo "unmounted; keybase stopped"
