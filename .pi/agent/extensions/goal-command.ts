@@ -20,6 +20,9 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import { homedir, tmpdir } from "node:os";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { popupArgs, surface } from "./_lib/ui-gate.ts";
 import { type Exec, agentWouldWriteGoalStore, resolveRepo } from "./_lib/goal-io.ts";
 import {
 	type Deps, SUBCOMMANDS, promptReminder, proposeFromAgent, runGoalCommand, staleWarning,
@@ -28,6 +31,7 @@ import {
 const TOOL = "goal_propose";
 
 const Params = Type.Object({
+	outcome: Type.Optional(Type.String({ description: "One sentence: the outcome of the goal (when the draft has none yet)" })),
 	done_check: Type.Optional(
 		Type.Object({
 			kind: Type.Union([Type.Literal("command"), Type.Literal("human")], { description: '"command" unless no command can test the outcome' }),
@@ -38,7 +42,6 @@ const Params = Type.Object({
 	anti_goals: Type.Optional(Type.Array(Type.String(), { description: "What this work must not do" })),
 	scope_anchors: Type.Optional(Type.Array(Type.String(), { description: "Repo paths the work belongs to" })),
 	spec_links: Type.Optional(Type.Array(Type.String(), { description: "Specs, ADRs or issues that define the outcome" })),
-	reason: Type.Optional(Type.String({ description: "Required when the goal is locked: why the done-check must change" })),
 });
 
 export default function (pi: ExtensionAPI) {
@@ -61,6 +64,16 @@ export default function (pi: ExtensionAPI) {
 				confirm: async (title, message) => (ctx.hasUI ? ctx.ui.confirm(title, message) : false),
 				select: async (title, options) => (ctx.hasUI ? ctx.ui.select(title, options) : undefined),
 				input: async (title, message) => (ctx.hasUI ? ctx.ui.input(title, message) : undefined),
+			},
+			showHelp: (text) => {
+				const pane = process.env.TMUX_PANE;
+				if (!pane) return ctx.ui.notify(text, "info");
+				void surface(exec, "/goal help", process.env, ctx.hasUI !== false).then(async (r) => {
+					if (r !== "show") return ctx.ui.notify(text, "info");
+					const f = join(tmpdir(), `goal-help-${process.pid}.txt`);
+					writeFileSync(f, text);
+					await pi.exec("tmux", popupArgs(pane, repo.root, "goal", "help", `less -R ${f}; rm -f ${f}`));
+				});
 			},
 			tellAgent: (m) => void send(m, false),
 			runCommand: (c) => send(c, true),
@@ -89,9 +102,9 @@ export default function (pi: ExtensionAPI) {
 		name: TOOL,
 		label: "Goal propose",
 		description:
-			"Draft the Goal Contract of the current branch (done_check, anti_goals, scope_anchors, spec_links), or propose a change to a locked done_check with a reason. " +
-			"Writes a draft or a pending change only. You cannot lock, approve or close a goal: the user does that with /goal.",
-		promptSnippet: "Draft the branch's Goal Contract, or propose a change to a locked done-check",
+			"Draft the Goal Contract of the current branch (outcome, done_check, anti_goals, scope_anchors, spec_links). " +
+			"Writes a draft only; a locked goal is changed by the user with /goal unlock. You cannot lock, approve or close a goal: the user does that with /goal.",
+		promptSnippet: "Draft the branch's Goal Contract (draft only; a locked goal needs /goal unlock first)",
 		promptGuidelines: [
 			"A done_check must fail on the base commit and pass only when the outcome is met; a check that already passes is refused at lock time.",
 			"Never edit files in the goals directory directly; use goal_propose.",
@@ -101,19 +114,19 @@ export default function (pi: ExtensionAPI) {
 		async execute(_id: string, params: any, _signal: any, _onUpdate: any, ctx: any) {
 			const d = await depsFor(ctx);
 			const r = d ? await proposeFromAgent(d, {
+				outcome: params.outcome,
 				doneCheck: params.done_check,
 				outcomeChecks: params.outcome_checks,
 				antiGoals: params.anti_goals,
 				scopeAnchors: params.scope_anchors,
 				specLinks: params.spec_links,
-				reason: params.reason,
 			}) : { ok: false, message: "Not in a git repository." };
 			return { content: [{ type: "text" as const, text: r.ok ? r.message : `Error: ${r.message}` }], details: { ok: r.ok } };
 		},
 	} as any);
 
 	pi.registerCommand("goal", {
-		description: "/goal <outcome> | lock | check | approve | reject | done | drop — branch goal with a human-locked done-check",
+		description: "/goal [<outcome>] | lock | unlock | done | drop | help — branch goal with a human-locked done-check",
 		getArgumentCompletions: (prefix: string) => {
 			const hits = SUBCOMMANDS.filter((o) => o.startsWith(prefix));
 			return hits.length ? hits.map((value) => ({ value, label: value })) : null;

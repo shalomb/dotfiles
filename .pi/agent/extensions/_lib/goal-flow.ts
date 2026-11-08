@@ -4,9 +4,10 @@
 
 import {
 	type CheckSpec, type DraftFields, type Goal, type Result,
-	applyApprovedChange, applyClose, applyLock, canLock, goalCheckHash, applyReject, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft, oneLine,
-	proposeChange, reminderLine, stamp, staleGoal,
+	applyUnlock, lastLockedSpec, applyClose, applyLock, canLock, goalCheckHash, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft, oneLine,
+	reminderLine, stamp, staleGoal,
 } from "./goal.ts";
+import { GOAL_HELP } from "./goal-help.ts";
 import { type Exec, type GoalEvent, appendGoalEvent, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, recordTombstone, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
 
 export interface Deps {
@@ -30,20 +31,26 @@ export interface Deps {
 	};
 	/** Send the agent a user message. */
 	tellAgent(message: string): void;
+	/** Show the man page (a popup when the pane is focused). Falls back to a notification. */
+	showHelp?(text: string): void;
 	/** Run a slash command (such as /persist) as if the human typed it. */
 	runCommand(command: string): Promise<void> | void;
 }
 
 export type GoalArgs =
-	| { kind: "show" | "lock" | "check" | "approve" | "reject" | "done" | "drop" }
+	| { kind: "show" | "lock" | "unlock" | "done" | "drop" | "help" }
+	| { kind: "retired"; word: string }
 	| { kind: "start"; outcome: string };
 
-export const SUBCOMMANDS = ["lock", "check", "approve", "reject", "done", "drop"] as const;
+export const SUBCOMMANDS = ["lock", "unlock", "done", "drop", "help"] as const;
+/** Verbs of the old protocol: still recognised, so a typed one gets a pointer instead of becoming an outcome. */
+const RETIRED = ["check", "approve", "reject"] as const;
 
 /** A subcommand is the whole argument. Anything longer is an outcome, even if its first word is a subcommand. */
 export function parseGoalArgs(raw: string): GoalArgs {
 	const a = raw.trim();
 	if (!a) return { kind: "show" };
+	if ((RETIRED as readonly string[]).includes(a)) return { kind: "retired", word: a };
 	return (SUBCOMMANDS as readonly string[]).includes(a) ? ({ kind: a } as GoalArgs) : { kind: "start", outcome: a };
 }
 
@@ -140,14 +147,45 @@ export function summary(g: Goal): string {
 		"Scope anchors:", bullets(g.scopeAnchors),
 		"Spec links:", bullets(g.specLinks),
 	];
-	if (g.pending?.new) lines.push(`Pending change from ${g.pending.by} (${g.pending.reason}); /goal approve or /goal reject:`, ...checkLines({ ...g, doneCheck: { ...g.doneCheck, ...g.pending.new } }));
 	if (g.closedBy) lines.push(`Closed ${g.closedAt} by ${g.closedBy}.`);
 	return lines.join("\n");
 }
 
+/** Bare `/goal`: no goal → draft one from the conversation; draft → card + next step; locked → card + live check result. */
 export async function showGoal(d: Deps): Promise<void> {
 	const { goal, error } = load(d);
-	d.ui.notify(goal ? summary(goal) : error!, goal ? "info" : "error");
+	if (!goal) {
+		if (error === NO_GOAL) return await draftFromContext(d);
+		return d.ui.notify(error!, "error");
+	}
+	if (goal.status === "draft") return d.ui.notify(`${summary(goal)}\nNext: /goal lock when this is right (the agent can still change it); /goal drop to abandon.`, "info");
+	if (goal.status !== "active") return d.ui.notify(summary(goal), "info");
+	let status = "";
+	const problem = await integrityProblem(d, goal);
+	if (problem) return d.ui.notify(`${summary(goal)}\n${problem}`, "error");
+	if (goal.doneCheck.kind === "human") status = "Human-confirm check: /goal done asks you to confirm.";
+	else {
+		const run = await runChecks(d.exec, goal.doneCheck.commands, d.root);
+		status = run.exit === 0 ? `Done-check green.\n${run.output}` : `Done-check red (exit ${run.exit}).\n${run.output}`;
+		d.ui.notify(`${summary(goal)}\n${status}\nNext: ${run.exit === 0 ? "/goal done" : "do the work, /goal to re-check; /goal unlock to correct the goal"}`, "info");
+		return;
+	}
+	d.ui.notify(`${summary(goal)}\n${status}\nNext: /goal done`, "info");
+}
+
+/** Bare `/goal` with no goal: save an empty draft and ask the agent to discover and fill it in from the conversation. */
+async function draftFromContext(d: Deps): Promise<void> {
+	if (!d.branch) return d.ui.notify(NEEDS_BRANCH, "error");
+	const sharing = loadGoalFile(d.store, d.branch);
+	if (sharing && sharing.branch !== d.branch)
+		return d.ui.notify(`The goal file for this branch name belongs to branch ${sharing.branch} (${sharing.id}). Not overwritten.`, "error");
+	const g = newDraft({ branch: d.branch, outcome: "(to be drafted from the conversation)", baseCommit: d.head }, d.now());
+	if (!commit(d, { ok: true, goal: g }, `Draft goal saved: ${g.id}`)) return;
+	d.tellAgent(
+		`/goal: the user wants a goal for branch ${g.branch}, drafted from the conversation so far. First run Discovery (what is already true, partly true, or not there, citing a path and a command). ` +
+		"Then call goal_propose with outcome (one sentence), done_check (shell commands that exit non-zero on the base commit " +
+		`${g.doneCheck.baseCommit} and pass only when the work is done), anti_goals, scope_anchors (paths) and spec_links. Ask at most 2 questions, and only on a real gap. ` +
+		"You cannot lock the contract: the user reviews it and runs /goal lock. Reply with a short Review Card.");
 }
 
 /** `/goal <outcome>`: save a draft at the current HEAD and ask the agent to fill in the contract. */
@@ -170,37 +208,22 @@ export async function startGoal(d: Deps, outcome: string): Promise<void> {
 		"You cannot lock the contract: the user reviews it and runs /goal lock. Reply with a 3-line summary of what you drafted.");
 }
 
-export interface Proposal { doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[]; reason?: string }
+export interface Proposal { outcome?: string; doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
 
-/**
- * The goal_propose tool. On a draft: fill the contract fields. On an active goal: park a change to the
- * done-check for the human to approve. Never locks, approves or closes.
- */
+/** The goal_propose tool. Fills a draft; never locks, and never touches a locked goal (the human unlocks it first). */
 export async function proposeFromAgent(d: Deps, p: Proposal): Promise<{ ok: boolean; message: string }> {
 	const out = (ok: boolean, message: string) => ({ ok, message });
 	if (!d.branch) return out(false, NEEDS_BRANCH);
 	const { goal: g, error } = load(d);
 	if (!g) return out(false, error === NO_GOAL ? `${NO_GOAL} Only the user starts a goal.` : error!);
-	let r: Result;
-	if (g.status === "draft") {
-		const f: DraftFields = { doneCheck: p.doneCheck, outcomeChecks: p.outcomeChecks, antiGoals: p.antiGoals, scopeAnchors: p.scopeAnchors, specLinks: p.specLinks };
-		r = fillDraft(g, f);
-	} else if (g.status === "active") {
-		if (p.outcomeChecks) return out(false, "The goal is locked. Only the user marks the Outcome Check (at /goal lock or /goal approve).");
-		if (!p.doneCheck) return out(false, "The goal is locked. Only a change to the done-check can be proposed: pass done_check and a reason.");
-		if (p.antiGoals || p.scopeAnchors || p.specLinks) return out(false, "The goal is locked. Propose a done-check change only; ask the user to change anti-goals, scope anchors or spec links.");
-		r = proposeChange(g, { now: d.now(), by: "agent", reason: p.reason ?? "", check: p.doneCheck });
-	} else {
-		return out(false, `The goal is ${g.status}; nothing to propose.`);
-	}
+	if (g.status === "active") return out(false, "The goal is locked, so you cannot change it. Ask the user to run /goal unlock, correct the draft, then /goal lock.");
+	if (g.status !== "draft") return out(false, `The goal is ${g.status}; nothing to propose.`);
+	const f: DraftFields = { outcome: p.outcome, doneCheck: p.doneCheck, outcomeChecks: p.outcomeChecks, antiGoals: p.antiGoals, scopeAnchors: p.scopeAnchors, specLinks: p.specLinks };
+	const r = fillDraft(g, f);
 	if (!r.ok) return out(false, r.reason);
 	saveGoal(d.store, r.goal);
-	if (g.status === "draft") {
-		d.ui.notify(`Goal ${g.id} draft updated by the agent. Review it with /goal; /goal lock when it is right.`, "info");
-		return out(true, "Draft saved. It is not locked: the user reviews it and runs /goal lock.");
-	}
-	d.ui.notify(`The agent proposes a change to the locked done-check of ${g.id}: ${oneLine(p.reason ?? "")}. /goal approve or /goal reject.`, "warning");
-	return out(true, "Change recorded as pending. The locked done-check is unchanged until the user runs /goal approve.");
+	d.ui.notify(`Goal ${g.id} draft updated by the agent. Review it with /goal; /goal lock when it is right.`, "info");
+	return out(true, "Draft saved. It is not locked: the user reviews it and runs /goal lock.");
 }
 
 /** The human picks which of `commands` is the Outcome Check (the one that tests the outcome from outside); undefined when they cancel. */
@@ -243,15 +266,17 @@ export async function lockGoal(d: Deps): Promise<void> {
 		if (!outcomeChecks) return d.ui.notify("Not locked: mark one command as the Outcome Check. The goal stays a draft.", "error");
 		evidence += `\nOutcome Check: ${outcomeChecks.join(", ")}`;
 	}
-	const ok = await d.ui.confirm(
-		`Lock the done-check of ${g.id}?`,
-		`${g.outcome}\n${checkLines(g).join("\n")}\n${evidence}\nOnce locked, only you can change it.`);
-	if (!ok) return d.ui.notify("Not locked. The goal stays a draft.", "info");
+	// A relock of a check weaker than the one that was unlocked needs the goal id typed, so a reflex "yes" cannot loosen it.
+	const before = lastLockedSpec(g);
+	const weakening = !!before && weakens(before, { kind: g.doneCheck.kind, commands: g.doneCheck.commands });
+	const body = `${g.outcome}\n${checkLines(g).join("\n")}\n${evidence}\nOnce locked, only you can change it (/goal unlock).`;
+	const ok = weakening
+		? (await d.ui.input(`WEAKENING: relock a weaker done-check for ${g.id}? Type ${g.id} to lock.`, `Was:\n${before!.commands.map((c) => `  $ ${c}`).join("\n")}\n${body}`))?.trim() === g.id
+		: await d.ui.confirm(`Lock the done-check of ${g.id}?`, body);
+	if (!ok) return d.ui.notify(weakening ? "Not locked: the goal id was not typed. The goal stays a draft." : "Not locked. The goal stays a draft.", "info");
 	await commitRecorded(d, applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit, outcomeChecks }), `Goal ${g.id} locked.`, () => `lock ${g.id}`,
-		(locked) => ({ event: "goal_locked", kind: locked.doneCheck.kind, checkHash: goalCheckHash(locked) }));
+		(locked) => ({ event: "goal_locked", kind: locked.doneCheck.kind, weakening, checkHash: goalCheckHash(locked) }));
 }
-
-const sameSpec = (a: CheckSpec, b: CheckSpec) => a.kind === b.kind && a.commands.length === b.commands.length && a.commands.every((c, i) => c === b.commands[i]);
 
 /**
  * A change weakens the check when it drops a command, swaps commands for a human confirmation, or adds a command
@@ -264,75 +289,13 @@ const weakens = (old: CheckSpec, next: CheckSpec) => {
 	return !pureAppend && next.commands.some((c) => !old.commands.includes(c));
 };
 
-/**
- * `/goal approve`: same rule as lock. The new check must fail at the base commit, and the human is shown
- * the live current check; a proposal made against a different check is refused.
- */
-export async function approveChange(d: Deps): Promise<void> {
+/** `/goal unlock`: a locked goal becomes a draft again, so the human (or the agent, through goal_propose) can correct it. Relock re-runs every lock rule. */
+export async function unlockGoal(d: Deps): Promise<void> {
 	const g = current(d);
 	if (!g) return;
-	const p = g.pending;
-	if (!p?.new) return d.ui.notify("No change is pending.", "info");
-	const live: CheckSpec = { kind: g.doneCheck.kind, commands: g.doneCheck.commands };
-	if (!p.old || !sameSpec(p.old, live))
-		return d.ui.notify("The pending change no longer matches the current done-check (it changed since the proposal). /goal reject discards it; ask the agent to propose again.", "error");
-	let evidence = "(human-confirm check; no command runs)";
-	if (p.new.kind === "command") {
-		const run = await runChecksAtCommit(d.exec, d.root, g.doneCheck.baseCommit, p.new.commands, d.tmpParent);
-		const refused = canLock(run.exit);
-		if (!refused.ok) return d.ui.notify(`${refused.reason}\n${run.output}`, "error");
-		if (!(await environmentFailureOverridden(d, g, run))) return;
-		evidence = `On base ${g.doneCheck.baseCommit} the new check fails (exit ${run.exit}).`;
-	}
-	let outcomeChecks: string[] | undefined;
-	if (p.new.kind === "command" && !g.doneCheck.outcomeChecks.some((c) => p.new!.commands.includes(c))) {
-		outcomeChecks = await askOutcomeCheck(d, g, p.new.commands);
-		if (!outcomeChecks) return d.ui.notify("Not approved: the change drops the Outcome Check, so mark one of the new commands as the Outcome Check. The change stays pending.", "error");
-		evidence += `\nOutcome Check: ${outcomeChecks.join(", ")}`;
-	}
-	const weakening = weakens(live, p.new);
-	const title = `${weakening ? "WEAKENING: approve" : "Approve"} the change to the done-check of ${g.id}?`;
-	const body = `Proposed by ${p.by}: ${p.reason}\nCurrent:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...live } }).join("\n")}\nNew:\n${checkLines({ ...g, doneCheck: { ...g.doneCheck, ...p.new } }).join("\n")}\n${evidence}`;
-	// A weakening change needs the goal id typed, so a reflex "yes" cannot approve it.
-	const ok = weakening
-		? (await d.ui.input(`${title} Type ${g.id} to approve.`, body))?.trim() === g.id
-		: await d.ui.confirm(title, body);
-	if (!ok) return d.ui.notify(weakening ? "Not approved: the goal id was not typed. The change stays pending; /goal reject discards it." : "Not approved. The change stays pending; /goal reject discards it.", "info");
-	await commitRecorded(d, applyApprovedChange(g, { now: d.now(), outcomeChecks }), `Change approved and recorded in ${g.id}.`, () => `approve ${g.id}: ${oneLine(p.reason)}`,
-		(changed) => ({ event: "goal_changed", reason: oneLine(p.reason), weakening, checkHash: goalCheckHash(changed) }));
-}
-
-/**
- * `/goal reject`: discard the pending change. If a failed approve left the ref on the rejected hash, record the
- * current check's hash again (before saving) so the ref and the goal file agree; an agreeing ref is left alone.
- */
-export async function rejectChange(d: Deps): Promise<void> {
-	const g = current(d);
-	if (!g) return;
-	const r = applyReject(g, { now: d.now() });
-	if (r.ok && g.status === "active") {
-		const hash = goalCheckHash(g);
-		const recorded = await readRecordedHash(d.exec, d.root, g.branch);
-		if (recorded.kind === "hash" && recorded.hash !== hash) {
-			const rec = await recordCheckHash(d.exec, d.root, g.branch, hash, `reject ${g.id}`);
-			if (!rec.ok) return d.ui.notify(`Not discarded: the current done-check could not be re-recorded on ${goalRefName(g.branch)}: ${rec.error}`, "error");
-		}
-	}
-	commit(d, r, "Pending change discarded; the done-check is unchanged.");
-}
-
-/** `/goal check`: run the done-check now, from this checkout. */
-export async function checkGoal(d: Deps): Promise<void> {
-	const g = current(d);
-	if (!g) return;
-	if (g.status === "active") {
-		const problem = await integrityProblem(d, g);
-		if (problem) return d.ui.notify(problem, "error");
-	}
-	if (g.doneCheck.kind === "human") return d.ui.notify("Human-confirm check: no command to run. /goal done asks you to confirm.", "info");
-	if (!g.doneCheck.commands.length) return d.ui.notify("The draft has no done-check yet.", "error");
-	const run = await runChecks(d.exec, g.doneCheck.commands, d.root);
-	d.ui.notify(run.exit === 0 ? `Done-check green.\n${run.output}` : `Done-check red (exit ${run.exit}).\n${run.output}`, "info");
+	if (g.status !== "active") return d.ui.notify(`Only a locked goal can be unlocked (the goal is ${g.status}).`, "error");
+	if (!(await d.ui.confirm(`Unlock ${g.id}?`, "It becomes a draft; the agent may edit it until you run /goal lock again (which re-checks it on the base commit)."))) return d.ui.notify("Not unlocked.", "info");
+	commit(d, applyUnlock(g, { now: d.now() }), `Goal ${g.id} unlocked: now a draft. Correct it, then /goal lock.`, () => ({ event: "goal_unlocked" }));
 }
 
 /** `/goal done`: close only on a green check (or the human's confirmation for a human-confirm check). */
@@ -375,9 +338,9 @@ export async function runGoalCommand(d: Deps, raw: string): Promise<void> {
 			case "show": return await showGoal(d);
 			case "start": return await startGoal(d, a.outcome);
 			case "lock": return await lockGoal(d);
-			case "check": return await checkGoal(d);
-			case "approve": return await approveChange(d);
-			case "reject": return await rejectChange(d);
+			case "unlock": return await unlockGoal(d);
+			case "help": return d.showHelp ? d.showHelp(GOAL_HELP) : d.ui.notify(GOAL_HELP, "info");
+			case "retired": return d.ui.notify(`/goal ${a.word} is retired. /goal shows the card and whether the check is green; to correct a locked goal use /goal unlock, then /goal lock.`, "info");
 			case "done": return await doneGoal(d);
 			case "drop": return await dropCurrentGoal(d, "dropped by the user");
 		}
