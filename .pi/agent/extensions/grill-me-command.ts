@@ -13,6 +13,7 @@
  * Load location: ~/.pi/agent/extensions/grill-me-command.ts (global)
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { notShownNote, openPopup } from "./_lib/ui-gate.ts";
 import { Type } from "typebox";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -112,15 +113,12 @@ export default function (pi: ExtensionAPI) {
 	};
 
 	const runRound = async (p: Pending, ctx: any, signal?: AbortSignal): Promise<Outcome> => {
-		const res = await pi.exec(
-			"tmux",
-			["display-popup", "-E", "-d", p.cwd, "-w", "90%", "-h", "90%", "-T", ` grill-me: round ${p.n} `,
-				resolveEditor(process.env), "-S", VIM_SCRIPT, p.work],
-			{ signal },
-		);
+		const res = await openPopup(pi.exec.bind(pi) as any, { name: `grill-me: round ${p.n}`, cwd: p.cwd, width: "90%", height: "90%",
+			argv: [resolveEditor(process.env), "-S", VIM_SCRIPT, p.work], signal }, process.env, ctx.hasUI !== false);
+		if (res.status !== "shown") return { kind: "later", text: `Round ${p.n} was not shown (${res.status === "parked" ? "the user is not looking at this pane" : "no tmux or a child process"}). It is saved: /grill-me resume reopens it.` };
 		if (signal?.aborted) return { kind: "later", text: `Round ${p.n} was cancelled. It is saved: /grill-me resume reopens it.` };
-		if (res.code !== 0 && res.stderr.trim())
-			return { kind: "error", text: `The round popup failed (${res.code}): ${res.stderr.trim()}. Round ${p.n} is saved.` };
+		if (res.code !== 0 && res.stderr?.trim())
+			return { kind: "error", text: `The round popup failed (${res.code}): ${res.stderr?.trim()}. Round ${p.n} is saved.` };
 
 		const delta = computeDelta(readFileSync(p.original, "utf8"), readFileSync(p.work, "utf8"));
 		if (!delta.empty) return { kind: "answered", text: `Round ${p.n} reply (delta only; you hold the original):\n${delta.text}` };
