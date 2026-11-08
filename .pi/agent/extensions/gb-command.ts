@@ -6,6 +6,7 @@
  * Opens in a tmux popup at the repo root. No agent turn, no tokens.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { notShownNote, openPopup } from "./_lib/ui-gate.ts";
 import { registerShared } from "./_lib/subcommands.ts";
 import { splitArgs } from "./_lib/args.ts";
 
@@ -23,11 +24,10 @@ export default function (pi: ExtensionAPI) {
         const extra = splitArgs(args);
         // fzf-utils.sh returns early unless stdin is a tty; the popup provides one.
         const script = `source "$1" || exit 1; declare -F gB >/dev/null || { echo "gB not defined (is stdin a tty?)"; read -rsn1; exit 1; }; shift; if ! git rev-parse --verify --quiet HEAD >/dev/null && [ $# -eq 0 ]; then echo "No commits yet."; read -rsn1 -p "press any key"; exit 0; fi; GB_MODE=${mode} gB "$@"; rc=$?; (( rc == 130 || rc == 1 )) && rc=0; exit $rc`;
-        const res = await pi.exec("tmux", [
-          "display-popup", "-E", "-d", root.stdout.trim(), "-w", "98%", "-h", "98%", "-T", title,
-          "bash", "-c", script, "_", lib, ...extra,
-        ]);
-        if (res.code !== 0) notify(`/${name} popup failed (${res.code}): ${res.stderr.trim()}`, "error");
+        const res = await openPopup(pi.exec.bind(pi) as any, { name: String(title).trim(), cwd: root.stdout.trim(),
+          argv: ["bash", "-c", script, "_", lib, ...extra] }, process.env, ctx.hasUI !== false);
+        if (res.status !== "shown") return notify(notShownNote(res, `/${name}`));
+        if (res.code !== 0) notify(`/${name} popup failed (${res.code}): ${res.stderr?.trim()}`, "error");
       },
     });
 
