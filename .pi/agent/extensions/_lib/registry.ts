@@ -1,11 +1,41 @@
 // Session registry: SQLite (WAL) kept OUTSIDE the repo; backfilled from pi JSONL metadata.
-import { Database } from "bun:sqlite";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 
-export type Registry = Database;
+// Runtime adapter for Bun vs Node sqlite
+interface DbAdapter {
+	exec(sql: string): void;
+	query(sql: string): { get(...args: any[]): any; all(...args: any[]): any[]; run(...args: any[]): void };
+}
+
+function createDbAdapter(path: string): DbAdapter {
+	if (process.versions.bun) {
+		// Use bun:sqlite (native Bun API)
+		const { Database } = require("bun:sqlite");
+		return new Database(path) as DbAdapter;
+	} else {
+		// Use node:sqlite (Node v24+ API)
+		const { DatabaseSync } = require("node:sqlite");
+		const db = new DatabaseSync(path);
+		// Node's sqlite doesn't accept undefined - convert to null
+		const normalizeArgs = (args: any[]) => args.map(v => v === undefined ? null : v);
+		return {
+			exec: (sql: string) => db.exec(sql),
+			query: (sql: string) => {
+				const stmt = db.prepare(sql);
+				return {
+					get: (...args: any[]) => stmt.get(...normalizeArgs(args)),
+					all: (...args: any[]) => stmt.all(...normalizeArgs(args)),
+					run: (...args: any[]) => stmt.run(...normalizeArgs(args))
+				};
+			}
+		};
+	}
+}
+
+export type Registry = DbAdapter;
 export interface GitFacts { branch?: string }
 export interface Row { id: string; file: string; cwd: string; repo: string; worktree: string | null; branch: string | null; profile: string | null; model: string | null; started: string; ended: string | null; status: string; last_activity: string | null; digest: string }
 export interface Criteria { id?: string; cwd?: string; worktree?: string; branch?: string; repo?: string; status?: string; since?: string; keyword?: string; pid?: number; tmuxSession?: string; tmuxWindow?: string; tmuxPane?: string }
@@ -14,7 +44,7 @@ export const defaultDbPath = () => join(process.env.XDG_STATE_HOME ?? join(homed
 
 export function openRegistry(path = defaultDbPath()): Registry {
 	if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
-	const db = new Database(path);
+	const db = createDbAdapter(path);
 	db.exec("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=3000;");
 	db.exec(`CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, file TEXT, cwd TEXT, repo TEXT, worktree TEXT, branch TEXT, profile TEXT, model TEXT, started TEXT, ended TEXT, status TEXT, last_activity TEXT, digest TEXT DEFAULT '', mtime_ms REAL, size INTEGER);
 CREATE TABLE IF NOT EXISTS instances (session_id TEXT, pid INTEGER, tmux_session TEXT, tmux_window TEXT, tmux_pane TEXT, scope TEXT, started TEXT, ended TEXT);
