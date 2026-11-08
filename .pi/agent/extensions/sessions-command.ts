@@ -14,6 +14,7 @@
  * Hand-maintained: not generated from commands.json.
  */
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { openPopup } from "./_lib/ui-gate.ts";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "./_lib/sessions";
@@ -37,7 +38,8 @@ export default function (pi: ExtensionAPI) {
 				? `t=$(mktemp); bun ${q(SCRIPT)} ${extra} >"$t"; rc=$?; if [ $rc -ne 0 ]; then printf '\\n[exit %s] press a key' $rc; read -r _; else less -R "$t"; fi; rm -f "$t"`
 				: `bun ${q(SCRIPT)} --width "$(tput cols)" ${extra} | less -RSX --header=1`;
 			const title = parsed.cmd === "summarize" ? " Sessions summary (q to close) " : " Sessions (q to close) ";
-			const res = await pi.exec("tmux", ["display-popup", "-E", "-d", ctx.cwd, "-w", "95%", "-h", "90%", "-T", title, "sh", "-c", cmd]);
+			const res = await openPopup(pi.exec.bind(pi), { name: title.trim(), cwd: ctx.cwd, width: "95%", height: "90%", argv: ["sh", "-c", cmd] });
+			if (res.status !== "shown") return ctx.ui.notify(res.status === "parked" ? "/sessions parked: pane not focused." : "/sessions skipped (child/no UI).", "info");
 			if (res.code !== 0) ctx.ui.notify(`sessions popup failed (${res.code}): ${res.stderr.trim()}`, "error");
 		},
 	});
