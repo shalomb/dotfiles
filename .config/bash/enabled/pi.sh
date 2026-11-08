@@ -105,47 +105,113 @@ _pi_age_str() {
 _pi_worktree_chooser() {
   local profile="$1" profile_dir common_dir line wt_path wt_branch
   local rows=() pwd_abs newest age_str label
+  local use_registry=0 sessions_json session_data
   shift
 
   profile_dir="$(_pi_profile_dir "$profile")"
   common_dir="$(git rev-parse --git-common-dir 2>/dev/null)" || return 1
   pwd_abs="$(pwd -P)"
 
+  # Try pi-find if available
+  if command -v bun >/dev/null 2>&1 && command -v pi-find >/dev/null 2>&1; then
+    if sessions_json="$(pi-find --json --worktree 2>/dev/null)"; then
+      use_registry=1
+    fi
+  fi
+
   # Build fzf menu
   rows+=("here")
   rows+=("+ new worktree")
 
-  # Parse worktree list
-  while IFS= read -r line; do
-    if [[ "$line" == worktree\ * ]]; then
-      [[ -n "${wt_path:-}" ]] && {
-        [[ "$wt_path" != "$pwd_abs" ]] && {
-          newest="$(_pi_newest_session "$wt_path" "$profile_dir")"
-          age_str="$(_pi_age_str "$newest")"
-          label="${wt_branch:-HEAD}  ($age_str)"
-          rows+=("$label	$wt_path")
-        }
-      }
-      wt_path="${line#worktree }"
-      wt_branch=""
-    elif [[ "$line" == branch\ * ]]; then
-      wt_branch="${line#branch }"
-      wt_branch="${wt_branch#refs/heads/}"
-    elif [[ "$line" == prunable\ * ]]; then
-      wt_path="" # Skip prunable worktrees
-    fi
-  done < <(git worktree list --porcelain)
+  if [[ $use_registry -eq 1 ]]; then
+    # Registry-based: parse JSON sessions
+    local -A wt_sessions wt_status
+    # Flatten JSON to single line and parse each object
+    while IFS= read -r session_data; do
+      [[ -z "$session_data" ]] && continue
+      local cwd status uuid
+      cwd="$(echo "$session_data" | grep -o '"cwd"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')"
+      status="$(echo "$session_data" | grep -o '"status"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')"
+      uuid="$(echo "$session_data" | grep -o '"id"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"\([^"]*\)"$/\1/')"
+      [[ -n "$cwd" && -n "$uuid" ]] || continue
+      wt_sessions["$cwd"]="$uuid"
+      wt_status["$cwd"]="$status"
+    done < <(echo "$sessions_json" | tr -d '\n' | grep -o '{[^}]*}' || true)
 
-  # Last worktree
-  [[ -n "${wt_path:-}" && "$wt_path" != "$pwd_abs" ]] && {
-    newest="$(_pi_newest_session "$wt_path" "$profile_dir")"
-    age_str="$(_pi_age_str "$newest")"
-    label="${wt_branch:-HEAD}  ($age_str)"
-    rows+=("$label	$wt_path")
-  }
+    # Parse worktree list and annotate with status
+    while IFS= read -r line; do
+      if [[ "$line" == worktree\ * ]]; then
+        [[ -n "${wt_path:-}" ]] && {
+          [[ "$wt_path" != "$pwd_abs" ]] && {
+            local status_str=""
+            if [[ -n "${wt_sessions[$wt_path]:-}" ]]; then
+              local st="${wt_status[$wt_path]:-}"
+              [[ -n "$st" ]] && status_str=" [$st]"
+            fi
+            label="${wt_branch:-HEAD}${status_str}"
+            rows+=("$label	$wt_path")
+            # Add /resume entry if session exists
+            if [[ -n "${wt_sessions[$wt_path]:-}" ]]; then
+              rows+=("  /resume ${wt_sessions[$wt_path]}	/resume	${wt_sessions[$wt_path]}")
+            fi
+          }
+        }
+        wt_path="${line#worktree }"
+        wt_branch=""
+      elif [[ "$line" == branch\ * ]]; then
+        wt_branch="${line#branch }"
+        wt_branch="${wt_branch#refs/heads/}"
+      elif [[ "$line" == prunable\ * ]]; then
+        wt_path="" # Skip prunable worktrees
+      fi
+    done < <(git worktree list --porcelain)
+
+    # Last worktree
+    [[ -n "${wt_path:-}" && "$wt_path" != "$pwd_abs" ]] && {
+      local status_str=""
+      if [[ -n "${wt_sessions[$wt_path]:-}" ]]; then
+        local st="${wt_status[$wt_path]:-}"
+        [[ -n "$st" ]] && status_str=" [$st]"
+      fi
+      label="${wt_branch:-HEAD}${status_str}"
+      rows+=("$label	$wt_path")
+      if [[ -n "${wt_sessions[$wt_path]:-}" ]]; then
+        rows+=("  /resume ${wt_sessions[$wt_path]}	/resume	${wt_sessions[$wt_path]}")
+      fi
+    }
+  else
+    # Fallback: file-scanning method
+    while IFS= read -r line; do
+      if [[ "$line" == worktree\ * ]]; then
+        [[ -n "${wt_path:-}" ]] && {
+          [[ "$wt_path" != "$pwd_abs" ]] && {
+            newest="$(_pi_newest_session "$wt_path" "$profile_dir")"
+            age_str="$(_pi_age_str "$newest")"
+            label="${wt_branch:-HEAD}  ($age_str)"
+            rows+=("$label	$wt_path")
+          }
+        }
+        wt_path="${line#worktree }"
+        wt_branch=""
+      elif [[ "$line" == branch\ * ]]; then
+        wt_branch="${line#branch }"
+        wt_branch="${wt_branch#refs/heads/}"
+      elif [[ "$line" == prunable\ * ]]; then
+        wt_path="" # Skip prunable worktrees
+      fi
+    done < <(git worktree list --porcelain)
+
+    # Last worktree
+    [[ -n "${wt_path:-}" && "$wt_path" != "$pwd_abs" ]] && {
+      newest="$(_pi_newest_session "$wt_path" "$profile_dir")"
+      age_str="$(_pi_age_str "$newest")"
+      label="${wt_branch:-HEAD}  ($age_str)"
+      rows+=("$label	$wt_path")
+    }
+  fi
 
   # Invoke fzf
-  local choice tab_idx wt_target
+  local choice tab_idx wt_target resume_uuid
   choice="$(printf '%s\n' "${rows[@]}" | fzf --with-nth=1 --delimiter=$'\t')" || return 1
 
   # Parse selection
@@ -196,21 +262,44 @@ _pi_worktree_chooser() {
       pi --name "$new_branch" "$@"
     )
   else
-    # Existing worktree
-    tab_idx="${choice#*	}"
-    wt_target="$tab_idx"
-    newest="$(_pi_newest_session "$wt_target" "$profile_dir")"
-    (
-      cd "$wt_target" || return 1
-      _pi_profile_prepare "$profile" || return 1
-      export PI_CODING_AGENT_DIR
-      PI_CODING_AGENT_DIR="$profile_dir"
-      if [[ "$newest" -gt 0 ]]; then
-        pi --continue "$@"
+    # Check if /resume entry
+    tab_idx="${choice#*$'\t'}"
+    if [[ "$tab_idx" == /resume$'\t'* ]]; then
+      resume_uuid="${tab_idx#/resume$'\t'}"
+      (
+        _pi_profile_prepare "$profile" || return 1
+        export PI_CODING_AGENT_DIR
+        PI_CODING_AGENT_DIR="$profile_dir"
+        pi --resume "$resume_uuid" "$@"
+      )
+    else
+      # Existing worktree
+      wt_target="$tab_idx"
+      if [[ $use_registry -eq 1 ]]; then
+        # Registry mode: always use --continue if session exists
+        (
+          cd "$wt_target" || return 1
+          _pi_profile_prepare "$profile" || return 1
+          export PI_CODING_AGENT_DIR
+          PI_CODING_AGENT_DIR="$profile_dir"
+          pi --continue "$@"
+        )
       else
-        pi "$@"
+        # Fallback mode: check file age
+        newest="$(_pi_newest_session "$wt_target" "$profile_dir")"
+        (
+          cd "$wt_target" || return 1
+          _pi_profile_prepare "$profile" || return 1
+          export PI_CODING_AGENT_DIR
+          PI_CODING_AGENT_DIR="$profile_dir"
+          if [[ "$newest" -gt 0 ]]; then
+            pi --continue "$@"
+          else
+            pi "$@"
+          fi
+        )
       fi
-    )
+    fi
   fi
 }
 

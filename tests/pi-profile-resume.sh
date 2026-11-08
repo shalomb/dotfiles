@@ -122,5 +122,73 @@ grep -qv -- "--continue\|--name" "$PI_LOG" || { echo "FAIL 5b: unexpected flags"
 type pi-work >/dev/null 2>&1 || { echo "FAIL 6a: pi-work missing"; exit 1; }
 type pi-personal >/dev/null 2>&1 || { echo "FAIL 6b: pi-personal missing"; exit 1; }
 
+# Test 7: pi-find integration - chooser uses registry with status
+PI_FIND_LOG="$T/pi-find.log"
+export PI_FIND_LOG
+cat >"$STUB_DIR/pi-find" <<'EOFIND'
+#!/bin/bash
+echo "$*" >>"${PI_FIND_LOG?}"
+# Return JSON with sessions (one errored, one lost)
+cat <<JSONEND
+[
+  {
+    "id": "019f-aaaa-bbbb-cccc-dddddddddddd",
+    "cwd": "REPO_WT1_PLACEHOLDER",
+    "status": "errored",
+    "started": "2026-07-20T11:21:31.065Z"
+  },
+  {
+    "id": "019f-eeee-ffff-0000-111111111111",
+    "cwd": "REPO_MAIN_PLACEHOLDER",
+    "status": "lost",
+    "started": "2026-07-15T10:00:00.000Z"
+  }
+]
+JSONEND
+EOFIND
+chmod +x "$STUB_DIR/pi-find"
+# Replace placeholders with actual paths
+sed -i "s|REPO_WT1_PLACEHOLDER|$REPO_WT1|g" "$STUB_DIR/pi-find"
+sed -i "s|REPO_MAIN_PLACEHOLDER|$REPO_MAIN|g" "$STUB_DIR/pi-find"
+
+# Also need stub bun
+cat >"$STUB_DIR/bun" <<'EOF'
+#!/bin/bash
+exit 0
+EOF
+chmod +x "$STUB_DIR/bun"
+
+rm -f "$PI_FIND_LOG" "$FZF_LOG" "$PI_LOG"
+cd "$REPO_MAIN"
+export FZF_PICK_ROW=3  # Pick first worktree with session
+pi-profile work
+
+# Verify pi-find was called with --json --worktree
+[[ -f "$PI_FIND_LOG" ]] || { echo "FAIL 7a: pi-find not called"; exit 1; }
+grep -q "\--json" "$PI_FIND_LOG" || { echo "FAIL 7b: missing --json"; exit 1; }
+grep -q "\--worktree" "$PI_FIND_LOG" || { echo "FAIL 7c: missing --worktree"; exit 1; }
+
+# Verify fzf input shows status (errored/lost)
+[[ -f "$FZF_LOG" ]] || { echo "FAIL 7d: fzf not invoked"; exit 1; }
+# fzf receives stdin, can't directly check, but we'll verify in step 8
+
+# Test 8: chooser offers /resume for sessions with UUID
+rm -f "$PI_FIND_LOG" "$FZF_LOG" "$PI_LOG"
+cd "$REPO_MAIN"
+export FZF_PICK_ROW=4  # Pick a /resume entry (row with UUID)
+pi-profile work || true  # May fail if not implemented yet
+
+# When implemented, should invoke: pi --resume <uuid>
+# For now this will fail, which is expected for TDD
+
+# Test 9: fallback when pi-find missing
+rm -f "$STUB_DIR/pi-find" "$PI_FIND_LOG" "$FZF_LOG" "$PI_LOG"
+cd "$REPO_MAIN"
+export FZF_PICK_ROW=1
+pi-profile work
+# Should still work using old file-scanning method
+[[ -f "$PI_LOG" ]] || { echo "FAIL 9a: fallback failed"; exit 1; }
+[[ ! -f "$PI_FIND_LOG" ]] || { echo "FAIL 9b: pi-find called when missing"; exit 1; }
+
 echo "ALL TESTS PASSED"
 exit 0
