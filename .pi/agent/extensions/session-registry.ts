@@ -24,7 +24,7 @@ export default function (pi: ExtensionAPI) {
 			if (!db) return;
 			sessionId = ctx.sessionManager.getSessionId();
 			pid = process.pid;
-			const file = ctx.sessionManager.getSessionMetadataPath?.() ?? "";
+			const file = ctx.sessionManager.getSessionFile?.() ?? "";
 			const cwd = ctx.cwd ?? process.cwd();
 			const { worktree } = deriveRepo(cwd);
 			const { branch } = gitFacts(cwd);
