@@ -5,6 +5,7 @@
  * Untracked files aren't diffed (use `git add -N`).
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { openPopup } from "./_lib/ui-gate.ts";
 import { registerShared } from "./_lib/subcommands.ts";
 import { splitArgs } from "./_lib/args.ts";
 
@@ -32,10 +33,8 @@ export default function (pi: ExtensionAPI) {
         `if [ $rc -eq 0 ]; then echo ${q(`No changes (${label}).`)}; read -rsn1 -p 'press any key'; ` +
         `elif [ $rc -eq 1 ]; then ${g()} | LESS=-R delta --side-by-side --paging=always; ` +
         `else ${g()}; read -rsn1 -p 'git diff failed - press any key'; fi`;
-      const res = await pi.exec("tmux", [
-        "display-popup", "-E", "-d", root.stdout.trim(), "-w", "98%", "-h", "98%", "-T", " git diff ",
-        "bash", "-c", script,
-      ]);
+      const res = await openPopup(pi.exec.bind(pi), { name: "git diff", cwd: root.stdout.trim(), argv: ["bash", "-c", script] });
+      if (res.status !== "shown") return notify(res.status === "parked" ? "/diff parked: pane not focused." : "/diff skipped (child/no UI).");
       if (res.code !== 0) notify(`diff popup failed (${res.code}): ${res.stderr.trim()}`, "error");
     },
   });
