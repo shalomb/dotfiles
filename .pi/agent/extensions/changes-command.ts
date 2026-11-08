@@ -4,34 +4,24 @@
  *   /changes popup      same panel in a 98% popup
  *   /changes <ref>      start against a ref (HEAD~1, origin/main); default HEAD
  *   /changes attach     add files marked with ^a in the panel to the prompt as @refs
- *   /changes close      close the panel (and stop auto-opening)
+ *   /changes close      close the panel
  * Panel: foldable tree — file rows (▸/▾, ● = touched in the last 30s) with hunk rows under open files.
  *   ⏎/space/l/h fold · j/k move · J/K jump ±10 · g/G top/bottom · e/c expand/close all · b cycle base
  *   (session → HEAD → branch) · t tests+generated · s side-by-side · m mark file for prompt · p pager · q quit.
  *   Polls a cheap mtime/status signature every 1s (results cached per signature), and refreshes
  *   instantly after an agent edit/write/bash tool call. Cursor stays on its row across refreshes.
- * Auto-open: once you've opened the panel yourself, it reopens on the agent's first edit
- *   (tmux window ≥ 144 cols) until you close it. Preference lives in ~/.pi/agent/changes-state.json.
+ * No auto-open: only /changes and ctrl+alt+d open UI, and only via _lib/ui-gate.ts (shown when pi's
+ *   pane is the one you're looking at; otherwise parked with a bell + @pi_attn; never from child processes).
  * Rendering/UI lives in _lib/changes.sh (tested: _lib/changes.test.ts).
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { registerShared } from "./_lib/subcommands.ts";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { originQuery, popupArgs, splitArgs, surface } from "./_lib/ui-gate.ts";
 
-const AUTO_MIN_COLS = 144;
-const STATE_FILE = join(homedir(), ".pi", "agent", "changes-state.json");
 const MARKED = join(process.env.XDG_RUNTIME_DIR || "/tmp", `pi-changes-marked-${process.pid}`);
-
-const loadAuto = (): boolean => {
-  try { return JSON.parse(readFileSync(STATE_FILE, "utf8")).auto === true; } catch { return false; }
-};
-const saveAuto = (auto: boolean) => {
-  mkdirSync(dirname(STATE_FILE), { recursive: true });
-  writeFileSync(STATE_FILE, JSON.stringify({ auto }));
-};
 
 export default function (pi: ExtensionAPI) {
   const script = join(dirname(fileURLToPath(import.meta.url)), "_lib", "changes.sh");
@@ -39,9 +29,10 @@ export default function (pi: ExtensionAPI) {
   let port = 0;
   let sessionTree: string | undefined;
   let repoRoot: string | undefined;
-  let autoShown = false; // auto-open at most once per session
 
   const tmux = (args: string[]) => pi.exec("tmux", args, { timeout: 5000 });
+  const tmuxBlocking = (args: string[]) => pi.exec("tmux", args); // display-popup -E blocks until closed
+  const originPane = () => process.env.TMUX_PANE ?? "";
   const paneAlive = async () => {
     if (!paneId) return false;
     const r = await tmux(["display-message", "-p", "-t", paneId, "#{pane_id}"]);
@@ -73,12 +64,16 @@ export default function (pi: ExtensionAPI) {
       (sessionTree ? ` CHANGES_SESSION_TREE=${q(sessionTree)}` : "");
     const startMode = base === "HEAD" ? (sessionTree ? "session" : "head") : base;
     const cmd = `${env} bash ${q(script)} ui ${q(repo)} ${q(startMode)}`;
+    const pane = originPane();
+    if ((await surface(pi.exec.bind(pi) as any, "changes: panel not shown (pane not focused)", process.env, ctx.hasUI !== false)) !== "show")
+      return notify("changes: not shown, you are not looking at this pane (flagged @pi_attn)");
     if (popup) {
-      const res = await tmux(["display-popup", "-E", "-d", repo, "-w", "98%", "-h", "98%", "-T", " changes ", "bash", "-c", cmd]);
+      const origin = (await tmux(originQuery(pane))).stdout.trim() || pane;
+      const res = await tmuxBlocking(popupArgs(pane, repo, "changes", origin, cmd));
       if (res.code !== 0) notify(`changes popup failed (${res.code}): ${res.stderr.trim()}`, "error");
       return;
     }
-    const res = await tmux(["split-window", "-h", "-d", "-P", "-F", "#{pane_id}", "-l", "45%", "-c", repo, "bash", "-c", cmd]);
+    const res = await tmux(splitArgs(pane, repo, cmd));
     if (res.code !== 0) return notify(`changes split failed (${res.code}): ${res.stderr.trim()}`, "error");
     paneId = res.stdout.trim();
   };
@@ -110,18 +105,16 @@ export default function (pi: ExtensionAPI) {
     if (first === "attach") return attach(ctx);
     if (first === "close" || (!first && (await paneAlive()))) {
       await close();
-      saveAuto(false); // closing turns auto-open off until you open it again
       return notify("changes: closed");
     }
     const popup = first === "popup";
     const base = (popup ? rest[0] : first) ?? "HEAD";
     if (base.startsWith("-")) return notify("changes: base must be a ref, not an option", "error");
-    if (!popup) saveAuto(true); // opening manually turns auto-open on
     await close();
     await launch(ctx, base, popup);
   };
 
-  // Instant refresh + auto-open when the agent touches the working tree.
+  // Instant refresh when the agent touches the working tree.
   pi.on("tool_result", async (event: any, ctx: any) => {
     const name = String(event.toolName ?? "");
     if (!["edit", "write", "bash"].includes(name)) return;
@@ -129,11 +122,6 @@ export default function (pi: ExtensionAPI) {
       await pi.exec("bash", [script, "poke", "/", String(port)], { timeout: 3000 }).catch(() => {});
       return;
     }
-    if (name === "bash" || autoShown || !process.env.TMUX || !loadAuto()) return;
-    const w = await tmux(["display-message", "-p", "#{window_width}"]);
-    if (Number(w.stdout.trim()) < AUTO_MIN_COLS) return;
-    autoShown = true;
-    await launch(ctx, "HEAD", false);
   });
 
   registerShared(pi, "changes", {
