@@ -51,7 +51,7 @@ export async function surface(exec: Exec, reason: string, env = process.env, has
   return "park";
 }
 
-export type PopupOpts = { name: string; cwd: string; width?: string; height?: string; argv: string[] };
+export type PopupOpts = { name: string; cwd: string; width?: string; height?: string; argv: string[]; signal?: AbortSignal };
 export type PopupResult = { status: "shown" | "parked" | "skip"; code?: number; stdout?: string; stderr?: string };
 
 /** The one path for popups: gate on focus, target the origin pane, no timeout (display-popup -E blocks). */
@@ -63,7 +63,7 @@ export async function openPopup(exec: Exec, o: PopupOpts, env = process.env, has
   const w = await exec("tmux", originQuery(pane), { timeout: 5000 });
   const origin = w.code === 0 && w.stdout.trim() ? w.stdout.trim() : pane;
   const args = ["display-popup", "-t", pane, "-E", "-d", o.cwd, "-w", o.width ?? "98%", "-h", o.height ?? "98%", "-T", popupTitle(o.name, origin), ...o.argv];
-  const r = await exec("tmux", args);
+  const r = await exec("tmux", args, o.signal ? { signal: o.signal } : undefined);
   return { status: "shown", code: r.code, stdout: r.stdout, stderr: r.stderr };
 }
 
@@ -72,7 +72,11 @@ export type SplitResult = { status: "shown" | "parked" | "skip"; paneId?: string
 /** Gated split pane beside the origin pane (non-blocking, so the normal timeout applies). */
 export async function openSplit(exec: Exec, o: { name: string; cwd: string; cmd: string }, env = process.env, hasUI = true): Promise<SplitResult> {
   const s = await surface(exec, `${o.name} ready`, env, hasUI);
-  if (s !== "show") return { status: s };
+  if (s !== "show") return { status: s === "park" ? "parked" : "skip" };
   const r = await exec("tmux", splitArgs(env.TMUX_PANE!, o.cwd, o.cmd), { timeout: 5000 });
   return { status: "shown", paneId: r.stdout.trim(), code: r.code, stderr: r.stderr };
 }
+
+/** Notice for a popup that did not open ("" when it was shown). */
+export const notShownNote = (r: { status: string }, name: string): string =>
+  r.status === "parked" ? `${name}: not shown, you are not looking at this pane (flagged @pi_attn)` : r.status === "skip" ? `${name}: not shown (child process or no tmux)` : "";
