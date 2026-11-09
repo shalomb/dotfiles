@@ -36,9 +36,9 @@ function createDbAdapter(path: string): DbAdapter {
 }
 
 export type Registry = DbAdapter;
-export interface GitFacts { branch?: string }
-export interface Row { id: string; file: string; cwd: string; repo: string; worktree: string | null; branch: string | null; profile: string | null; model: string | null; started: string; ended: string | null; status: string; last_activity: string | null; digest: string }
-export interface Criteria { id?: string; cwd?: string; worktree?: string; branch?: string; repo?: string; status?: string; since?: string; keyword?: string; pid?: number; tmuxSession?: string; tmuxWindow?: string; tmuxPane?: string }
+export interface GitFacts { branch?: string; repo?: string; worktree?: string; worktreePath?: string; isLinked?: boolean }
+export interface Row { id: string; file: string; cwd: string; repo: string; worktree: string | null; worktree_path: string | null; branch: string | null; profile: string | null; model: string | null; started: string; ended: string | null; status: string; last_activity: string | null; digest: string }
+export interface Criteria { id?: string; cwd?: string; worktree?: string; branch?: string; repo?: string; status?: string; since?: string; keyword?: string; pid?: number; tmuxSession?: string; tmuxWindow?: string; tmuxPane?: string; worktreePath?: string }
 
 export const defaultDbPath = () => join(process.env.XDG_STATE_HOME ?? join(homedir(), ".local/state"), "pi-registry/registry.db");
 
@@ -49,6 +49,18 @@ export function openRegistry(path = defaultDbPath()): Registry {
 	db.exec(`CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, file TEXT, cwd TEXT, repo TEXT, worktree TEXT, branch TEXT, profile TEXT, model TEXT, started TEXT, ended TEXT, status TEXT, last_activity TEXT, digest TEXT DEFAULT '', mtime_ms REAL, size INTEGER);
 CREATE TABLE IF NOT EXISTS instances (session_id TEXT, pid INTEGER, tmux_session TEXT, tmux_window TEXT, tmux_pane TEXT, scope TEXT, started TEXT, ended TEXT);
 CREATE INDEX IF NOT EXISTS idx_inst_sid ON instances(session_id);`);
+	
+	// Migration: add worktree_path column if missing
+	const tableInfo = db.query("PRAGMA table_info(sessions)").all() as any[];
+	const hasWorktreePath = tableInfo.some((col: any) => col.name === "worktree_path");
+	if (!hasWorktreePath) {
+		db.exec("ALTER TABLE sessions ADD COLUMN worktree_path TEXT");
+		// Force re-scan of all rows by resetting mtime_ms
+		db.exec("UPDATE sessions SET mtime_ms = 0 WHERE worktree_path IS NULL");
+		// Bump schema version
+		db.exec("PRAGMA user_version = 1");
+	}
+	
 	return db;
 }
 
@@ -81,8 +93,36 @@ export function deriveRepo(cwd: string): { repo: string; worktree: string | null
 
 export function gitFacts(cwd: string): GitFacts {
 	if (!existsSync(cwd)) return {};
-	const r = spawnSync("git", ["-C", cwd, "branch", "--show-current"], { encoding: "utf8" });
-	return r.status === 0 && r.stdout.trim() ? { branch: r.stdout.trim() } : {};
+	
+	// Get branch
+	const branchResult = spawnSync("git", ["-C", cwd, "branch", "--show-current"], { encoding: "utf8" });
+	if (branchResult.status !== 0) return {};
+	const branch = branchResult.stdout.trim();
+	
+	// Get worktree path (toplevel of cwd)
+	const toplevelResult = spawnSync("git", ["-C", cwd, "rev-parse", "--show-toplevel"], { encoding: "utf8" });
+	if (toplevelResult.status !== 0) return { branch: branch || undefined };
+	const worktreePath = toplevelResult.stdout.trim();
+	
+	// Get common dir (points to main repo for linked worktrees, to .git for main repo)
+	const commonDirResult = spawnSync("git", ["-C", cwd, "rev-parse", "--path-format=absolute", "--git-common-dir"], { encoding: "utf8" });
+	if (commonDirResult.status !== 0) return { branch: branch || undefined, worktreePath };
+	const commonDir = commonDirResult.stdout.trim();
+	
+	// Repo is parent of common dir (non-bare)
+	const repo = dirname(commonDir);
+	
+	// Check if this is a linked worktree
+	const isLinked = worktreePath !== repo;
+	const worktree = isLinked ? basename(worktreePath) : undefined;
+	
+	return {
+		branch: branch || undefined,
+		repo,
+		worktree,
+		worktreePath,
+		isLinked
+	};
 }
 
 function listFiles(root: string): string[] {
@@ -100,7 +140,17 @@ export function backfill(db: Registry, root: string, opts: { git?: (cwd: string)
 	const git = opts.git ?? gitFacts;
 	const isAlive = opts.isAlive ?? ((pid: number) => { try { process.kill(pid, 0); return true; } catch { return false; } });
 	const known = db.query("SELECT mtime_ms, size FROM sessions WHERE file=?");
-	const ins = db.query(`INSERT OR REPLACE INTO sessions (id,file,cwd,repo,worktree,branch,profile,model,started,ended,status,last_activity,digest,mtime_ms,size) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+	const ins = db.query(`INSERT OR REPLACE INTO sessions (id,file,cwd,repo,worktree,worktree_path,branch,profile,model,started,ended,status,last_activity,digest,mtime_ms,size) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+	
+	// Cache git results per cwd to avoid repeated git calls
+	const gitCache = new Map<string, GitFacts>();
+	const getCachedGit = (cwd: string): GitFacts => {
+		if (!gitCache.has(cwd)) {
+			gitCache.set(cwd, git(cwd));
+		}
+		return gitCache.get(cwd)!;
+	};
+	
 	let scanned = 0, skipped = 0;
 	for (const file of listFiles(root)) {
 		const st = statSync(file);
@@ -116,14 +166,21 @@ export function backfill(db: Registry, root: string, opts: { git?: (cwd: string)
 			else if (l.includes('"role":"user"')) { const t = clip(textOf(safe(l)?.message?.content), 300); if (t) prompts.push(t); }
 			else if (l.includes('"role":"assistant"')) { const t = clip(textOf(safe(l)?.message?.content), 300); if (t) { firstA ||= t; lastA = t; } }
 		}
-		const { repo, worktree } = deriveRepo(head.cwd ?? "");
+		
+		// Get git facts (with caching)
+		const facts = getCachedGit(head.cwd ?? "");
+		// Fallback to path-based derive if git facts unavailable
+		const { repo, worktree } = facts.repo ? { repo: facts.repo, worktree: facts.worktree ?? null } : deriveRepo(head.cwd ?? "");
+		const worktreePath = facts.worktreePath ?? null;
+		const branch = facts.branch ?? null;
+		
 		const last = tailLine(file, st.size);
 		const lastTs = /"timestamp":"([^"]+)"/.exec(last)?.[1] ?? new Date(st.mtimeMs).toISOString();
 		let status = classifyTail(last);
 		const liveInst = db.query("SELECT pid FROM instances WHERE session_id=? AND ended IS NULL").get(head.id) as any;
 		if (liveInst && isAlive(liveInst.pid)) status = "running";
 		const digest = [...prompts, firstA, lastA].filter(Boolean).join("\n");
-		ins.run(head.id, file, head.cwd ?? "", repo, worktree, git(head.cwd ?? "").branch ?? null, opts.profile ?? null, model, head.timestamp, status === "ended" ? lastTs : null, status, lastTs, digest, st.mtimeMs, st.size);
+		ins.run(head.id, file, head.cwd ?? "", repo, worktree, worktreePath, branch, opts.profile ?? null, model, head.timestamp, status === "ended" ? lastTs : null, status, lastTs, digest, st.mtimeMs, st.size);
 		scanned++;
 	}
 	return { scanned, skipped };
@@ -133,6 +190,7 @@ export function search(db: Registry, c: Criteria): Row[] {
 	const w: string[] = [], a: any[] = [];
 	const eq = (col: string, v: unknown) => { if (v !== undefined) { w.push(`s.${col}=?`); a.push(v); } };
 	eq("id", c.id); eq("cwd", c.cwd); eq("worktree", c.worktree); eq("branch", c.branch); eq("repo", c.repo); eq("status", c.status);
+	if (c.worktreePath) { w.push("s.worktree_path=?"); a.push(c.worktreePath); }
 	if (c.since) { w.push("s.last_activity>=?"); a.push(c.since); }
 	if (c.keyword) { w.push("s.digest LIKE ? ESCAPE '\\'"); a.push(`%${c.keyword.replace(/[\\%_]/g, "\\$&")}%`); }
 	const ic: string[] = [];
@@ -141,7 +199,7 @@ export function search(db: Registry, c: Criteria): Row[] {
 	if (c.tmuxWindow) { ic.push("tmux_window=?"); a.push(c.tmuxWindow); }
 	if (c.tmuxPane) { ic.push("tmux_pane=?"); a.push(c.tmuxPane); }
 	if (ic.length) w.push(`s.id IN (SELECT session_id FROM instances WHERE ${ic.join(" AND ")})`);
-	const sql = `SELECT s.id,s.file,s.cwd,s.repo,s.worktree,s.branch,s.profile,s.model,s.started,s.ended,s.status,s.last_activity,s.digest FROM sessions s ${w.length ? "WHERE " + w.join(" AND ") : ""} ORDER BY s.last_activity DESC`;
+	const sql = `SELECT s.id,s.file,s.cwd,s.repo,s.worktree,s.worktree_path,s.branch,s.profile,s.model,s.started,s.ended,s.status,s.last_activity,s.digest FROM sessions s ${w.length ? "WHERE " + w.join(" AND ") : ""} ORDER BY s.last_activity DESC`;
 	return db.query(sql).all(...a) as Row[];
 }
 
@@ -162,9 +220,14 @@ export interface InstanceData {
 }
 
 export function registerInstance(db: Registry, data: InstanceData): void {
-	const { repo, worktree } = deriveRepo(data.cwd);
-	db.query(`INSERT OR REPLACE INTO sessions (id,file,cwd,repo,worktree,branch,profile,model,started,ended,status,last_activity,digest,mtime_ms,size) VALUES (?,?,?,?,?,?,?,?,?,NULL,'running',?,'',-1,-1)`)
-		.run(data.sessionId, data.file, data.cwd, repo, data.worktree ?? worktree, data.branch, data.profile, data.model, data.started, data.started);
+	// Use gitFacts if available, otherwise fall back to deriveRepo
+	const facts = gitFacts(data.cwd);
+	const { repo, worktree } = facts.repo ? { repo: facts.repo, worktree: facts.worktree ?? null } : deriveRepo(data.cwd);
+	const worktreePath = facts.worktreePath ?? null;
+	const branch = data.branch ?? facts.branch ?? null;
+	
+	db.query(`INSERT OR REPLACE INTO sessions (id,file,cwd,repo,worktree,worktree_path,branch,profile,model,started,ended,status,last_activity,digest,mtime_ms,size) VALUES (?,?,?,?,?,?,?,?,?,?,NULL,'running',?,'',-1,-1)`)
+		.run(data.sessionId, data.file, data.cwd, repo, data.worktree ?? worktree, worktreePath, branch, data.profile, data.model, data.started, data.started);
 	db.query(`INSERT INTO instances (session_id,pid,tmux_session,tmux_window,tmux_pane,scope,started,ended) VALUES (?,?,?,?,?,?,?,NULL)`)
 		.run(data.sessionId, data.pid, data.tmuxSession ?? null, data.tmuxWindow ?? null, data.tmuxPane ?? null, data.scope ?? null, data.started);
 }

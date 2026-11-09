@@ -68,6 +68,7 @@ export function parseFindArgs(argv: string[], now = new Date()): FindArgs {
 			case "--tmux-pane": criteria.tmuxPane = val(t); break;
 			case "--branch": criteria.branch = val(t); break;
 			case "--worktree": criteria.worktree = val(t); break;
+			case "--worktree-path": criteria.worktreePath = val(t); break;
 			case "--cwd": criteria.cwd = val(t); break;
 			case "--repo": criteria.repo = val(t); break;
 			case "--status": criteria.status = val(t); break;
@@ -123,7 +124,8 @@ function renderTable(rows: Row[], limit?: number): string {
 		const id = r.id.slice(0, 8);
 		const status = (r.status || "?").padEnd(15);
 		const activity = formatTimestamp(r.last_activity).padEnd(17);
-		const branchWt = (r.branch || r.worktree || "—").slice(0, 20).padEnd(20);
+		// Show worktree name if present, otherwise branch
+		const branchWt = (r.worktree || r.branch || "—").slice(0, 20).padEnd(20);
 		const cwd = shortCwd(r.cwd).slice(0, 40);
 		lines.push(`${id}  ${status} ${activity} ${branchWt} ${cwd}`);
 		lines.push(`         /resume ${r.id}`);
