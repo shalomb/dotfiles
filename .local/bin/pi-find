@@ -1,0 +1,15 @@
+#!/usr/bin/env bun
+/** pi-find: search the session registry with filters and render table/JSON. */
+import { realpathSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { runFind } from "../../.pi/agent/extensions/_lib/registry-find";
+
+const scriptPath = realpathSync(process.argv[1]);
+const scriptDir = dirname(scriptPath);
+
+const output = runFind(process.argv.slice(2), {
+	write: (s: string) => process.stdout.write(s),
+	error: (s: string) => process.stderr.write(s),
+});
+
+console.log(output);
