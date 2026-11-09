@@ -127,3 +127,63 @@ describe("deriveRepo fallback for deleted worktrees", () => {
 		expect(result.worktree).toBeNull();
 	});
 });
+
+describe("gitFacts with removed/stale worktrees (regression fix)", () => {
+	test("removed linked worktree falls back to path-based derive", () => {
+		const repo = makeRepo("main");
+		const wtPath = join(repo, ".worktrees", "removed-wt");
+		git(repo, "worktree", "add", "-b", "removed-branch", wtPath);
+		
+		// Remove the worktree
+		git(repo, "worktree", "remove", "removed-wt");
+		
+		// Now gitFacts should fall back to path-based derive
+		const facts = gitFacts(wtPath);
+		expect(facts.repo).toBe(repo);
+		expect(facts.worktree).toBe("removed-wt");
+		expect(facts.worktreePath).toBe(wtPath);
+	});
+
+	test("cwd that no longer exists falls back to path-based derive", () => {
+		const fakeWtPath = join(testRoot, "nonexistent", ".worktrees", "missing");
+		
+		const facts = gitFacts(fakeWtPath);
+		// Should still derive repo and worktree from path even if dir doesn't exist
+		expect(facts.repo).toBe(join(testRoot, "nonexistent"));
+		expect(facts.worktree).toBe("missing");
+		expect(facts.worktreePath).toBe(fakeWtPath);
+		expect(facts.isLinked).toBe(true);
+	});
+
+	test("subdir of live linked worktree still works correctly", () => {
+		const repo = makeRepo("main");
+		const wtPath = join(repo, ".worktrees", "live-wt");
+		git(repo, "worktree", "add", "-b", "live-branch", wtPath);
+		
+		const subdir = join(wtPath, "src", "components");
+		mkdirSync(subdir, { recursive: true });
+		
+		// Should still correctly identify as worktree
+		const facts = gitFacts(subdir);
+		expect(facts.repo).toBe(repo);
+		expect(facts.worktree).toBe("live-wt");
+		expect(facts.worktreePath).toBe(wtPath);
+		expect(facts.branch).toBe("live-branch");
+	});
+
+	test("removed worktree with parent repo access returns path-based worktree", () => {
+		const repo = makeRepo("main");
+		const wtPath = join(repo, ".worktrees", "deleted-dir");
+		git(repo, "worktree", "add", "-b", "deleted-branch", wtPath);
+		
+		// Remove just the directory (not via git worktree remove)
+		// This simulates a stale worktree where git resolves to parent
+		rmSync(wtPath, { recursive: true, force: true });
+		
+		// Git would resolve to parent repo, but we should detect and use path-based derive
+		const facts = gitFacts(wtPath);
+		expect(facts.repo).toBe(repo);
+		expect(facts.worktree).toBe("deleted-dir");
+		expect(facts.worktreePath).toBe(wtPath);
+	});
+});

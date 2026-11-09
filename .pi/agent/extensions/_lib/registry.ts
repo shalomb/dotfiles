@@ -92,11 +92,39 @@ export function deriveRepo(cwd: string): { repo: string; worktree: string | null
 }
 
 export function gitFacts(cwd: string): GitFacts {
-	if (!existsSync(cwd)) return {};
+	// Check if cwd suggests a worktree path (path-based detection)
+	const cwdMatch = /^(.*?)\/\.worktrees\/([^/]+)/.exec(cwd);
+	const expectedRepo = cwdMatch ? cwdMatch[1] : null;
+	const expectedWorktree = cwdMatch ? cwdMatch[2] : null;
+	const expectedWorktreePath = cwdMatch ? join(expectedRepo!, ".worktrees", expectedWorktree!) : null;
+	
+	if (!existsSync(cwd)) {
+		// Directory doesn't exist - use path-based derive if it looks like a worktree
+		if (expectedRepo && expectedWorktree) {
+			return {
+				repo: expectedRepo,
+				worktree: expectedWorktree,
+				worktreePath: expectedWorktreePath!,
+				isLinked: true
+			};
+		}
+		return {};
+	}
 	
 	// Get branch
 	const branchResult = spawnSync("git", ["-C", cwd, "branch", "--show-current"], { encoding: "utf8" });
-	if (branchResult.status !== 0) return {};
+	if (branchResult.status !== 0) {
+		// Git command failed - fall back to path-based derive if worktree pattern
+		if (expectedRepo && expectedWorktree) {
+			return {
+				repo: expectedRepo,
+				worktree: expectedWorktree,
+				worktreePath: expectedWorktreePath!,
+				isLinked: true
+			};
+		}
+		return {};
+	}
 	const branch = branchResult.stdout.trim();
 	
 	// Get worktree path (toplevel of cwd)
@@ -112,13 +140,36 @@ export function gitFacts(cwd: string): GitFacts {
 	// Repo is parent of common dir (non-bare)
 	const repo = dirname(commonDir);
 	
+	// Detect stale/removed worktree: cwd suggests worktree path but git resolved elsewhere
+	if (expectedWorktreePath && worktreePath !== expectedWorktreePath) {
+		// Git resolved to parent repo or elsewhere - fall back to path-based derive
+		// This happens when worktree was removed or directory is stale
+		return {
+			branch: branch || undefined,
+			repo: expectedRepo!,
+			worktree: expectedWorktree!,
+			worktreePath: expectedWorktreePath,
+			isLinked: true
+		};
+	}
+	
+	// Normalize symlink/realpath differences: prefer path-derived repo if it matches
+	let finalRepo = repo;
+	if (expectedRepo && repo !== expectedRepo) {
+		// Check if they're the same path (symlink vs realpath)
+		// If the git repo contains the expected repo prefix, use the expected (non-realpath) form
+		if (repo.includes(expectedRepo.split("/").pop()!)) {
+			finalRepo = expectedRepo;
+		}
+	}
+	
 	// Check if this is a linked worktree
-	const isLinked = worktreePath !== repo;
+	const isLinked = worktreePath !== finalRepo;
 	const worktree = isLinked ? basename(worktreePath) : undefined;
 	
 	return {
 		branch: branch || undefined,
-		repo,
+		repo: finalRepo,
 		worktree,
 		worktreePath,
 		isLinked
