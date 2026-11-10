@@ -23,7 +23,7 @@ goal - one checkable goal per branch, locked before work starts
 - **\`/goal <outcome>\`** - Same as /goal, seeding the outcome
 - **/goal lock** - Lock the draft. Refuses if the check already passes on the base commit
 - **/goal unlock** - Locked -> draft, to correct it. Logged; relock re-validates
-- **/goal done** - Run the check; close if green, then /persist and lessons (alias: /goal close)
+- **/goal done** - Run the check; close if green, then suggest /persist, lessons and the next goal (alias: /goal close)
 - **/goal drop** - Abandon the goal
 - **/goal help** - This page
 ## DESCRIPTION

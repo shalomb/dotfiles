@@ -37,7 +37,7 @@ Feature: Goal Contract with a locked Done-check
       Given branch "feat/export" has an active goal whose Done-check passes
       When the Human Partner asks to close the goal
       Then the goal is closed
-      And a hand-off with lessons learned is written for the branch
+      And a notice suggests /persist, lessons learned and the next goal, and runs none of them
 
     Scenario: A design goal without a command check closes as an assertion
       Given branch "design/sync" has an active goal with a human-confirm Done-check

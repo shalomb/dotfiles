@@ -6,7 +6,7 @@
  *   /goal check       run the done-check now: green or red
  *   /goal approve     apply the agent's pending change to the locked done-check (asks first)
  *   /goal reject      discard the pending change
- *   /goal done        close on a green check (or on your confirmation for a human-confirm check), then /persist and lessons
+ *   /goal done        close on a green check (or on your confirmation for a human-confirm check), then suggest /persist and lessons
  *   /goal drop        abandon the goal
  * The agent can reach the store only through goal_propose (a draft, or a pending change; never lock, approve or close),
  * and a tool_call guard blocks direct writes to the goals directory. Only these command handlers, driven by the human,

@@ -357,10 +357,9 @@ export async function doneGoal(d: Deps): Promise<void> {
 	if (!decision.close) return d.ui.notify(decision.reason, "error");
 	const closed = await commitTombstoned(d, applyClose(g, { now: d.now(), closedBy: decision.closedBy }), "closed", `Goal ${g.id} closed (${decision.closedBy}).`, () => ({ event: "goal_closed", closedBy: decision.closedBy }));
 	if (!closed) return;
-	await d.runCommand(`/persist goal ${g.id} closed (${decision.closedBy}): ${g.outcome}`);
-	d.tellAgent(
-		`/goal done: goal ${g.id} is closed (${decision.closedBy}). After the /persist hand-off, capture the lessons learned from this goal ` +
-		"(lessons-learned skill): what worked, what cost time, what to change next time. Keep it short.");
+	d.ui.notify(
+		`Goal ${g.id} is closed. Nothing else runs on its own. Next, when you want them: /persist to write a hand-off, ask the agent for lessons learned, ` +
+		"or /goal to draft the next goal from the discussion.", "info");
 }
 
 export async function dropCurrentGoal(d: Deps, reason: string): Promise<void> {
