@@ -589,6 +589,21 @@ test("bare /goal on a closed goal shows it, saves a fresh draft and asks the age
 	expect(toAgent.join("\n")).toContain("Users can export");
 });
 
+test("a draft that follows a finished goal logs goal_started with the id it came from; a first draft logs nothing", async () => {
+	await draftWithCheck();
+	expect(events()).toEqual([]);
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
+	await runGoalCommand(deps(), "");
+	expect(events()).toMatchObject([{ event: "goal_started", goal: "g-feat-export", from: "g-feat-export", previousStatus: "closed" }]);
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "dropped" });
+	await startGoal(deps(), "third");
+	expect(events().map((e) => e.previousStatus)).toEqual(["closed", "dropped"]);
+	await proposeFromAgent(deps(), { doneCheck: { kind: "command", commands: ["test -f x"] } });
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
+	await proposeFromAgent(deps(), { outcome: "fourth", doneCheck: { kind: "command", commands: ["test -f y"] } });
+	expect(events().map((e) => e.previousStatus)).toEqual(["closed", "dropped", "closed"]);
+});
+
 test("goal_propose on a closed goal starts a new draft instead of refusing; it is not locked", async () => {
 	await draftWithCheck();
 	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });

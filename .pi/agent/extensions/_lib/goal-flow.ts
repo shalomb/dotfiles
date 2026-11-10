@@ -85,6 +85,16 @@ const nextStep = (g: Goal): string => {
 };
 const refusal = (g: Goal, what: string) => `${what} (the goal is ${g.status}). ${nextStep(g)}`;
 
+/** A draft that follows a finished goal on the same branch: log the link, so the history of goals on a branch can be rebuilt. Never throws. */
+function logSuccessor(d: Deps, next: Goal, previous: Goal | undefined): void {
+	if (!previous || (previous.status !== "closed" && previous.status !== "dropped")) return;
+	try {
+		appendGoalEvent(d.store, { at: stamp(d.now()), event: "goal_started", goal: next.id, branch: next.branch, from: previous.id, previousStatus: previous.status });
+	} catch (e) {
+		d.ui.notify(`The event could not be appended to trajectories.jsonl: ${errorText(e)}`, "warning");
+	}
+}
+
 function current(d: Deps): Goal | undefined {
 	const { goal, error } = load(d);
 	if (error) d.ui.notify(error, "error");
@@ -196,6 +206,7 @@ async function draftFromContext(d: Deps, previous?: Goal): Promise<void> {
 		return d.ui.notify(`The goal file for this branch name belongs to branch ${sharing.branch} (${sharing.id}). Not overwritten.`, "error");
 	const g = newDraft({ branch: d.branch, outcome: "(to be drafted from the conversation)", baseCommit: d.head }, d.now());
 	if (!commit(d, { ok: true, goal: g }, `Draft goal saved: ${g.id}`)) return;
+	logSuccessor(d, g, previous);
 	if (previous) {
 		d.tellAgent(
 			`/goal: goal ${previous.id} (${previous.outcome}) is ${previous.status}. The user wants the next goal for branch ${g.branch}. Infer it from the discussion so far ` +
@@ -224,6 +235,7 @@ export async function startGoal(d: Deps, outcome: string): Promise<void> {
 	const g = newDraft({ branch: d.branch, outcome, baseCommit: d.head }, d.now());
 	const saved = commit(d, { ok: true, goal: g }, `Draft goal saved: ${g.id}`);
 	if (!saved) return;
+	logSuccessor(d, g, existing);
 	d.tellAgent(
 		`/goal: the user set this goal for branch ${g.branch}: "${g.outcome}". Draft the contract now with the goal_propose tool: ` +
 		"done_check (one or more shell commands that test the outcome and exit non-zero until the work is done; they must fail on the base commit " +
@@ -240,13 +252,15 @@ export async function proposeFromAgent(d: Deps, p: Proposal): Promise<{ ok: bool
 	let { goal: g, error } = load(d);
 	if (!g) return out(false, error === NO_GOAL ? `${NO_GOAL} Only the user starts a goal.` : error!);
 	// A finished goal: the agent's proposal becomes the next draft (never locked; the user still runs /goal lock).
-	if (g.status === "closed" || g.status === "dropped") g = newDraft({ branch: g.branch, outcome: p.outcome ?? "(to be drafted)", baseCommit: d.head }, d.now());
+	const finished = g.status === "closed" || g.status === "dropped" ? g : undefined;
+	if (finished) g = newDraft({ branch: g.branch, outcome: p.outcome ?? "(to be drafted)", baseCommit: d.head }, d.now());
 	if (g.status === "active") return out(false, "The goal is locked, so you cannot change it. Ask the user to run /goal unlock, correct the draft, then /goal lock.");
 	if (g.status !== "draft") return out(false, `The goal is ${g.status}; nothing to propose.`);
 	const f: DraftFields = { outcome: p.outcome, doneCheck: p.doneCheck, outcomeChecks: p.outcomeChecks, antiGoals: p.antiGoals, scopeAnchors: p.scopeAnchors, specLinks: p.specLinks };
 	const r = fillDraft(g, f);
 	if (!r.ok) return out(false, r.reason);
 	saveGoal(d.store, r.goal);
+	logSuccessor(d, r.goal, finished);
 	d.ui.notify(`Goal ${g.id} draft updated by the agent. Review it with /goal; /goal lock when it is right.`, "info");
 	return out(true, "Draft saved. It is not locked: the user reviews it and runs /goal lock.");
 }
