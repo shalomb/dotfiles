@@ -4,7 +4,7 @@
 
 import {
 	type CheckSpec, type DraftFields, type Goal, type Result,
-	applyUnlock, lastLockedSpec, applyClose, applyLock, canLock, goalCheckHash, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft, oneLine,
+	applyUnlock, lastLockedSpec, applyClose, applyLock, canLock, goalCheckHash, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft,
 	reminderLine, stamp, staleGoal,
 } from "./goal.ts";
 import { GOAL_HELP } from "./goal-help.ts";
