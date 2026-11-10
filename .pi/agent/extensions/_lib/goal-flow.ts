@@ -51,6 +51,7 @@ export function parseGoalArgs(raw: string): GoalArgs {
 	const a = raw.trim();
 	if (!a) return { kind: "show" };
 	if ((RETIRED as readonly string[]).includes(a)) return { kind: "retired", word: a };
+	if (a === "close") return { kind: "done" };
 	return (SUBCOMMANDS as readonly string[]).includes(a) ? ({ kind: a } as GoalArgs) : { kind: "start", outcome: a };
 }
 
@@ -159,7 +160,10 @@ export async function showGoal(d: Deps): Promise<void> {
 		return d.ui.notify(error!, "error");
 	}
 	if (goal.status === "draft") return d.ui.notify(`${summary(goal)}\nNext: /goal lock when this is right (the agent can still change it); /goal drop to abandon.`, "info");
-	if (goal.status !== "active") return d.ui.notify(summary(goal), "info");
+	if (goal.status === "closed" || goal.status === "dropped") {
+		d.ui.notify(`${summary(goal)}\nThis goal is finished. Drafting the next goal from the discussion; review it, then /goal lock. (Or /goal <outcome> to state it yourself.)`, "info");
+		return await draftFromContext(d, goal);
+	}
 	let status = "";
 	const problem = await integrityProblem(d, goal);
 	if (problem) return d.ui.notify(`${summary(goal)}\n${problem}`, "error");
@@ -174,13 +178,21 @@ export async function showGoal(d: Deps): Promise<void> {
 }
 
 /** Bare `/goal` with no goal: save an empty draft and ask the agent to discover and fill it in from the conversation. */
-async function draftFromContext(d: Deps): Promise<void> {
+async function draftFromContext(d: Deps, previous?: Goal): Promise<void> {
 	if (!d.branch) return d.ui.notify(NEEDS_BRANCH, "error");
 	const sharing = loadGoalFile(d.store, d.branch);
 	if (sharing && sharing.branch !== d.branch)
 		return d.ui.notify(`The goal file for this branch name belongs to branch ${sharing.branch} (${sharing.id}). Not overwritten.`, "error");
 	const g = newDraft({ branch: d.branch, outcome: "(to be drafted from the conversation)", baseCommit: d.head }, d.now());
 	if (!commit(d, { ok: true, goal: g }, `Draft goal saved: ${g.id}`)) return;
+	if (previous) {
+		d.tellAgent(
+			`/goal: goal ${previous.id} (${previous.outcome}) is ${previous.status}. The user wants the next goal for branch ${g.branch}. Infer it from the discussion so far ` +
+			"(what was proposed or left open after that goal), reusing context already present (scope, anti-goals, specs). " +
+			`Call goal_propose with outcome, done_check (shell commands that exit non-zero on the base commit ${g.doneCheck.baseCommit} and pass only when the work is done), anti_goals, scope_anchors and spec_links. ` +
+			"If the discussion does not make the next goal clear, ask one question. You cannot lock it: the user reviews it and runs /goal lock. Reply with the new goal statement.");
+		return;
+	}
 	d.tellAgent(
 		`/goal: the user wants a goal for branch ${g.branch}, drafted from the conversation so far. First run Discovery (what is already true, partly true, or not there, citing a path and a command). ` +
 		"Then call goal_propose with outcome (one sentence), done_check (shell commands that exit non-zero on the base commit " +
@@ -214,8 +226,10 @@ export interface Proposal { outcome?: string; doneCheck?: CheckSpec; outcomeChec
 export async function proposeFromAgent(d: Deps, p: Proposal): Promise<{ ok: boolean; message: string }> {
 	const out = (ok: boolean, message: string) => ({ ok, message });
 	if (!d.branch) return out(false, NEEDS_BRANCH);
-	const { goal: g, error } = load(d);
+	let { goal: g, error } = load(d);
 	if (!g) return out(false, error === NO_GOAL ? `${NO_GOAL} Only the user starts a goal.` : error!);
+	// A finished goal: the agent's proposal becomes the next draft (never locked; the user still runs /goal lock).
+	if (g.status === "closed" || g.status === "dropped") g = newDraft({ branch: g.branch, outcome: p.outcome ?? "(to be drafted)", baseCommit: d.head }, d.now());
 	if (g.status === "active") return out(false, "The goal is locked, so you cannot change it. Ask the user to run /goal unlock, correct the draft, then /goal lock.");
 	if (g.status !== "draft") return out(false, `The goal is ${g.status}; nothing to propose.`);
 	const f: DraftFields = { outcome: p.outcome, doneCheck: p.doneCheck, outcomeChecks: p.outcomeChecks, antiGoals: p.antiGoals, scopeAnchors: p.scopeAnchors, specLinks: p.specLinks };

@@ -578,6 +578,29 @@ test("bare /goal with no goal drafts one from the conversation: a draft is saved
 	expect(loadGoal(store, "feat/export")!.outcome).toBe("Users can export a backlog as CSV");
 });
 
+test("bare /goal on a closed goal shows it, saves a fresh draft and asks the agent to infer the next goal from the discussion", async () => {
+	await draftWithCheck();
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
+	await runGoalCommand(deps(), "");
+	expect(notes.join("\n")).toMatch(/closed/);
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft" });
+	expect(toAgent.join("\n")).toMatch(/next goal/i);
+	expect(toAgent.join("\n")).toMatch(/discussion|conversation/);
+	expect(toAgent.join("\n")).toContain("Users can export");
+});
+
+test("goal_propose on a closed goal starts a new draft instead of refusing; it is not locked", async () => {
+	await draftWithCheck();
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
+	const r = await proposeFromAgent(deps(), { outcome: "Export is also available as JSON", doneCheck: { kind: "command", commands: ["test -f export.json"] } });
+	expect(r.ok).toBe(true);
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft", outcome: "Export is also available as JSON" });
+});
+
+test("parseGoalArgs: close is an alias of done, not an outcome", () => {
+	expect(parseGoalArgs("close")).toEqual({ kind: "done" });
+});
+
 test("bare /goal on a draft shows the card with a next-step line", async () => {
 	const d = await draftWithCheck();
 	await runGoalCommand(d, "");
