@@ -19,6 +19,7 @@ class DotfileConfig:
         self.exclude_directories: List[str] = []
         self.exclude_files: List[str] = []
         self.import_exclude: List[str] = []  # deny list for `import` only
+        self.include_patterns: List[str] = []  # re-include paths a broad exclusion would drop
         
         self._load_config()
     
@@ -36,6 +37,7 @@ class DotfileConfig:
             self.exclusion_patterns = exclusions.get("patterns", [])
             self.exclude_directories = exclusions.get("exclude_directories", [])
             self.exclude_files = exclusions.get("exclude_files", [])
+            self.include_patterns = exclusions.get("include", [])
             self.import_exclude = config_data.get("import", {}).get("exclude", [])
             
             logger.info(f"Loaded configuration from {self.config_path}")
@@ -80,6 +82,10 @@ class DotfileConfig:
     def should_exclude_path(self, path: Path) -> bool:
         """Check if a path should be excluded."""
         path_str = str(path)
+
+        # An explicit include wins over every exclusion (e.g. pi extensions are .ts, which "*.ts" excludes as source code)
+        if any(self._matches_include(path_str, p) for p in self.include_patterns):
+            return False
         
         # Check exact file matches
         if path.name in self.exclude_files:
@@ -96,6 +102,13 @@ class DotfileConfig:
         
         return False
     
+    @staticmethod
+    def _matches_include(path_str: str, pattern: str) -> bool:
+        """An include pattern is a glob over the path from any directory boundary; '*' also spans '/'."""
+        import fnmatch
+
+        return fnmatch.fnmatch(path_str, f"*/{pattern}") or fnmatch.fnmatch(path_str, pattern)
+
     def _matches_pattern(self, path_str: str, pattern: str) -> bool:
         """Check if path matches a pattern."""
         import fnmatch
