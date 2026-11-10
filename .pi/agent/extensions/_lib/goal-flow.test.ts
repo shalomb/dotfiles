@@ -675,7 +675,7 @@ test("unlock only applies to a locked goal", async () => {
 test("/goal help hands the man page to the UI", async () => {
 	let shown = "";
 	await runGoalCommand({ ...deps(), showHelp: (t: string) => { shown = t; } }, "help");
-	expect(shown).toMatch(/^# GOAL\(1\)/);
+	expect(shown).toMatch(/^# GOAL\(1\)/m);
 });
 
 // ---- ADR-010 integrity, unchanged by the simplification ----

@@ -70,9 +70,9 @@ export default function (pi: ExtensionAPI) {
 				if (!pane) return ctx.ui.notify(text, "info");
 				void surface(exec, "/goal help", process.env, ctx.hasUI !== false).then(async (r) => {
 					if (r !== "show") return ctx.ui.notify(text, "info");
-					const f = join(tmpdir(), `goal-help-${process.pid}.txt`);
+					const f = join(tmpdir(), `goal-help-${process.pid}.md`);
 					writeFileSync(f, text);
-					await pi.exec("tmux", popupArgs(pane, repo.root, "goal", "help", `less -R ${f}; rm -f ${f}`));
+					await pi.exec("tmux", popupArgs(pane, repo.root, "goal", "help", `if command -v glow >/dev/null; then glow -p -s dark ${f}; else less -R ${f}; fi; rm -f ${f}`));
 				});
 			},
 			tellAgent: (m) => void send(m, false),
