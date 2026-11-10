@@ -672,6 +672,32 @@ test("unlock only applies to a locked goal", async () => {
 	expect(lastNote()).toMatch(/Only a locked goal/);
 });
 
+test("a refusal names the next step for the state the goal is in", async () => {
+	const note = async (status: string, run: (d: Deps) => Promise<void>) => {
+		await draftWithCheck();
+		saveGoal(store, { ...loadGoal(store, "feat/export")!, status: status as any });
+		notes.length = 0;
+		await run(deps());
+		return lastNote();
+	};
+	for (const s of ["closed", "dropped"]) {
+		expect(await note(s, doneGoal)).toMatch(/finished.*Run \/goal/s);
+		expect(await note(s, unlockGoal)).toMatch(/finished.*Run \/goal/s);
+		expect(await note(s, lockGoal)).toMatch(/finished.*Run \/goal/s);
+		expect(await note(s, (d) => dropCurrentGoal(d, "x"))).toMatch(/finished.*Run \/goal/s);
+	}
+	expect(await note("draft", doneGoal)).toMatch(/\/goal lock/);
+	expect(await note("draft", unlockGoal)).toMatch(/\/goal lock/);
+	expect(await note("active", lockGoal)).toMatch(/\/goal done|\/goal unlock/);
+});
+
+test("/goal <outcome> over a live goal names both ways out", async () => {
+	await draftWithCheck();
+	await startGoal(deps(), "another");
+	expect(lastNote()).toMatch(/\/goal drop/);
+	expect(lastNote()).toMatch(/\/goal lock|\/goal done/);
+});
+
 test("/goal help hands the man page to the UI", async () => {
 	let shown = "";
 	await runGoalCommand({ ...deps(), showHelp: (t: string) => { shown = t; } }, "help");

@@ -74,6 +74,17 @@ function load(d: Deps): { goal?: Goal; error?: string } {
 	}
 }
 
+/** What to do next, for a command that does not apply to the goal's state. Every refusal ends with it, so the human is never left at a dead end. */
+const nextStep = (g: Goal): string => {
+	switch (g.status) {
+		case "closed":
+		case "dropped": return `This goal is finished (${g.status}). Run /goal to draft the next goal from the discussion, or /goal <outcome> to state it yourself.`;
+		case "draft": return "Review it with /goal; /goal lock when it is right, /goal drop to abandon.";
+		case "active": return "It is locked: /goal shows whether the check is green, /goal done closes it, /goal unlock corrects it, /goal drop abandons it.";
+	}
+};
+const refusal = (g: Goal, what: string) => `${what} (the goal is ${g.status}). ${nextStep(g)}`;
+
 function current(d: Deps): Goal | undefined {
 	const { goal, error } = load(d);
 	if (error) d.ui.notify(error, "error");
@@ -209,7 +220,7 @@ export async function startGoal(d: Deps, outcome: string): Promise<void> {
 	if (sharing && sharing.branch !== d.branch)
 		return d.ui.notify(`The goal file for this branch name belongs to branch ${sharing.branch} (${sharing.id}); branch names ${sharing.branch} and ${d.branch} map to the same file. Not overwritten.`, "error");
 	if (existing && (existing.status === "draft" || existing.status === "active"))
-		return d.ui.notify(`This branch already has a ${existing.status} goal (${existing.id}). /goal drop ends it first.`, "error");
+		return d.ui.notify(`This branch already has a ${existing.status} goal (${existing.id}). ${nextStep(existing)} (/goal drop ends it first.)`, "error");
 	const g = newDraft({ branch: d.branch, outcome, baseCommit: d.head }, d.now());
 	const saved = commit(d, { ok: true, goal: g }, `Draft goal saved: ${g.id}`);
 	if (!saved) return;
@@ -264,7 +275,7 @@ async function environmentFailureOverridden(d: Deps, g: Goal, run: { exit: numbe
 export async function lockGoal(d: Deps): Promise<void> {
 	const g = current(d);
 	if (!g) return;
-	if (g.status !== "draft") return d.ui.notify(`Only a draft can be locked (the goal is ${g.status}).`, "error");
+	if (g.status !== "draft") return d.ui.notify(refusal(g, "Only a draft can be locked"), "error");
 	let baseExit: number | undefined;
 	let outcomeChecks: string[] | undefined;
 	let evidence = "(human-confirm check; no command runs)";
@@ -307,7 +318,7 @@ const weakens = (old: CheckSpec, next: CheckSpec) => {
 export async function unlockGoal(d: Deps): Promise<void> {
 	const g = current(d);
 	if (!g) return;
-	if (g.status !== "active") return d.ui.notify(`Only a locked goal can be unlocked (the goal is ${g.status}).`, "error");
+	if (g.status !== "active") return d.ui.notify(refusal(g, "Only a locked goal can be unlocked"), "error");
 	if (!(await d.ui.confirm(`Unlock ${g.id}?`, "It becomes a draft; the agent may edit it until you run /goal lock again (which re-checks it on the base commit)."))) return d.ui.notify("Not unlocked.", "info");
 	commit(d, applyUnlock(g, { now: d.now() }), `Goal ${g.id} unlocked: now a draft. Correct it, then /goal lock.`, () => ({ event: "goal_unlocked" }));
 }
@@ -316,7 +327,7 @@ export async function unlockGoal(d: Deps): Promise<void> {
 export async function doneGoal(d: Deps): Promise<void> {
 	const g = current(d);
 	if (!g) return;
-	if (g.status !== "active") return d.ui.notify(`Only an active goal can be closed (the goal is ${g.status}).`, "error");
+	if (g.status !== "active") return d.ui.notify(refusal(g, "Only an active goal can be closed"), "error");
 	const problem = await integrityProblem(d, g);
 	if (problem) return d.ui.notify(problem, "error");
 	let exit: number | undefined;
@@ -341,6 +352,7 @@ export async function doneGoal(d: Deps): Promise<void> {
 export async function dropCurrentGoal(d: Deps, reason: string): Promise<void> {
 	const g = current(d);
 	if (!g) return;
+	if (g.status === "closed" || g.status === "dropped") return d.ui.notify(refusal(g, "Nothing to drop"), "error");
 	await commitTombstoned(d, dropGoal(g, { now: d.now(), reason }), "dropped", `Goal ${g.id} dropped.`, () => ({ event: "goal_dropped", reason }));
 }
 
