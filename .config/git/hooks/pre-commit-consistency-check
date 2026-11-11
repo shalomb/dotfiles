@@ -21,6 +21,21 @@ CONFIG_DIR="$HOME_DIR/.config"
 
 echo -e "${BLUE}🔍 Validating dotfile consistency...${NC}"
 
+# Name the checkout whose copy of a home file shares its inode. Bounded: only
+# ~/.config/dotfiles* trees, one filesystem, no .git/submodules, 10s cap.
+find_link_owner() {
+    local home_file="$1"
+    local roots=()
+    local root
+    for root in "$CONFIG_DIR"/dotfiles*; do
+        [[ -d "$root" ]] && roots+=("$root")
+    done
+    [[ ${#roots[@]} -eq 0 ]] && return 0
+    timeout 10 find "${roots[@]}" -xdev \
+        \( -name .git -o -path '*/.config/submodules' -o -name node_modules \) -prune -o \
+        -samefile "$home_file" -print 2>/dev/null | head -n 1 || true
+}
+
 # Function to check if a file is properly hardlinked
 check_hardlink() {
     local repo_file="$1"
@@ -52,6 +67,13 @@ check_hardlink() {
     if [[ "$repo_inode" != "$home_inode" ]]; then
         echo -e "${RED}❌ Files not hardlinked: $repo_file <-> $home_file${NC}"
         echo -e "${RED}   Repository inode: $repo_inode, Home inode: $home_inode${NC}"
+        local owner
+        owner="$(find_link_owner "$home_file")"
+        if [[ -n "$owner" ]]; then
+            echo -e "${YELLOW}   $home_file is currently linked to: $owner${NC}"
+        else
+            echo -e "${YELLOW}   $home_file is not linked to any checkout under $CONFIG_DIR/dotfiles*${NC}"
+        fi
         return 1
     fi
     
@@ -145,8 +167,10 @@ main() {
         echo -e "${RED}   Agents MUST fix consistency issues - no workarounds allowed${NC}"
         echo ""
         echo -e "${YELLOW}Required steps to fix consistency issues:${NC}"
-        echo "1. Use dotfile manager to deploy changes:"
+        echo "1. Use dotfile manager to deploy changes (from the main checkout only):"
         echo "   uv run python -m dotfile_manager export <files>"
+        echo "   Restore links after an export from a worktree or another clone:"
+        echo "   cd ~/.config/dotfiles && PYTHONPATH=src uv run python -m dotfile_manager export .config/bash/ .bashrc"
         echo "2. Check for manual file operations in home directory"
         echo "3. Ensure all managed files are properly hardlinked"
         echo ""
