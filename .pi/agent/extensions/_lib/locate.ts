@@ -44,3 +44,89 @@ export function parseLocateQuery(input: string): LocateQuery {
 	}
 	return q;
 }
+
+// ---- zones, noise, scoring ----
+
+export interface ZoneEnv {
+	cwd: string;
+	repoRoot: string;
+	parent: string;
+	home: string;
+}
+
+export const ZONE_WEIGHTS: Record<number, number> = { 0: 1, 1: 0.9, 2: 0.75, 3: 0.5, 4: 0.25 };
+
+const under = (p: string, dir: string) => p === dir || p.startsWith(dir.endsWith("/") ? dir : `${dir}/`);
+
+export function classifyZone(p: string, env: ZoneEnv): number {
+	if (under(p, env.cwd)) return 0;
+	if (under(p, env.repoRoot)) return 1;
+	if (under(p, env.parent)) return 2;
+	if (under(p, env.home)) return 3;
+	return 4;
+}
+
+const NOISE_SEGMENTS = ["/.git/", "/node_modules/", "/dist/", "/target/"];
+
+export function isNoise(p: string, home: string): boolean {
+	const q = p.endsWith("/") ? p : `${p}/`;
+	if (NOISE_SEGMENTS.some((s) => q.includes(s))) return true;
+	return [".cache", ".claude", ".gemini"].some((d) => under(p, `${home}/${d}`));
+}
+
+/** Match quality in [0,1]: fraction of terms found, bonus for hits in the basename. */
+export function scoreCandidate(p: string, terms: string[]): number {
+	if (!terms.length) return 0;
+	const lower = p.toLowerCase();
+	const base = lower.slice(lower.lastIndexOf("/") + 1);
+	let sum = 0;
+	for (const t of terms) {
+		const tl = t.toLowerCase();
+		if (base.includes(tl)) sum += 1;
+		else if (lower.includes(tl)) sum += 0.6;
+	}
+	return sum / terms.length;
+}
+
+export interface Ranked {
+	path: string;
+	zone: number;
+	score: number;
+}
+
+export function rankCandidates(paths: string[], terms: string[], env: ZoneEnv, mandatory: string[] = []): Ranked[] {
+	const out: Ranked[] = [];
+	for (const path of paths) {
+		const low = path.toLowerCase();
+		if (mandatory.some((m) => !low.includes(m.toLowerCase()))) continue;
+		const match = scoreCandidate(path, terms);
+		if (match <= 0) continue;
+		const zone = classifyZone(path, env);
+		out.push({ path, zone, score: match * ZONE_WEIGHTS[zone] });
+	}
+	return out.sort((a, b) => b.score - a.score || a.path.localeCompare(b.path));
+}
+
+export function collapseToAnchors(paths: string[], anchorOf: (p: string) => string): string[] {
+	return [...new Set(paths.map(anchorOf))];
+}
+
+export interface Hit {
+	path: string;
+	line?: number;
+	col?: number;
+	snippet?: string;
+}
+
+export const MAX_RECEIPT_LINES = 25;
+
+export function formatReceipt(hits: Hit[], total: number): string {
+	const room = MAX_RECEIPT_LINES - 2;
+	const lines = [`**locate**: ${total} candidate(s)`];
+	for (const h of hits.slice(0, room)) {
+		const loc = h.line ? `:${h.line}:${h.col ?? 1}` : "";
+		lines.push(`- ${h.path}${loc}${h.snippet ? ` — ${h.snippet.trim().slice(0, 100)}` : ""}`);
+	}
+	if (hits.length > room) lines.push(`… ${hits.length - room} more`);
+	return lines.join("\n");
+}
