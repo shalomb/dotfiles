@@ -101,9 +101,22 @@ export interface Ranked {
 	score: number;
 }
 
+const WORKTREE_RE = /\/\.worktrees\/[^/]+(?=\/)/;
+
+/** A `<root>/.worktrees/<name>/rel` copy whose `<root>/rel` twin is present (unless cwd is inside that worktree). */
+function isWorktreeDuplicate(path: string, present: Set<string>, cwd: string): boolean {
+	const m = WORKTREE_RE.exec(path);
+	if (!m) return false;
+	const wtRoot = path.slice(0, m.index + m[0].length);
+	if (under(cwd, wtRoot)) return false;
+	return present.has(path.slice(0, m.index) + path.slice(m.index + m[0].length));
+}
+
 export function rankCandidates(paths: string[], terms: string[], env: ZoneEnv, mandatory: string[] = []): Ranked[] {
 	const out: Ranked[] = [];
+	const present = new Set(paths);
 	for (const path of paths) {
+		if (isWorktreeDuplicate(path, present, env.cwd)) continue;
 		const low = path.toLowerCase();
 		if (mandatory.some((m) => !low.includes(m.toLowerCase()))) continue;
 		const match = scoreCandidate(path, terms);
