@@ -203,15 +203,19 @@ test("done refuses on a red check: the goal stays active and the output is offer
 });
 
 // Scenario: Closing a goal with a green Done-check records the hand-off
-test("done on a green check closes as check, then runs /persist and asks the agent for lessons", async () => {
+test("done on a green check closes as check and only closes: no /persist, no agent turn, a notice lists the follow-ups", async () => {
 	const d = await activeGoal();
 	commitFile("export.csv");
+	toAgent.length = 0;
+	commands.length = 0;
 	await doneGoal(d);
 	const g = loadGoal(store, "feat/export")!;
 	expect(g).toMatchObject({ status: "closed", closedBy: "check", closedAt: "2026-11-01T10:00:00Z" });
-	expect(commands).toHaveLength(1);
-	expect(commands[0]).toMatch(/^\/persist .*g-feat-export/);
-	expect(toAgent.join("\n")).toMatch(/lessons/i);
+	expect(commands).toEqual([]);
+	expect(toAgent).toEqual([]);
+	expect(lastNote()).toMatch(/\/persist/);
+	expect(lastNote()).toMatch(/lessons/i);
+	expect(lastNote()).toMatch(/\/goal\b.*next goal/s);
 });
 
 // Scenario: A design goal without a command check closes as an assertion
@@ -224,7 +228,7 @@ test("done on a human-confirm check closes as assertion after the human confirms
 	answers.push(true); // outcome met
 	await doneGoal(d);
 	expect(loadGoal(store, "design/sync")).toMatchObject({ status: "closed", closedBy: "assertion" });
-	expect(commands).toHaveLength(1);
+	expect(commands).toEqual([]);
 });
 
 test("done on a human-confirm check stays active when the human does not confirm", async () => {
@@ -578,6 +582,44 @@ test("bare /goal with no goal drafts one from the conversation: a draft is saved
 	expect(loadGoal(store, "feat/export")!.outcome).toBe("Users can export a backlog as CSV");
 });
 
+test("bare /goal on a closed goal shows it, saves a fresh draft and asks the agent to infer the next goal from the discussion", async () => {
+	await draftWithCheck();
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
+	await runGoalCommand(deps(), "");
+	expect(notes.join("\n")).toMatch(/closed/);
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft" });
+	expect(toAgent.join("\n")).toMatch(/next goal/i);
+	expect(toAgent.join("\n")).toMatch(/discussion|conversation/);
+	expect(toAgent.join("\n")).toContain("Users can export");
+});
+
+test("a draft that follows a finished goal logs goal_started with the id it came from; a first draft logs nothing", async () => {
+	await draftWithCheck();
+	expect(events()).toEqual([]);
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
+	await runGoalCommand(deps(), "");
+	expect(events()).toMatchObject([{ event: "goal_started", goal: "g-feat-export", from: "g-feat-export", previousStatus: "closed" }]);
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "dropped" });
+	await startGoal(deps(), "third");
+	expect(events().map((e) => e.previousStatus)).toEqual(["closed", "dropped"]);
+	await proposeFromAgent(deps(), { doneCheck: { kind: "command", commands: ["test -f x"] } });
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
+	await proposeFromAgent(deps(), { outcome: "fourth", doneCheck: { kind: "command", commands: ["test -f y"] } });
+	expect(events().map((e) => e.previousStatus)).toEqual(["closed", "dropped", "closed"]);
+});
+
+test("goal_propose on a closed goal starts a new draft instead of refusing; it is not locked", async () => {
+	await draftWithCheck();
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
+	const r = await proposeFromAgent(deps(), { outcome: "Export is also available as JSON", doneCheck: { kind: "command", commands: ["test -f export.json"] } });
+	expect(r.ok).toBe(true);
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft", outcome: "Export is also available as JSON" });
+});
+
+test("parseGoalArgs: close is an alias of done, not an outcome", () => {
+	expect(parseGoalArgs("close")).toEqual({ kind: "done" });
+});
+
 test("bare /goal on a draft shows the card with a next-step line", async () => {
 	const d = await draftWithCheck();
 	await runGoalCommand(d, "");
@@ -649,10 +691,36 @@ test("unlock only applies to a locked goal", async () => {
 	expect(lastNote()).toMatch(/Only a locked goal/);
 });
 
+test("a refusal names the next step for the state the goal is in", async () => {
+	const note = async (status: string, run: (d: Deps) => Promise<void>) => {
+		await draftWithCheck();
+		saveGoal(store, { ...loadGoal(store, "feat/export")!, status: status as any });
+		notes.length = 0;
+		await run(deps());
+		return lastNote();
+	};
+	for (const s of ["closed", "dropped"]) {
+		expect(await note(s, doneGoal)).toMatch(/finished.*Run \/goal/s);
+		expect(await note(s, unlockGoal)).toMatch(/finished.*Run \/goal/s);
+		expect(await note(s, lockGoal)).toMatch(/finished.*Run \/goal/s);
+		expect(await note(s, (d) => dropCurrentGoal(d, "x"))).toMatch(/finished.*Run \/goal/s);
+	}
+	expect(await note("draft", doneGoal)).toMatch(/\/goal lock/);
+	expect(await note("draft", unlockGoal)).toMatch(/\/goal lock/);
+	expect(await note("active", lockGoal)).toMatch(/\/goal done|\/goal unlock/);
+});
+
+test("/goal <outcome> over a live goal names both ways out", async () => {
+	await draftWithCheck();
+	await startGoal(deps(), "another");
+	expect(lastNote()).toMatch(/\/goal drop/);
+	expect(lastNote()).toMatch(/\/goal lock|\/goal done/);
+});
+
 test("/goal help hands the man page to the UI", async () => {
 	let shown = "";
 	await runGoalCommand({ ...deps(), showHelp: (t: string) => { shown = t; } }, "help");
-	expect(shown).toMatch(/^# GOAL\(1\)/);
+	expect(shown).toMatch(/^# GOAL\(1\)/m);
 });
 
 // ---- ADR-010 integrity, unchanged by the simplification ----

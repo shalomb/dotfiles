@@ -128,3 +128,19 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def test_include_list_re_includes_paths_a_broad_pattern_excludes(tmp_path):
+    """A path matching [exclusions] include is exported even when '*.ts' excludes source code."""
+    from dotfile_manager.config import DotfileConfig
+
+    cfg_file = tmp_path / ".dotfiles.toml"
+    cfg_file.write_text(
+        '[exclusions]\npatterns = ["*.ts"]\ninclude = [".pi/agent/extensions/*"]\n'
+        'exclude_directories = ["lib"]\nexclude_files = []\n'
+    )
+    cfg = DotfileConfig(cfg_file)
+    root = tmp_path
+    assert not cfg.should_exclude_path(root / ".pi/agent/extensions/_lib/goal-flow.ts")
+    assert not cfg.should_exclude_path(root / ".pi/agent/extensions/goal-command.ts")
+    assert cfg.should_exclude_path(root / "src/other.ts")

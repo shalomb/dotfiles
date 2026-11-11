@@ -37,7 +37,7 @@ Feature: Goal Contract with a locked Done-check
       Given branch "feat/export" has an active goal whose Done-check passes
       When the Human Partner asks to close the goal
       Then the goal is closed
-      And a hand-off with lessons learned is written for the branch
+      And a notice suggests /persist, lessons learned and the next goal, and runs none of them
 
     Scenario: A design goal without a command check closes as an assertion
       Given branch "design/sync" has an active goal with a human-confirm Done-check
@@ -125,3 +125,26 @@ Feature: Goal Contract with a locked Done-check
     Scenario: Every draft ends with one next step
       When a draft is saved
       Then the Review Card ends with one line naming lock, change and drop
+
+  Rule: A finished goal does not end the session
+
+    Scenario: The next goal is drafted from the discussion
+      Given the goal of the branch is closed or dropped
+      When the Human Partner runs "/goal"
+      Then a new draft replaces it and the Main Copilot proposes the next goal from the discussion
+      And a goal_started event records the id of the goal it follows
+      And the draft is not locked
+
+    Scenario: The Main Copilot proposes a goal after the last one finished
+      Given the goal of the branch is closed or dropped
+      When the Main Copilot proposes a goal
+      Then it is saved as a new draft that only the Human Partner can lock
+
+    Scenario: A command that does not fit the state names the next step
+      Given the goal of the branch is closed or dropped
+      When the Human Partner runs "/goal done", "/goal unlock", "/goal lock" or "/goal drop"
+      Then the refusal ends with the command that drafts the next goal
+
+    Scenario: close is another word for done
+      When the Human Partner runs "/goal close"
+      Then it behaves as "/goal done"

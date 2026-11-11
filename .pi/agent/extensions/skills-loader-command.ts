@@ -9,6 +9,7 @@
  * SKILLS_TIERS=off disables all filtering (baseline for measurements). SKILLS_LOG=<file> logs events as JSONL.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { notShownNote, openPopup } from "./_lib/ui-gate.ts";
 import { appendFileSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -178,10 +179,9 @@ export default function (pi: ExtensionAPI) {
 			const dir = mkdtempSync(join(tmpdir(), "skills-loader-"));
 			const rows = join(dir, "rows.tsv"), out = join(dir, "out.txt");
 			writeFileSync(rows, ordered.map((s) => row(s, m)).join("\n") + "\n");
-			const res = await pi.exec("tmux", [
-				"display-popup", "-E", "-d", ctx.cwd, "-w", "95%", "-h", "90%",
-				"-T", " skills:loader (tab=multi, ⏎=load) ", "sh", "-c", `bash ${q(PICKER)} ${q(rows)} ${q(out)}`,
-			]);
+			const res = await openPopup(pi.exec.bind(pi) as any, { name: "skills:loader (tab=multi, ⏎=load)", cwd: ctx.cwd, width: "95%", height: "90%",
+				argv: ["sh", "-c", `bash ${q(PICKER)} ${q(rows)} ${q(out)}`] }, process.env, ctx.hasUI !== false);
+			if (res.status !== "shown") { rmSync(dir, { recursive: true, force: true }); return ctx.ui.notify(notShownNote(res, "skills:loader"), "info"); }
 			let picked: string[] = [];
 			try { picked = readFileSync(out, "utf8").split("\n").filter(Boolean); } catch {}
 			rmSync(dir, { recursive: true, force: true });

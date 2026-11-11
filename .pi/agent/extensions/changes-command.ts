@@ -19,7 +19,7 @@ import { registerShared } from "./_lib/subcommands.ts";
 import { readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { originQuery, popupArgs, splitArgs, surface } from "./_lib/ui-gate.ts";
+import { openPopup, openSplit } from "./_lib/ui-gate.ts";
 
 const MARKED = join(process.env.XDG_RUNTIME_DIR || "/tmp", `pi-changes-marked-${process.pid}`);
 
@@ -31,8 +31,6 @@ export default function (pi: ExtensionAPI) {
   let repoRoot: string | undefined;
 
   const tmux = (args: string[]) => pi.exec("tmux", args, { timeout: 5000 });
-  const tmuxBlocking = (args: string[]) => pi.exec("tmux", args); // display-popup -E blocks until closed
-  const originPane = () => process.env.TMUX_PANE ?? "";
   const paneAlive = async () => {
     if (!paneId) return false;
     const r = await tmux(["display-message", "-p", "-t", paneId, "#{pane_id}"]);
@@ -64,18 +62,19 @@ export default function (pi: ExtensionAPI) {
       (sessionTree ? ` CHANGES_SESSION_TREE=${q(sessionTree)}` : "");
     const startMode = base === "HEAD" ? (sessionTree ? "session" : "head") : base;
     const cmd = `${env} bash ${q(script)} ui ${q(repo)} ${q(startMode)}`;
-    const pane = originPane();
-    if ((await surface(pi.exec.bind(pi) as any, "changes: panel not shown (pane not focused)", process.env, ctx.hasUI !== false)) !== "show")
-      return notify("changes: not shown, you are not looking at this pane (flagged @pi_attn)");
+    const exec = pi.exec.bind(pi) as any;
+    const hasUI = ctx.hasUI !== false;
+    const parked = () => notify("changes: not shown, you are not looking at this pane (flagged @pi_attn)");
     if (popup) {
-      const origin = (await tmux(originQuery(pane))).stdout.trim() || pane;
-      const res = await tmuxBlocking(popupArgs(pane, repo, "changes", origin, cmd));
-      if (res.code !== 0) notify(`changes popup failed (${res.code}): ${res.stderr.trim()}`, "error");
+      const res = await openPopup(exec, { name: "changes", cwd: repo, argv: ["bash", "-c", cmd] }, process.env, hasUI);
+      if (res.status !== "shown") return res.status === "parked" ? parked() : undefined;
+      if (res.code !== 0) notify(`changes popup failed (${res.code}): ${res.stderr?.trim()}`, "error");
       return;
     }
-    const res = await tmux(splitArgs(pane, repo, cmd));
-    if (res.code !== 0) return notify(`changes split failed (${res.code}): ${res.stderr.trim()}`, "error");
-    paneId = res.stdout.trim();
+    const res = await openSplit(exec, { name: "changes", cwd: repo, cmd }, process.env, hasUI);
+    if (res.status !== "shown") return res.status === "parked" ? parked() : undefined;
+    if (res.code !== 0) return notify(`changes split failed (${res.code}): ${res.stderr?.trim()}`, "error");
+    paneId = res.paneId;
   };
 
   const close = async () => {
@@ -115,7 +114,7 @@ export default function (pi: ExtensionAPI) {
   };
 
   // Instant refresh when the agent touches the working tree.
-  pi.on("tool_result", async (event: any, ctx: any) => {
+  pi.on("tool_result", async (event: any) => {
     const name = String(event.toolName ?? "");
     if (!["edit", "write", "bash"].includes(name)) return;
     if (await paneAlive()) {
@@ -123,6 +122,8 @@ export default function (pi: ExtensionAPI) {
       return;
     }
   });
+
+  pi.on("session_shutdown", async () => { await close(); });
 
   registerShared(pi, "changes", {
     description: "Live diff panel beside pi (toggle). Args: popup | attach | close | <base ref>.",

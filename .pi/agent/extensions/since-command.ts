@@ -9,6 +9,7 @@
  * Unreferenced objects survive until git gc prunes them (default ~2 weeks).
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { notShownNote, openPopup } from "./_lib/ui-gate.ts";
 import { registerShared } from "./_lib/subcommands.ts";
 import { splitArgs } from "./_lib/args.ts";
 import { dirname, join } from "node:path";
@@ -68,11 +69,10 @@ export default function (pi: ExtensionAPI) {
       if (!process.env.TMUX) return notify("/since needs a tmux session (popup).", "error");
 
       const at = new Date(baseline.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      const res = await pi.exec("tmux", [
-        "display-popup", "-E", "-d", root, "-w", "98%", "-h", "98%", "-T", ` since ${at} `,
-        "bash", script, "diff", root, baseline.tree, ...tokens,
-      ]);
-      if (res.code !== 0) notify(`/since popup failed (${res.code}): ${res.stderr.trim()}`, "error");
+      const res = await openPopup(pi.exec.bind(pi) as any, { name: `since ${at}`, cwd: root,
+        argv: ["bash", script, "diff", root, baseline.tree, ...tokens] }, process.env, ctx.hasUI !== false);
+      if (res.status !== "shown") return notify(notShownNote(res, "/since"));
+      if (res.code !== 0) notify(`/since popup failed (${res.code}): ${res.stderr?.trim()}`, "error");
     },
   });
 }

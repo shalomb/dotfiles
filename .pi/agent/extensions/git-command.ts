@@ -6,6 +6,7 @@
  * (_lib/subcommands.ts, tested), so load order doesn't matter and a missing one just disappears.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { notShownNote, openPopup } from "./_lib/ui-gate.ts";
 import { complete, dispatch, fromShared, type SubTree } from "./_lib/subcommands.ts";
 
 export default function (pi: ExtensionAPI) {
@@ -17,11 +18,10 @@ export default function (pi: ExtensionAPI) {
       if (!process.env.TMUX) return ctx.ui.notify("/git lg needs a tmux session (popup).", "error");
       const root = await pi.exec("git", ["-C", ctx.cwd, "rev-parse", "--show-toplevel"], { timeout: 5000 });
       if (root.code !== 0) return ctx.ui.notify(`Not a git repository: ${ctx.cwd}`, "error");
-      const res = await pi.exec("tmux", [
-        "display-popup", "-E", "-d", root.stdout.trim(), "-w", "90%", "-h", "90%", "-T", " lazygit ",
-        "lazygit", ...args.split(/\s+/).filter(Boolean),
-      ]);
-      if (res.code !== 0) ctx.ui.notify(`lazygit popup failed (${res.code}): ${res.stderr.trim()}`, "error");
+      const res = await openPopup(pi.exec.bind(pi) as any, { name: "lazygit", cwd: root.stdout.trim(), width: "90%", height: "90%",
+        argv: ["lazygit", ...args.split(/\s+/).filter(Boolean)] }, process.env, ctx.hasUI !== false);
+      if (res.status !== "shown") return ctx.ui.notify(notShownNote(res, "/git lg"), "info");
+      if (res.code !== 0) ctx.ui.notify(`lazygit popup failed (${res.code}): ${res.stderr?.trim()}`, "error");
     },
   };
 

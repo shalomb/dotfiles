@@ -102,6 +102,11 @@ patterns = [
     "*.h",
 ]
 
+# Paths re-included although a pattern above excludes them (pi extensions are .ts, not "source code" to keep out of home)
+include = [
+    ".pi/agent/extensions/*",
+]
+
 # Directories to exclude completely
 exclude_directories = [
     ".git",

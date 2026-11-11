@@ -54,5 +54,13 @@
     "{\"source\":\"npm:pi-powerline-footer\",\"scope\":\"user\"}": "0.22.0",
     "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.84.0",
     "{\"source\":\"npm:@tmustier/pi-usage-extension\",\"scope\":\"user\"}": "0.10.1"
+  },
+  "subagents": {
+    "defaultModel": "anthropic/claude-sonnet-5-5",
+    "agentOverrides": {
+      "scout": {
+        "model": "anthropic/claude-haiku-5-5"
+      }
+    }
   }
 }

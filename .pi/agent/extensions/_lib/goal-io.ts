@@ -139,7 +139,7 @@ export async function branchState(exec: Exec, repoRoot: string, branch: string, 
 
 // ---- events (ADR-009 Amendment 1) ----
 
-export type GoalEventName = "goal_locked" | "goal_unlocked" | "goal_changed" | "goal_closed" | "goal_dropped";
+export type GoalEventName = "goal_locked" | "goal_unlocked" | "goal_changed" | "goal_closed" | "goal_dropped" | "goal_started";
 export interface GoalEvent { at: string; event: GoalEventName; goal: string; branch: string; [extra: string]: unknown }
 
 /** Append one JSON line to `<store>/trajectories.jsonl` (kept for the H5 review of drop and assertion-closure rates). */

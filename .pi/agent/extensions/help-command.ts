@@ -4,6 +4,7 @@
  * No agent turn. Rendering/categories: _lib/help.ts (tested). Needs tmux; falls back to a notify otherwise.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { notShownNote, openPopup } from "./_lib/ui-gate.ts";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
@@ -55,8 +56,9 @@ export default function (pi: ExtensionAPI) {
 				writeFileSync(file, text);
 				const pager = process.env.PAGER?.trim() || "less -R";
 				const cmd = /less/.test(pager) && !/\s-\S*R/.test(pager) ? `${pager} -R` : pager;
-				const res = await pi.exec("tmux", ["display-popup", "-E", "-d", ctx.cwd, "-w", "90%", "-h", "90%", "-T", " pi help ", `${cmd} ${JSON.stringify(file)}`]);
-				if (res.code !== 0) ctx.ui.notify(`/help popup failed (${res.code}): ${res.stderr.trim()}`, "error");
+				const res = await openPopup(pi.exec.bind(pi) as any, { name: "pi help", cwd: ctx.cwd, width: "90%", height: "90%", argv: [`${cmd} ${JSON.stringify(file)}`] }, process.env, ctx.hasUI !== false);
+				if (res.status !== "shown") ctx.ui.notify(notShownNote(res, "/help"), "info");
+				else if (res.code !== 0) ctx.ui.notify(`/help popup failed (${res.code}): ${res.stderr?.trim()}`, "error");
 			} finally { rmSync(dir, { recursive: true, force: true }); }
 		},
 	});

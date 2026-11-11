@@ -503,11 +503,6 @@ help: ## Show make targets available
 
 # vim: ts=2 sts=2 sw=2 noet
 
-	./dotfile_stash export .bashrc
-	./dotfile_stash export .config/bash/
-	# Deploy bash configuration directory and all dependencies
-	# Deploy bashrc
-
 .PHONY: deploy
 deploy:  ## Deploy bashrc and all dependencies
 	./dotfile_stash export .bashrc

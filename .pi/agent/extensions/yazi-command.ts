@@ -4,6 +4,7 @@
  * are appended to the prompt editor as @path references.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { notShownNote, openPopup } from "./_lib/ui-gate.ts";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
@@ -17,11 +18,10 @@ export default function (pi: ExtensionAPI) {
     const dir = mkdtempSync(join(tmpdir(), "pi-yazi-"));
     const chooser = join(dir, "chosen");
     try {
-      const res = await pi.exec("tmux", [
-        "display-popup", "-E", "-d", ctx.cwd, "-w", "95%", "-h", "95%", "-T", " yazi ",
-        "yazi", `--chooser-file=${chooser}`, start,
-      ]);
-      if (res.code !== 0) return notify(`yazi popup failed (${res.code}): ${res.stderr.trim() || "is yazi installed?"}`, "error");
+      const res = await openPopup(pi.exec.bind(pi) as any, { name: "yazi", cwd: ctx.cwd, width: "95%", height: "95%",
+        argv: ["yazi", `--chooser-file=${chooser}`, start] }, process.env, ctx.hasUI !== false);
+      if (res.status !== "shown") return notify(notShownNote(res, "yazi"));
+      if (res.code !== 0) return notify(`yazi popup failed (${res.code}): ${res.stderr?.trim() || "is yazi installed?"}`, "error");
 
       let chosen: string[] = [];
       try { chosen = readFileSync(chooser, "utf8").split("\n").filter(Boolean); } catch {}
