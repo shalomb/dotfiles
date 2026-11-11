@@ -9,8 +9,35 @@ import click
 from rich.console import Console
 
 from .core import DotfileManager
+from .guard import check_checkout
 
 console = Console()
+
+allow_worktree_option = click.option(
+    "--allow-worktree", is_flag=True,
+    help="Run from a linked worktree or non-canonical checkout anyway (repoints $HOME at it)",
+)
+
+
+def enforce_checkout_guard(manager: DotfileManager, allow_worktree: bool, dry_run: bool = False) -> None:
+    """Exit unless the manager runs from the checkout the pre-commit hook validates $HOME against.
+
+    A dry run never changes anything, so it prints the refusal as a notice and carries on.
+    """
+    verdict = check_checkout(manager.repo_root, manager.config.repo_root)
+    for warning in verdict.warnings:
+        click.echo(warning, err=True)
+    if verdict.refusal is None:
+        return
+    if dry_run:
+        click.echo(f"notice: {verdict.refusal} (a real run would be refused)", err=True)
+    elif allow_worktree:
+        click.echo(f"WARNING: --allow-worktree given; {verdict.refusal}", err=True)
+        click.echo("WARNING: $HOME will be linked to this checkout; the pre-commit hook will block "
+                   "commits until you re-export from the main checkout", err=True)
+    else:
+        click.echo(verdict.refusal, err=True)
+        sys.exit(1)
 
 
 @click.group()
@@ -30,11 +57,14 @@ def cli(ctx: click.Context, debug: bool) -> None:
 @click.option("--interactive", is_flag=True, help="Interactive mode for orphan cleanup review")
 @click.option("--backup", is_flag=True, help="Create backup before cleanup (git is source of truth)")
 @click.option("--working-dir", is_flag=True, help="Use working directory files instead of git HEAD")
+@allow_worktree_option
 @click.pass_context
 def export(ctx: click.Context, files: List[str], cleanup: bool,
-           dry_run: bool, interactive: bool, backup: bool, working_dir: bool) -> None:
+           dry_run: bool, interactive: bool, backup: bool, working_dir: bool,
+           allow_worktree: bool) -> None:
     """Export files from repository to home directory."""
     manager: DotfileManager = ctx.obj["manager"]
+    enforce_checkout_guard(manager, allow_worktree, dry_run=dry_run)
     
     # Validate options
     if cleanup and not interactive and not dry_run:
@@ -65,10 +95,12 @@ def export(ctx: click.Context, files: List[str], cleanup: bool,
 
 @cli.command(name="import")
 @click.argument("files", nargs=-1, required=True)
+@allow_worktree_option
 @click.pass_context
-def import_files(ctx: click.Context, files: List[str]) -> None:
+def import_files(ctx: click.Context, files: List[str], allow_worktree: bool) -> None:
     """Import files from home directory to repository."""
     manager: DotfileManager = ctx.obj["manager"]
+    enforce_checkout_guard(manager, allow_worktree)
     
     try:
         manager.import_files(files)
