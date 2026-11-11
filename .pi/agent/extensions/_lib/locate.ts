@@ -152,18 +152,20 @@ async function run(cmd: string, args: string[], cwd?: string): Promise<string> {
 export interface LocateOptions {
 	cwd: string;
 	plocate?: boolean;
+	/** Alternate plocate database (tests). */
+	plocateDb?: string;
 	home?: string;
 }
 
 const COLLAPSE_THRESHOLD = 5;
 const TOP_ANCHORS = 15;
 
-async function harvest(terms: string[], repoRoot: string, home: string, usePlocate: boolean): Promise<string[]> {
+async function harvest(terms: string[], repoRoot: string, home: string, plocateDb: string | undefined, usePlocate: boolean): Promise<string[]> {
 	const pool = new Set<string>();
 	for (const rel of (await run("git", ["ls-files", "-co", "--exclude-standard"], repoRoot)).split("\n"))
 		if (rel) pool.add(join(repoRoot, rel));
 	if (usePlocate) {
-		const out = await run("plocate", ["-i", "-l", "20000", "--all", ...terms]);
+		const out = await run("plocate", ["-i", "-l", "20000", "--all", ...(plocateDb ? ["-d", plocateDb] : []), ...terms]);
 		for (const p of out.split("\n")) if (p) pool.add(p);
 	}
 	return [...pool].filter((p) => !isNoise(p, home));
@@ -201,7 +203,7 @@ export async function runLocate(input: string, opts: LocateOptions): Promise<str
 	const home = opts.home ?? homedir();
 	const repoRoot = (await run("git", ["rev-parse", "--show-toplevel"], opts.cwd)).trim() || opts.cwd;
 	const env: ZoneEnv = { cwd: opts.cwd, repoRoot, parent: dirname(repoRoot), home };
-	const paths = await harvest(q.pathTerms, repoRoot, home, opts.plocate !== false);
+	const paths = await harvest(q.pathTerms, repoRoot, home, opts.plocateDb, opts.plocate !== false);
 	const ranked = rankCandidates(paths, q.pathTerms, env, q.mandatory);
 	const hits = await inspect(collapseRanked(ranked), q.contentTerms);
 	return formatReceipt(hits, ranked.length);
