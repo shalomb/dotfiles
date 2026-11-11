@@ -68,3 +68,105 @@ class TestDryRun:
 
         assert result.returncode == 0, result.stderr
         assert list(sandbox["home"].iterdir()) == []
+
+
+class TestWorktreeExport:
+    def test_export_from_worktree_is_refused_and_links_nothing(self, sandbox, worktree):
+        result = run_manager(worktree, sandbox["home"], "export", MANAGED_FILE)
+
+        assert result.returncode != 0
+        assert refusal(sandbox["main"]) in result.stdout + result.stderr
+        assert not (sandbox["home"] / MANAGED_FILE).exists()
+
+    def test_allow_worktree_overrides_with_a_warning(self, sandbox, worktree):
+        result = run_manager(worktree, sandbox["home"], "export", "--allow-worktree", MANAGED_FILE)
+
+        assert result.returncode == 0, result.stderr
+        assert "warning" in result.stderr.lower()
+        linked = sandbox["home"] / MANAGED_FILE
+        assert linked.stat().st_ino == (worktree / MANAGED_FILE).stat().st_ino
+
+    def test_export_from_main_checkout_succeeds(self, sandbox):
+        result = run_manager(sandbox["main"], sandbox["home"], "export", MANAGED_FILE)
+
+        assert result.returncode == 0, result.stderr
+        assert (sandbox["home"] / MANAGED_FILE).stat().st_ino == (sandbox["main"] / MANAGED_FILE).stat().st_ino
+
+    def test_dry_run_from_worktree_prints_notice_and_changes_nothing(self, sandbox, worktree):
+        result = run_manager(worktree, sandbox["home"], "export", "--dry-run", MANAGED_FILE)
+
+        assert result.returncode == 0, result.stderr
+        assert refusal(sandbox["main"]) in result.stdout + result.stderr
+        assert list(sandbox["home"].iterdir()) == []
+
+    def test_help_lists_allow_worktree_for_export_and_import(self, sandbox):
+        for command in ("export", "import"):
+            result = run_manager(sandbox["main"], sandbox["home"], command, "--help")
+            assert "--allow-worktree" in result.stdout
+
+
+class TestWorktreeReadOnlyAndImport:
+    def test_status_from_worktree_is_allowed(self, sandbox, worktree):
+        result = run_manager(worktree, sandbox["home"], "status", MANAGED_FILE)
+
+        assert result.returncode == 0, result.stderr
+        assert "refusing" not in result.stdout + result.stderr
+
+    def test_diff_from_worktree_is_allowed(self, sandbox, worktree):
+        result = run_manager(worktree, sandbox["home"], "diff", MANAGED_FILE)
+
+        assert "refusing" not in result.stdout + result.stderr
+
+    def test_import_from_worktree_is_refused_and_leaves_repo_untouched(self, sandbox, worktree):
+        (sandbox["home"] / MANAGED_FILE).write_text("edited in home\n")
+
+        result = run_manager(worktree, sandbox["home"], "import", MANAGED_FILE)
+
+        assert result.returncode != 0
+        assert refusal(sandbox["main"]) in result.stdout + result.stderr
+        assert (worktree / MANAGED_FILE).read_text() == "from repo\n"
+        assert (sandbox["home"] / MANAGED_FILE).read_text() == "edited in home\n"
+
+
+class TestCanonicalCheckout:
+    @pytest.fixture
+    def stray(self, sandbox):
+        path = sandbox["root"] / "stray"
+        subprocess.run(["git", "clone", str(sandbox["main"]), str(path)], check=True, capture_output=True)
+        return path.resolve()
+
+    def test_stray_clone_is_refused_when_repo_root_env_names_another_checkout(self, sandbox, stray):
+        result = run_manager(
+            stray, sandbox["home"], "export", MANAGED_FILE,
+            extra_env={"DOTFILES_REPO_ROOT": str(sandbox["main"])},
+        )
+
+        assert result.returncode != 0
+        assert refusal(sandbox["main"]) in result.stdout + result.stderr
+        assert not (sandbox["home"] / MANAGED_FILE).exists()
+
+    def test_stray_clone_is_refused_when_dotfiles_toml_sets_repo_root(self, sandbox, stray):
+        (stray / ".dotfiles.toml").write_text(f'repo_root = "{sandbox["main"]}"\n{EXCLUSIONS_ONLY_TOML}')
+
+        result = run_manager(stray, sandbox["home"], "export", MANAGED_FILE)
+
+        assert result.returncode != 0
+        assert refusal(sandbox["main"]) in result.stdout + result.stderr
+        assert not (sandbox["home"] / MANAGED_FILE).exists()
+
+    def test_main_checkout_named_by_repo_root_is_allowed(self, sandbox):
+        result = run_manager(
+            sandbox["main"], sandbox["home"], "export", MANAGED_FILE,
+            extra_env={"DOTFILES_REPO_ROOT": str(sandbox["main"])},
+        )
+
+        assert result.returncode == 0, result.stderr
+
+    def test_non_default_branch_in_main_checkout_only_warns(self, sandbox):
+        git(sandbox["main"], "checkout", "-b", "topic")
+
+        result = run_manager(sandbox["main"], sandbox["home"], "export", MANAGED_FILE)
+
+        assert result.returncode == 0, result.stderr
+        assert "topic" in result.stderr
+        assert (sandbox["home"] / MANAGED_FILE).exists()

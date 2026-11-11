@@ -1,6 +1,7 @@
 """Configuration management for dotfile manager."""
 
 import logging
+import os
 from pathlib import Path
 from typing import List, Optional
 
@@ -21,7 +22,12 @@ class DotfileConfig:
         self.import_exclude: List[str] = []  # deny list for `import` only
         self.include_patterns: List[str] = []  # re-include paths a broad exclusion would drop
         
+        self.repo_root: Optional[Path] = None  # canonical checkout; enforced only when set
+        
         self._load_config()
+        env_repo_root = os.environ.get("DOTFILES_REPO_ROOT")
+        if env_repo_root:
+            self.repo_root = Path(env_repo_root)
     
     def _load_config(self) -> None:
         """Load configuration from TOML file."""
@@ -32,6 +38,8 @@ class DotfileConfig:
         
         try:
             config_data = toml.load(self.config_path)
+            if config_data.get("repo_root"):
+                self.repo_root = Path(config_data["repo_root"])
             exclusions = config_data.get("exclusions", {})
             
             self.exclusion_patterns = exclusions.get("patterns", [])
