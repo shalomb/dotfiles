@@ -130,3 +130,63 @@ export function formatReceipt(hits: Hit[], total: number): string {
 	if (hits.length > room) lines.push(`… ${hits.length - room} more`);
 	return lines.join("\n");
 }
+
+// ---- harvesting + orchestration ----
+
+import { execFile } from "node:child_process";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
+import { promisify } from "node:util";
+
+const sh = promisify(execFile);
+
+async function run(cmd: string, args: string[], cwd?: string): Promise<string> {
+	try {
+		const { stdout } = await sh(cmd, args, { cwd, maxBuffer: 64 * 1024 * 1024 });
+		return stdout;
+	} catch (e: any) {
+		return typeof e?.stdout === "string" ? e.stdout : ""; // rg exits 1 on no match
+	}
+}
+
+export interface LocateOptions {
+	cwd: string;
+	plocate?: boolean;
+	home?: string;
+}
+
+export async function runLocate(input: string, opts: LocateOptions): Promise<string> {
+	const q = parseLocateQuery(input);
+	const terms = [...q.pathTerms];
+	if (!terms.length) return "Usage: /locate <path terms> [in|within|containing <content terms>]";
+	const home = opts.home ?? homedir();
+	const repoRoot = (await run("git", ["rev-parse", "--show-toplevel"], opts.cwd)).trim() || opts.cwd;
+	const env: ZoneEnv = { cwd: opts.cwd, repoRoot, parent: dirname(repoRoot), home };
+
+	const pool = new Set<string>();
+	// Zone 0/1: fresh, via git
+	for (const rel of (await run("git", ["ls-files", "-co", "--exclude-standard"], repoRoot)).split("\n"))
+		if (rel) pool.add(join(repoRoot, rel));
+	// Zones 2-4: plocate, filtered at stream time
+	if (opts.plocate !== false) {
+		const out = await run("plocate", ["-i", "-l", "20000", "--all", ...terms.flatMap((t) => [t])]);
+		for (const p of out.split("\n")) if (p && !isNoise(p, home)) pool.add(p);
+	}
+	const paths = [...pool].filter((p) => !isNoise(p, home));
+	const ranked = rankCandidates(paths, terms, env, q.mandatory);
+	const top = ranked.slice(0, 15);
+
+	const hits: Hit[] = [];
+	if (q.contentTerms.length) {
+		const pattern = q.contentTerms.join("|");
+		for (const c of top) {
+			const out = await run("rg", ["-i", "--no-heading", "--line-number", "--column", "--max-count", "1", "-e", pattern, c.path]);
+			const line = out.split("\n")[0];
+			const m = /^(\d+):(\d+):(.*)$/.exec(line ?? "") ?? /^[^:]*:(\d+):(\d+):(.*)$/.exec(line ?? "");
+			hits.push(m ? { path: c.path, line: +m[1], col: +m[2], snippet: m[3] } : { path: c.path });
+		}
+	} else {
+		for (const c of top) hits.push({ path: c.path });
+	}
+	return formatReceipt(hits, ranked.length);
+}
