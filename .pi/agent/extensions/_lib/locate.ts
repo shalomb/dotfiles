@@ -99,6 +99,10 @@ export interface Ranked {
 	path: string;
 	zone: number;
 	score: number;
+	/** Set by locateForPicker. */
+	mtimeMs?: number;
+	/** First content-match line, when content terms were given. */
+	line?: number;
 }
 
 const WORKTREE_RE = /\/\.worktrees\/[^/]+(?=\/)/;
@@ -156,6 +160,7 @@ export function formatReceipt(hits: Hit[], total: number): string {
 import { execFile } from "node:child_process";
 import { homedir } from "node:os";
 import { dirname, join, relative } from "node:path";
+import { statSync } from "node:fs";
 import { promisify } from "node:util";
 
 const sh = promisify(execFile);
@@ -246,14 +251,72 @@ export function parseLocateArgs(args: string): { query: string; list: boolean } 
 	return { query: rest.join(" "), list };
 }
 
-const displayPath = (p: string, cwd: string): string => {
-	const rel = relative(cwd, p);
-	return rel && !rel.startsWith("..") ? rel : p;
-};
+export function formatAge(now: number, then: number): string {
+	const s = Math.max(0, (now - then) / 1000);
+	const units: [number, string][] = [[365 * 86400, "y"], [30 * 86400, "mo"], [7 * 86400, "w"], [86400, "d"], [3600, "h"], [60, "m"]];
+	for (const [secs, u] of units) if (s >= secs) return `${Math.floor(s / secs)}${u} ago`;
+	return "now";
+}
 
-/** `display<TAB>absolute` rows for fzf (--with-nth=1, result = field 2). */
-export function pickerRows(ranked: Ranked[], cwd: string): string {
-	return ranked.map((r) => `${displayPath(r.path, cwd)}\t${r.path}`).join("\n");
+function dirLabel(p: string, cwd: string, home: string): string {
+	const d = dirname(p);
+	const rel = relative(cwd, d);
+	if (rel === "") return ".";
+	if (!rel.startsWith("..")) return rel;
+	return under(d, home) ? `~${d.slice(home.length)}` : d;
+}
+
+/** fzf rows: `name · dir · age <TAB> absolute path <TAB> match line`. */
+export function pickerRows(ranked: Ranked[], cwd: string, now = Date.now(), home = homedir()): string {
+	return ranked
+		.map((r) => {
+			const parts = [r.path.slice(r.path.lastIndexOf("/") + 1), dirLabel(r.path, cwd, home)];
+			if (r.mtimeMs) parts.push(formatAge(now, r.mtimeMs));
+			return `${parts.join("  ·  ")}\t${r.path}\t${r.line ?? ""}`;
+		})
+		.join("\n");
+}
+
+const PICKER_MAX = 500;
+const CONTENT_SCAN_MAX = 300;
+
+async function firstMatchLines(paths: string[], pattern: string): Promise<Map<string, number>> {
+	const found = new Map<string, number>();
+	if (!paths.length) return found;
+	const out = await run("rg", ["-i", "--no-heading", "--with-filename", "--line-number", "--max-count", "1", "-e", pattern, "--", ...paths]);
+	for (const l of out.split("\n")) {
+		const m = /^(.*?):(\d+):/.exec(l);
+		if (m && !found.has(m[1])) found.set(m[1], +m[2]);
+	}
+	return found;
+}
+
+function mtimeOf(p: string): number | undefined {
+	try {
+		return statSync(p).mtimeMs;
+	} catch {
+		return undefined;
+	}
+}
+
+/** Candidates for the picker: content-filtered when content terms exist, with mtimes and graceful fallbacks. */
+export async function locateForPicker(input: string, opts: LocateOptions): Promise<{ items: Ranked[]; note?: string }> {
+	const q = parseLocateQuery(input);
+	let note: string | undefined;
+	let ranked = await findCandidates(input, opts);
+	if (!ranked.length && q.pathTerms.length > 1) {
+		const dropped = q.pathTerms[q.pathTerms.length - 1];
+		ranked = await findCandidates(q.pathTerms.slice(0, -1).join(" "), { ...opts });
+		if (ranked.length) note = `no match including "${dropped}"; showing results without it`;
+	}
+	let items = ranked.slice(0, PICKER_MAX);
+	if (q.contentTerms.length && items.length) {
+		const lines = await firstMatchLines(items.slice(0, CONTENT_SCAN_MAX).map((r) => r.path), q.contentTerms.join("|"));
+		const hit = items.filter((r) => lines.has(r.path)).map((r) => ({ ...r, line: lines.get(r.path) }));
+		if (hit.length) items = hit;
+		else note = `no file contains "${q.contentTerms.join(" ")}"; showing path matches only`;
+	}
+	return { items: items.map((r) => ({ ...r, mtimeMs: mtimeOf(r.path) })), note };
 }
 
 /** Pi `@path` references; cwd-relative where possible, quoted if they contain spaces. */

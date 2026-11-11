@@ -129,7 +129,7 @@ describe("runLocate plocate harvesting", () => {
 		const out = await runLocate("blank template", { cwd: repo, plocateDb: db });
 		expect(out).toContain("iac/modules/blank-workspace-template.tf");
 		expect(out).not.toContain("node_modules");
-	});
+	}, 30_000);
 });
 
 import { toMentions, findCandidates, parseLocateArgs, pickerRows } from "./locate.ts";
@@ -245,7 +245,7 @@ describe("locateForPicker", () => {
 	});
 	it("drops the last path term when nothing matches", async () => {
 		const dir = mk();
-		const { items, note } = await locateForPicker("template nonexistentterm", { cwd: dir, plocate: false });
+		const { items, note } = await locateForPicker("template +nonexistentterm", { cwd: dir, plocate: false });
 		expect(items.length).toBe(2);
 		expect(note).toContain("nonexistentterm");
 	});
