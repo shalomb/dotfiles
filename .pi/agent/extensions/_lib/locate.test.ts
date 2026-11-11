@@ -113,3 +113,21 @@ describe("anchor collapsing in runLocate", () => {
 		expect(out.split("\n").filter((l) => l.startsWith("- ")).length).toBe(1);
 	});
 });
+
+describe("runLocate plocate harvesting", () => {
+	it("finds a sibling-project file via a plocate index and masks noise", async () => {
+		const root = mkdtempSync(join(tmpdir(), "locate-pl-"));
+		const repo = join(root, "repo");
+		mkdirSync(repo);
+		execFileSync("git", ["init", "-q"], { cwd: repo });
+		mkdirSync(join(root, "iac/modules"), { recursive: true });
+		mkdirSync(join(root, "iac/node_modules"), { recursive: true });
+		writeFileSync(join(root, "iac/modules/blank-workspace-template.tf"), "x\n");
+		writeFileSync(join(root, "iac/node_modules/blank-template.js"), "x\n");
+		const db = join(root, "test.db");
+		execFileSync("updatedb", ["-l", "0", "-U", root, "-o", db]);
+		const out = await runLocate("blank template", { cwd: repo, plocateDb: db });
+		expect(out).toContain("iac/modules/blank-workspace-template.tf");
+		expect(out).not.toContain("node_modules");
+	});
+});
