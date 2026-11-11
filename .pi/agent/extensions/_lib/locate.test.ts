@@ -151,9 +151,31 @@ describe("mentions and picker", () => {
 		expect(c.length).toBe(30);
 		expect(c[0].zone).toBe(0);
 	});
-	it("pickerRows are tab-separated display+absolute path, shortest display for cwd files", () => {
-		const rows = pickerRows([{ path: "/w/a/x.md", zone: 0, score: 1 }, { path: "/etc/y", zone: 4, score: 0.2 }], "/w/a");
-		expect(rows).toBe("x.md\t/w/a/x.md\n/etc/y\t/etc/y");
+});
+
+import { formatAge, locateForPicker } from "./locate.ts";
+
+describe("picker rows", () => {
+	const NOW = 1_000_000_000_000;
+	it("formats ages", () => {
+		expect(formatAge(NOW, NOW - 30_000)).toBe("now");
+		expect(formatAge(NOW, NOW - 5 * 60_000)).toBe("5m ago");
+		expect(formatAge(NOW, NOW - 3 * 3600_000)).toBe("3h ago");
+		expect(formatAge(NOW, NOW - 2 * 86400_000)).toBe("2d ago");
+		expect(formatAge(NOW, NOW - 21 * 86400_000)).toBe("3w ago");
+		expect(formatAge(NOW, NOW - 90 * 86400_000)).toBe("3mo ago");
+		expect(formatAge(NOW, NOW - 800 * 86400_000)).toBe("2y ago");
+	});
+	it("rows lead with file name, then directory, then age; carry path and line", () => {
+		const rows = pickerRows(
+			[
+				{ path: "/w/a/iac/x.tf", zone: 0, score: 1, mtimeMs: NOW - 2 * 86400_000, line: 7 },
+				{ path: "/h/p/other/y.md", zone: 3, score: 0.5 },
+			],
+			"/w/a", NOW, "/h",
+		).split("\n");
+		expect(rows[0]).toBe("x.tf  ·  iac  ·  2d ago\t/w/a/iac/x.tf\t7");
+		expect(rows[1]).toBe("y.md  ·  ~/p/other\t/h/p/other/y.md\t");
 	});
 });
 
@@ -196,5 +218,35 @@ describe("worktree dedupe", () => {
 		const e = { cwd: "/h/p/repo/.worktrees/a", repoRoot: "/h/p/repo/.worktrees/a", parent: "/h/p/repo/.worktrees", home: "/h" };
 		const r = rankCandidates(["/h/p/repo/docs/s3.md", "/h/p/repo/.worktrees/a/docs/s3.md"], ["s3"], e).map((x) => x.path);
 		expect(r).toContain("/h/p/repo/.worktrees/a/docs/s3.md");
+	});
+});
+
+describe("locateForPicker", () => {
+	const mk = () => {
+		const dir = mkdtempSync(join(tmpdir(), "locate-"));
+		execFileSync("git", ["init", "-q"], { cwd: dir });
+		writeFileSync(join(dir, "a-template.md"), "intro\nthe workspace name is here\n");
+		writeFileSync(join(dir, "b-template.md"), "nothing relevant\n");
+		return dir;
+	};
+	it("keeps only content matches and records the matching line and mtime", async () => {
+		const dir = mk();
+		const { items, note } = await locateForPicker("template containing workspace", { cwd: dir, plocate: false });
+		expect(items.map((i) => i.path.split("/").pop())).toEqual(["a-template.md"]);
+		expect(items[0].line).toBe(2);
+		expect(items[0].mtimeMs).toBeGreaterThan(0);
+		expect(note).toBeUndefined();
+	});
+	it("falls back to the path-only list when no file contains the content terms", async () => {
+		const dir = mk();
+		const { items, note } = await locateForPicker("template containing zzzzz", { cwd: dir, plocate: false });
+		expect(items.length).toBe(2);
+		expect(note).toContain("no file contains");
+	});
+	it("drops the last path term when nothing matches", async () => {
+		const dir = mk();
+		const { items, note } = await locateForPicker("template nonexistentterm", { cwd: dir, plocate: false });
+		expect(items.length).toBe(2);
+		expect(note).toContain("nonexistentterm");
 	});
 });
