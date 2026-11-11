@@ -83,3 +83,21 @@ describe("anchors and receipt", () => {
 		expect(formatReceipt(hits, 100).split("\n").length).toBeLessThanOrEqual(25);
 	});
 });
+
+import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { execFileSync } from "node:child_process";
+import { runLocate } from "./locate.ts";
+
+describe("runLocate (integration)", () => {
+	it("finds an unindexed fresh file via git ls-files and returns a bounded receipt", async () => {
+		const dir = mkdtempSync(join(tmpdir(), "locate-"));
+		execFileSync("git", ["init", "-q"], { cwd: dir });
+		mkdirSync(join(dir, "docs"));
+		writeFileSync(join(dir, "docs/template.md"), "# my title\n");
+		const out = await runLocate("template in title", { cwd: dir, plocate: false });
+		expect(out).toContain("docs/template.md:1");
+		expect(out.split("\n").length).toBeLessThanOrEqual(25);
+	});
+});
