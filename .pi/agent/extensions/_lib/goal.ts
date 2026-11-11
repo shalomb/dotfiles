@@ -277,13 +277,14 @@ const badCommand = (commands: string[]): string | undefined => {
 	return bad === undefined ? undefined : `A check command may not contain a newline or control character (write one command per entry): ${JSON.stringify(bad)}`;
 };
 
-export interface DraftFields { doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
+export interface DraftFields { outcome?: string; doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
 
 /** Agent-reachable: set draft fields (an Outcome Check is only a suggestion). Never locks; refuses once the goal is no longer a draft. */
 export function fillDraft(g: Goal, f: DraftFields): Result {
 	if (g.status !== "draft") return refuse(`The goal is ${g.status}; only a draft is filled directly. Propose a change to a locked done-check instead.`);
 	const bad = f.doneCheck && badCommand(f.doneCheck.commands);
 	if (bad) return refuse(bad);
+	const outcome = f.outcome ? oneLine(f.outcome) : g.outcome;
 	const commands = f.doneCheck ? f.doneCheck.commands.map(oneLine).filter(Boolean) : g.doneCheck.commands;
 	const suggested = (f.outcomeChecks ?? g.doneCheck.outcomeChecks).map(oneLine);
 	if (f.outcomeChecks && suggested.some((c) => !commands.includes(c))) return refuse("An Outcome Check must be one of the done-check commands.");
@@ -291,6 +292,7 @@ export function fillDraft(g: Goal, f: DraftFields): Result {
 		ok: true,
 		goal: {
 			...g,
+			outcome,
 			doneCheck: { ...g.doneCheck, kind: f.doneCheck?.kind ?? g.doneCheck.kind, commands, outcomeChecks: suggested.filter((c) => commands.includes(c)) },
 			antiGoals: f.antiGoals?.map(oneLine).filter(Boolean) ?? g.antiGoals,
 			scopeAnchors: f.scopeAnchors?.map(oneLine).filter(Boolean) ?? g.scopeAnchors,
@@ -346,6 +348,32 @@ export function proposeChange(g: Goal, input: { now: Date; by: string; reason: s
 		ok: true,
 		goal: { ...g, pending: { at: stamp(input.now), by: input.by, reason: oneLine(input.reason), old: specOf(g.doneCheck), new: { kind: input.check.kind, commands } } },
 	};
+}
+
+/** Human only: take a locked goal back to a draft for correction. The locked check is kept in the history so a relock can tell a weakening. */
+export function applyUnlock(g: Goal, input: { now: Date }): Result {
+	if (g.status !== "active") return refuse(`Only a locked goal can be unlocked (the goal is ${g.status}).`);
+	const at = stamp(input.now);
+	return {
+		ok: true,
+		goal: {
+			...g,
+			status: "draft",
+			pending: undefined,
+			doneCheck: { ...g.doneCheck, lockedAt: "", lockedBy: "" },
+			history: [...g.history, { at, by: "human", reason: "unlocked", old: specOf(g.doneCheck) }],
+		},
+	};
+}
+
+/** The check that was locked before the latest unlock (to judge a weakening on relock), or undefined if the draft was never locked. */
+export function lastLockedSpec(g: Goal): CheckSpec | undefined {
+	for (let i = g.history.length - 1; i >= 0; i--) {
+		const h = g.history[i];
+		if (h.reason === "unlocked" && h.old) return h.old;
+		if (h.reason.startsWith("locked")) return undefined;
+	}
+	return undefined;
 }
 
 /** Human only: apply the pending change and record it. */
