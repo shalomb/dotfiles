@@ -35,3 +35,51 @@ describe("parseLocateQuery", () => {
 		expect(parseLocateQuery("  ").pathTerms).toEqual([]);
 	});
 });
+
+import { classifyZone, isNoise, scoreCandidate, rankCandidates, collapseToAnchors, formatReceipt, ZONE_WEIGHTS } from "./locate.ts";
+
+describe("zones and noise", () => {
+	const env = { cwd: "/h/p/repo/sub", repoRoot: "/h/p/repo", parent: "/h/p", home: "/h" };
+	it("classifies zones with spec weights", () => {
+		expect(classifyZone("/h/p/repo/sub/a.md", env)).toBe(0);
+		expect(classifyZone("/h/p/repo/other/a.md", env)).toBe(1);
+		expect(classifyZone("/h/p/iac/x.tf", env)).toBe(2);
+		expect(classifyZone("/h/notes/x", env)).toBe(3);
+		expect(classifyZone("/etc/x", env)).toBe(4);
+		expect([0, 1, 2, 3, 4].map((z) => ZONE_WEIGHTS[z])).toEqual([1, 0.9, 0.75, 0.5, 0.25]);
+	});
+	it("masks noise", () => {
+		for (const p of ["/a/.git/x", "/a/node_modules/x", "/h/.cache/x", "/h/.claude/x", "/h/.gemini/x", "/a/dist/x", "/a/target/x"])
+			expect(isNoise(p, "/h")).toBe(true);
+		expect(isNoise("/h/p/repo/a.md", "/h")).toBe(false);
+	});
+});
+
+describe("ranking", () => {
+	const env = { cwd: "/h/p/repo", repoRoot: "/h/p/repo", parent: "/h/p", home: "/h" };
+	it("strong sibling match beats weak local match", () => {
+		const terms = ["blank", "template"];
+		const ranked = rankCandidates(["/h/p/repo/scratch/test.txt", "/h/p/iac/modules/blank-workspace-template.tf"], terms, env);
+		expect(ranked[0].path).toBe("/h/p/iac/modules/blank-workspace-template.tf");
+	});
+	it("fresh local file is zone 0", () => {
+		const r = rankCandidates(["/h/p/repo/docs/template.md"], ["template"], env);
+		expect(r[0].zone).toBe(0);
+		expect(r[0].score).toBeGreaterThan(0);
+	});
+	it("drops non-matching paths and requires mandatory terms", () => {
+		expect(scoreCandidate("/h/p/repo/x.md", ["template"])).toBe(0);
+		expect(rankCandidates(["/h/p/repo/blank.md"], ["blank", "template"], env, ["template"])).toEqual([]);
+	});
+});
+
+describe("anchors and receipt", () => {
+	it("collapses children under a repo into the anchor", () => {
+		const a = collapseToAnchors(["/r/a/1.ts", "/r/a/2.ts", "/r/b/3.ts"], (p) => (p.startsWith("/r/a") ? "/r/a" : p));
+		expect(a).toEqual(["/r/a", "/r/b/3.ts"]);
+	});
+	it("caps receipt at 25 lines", () => {
+		const hits = Array.from({ length: 100 }, (_, i) => ({ path: `/x/${i}`, line: 1, col: 1, snippet: "s" }));
+		expect(formatReceipt(hits, 100).split("\n").length).toBeLessThanOrEqual(25);
+	});
+});
