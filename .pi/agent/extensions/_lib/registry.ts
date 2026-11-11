@@ -16,24 +16,23 @@ function createDbAdapter(path: string): DbAdapter {
 		// Use bun:sqlite (native Bun API)
 		const { Database } = require("bun:sqlite");
 		return new Database(path) as DbAdapter;
-	} else {
-		// Use node:sqlite (Node v24+ API)
-		const { DatabaseSync } = require("node:sqlite");
-		const db = new DatabaseSync(path);
-		// Node's sqlite doesn't accept undefined - convert to null
-		const normalizeArgs = (args: any[]) => args.map(v => v === undefined ? null : v);
-		return {
-			exec: (sql: string) => db.exec(sql),
-			query: (sql: string) => {
-				const stmt = db.prepare(sql);
-				return {
-					get: (...args: any[]) => stmt.get(...normalizeArgs(args)),
-					all: (...args: any[]) => stmt.all(...normalizeArgs(args)),
-					run: (...args: any[]) => stmt.run(...normalizeArgs(args))
-				};
-			}
-		};
 	}
+	// Use node:sqlite (Node v24+ API)
+	const { DatabaseSync } = require("node:sqlite");
+	const db = new DatabaseSync(path);
+	// Node's sqlite doesn't accept undefined - convert to null
+	const normalizeArgs = (args: any[]) => args.map(v => v === undefined ? null : v);
+	return {
+		exec: (sql: string) => db.exec(sql),
+		query: (sql: string) => {
+			const stmt = db.prepare(sql);
+			return {
+				get: (...args: any[]) => stmt.get(...normalizeArgs(args)),
+				all: (...args: any[]) => stmt.all(...normalizeArgs(args)),
+				run: (...args: any[]) => stmt.run(...normalizeArgs(args))
+			};
+		}
+	};
 }
 
 export type Registry = DbAdapter;

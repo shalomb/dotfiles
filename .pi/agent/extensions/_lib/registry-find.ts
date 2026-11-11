@@ -31,7 +31,7 @@ function parseSince(v: string, now = new Date()): string | undefined {
 	// ISO date
 	if (!/^\d{4}-\d{2}-\d{2}/.test(v)) return undefined;
 	const d = new Date(v.length === 10 ? `${v}T00:00:00.000Z` : v);
-	return isNaN(d.getTime()) ? undefined : d.toISOString();
+	return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
 }
 
 /** Resolve sessions root: PI_CODING_AGENT_DIR/sessions if exists, else ~/.pi/profiles/personal/sessions */
