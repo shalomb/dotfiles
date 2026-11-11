@@ -258,7 +258,7 @@ export function search(db: Registry, c: Criteria): Row[] {
 	eq("id", c.id); eq("cwd", c.cwd); eq("worktree", c.worktree); eq("branch", c.branch); eq("repo", c.repo); eq("status", c.status);
 	if (c.worktreePath) { w.push("s.worktree_path=?"); a.push(c.worktreePath); }
 	if (c.since) { w.push("s.last_activity>=?"); a.push(c.since); }
-	if (c.keyword) { w.push("s.digest LIKE ? ESCAPE '\\'"); a.push(`%${c.keyword.replace(/[\\%_]/g, "\\$&")}%`); }
+	for (const word of (c.keyword ?? "").split(/\s+/).filter(Boolean)) { w.push("s.digest LIKE ? ESCAPE '\\'"); a.push(`%${word.replace(/[\\%_]/g, "\\$&")}%`); }
 	const ic: string[] = [];
 	if (c.pid !== undefined) { ic.push("pid=?"); a.push(c.pid); }
 	if (c.tmuxSession) { ic.push("tmux_session=?"); a.push(c.tmuxSession); }
