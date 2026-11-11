@@ -59,10 +59,15 @@ agentctl() {
 # Export function for use in subshells
 export -f agentctl
 
-# Initialize agents on shell startup (suppress output)
-if command -v uv >/dev/null 2>&1; then
+# Initialize agents on shell startup (fast-path: reuse running gpg-agent socket;
+# full agentctl init only when no agent socket is active).
+_agentctl_sock="${XDG_RUNTIME_DIR:-/run/user/$UID}/gnupg/S.gpg-agent.ssh"
+if [[ -S "$_agentctl_sock" ]]; then
+    export SSH_AUTH_SOCK="$_agentctl_sock"
+elif [[ -z "${SSH_AUTH_SOCK:-}" ]] && command -v uv >/dev/null 2>&1; then
     agentctl init >/dev/null 2>&1 || true
 fi
+unset _agentctl_sock
 
 # Before SSH connections, unlock the gpg-agent SSH key on this terminal when
 # needed so ssh never silently falls back to a password prompt.
