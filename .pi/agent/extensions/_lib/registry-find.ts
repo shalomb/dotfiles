@@ -179,7 +179,7 @@ function renderTable(rows: Row[], limit?: number): string {
 	return lines.join("\n");
 }
 
-export function runFind(argv: string[], io: IO): string {
+export function runFind(argv: string[], _io?: IO): string {
 	const { criteria, options } = parseFindArgs(argv);
 	if (options.help) return USAGE;
 	const cap = options.all ? undefined : (options.limit ?? DEFAULT_LIMIT);
