@@ -49,19 +49,19 @@ export default function (pi: ExtensionAPI) {
 
 			if (parsed.json) {
 				const jsonStr = JSON.stringify(resolution, null, 2);
-				if (typeof ctx.ui?.output === "function") {
+				if (ctx.ui && typeof ctx.ui.output === "function") {
 					ctx.ui.output(jsonStr);
-				} else {
-					console.log(jsonStr);
+				} else if (ctx.ui?.notify) {
+					ctx.ui.notify(jsonStr, "info");
 				}
 				return;
 			}
 
 			const formatted = formatExplanation(resolution);
-			if (typeof ctx.ui?.output === "function") {
+			if (ctx.ui && typeof ctx.ui.output === "function") {
 				ctx.ui.output(formatted);
-			} else {
-				console.log(formatted);
+			} else if (ctx.ui?.notify) {
+				ctx.ui.notify(formatted, "info");
 			}
 		},
 	});
