@@ -155,38 +155,54 @@ export interface LocateOptions {
 	home?: string;
 }
 
+const COLLAPSE_THRESHOLD = 5;
+const TOP_ANCHORS = 15;
+
+async function harvest(terms: string[], repoRoot: string, home: string, usePlocate: boolean): Promise<string[]> {
+	const pool = new Set<string>();
+	for (const rel of (await run("git", ["ls-files", "-co", "--exclude-standard"], repoRoot)).split("\n"))
+		if (rel) pool.add(join(repoRoot, rel));
+	if (usePlocate) {
+		const out = await run("plocate", ["-i", "-l", "20000", "--all", ...terms]);
+		for (const p of out.split("\n")) if (p) pool.add(p);
+	}
+	return [...pool].filter((p) => !isNoise(p, home));
+}
+
+/** Directories holding many hits become one anchor entry; the rest stay as files. */
+export function collapseRanked(ranked: Ranked[]): { path: string; count: number }[] {
+	const perDir = new Map<string, number>();
+	for (const r of ranked) perDir.set(dirname(r.path), (perDir.get(dirname(r.path)) ?? 0) + 1);
+	const anchorOf = (p: string) => ((perDir.get(dirname(p)) ?? 0) >= COLLAPSE_THRESHOLD ? `${dirname(p)}/` : p);
+	return collapseToAnchors(ranked.map((r) => r.path), anchorOf).map((path) => ({
+		path,
+		count: path.endsWith("/") ? (perDir.get(path.slice(0, -1)) ?? 1) : 1,
+	}));
+}
+
+async function inspect(anchors: { path: string; count: number }[], contentTerms: string[]): Promise<Hit[]> {
+	const pattern = contentTerms.join("|");
+	const hits: Hit[] = [];
+	for (const a of anchors.slice(0, TOP_ANCHORS)) {
+		if (!pattern) {
+			hits.push({ path: a.count > 1 ? `${a.path} (${a.count} files)` : a.path });
+			continue;
+		}
+		const out = await run("rg", ["-i", "--no-heading", "--line-number", "--column", "--max-count", "1", "-e", pattern, a.path]);
+		const m = /^(?:[^:]*:)?(\d+):(\d+):(.*)$/.exec(out.split("\n")[0] ?? "");
+		hits.push(m ? { path: a.path, line: +m[1], col: +m[2], snippet: m[3] } : { path: a.path });
+	}
+	return hits;
+}
+
 export async function runLocate(input: string, opts: LocateOptions): Promise<string> {
 	const q = parseLocateQuery(input);
-	const terms = [...q.pathTerms];
-	if (!terms.length) return "Usage: /locate <path terms> [in|within|containing <content terms>]";
+	if (!q.pathTerms.length) return "Usage: /locate <path terms> [in|within|containing <content terms>]";
 	const home = opts.home ?? homedir();
 	const repoRoot = (await run("git", ["rev-parse", "--show-toplevel"], opts.cwd)).trim() || opts.cwd;
 	const env: ZoneEnv = { cwd: opts.cwd, repoRoot, parent: dirname(repoRoot), home };
-
-	const pool = new Set<string>();
-	// Zone 0/1: fresh, via git
-	for (const rel of (await run("git", ["ls-files", "-co", "--exclude-standard"], repoRoot)).split("\n"))
-		if (rel) pool.add(join(repoRoot, rel));
-	// Zones 2-4: plocate, filtered at stream time
-	if (opts.plocate !== false) {
-		const out = await run("plocate", ["-i", "-l", "20000", "--all", ...terms.flatMap((t) => [t])]);
-		for (const p of out.split("\n")) if (p && !isNoise(p, home)) pool.add(p);
-	}
-	const paths = [...pool].filter((p) => !isNoise(p, home));
-	const ranked = rankCandidates(paths, terms, env, q.mandatory);
-	const top = ranked.slice(0, 15);
-
-	const hits: Hit[] = [];
-	if (q.contentTerms.length) {
-		const pattern = q.contentTerms.join("|");
-		for (const c of top) {
-			const out = await run("rg", ["-i", "--no-heading", "--line-number", "--column", "--max-count", "1", "-e", pattern, c.path]);
-			const line = out.split("\n")[0];
-			const m = /^(\d+):(\d+):(.*)$/.exec(line ?? "") ?? /^[^:]*:(\d+):(\d+):(.*)$/.exec(line ?? "");
-			hits.push(m ? { path: c.path, line: +m[1], col: +m[2], snippet: m[3] } : { path: c.path });
-		}
-	} else {
-		for (const c of top) hits.push({ path: c.path });
-	}
+	const paths = await harvest(q.pathTerms, repoRoot, home, opts.plocate !== false);
+	const ranked = rankCandidates(paths, q.pathTerms, env, q.mandatory);
+	const hits = await inspect(collapseRanked(ranked), q.contentTerms);
 	return formatReceipt(hits, ranked.length);
 }
