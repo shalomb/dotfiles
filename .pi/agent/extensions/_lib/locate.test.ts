@@ -101,3 +101,15 @@ describe("runLocate (integration)", () => {
 		expect(out.split("\n").length).toBeLessThanOrEqual(25);
 	});
 });
+
+describe("anchor collapsing in runLocate", () => {
+	it("collapses many hits in one directory into a single anchor line", async () => {
+		const dir = mkdtempSync(join(tmpdir(), "locate-"));
+		execFileSync("git", ["init", "-q"], { cwd: dir });
+		mkdirSync(join(dir, "gen"));
+		for (let i = 0; i < 30; i++) writeFileSync(join(dir, "gen", `template${i}.md`), "x\n");
+		const out = await runLocate("template", { cwd: dir, plocate: false });
+		expect(out).toContain("gen/ (30 files)");
+		expect(out.split("\n").filter((l) => l.startsWith("- ")).length).toBe(1);
+	});
+});
