@@ -66,13 +66,20 @@ export function classifyZone(p: string, env: ZoneEnv): number {
 	return 4;
 }
 
-const NOISE_SEGMENTS = ["/.git/", "/node_modules/", "/dist/", "/target/"];
+/** Directory names that never hold substance: deps, caches, build output, tool state. */
+const NOISE_DIRS = new Set([
+	".git", "node_modules", "dist", "target", "build", "coverage", "bower_components",
+	".venv", "venv", "site-packages", "__pycache__", ".tox", ".mypy_cache", ".pytest_cache", ".ruff_cache",
+	".terraform", ".next", ".gradle", ".m2", ".npm", ".idea", ".direnv",
+]);
+const NOISE_HOME_DIRS = [".cache", ".claude", ".gemini"];
 
 export function isNoise(p: string, home: string): boolean {
-	const q = p.endsWith("/") ? p : `${p}/`;
-	if (NOISE_SEGMENTS.some((s) => q.includes(s))) return true;
-	return [".cache", ".claude", ".gemini"].some((d) => under(p, `${home}/${d}`));
+	if (p.split("/").some((s) => NOISE_DIRS.has(s))) return true;
+	return NOISE_HOME_DIRS.some((d) => under(p, `${home}/${d}`));
 }
+
+const WORKTREE_PENALTY = 0.5;
 
 /** Match quality in [0,1]: fraction of terms found, bonus for hits in the basename. */
 export function scoreCandidate(p: string, terms: string[]): number {
@@ -102,7 +109,7 @@ export function rankCandidates(paths: string[], terms: string[], env: ZoneEnv, m
 		const match = scoreCandidate(path, terms);
 		if (match <= 0) continue;
 		const zone = classifyZone(path, env);
-		out.push({ path, zone, score: match * ZONE_WEIGHTS[zone] });
+		out.push({ path, zone, score: match * ZONE_WEIGHTS[zone] * (path.includes("/.worktrees/") ? WORKTREE_PENALTY : 1) });
 	}
 	return out.sort((a, b) => b.score - a.score || a.path.localeCompare(b.path));
 }
