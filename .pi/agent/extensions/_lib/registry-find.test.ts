@@ -279,3 +279,19 @@ describe("runFind limit and help", () => {
 		}
 	});
 });
+
+describe("runFind gum enrichment", () => {
+	test("--json rows carry repo_name/remote_url from --gum-db; null when absent", () => {
+		const root = mkdtempSync(join(tmpdir(), "find-gum-"));
+		const dbPath = join(tmpdir(), `find-gum-${Date.now()}.db`);
+		put(root, "--r--", "2026-11-08T12-00-00-000Z", B, "/r", msg("user") + msg("assistant", "stop"));
+		const gumDb = join(root, "gum.db");
+		const g = openRegistry(gumDb);
+		g.exec("CREATE TABLE projects (id INTEGER PRIMARY KEY, path TEXT UNIQUE, name TEXT, remote_url TEXT)");
+		g.query("INSERT INTO projects (path,name,remote_url) VALUES (?,?,?)").run("/r", "rr", "https://github.com/o/rr.git");
+		const withGum = JSON.parse(runFind(["--json", "--db", dbPath, "--root", root, "--gum-db", gumDb]));
+		expect(withGum[0]).toMatchObject({ repo_name: "rr", remote_url: "https://github.com/o/rr.git" });
+		const without = JSON.parse(runFind(["--json", "--db", dbPath, "--root", root, "--gum-db", join(root, "none.db")]));
+		expect(without[0]).toMatchObject({ repo_name: null, remote_url: null });
+	});
+});

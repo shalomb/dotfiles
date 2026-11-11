@@ -30,7 +30,7 @@ pi-find [filters] [options] [keyword...]
   --id --pid --tmux-session --tmux-window --tmux-pane
   --branch --worktree --worktree-path --cwd --repo --status --since 7d|12h|2w|ISO
   --keyword <text>   each word must appear (any order); bare words work too
-  --json  --limit <n> (default 20)  --all  --no-scan  --db  --root  -h
+  --gum-db <path>    gum project db; --json rows gain repo_name/remote_url\n  --json  --limit <n> (default 20)  --all  --no-scan  --db  --root  -h
 ```
 Examples:
 ```

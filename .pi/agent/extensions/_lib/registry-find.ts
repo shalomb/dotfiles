@@ -2,6 +2,7 @@
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { enrichRows } from "./registry-gum";
 import { openRegistry, backfill, search, reapLost, defaultDbPath, type Criteria, type Row } from "./registry";
 
 export interface FindOptions {
@@ -11,6 +12,7 @@ export interface FindOptions {
 	help?: boolean;
 	noScan?: boolean;
 	db?: string;
+	gumDb?: string;
 	sessionsRoot?: string;
 }
 
@@ -87,6 +89,7 @@ export function parseFindArgs(argv: string[], now = new Date()): FindArgs {
 			case "--help": case "-h": options.help = true; break;
 			case "--no-scan": options.noScan = true; break;
 			case "--db": options.db = val(t); break;
+			case "--gum-db": options.gumDb = val(t); break;
 			case "--root": options.sessionsRoot = val(t); break;
 			default:
 				if (t.startsWith("--")) throw new Error(`unknown option ${t}`);
@@ -145,6 +148,7 @@ Options:
   --all                   no row cap
   --no-scan               skip reap/backfill, query the registry as is
   --db <path>             registry database
+  --gum-db <path>         gum project db for repo name/remote (default ~/.cache/gum/gum.db)
   --root <path>           sessions root to backfill from
   -h, --help              this text
 
@@ -197,7 +201,7 @@ export function runFind(argv: string[], _io?: IO): string {
 	const limited = cap ? results.slice(0, cap) : results;
 
 	if (options.json) {
-		return JSON.stringify(limited, null, 2);
+		return JSON.stringify(enrichRows(limited, options.gumDb), null, 2);
 	}
 
 	return renderTable(results, cap);
