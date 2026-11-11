@@ -66,6 +66,10 @@ class DotfileManager:
                 dst_path = self.home_dir / rel_path
                 logger.info(f"Exporting {src_path} -> {dst_path}")
                 
+                if dry_run and not (cleanup and src_path.is_dir()):
+                    console.print(f"[blue]Would export {src_path} -> {dst_path}[/blue]")
+                    continue
+                
                 if src_path.is_file():
                     self.file_ops.export_file(src_path, dst_path, force=True)
                 elif src_path.is_dir():
