@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach } from "bun:test";
-import { mkdtempSync, mkdirSync, writeFileSync, utimesSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseFindArgs, runFind } from "./registry-find";
@@ -230,5 +230,52 @@ describe("runFind", () => {
 		runFind(["--db", dbPath, "--root", root], { write: () => {}, error: () => {} });
 		const afterFiles = new Set(require("child_process").execSync("git ls-files", { cwd: repoPath, encoding: "utf8" }).split("\n"));
 		expect(beforeFiles).toEqual(afterFiles);
+	});
+});
+
+describe("runFind limit and help", () => {
+	let root: string, dbPath: string;
+	const io = { write: () => {}, error: () => {} };
+	beforeEach(() => {
+		root = mkdtempSync(join(tmpdir(), "find-lim-"));
+		dbPath = join(tmpdir(), `find-lim-${Date.now()}-${Math.random()}.db`);
+		for (let i = 0; i < 25; i++) {
+			const id = `01a1cccc-0000-7000-8000-${String(i).padStart(12, "0")}`;
+			put(root, `--r${i}--`, `2026-11-08T12-00-${String(i).padStart(2, "0")}-000Z`, id, `/r${i}`, msg("user") + msg("assistant", "stop"));
+		}
+	});
+
+	test("default caps at 20 rows with 'N more' footer", () => {
+		const out = runFind(["--db", dbPath, "--root", root], io);
+		expect(out.match(/\/resume /g)!.length).toBe(20);
+		expect(out).toContain("5 more");
+		expect(out).toContain("--all");
+	});
+
+	test("--all removes the cap and the footer", () => {
+		const out = runFind(["--all", "--db", dbPath, "--root", root], io);
+		expect(out.match(/\/resume /g)!.length).toBe(25);
+		expect(out).not.toContain("more");
+	});
+
+	test("explicit --limit shows footer for the remainder", () => {
+		const out = runFind(["--limit", "3", "--db", dbPath, "--root", root], io);
+		expect(out.match(/\/resume /g)!.length).toBe(3);
+		expect(out).toContain("22 more");
+	});
+
+	test("--json is capped at 20 by default, all with --all", () => {
+		expect(JSON.parse(runFind(["--json", "--db", dbPath, "--root", root], io)).length).toBe(20);
+		expect(JSON.parse(runFind(["--json", "--all", "--db", dbPath, "--root", root], io)).length).toBe(25);
+	});
+
+	test("--help prints usage with every flag and examples, without scanning", () => {
+		for (const f of ["--help", "-h"]) {
+			const out = runFind([f, "--db", "/nonexistent/x.db"], io);
+			expect(out).toContain("Usage: pi-find");
+			for (const flag of ["--id", "--pid", "--tmux-session", "--tmux-window", "--tmux-pane", "--branch", "--worktree", "--worktree-path", "--cwd", "--repo", "--status", "--since", "--keyword", "--json", "--limit", "--all", "--no-scan", "--db", "--root"])
+				expect(out).toContain(flag);
+			expect(out).toContain("Examples");
+		}
 	});
 });
