@@ -180,3 +180,21 @@ describe("worktree duplicates are demoted", () => {
 		expect(r[0].path).toBe("/h/p/repo/docs/s3.md");
 	});
 });
+
+describe("worktree dedupe", () => {
+	const env = { cwd: "/h/p/repo", repoRoot: "/h/p/repo", parent: "/h/p", home: "/h" };
+	it("drops worktree copies whose main-tree twin exists but keeps unique ones", () => {
+		const r = rankCandidates(
+			["/h/p/repo/docs/s3.md", "/h/p/repo/.worktrees/a/docs/s3.md", "/h/p/repo/.worktrees/b/docs/s3.md", "/h/p/repo/.worktrees/b/docs/s3-new.md"],
+			["s3"], env).map((x) => x.path);
+		expect(r).toContain("/h/p/repo/docs/s3.md");
+		expect(r).toContain("/h/p/repo/.worktrees/b/docs/s3-new.md");
+		expect(r).not.toContain("/h/p/repo/.worktrees/a/docs/s3.md");
+		expect(r).not.toContain("/h/p/repo/.worktrees/b/docs/s3.md");
+	});
+	it("keeps worktree files when cwd is inside that worktree", () => {
+		const e = { cwd: "/h/p/repo/.worktrees/a", repoRoot: "/h/p/repo/.worktrees/a", parent: "/h/p/repo/.worktrees", home: "/h" };
+		const r = rankCandidates(["/h/p/repo/docs/s3.md", "/h/p/repo/.worktrees/a/docs/s3.md"], ["s3"], e).map((x) => x.path);
+		expect(r).toContain("/h/p/repo/.worktrees/a/docs/s3.md");
+	});
+});
