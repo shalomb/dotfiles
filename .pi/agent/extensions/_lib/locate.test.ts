@@ -131,3 +131,28 @@ describe("runLocate plocate harvesting", () => {
 		expect(out).not.toContain("node_modules");
 	});
 });
+
+import { toMentions, findCandidates, parseLocateArgs, pickerRows } from "./locate.ts";
+
+describe("mentions and picker", () => {
+	it("formats @mentions relative to cwd, quoting spaces", () => {
+		expect(toMentions(["/w/a/b.md", "/w/my file.md", "/etc/x"], "/w/a")).toBe('@b.md @"../my file.md" @/etc/x');
+	});
+	it("extracts --list flag from args", () => {
+		expect(parseLocateArgs("--list blank template")).toEqual({ query: "blank template", list: true });
+		expect(parseLocateArgs("blank -l")).toEqual({ query: "blank", list: true });
+		expect(parseLocateArgs("blank")).toEqual({ query: "blank", list: false });
+	});
+	it("findCandidates returns all ranked paths uncapped by anchors", async () => {
+		const dir = mkdtempSync(join(tmpdir(), "locate-"));
+		execFileSync("git", ["init", "-q"], { cwd: dir });
+		for (let i = 0; i < 30; i++) writeFileSync(join(dir, `template${i}.md`), "x\n");
+		const c = await findCandidates("template", { cwd: dir, plocate: false });
+		expect(c.length).toBe(30);
+		expect(c[0].zone).toBe(0);
+	});
+	it("pickerRows are tab-separated display+absolute path, shortest display for cwd files", () => {
+		const rows = pickerRows([{ path: "/w/a/x.md", zone: 0, score: 1 }, { path: "/etc/y", zone: 4, score: 0.2 }], "/w/a");
+		expect(rows).toBe("x.md\t/w/a/x.md\n/etc/y\t/etc/y");
+	});
+});
