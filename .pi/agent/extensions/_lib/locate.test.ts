@@ -156,3 +156,27 @@ describe("mentions and picker", () => {
 		expect(rows).toBe("x.md\t/w/a/x.md\n/etc/y\t/etc/y");
 	});
 });
+
+describe("noise pruning of dependency and build trees", () => {
+	const dirs = [".venv", "venv", "site-packages", "__pycache__", ".tox", ".mypy_cache", ".pytest_cache", ".ruff_cache",
+		".terraform", ".next", "build", ".gradle", ".m2", ".npm", ".idea", ".direnv", "coverage", "bower_components"];
+	for (const d of dirs)
+		it(`masks ${d}`, () => expect(isNoise(`/h/p/repo/${d}/lib/x.py`, "/h")).toBe(true));
+	it("masks the directory itself and keeps real code", () => {
+		expect(isNoise("/h/p/repo/.venv", "/h")).toBe(true);
+		expect(isNoise("/h/p/repo/iac/s3-bucket.tf", "/h")).toBe(false);
+		expect(isNoise("/h/p/repo/.github/workflows/s3.yml", "/h")).toBe(false);
+	});
+	it("does not mask lookalike names", () => {
+		expect(isNoise("/h/p/repo/rebuild/x.md", "/h")).toBe(false);
+		expect(isNoise("/h/p/repo/builds.md", "/h")).toBe(false);
+	});
+});
+
+describe("worktree duplicates are demoted", () => {
+	const env = { cwd: "/h/p/repo", repoRoot: "/h/p/repo", parent: "/h/p", home: "/h" };
+	it("ranks the main-tree copy above a .worktrees copy", () => {
+		const r = rankCandidates(["/h/p/repo/.worktrees/x/s3.md", "/h/p/repo/docs/s3.md"], ["s3"], env);
+		expect(r[0].path).toBe("/h/p/repo/docs/s3.md");
+	});
+});
