@@ -135,7 +135,7 @@ export function formatReceipt(hits: Hit[], total: number): string {
 
 import { execFile } from "node:child_process";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { promisify } from "node:util";
 
 const sh = promisify(execFile);
@@ -197,14 +197,52 @@ async function inspect(anchors: { path: string; count: number }[], contentTerms:
 	return hits;
 }
 
-export async function runLocate(input: string, opts: LocateOptions): Promise<string> {
+export async function findCandidates(input: string, opts: LocateOptions): Promise<Ranked[]> {
 	const q = parseLocateQuery(input);
-	if (!q.pathTerms.length) return "Usage: /locate <path terms> [in|within|containing <content terms>]";
+	if (!q.pathTerms.length) return [];
 	const home = opts.home ?? homedir();
 	const repoRoot = (await run("git", ["rev-parse", "--show-toplevel"], opts.cwd)).trim() || opts.cwd;
 	const env: ZoneEnv = { cwd: opts.cwd, repoRoot, parent: dirname(repoRoot), home };
 	const paths = await harvest(q.pathTerms, repoRoot, home, opts.plocateDb, opts.plocate !== false);
-	const ranked = rankCandidates(paths, q.pathTerms, env, q.mandatory);
+	return rankCandidates(paths, q.pathTerms, env, q.mandatory);
+}
+
+export async function runLocate(input: string, opts: LocateOptions): Promise<string> {
+	const q = parseLocateQuery(input);
+	if (!q.pathTerms.length) return "Usage: /locate <path terms> [in|within|containing <content terms>]";
+	const ranked = await findCandidates(input, opts);
 	const hits = await inspect(collapseRanked(ranked), q.contentTerms);
 	return formatReceipt(hits, ranked.length);
+}
+
+// ---- picker / prompt integration ----
+
+export function parseLocateArgs(args: string): { query: string; list: boolean } {
+	let list = false;
+	const rest = args.split(/\s+/).filter((w) => {
+		if (w === "--list" || w === "-l") return (list = true), false;
+		return w !== "";
+	});
+	return { query: rest.join(" "), list };
+}
+
+const displayPath = (p: string, cwd: string): string => {
+	const rel = relative(cwd, p);
+	return rel && !rel.startsWith("..") ? rel : p;
+};
+
+/** `display<TAB>absolute` rows for fzf (--with-nth=1, result = field 2). */
+export function pickerRows(ranked: Ranked[], cwd: string): string {
+	return ranked.map((r) => `${displayPath(r.path, cwd)}\t${r.path}`).join("\n");
+}
+
+/** Pi `@path` references; cwd-relative where possible, quoted if they contain spaces. */
+export function toMentions(paths: string[], cwd: string): string {
+	return paths
+		.map((p) => {
+			const rel = relative(cwd, p);
+			const shown = rel && !rel.startsWith("../..") ? rel : p;
+			return `@${/\s/.test(shown) ? `"${shown}"` : shown}`;
+		})
+		.join(" ");
 }
