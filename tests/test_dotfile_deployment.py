@@ -42,6 +42,14 @@ class TestDotfileDeployment:
         # Help might not exist, but make should not crash
         assert result['returncode'] in [0, 2], f"make help failed: {result['stderr']}"
 
+    def test_makefile_help_has_no_side_effects(self, cmd, test_env, dotfiles_repo):
+        """`make help` is the default goal and must only print; a stray recipe
+        once exported dotfiles from whichever checkout ran it, relinking $HOME."""
+        result = cmd('make -n help', env=test_env, cwd=dotfiles_repo)
+        assert result['success'], result['stderr']
+        for forbidden in ('dotfile_stash', 'dotfile_manager', ' export ', 'ln ', 'cp ', 'rm '):
+            assert forbidden not in result['stdout'], f"make help would run: {forbidden!r}\n{result['stdout']}"
+
     def test_python_dotfile_manager(self, cmd, test_env, dotfiles_repo):
         """Test that Python dotfile manager works."""
         # First install the package
