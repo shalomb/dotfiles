@@ -11,16 +11,17 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { findCandidates, parseLocateArgs, pickerRows, runLocate, toMentions } from "./_lib/locate.ts";
+import { locateForPicker, parseLocateArgs, pickerRows, runLocate, toMentions } from "./_lib/locate.ts";
 import { notShownNote, openPopup } from "./_lib/ui-gate.ts";
 
 const USAGE = "Usage: /locate [--list] <path terms> [in|within|containing <content terms>]";
-const MAX_PICKER_ROWS = 500;
 
+// rows: display <TAB> absolute path <TAB> match line
 const FZF = [
-	"fzf --multi --delimiter=$'\\t' --with-nth=1 --layout=reverse --info=inline-right",
-	"--prompt='locate> ' --header='tab select · enter add @ref(s) to prompt · esc cancel'",
-	"--preview='bat -p --color=always {2} 2>/dev/null || ls -la {2}' --preview-window='right,55%,border-left'",
+	"fzf --multi --delimiter=$'\\t' --with-nth=1 --layout=reverse --info=inline-right --ansi",
+	"--prompt='locate> ' --header=\"$3\"",
+	"--preview='bat -p --color=always --highlight-line {3} {2} 2>/dev/null || bat -p --color=always {2} 2>/dev/null || ls -la {2}'",
+	"--preview-window='right,55%,border-left'",
 	'--select-1 --exit-0 <"$1" | cut -f2 >"$2"',
 ].join(" ");
 
@@ -36,7 +37,7 @@ export default function (pi: ExtensionAPI) {
 			const show = (text: string) => (typeof ctx.ui?.output === "function" ? ctx.ui.output(text) : notify(text));
 			if (list || !process.env.TMUX) return show(await runLocate(query, { cwd: ctx.cwd }));
 
-			const ranked = (await findCandidates(query, { cwd: ctx.cwd })).slice(0, MAX_PICKER_ROWS);
+			const { items: ranked, note } = await locateForPicker(query, { cwd: ctx.cwd });
 			if (!ranked.length) return notify(`locate: no matches for "${query}"`);
 
 			const dir = mkdtempSync(join(tmpdir(), "pi-locate-"));
@@ -45,7 +46,8 @@ export default function (pi: ExtensionAPI) {
 				const out = join(dir, "chosen");
 				writeFileSync(rows, `${pickerRows(ranked, ctx.cwd)}\n`);
 				const res = await openPopup(pi.exec.bind(pi) as any, { name: "locate", cwd: ctx.cwd, width: "95%", height: "90%",
-					argv: ["bash", "-c", FZF, "locate-picker", rows, out] }, process.env, ctx.hasUI !== false);
+					argv: ["bash", "-c", FZF, "locate-picker", rows, out,
+						note ?? "tab select · enter add @ref(s) to prompt · esc cancel"] }, process.env, ctx.hasUI !== false);
 				if (res.status !== "shown") return notify(notShownNote(res, "locate"));
 				if (res.code !== 0) return notify(`locate popup failed (${res.code}): ${res.stderr?.trim() || "is fzf installed?"}`, "error");
 
