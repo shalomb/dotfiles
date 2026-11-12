@@ -23,7 +23,8 @@ touch "$T/a/file.txt"
 warn() { echo "WARN: $*" >&2; }
 die()  { echo "DIE: $*" >&2; }
 tildeexpand() { echo "${1/#\~/$HOME}"; }
-cdto() { echo "$CDTO_ANSWER"; }       # picker stub: prints $CDTO_ANSWER
+cdto() { printf '%s\n' "$@" >"$T/cdto.args"; echo "$CDTO_ANSWER"; }  # picker stub; records args
+gum()  { case "$1" in dirs) echo "$T/w";; projects) echo "$T/qq";; esac; }
 CDTO_ANSWER=""
 
 reset() { builtin cd "$1" || exit 1; dirs -c; unset OLDPWD; }
@@ -88,6 +89,38 @@ CDTO_ANSWER="$T/w" run -b;    check picker-bookmarks "$T/w" "$PWD"
 reset "$T"; CDTO_ANSWER="" run -b; check picker-cancel-stays "$T" "$PWD"
 reset "$T/a"; run b; run c; CDTO_ANSWER="$T/a" run -v
 check picker-dirstack-lands "$T/a" "$PWD"
+
+
+# --- more pickers: which candidates reach cdto -------------------------------
+mkdir -p "$HOME/.cache"; echo "$T/var" >"$HOME/.cache/dir-selected"
+reset "$T"; CDTO_ANSWER="$T/var" run -s
+check picker-selection-lands "$T/var" "$PWD"
+check picker-selection-candidates "$T/var" "$(tail -n1 "$T/cdto.args")"
+reset "$T"; CDTO_ANSWER="$T/w" run -f;  check picker-frequent-lands "$T/w" "$PWD"
+check picker-frequent-candidates "$T/w" "$(tail -n1 "$T/cdto.args")"
+reset "$T"; CDTO_ANSWER="$T/qq" run -p; check picker-projects-lands "$T/qq" "$PWD"
+reset "$T"; CDTO_ANSWER="$T/w" run -o;  check picker-omni-lands "$T/w" "$PWD"
+check picker-omni-has-selection "$T/var" "$(rg -x -F "$T/var" "$T/cdto.args" | head -1)"
+check picker-omni-has-projects "$T/qq" "$(rg -x -F "$T/qq" "$T/cdto.args" | head -1)"
+reset "$T"; run -b x;                   check picker-query-passed "x" "$(head -n1 "$T/cdto.args")"
+
+# --- bookmarks ---------------------------------------------------------------
+rm -f "$XDG_CONFIG_HOME/dirs"
+reset "$T/a"; run -B; reset "$T/var"; run -B; run -B
+check bookmark-adds-pwd-deduped "$T/var
+$T/a" "$(cat "$XDG_CONFIG_HOME/dirs")"
+
+# --- dirstack: bare + and +name ---------------------------------------------
+mkdir -p "$T/zebra"
+reset "$T"; run zebra; run "$T/a"; run +zebra; check stack-name-match "$T/zebra" "$PWD"
+reset "$T/a"; run b; run c; CDTO_ANSWER="$T/a" run +
+check plus-opens-dirstack-picker "$T/a" "$PWD"
+
+# --- qualifier -d / -h -------------------------------------------------------
+reset "$T"; CDTO_ANSWER="./a/x" run x -d; check descend-flag "$T/a/x" "$PWD"
+check descend-candidates "./a/x" "$(rg -x -F ./a/x "$T/cdto.args")"
+reset "$T"; run x -h; check qualifier-help-lists-flags 1 "$(out | rg -c -- '-c  - Create and then cd')"
+check qualifier-help-no-move "$T" "$PWD"
 
 # --- CDPATH ------------------------------------------------------------------
 mkdir -p "$T/a/bbb"
