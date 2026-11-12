@@ -387,7 +387,7 @@ test-pi: ## Run pi extension unit tests (bun; cd needed, bun skips dot-dirs by p
 		cd $(PI_EXT_LIB) && bun test; \
 	fi
 
-.PHONY: test test-fast
+.PHONY: test test-fast test-cd
 test: ## Run acceptance tests (usage: make test [FAST=1])
 	@echo "Running bash standards validation..."
 	@tests/bash-standards/validate-standards.sh
@@ -430,12 +430,17 @@ test-bash: ## Run all bash test suites with goss (fails if any suite fails)
 	fi
 	echo "All bash tests passed"
 
+test-cd: ## Run cd function tests (behaviour + GitHub URL)
+	@bash tests/cd-behaviour.sh
+	@bash tests/cd-url.sh
+
 test-fast: ## Run fast tests only (environment + deployment)
 	@echo "Running bash standards validation..."
 	@tests/bash-standards/validate-standards.sh
 	@echo "Running shellcheck validation..."
 	@tests/bash-standards/run-shellcheck.sh
 	@$(MAKE) --no-print-directory test-pi
+	@$(MAKE) --no-print-directory test-cd
 	@echo "Running fast Python tests..."
 	@uv run pytest tests/test_environment.py tests/test_dotfile_deployment.py -v --tb=short
 
