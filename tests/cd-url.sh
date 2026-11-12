@@ -5,10 +5,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=/dev/null
 source "$ROOT/.config/bash/enabled/cd.sh"
 
-pass=0; fail=0
+pass=0
+fail=0
 check() { # name expected actual
-  if [[ "$2" == "$3" ]]; then pass=$((pass+1)); else
-    fail=$((fail+1)); printf 'FAIL %s\n  want: %s\n  got:  %s\n' "$1" "$2" "$3"; fi
+  if [[ "$2" == "$3" ]]; then pass=$((pass + 1)); else
+    fail=$((fail + 1))
+    printf 'FAIL %s\n  want: %s\n  got:  %s\n' "$1" "$2" "$3"
+  fi
 }
 
 # --- _cd_parse_url -----------------------------------------------------------
@@ -19,23 +22,27 @@ check parse-repo-git "o r repo -" "$(_cd_parse_url https://github.com/o/r.git)"
 check parse-tree "o r tree feat/x" "$(_cd_parse_url https://github.com/o/r/tree/feat/x)"
 check parse-blob "o r blob main/a/b.txt" "$(_cd_parse_url https://github.com/o/r/blob/main/a/b.txt)"
 check parse-ssh "o r repo -" "$(_cd_parse_url git@github.com:o/r.git)"
-_cd_parse_url https://example.com/o/r >/dev/null 2>&1; check parse-reject 1 $?
-_cd_parse_url ./local/dir >/dev/null 2>&1; check parse-reject-path 1 $?
+_cd_parse_url https://example.com/o/r >/dev/null 2>&1
+check parse-reject 1 $?
+_cd_parse_url ./local/dir >/dev/null 2>&1
+check parse-reject-path 1 $?
 
 # --- fixtures ----------------------------------------------------------------
-T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
+T="$(mktemp -d)"
+trap 'rm -rf "$T"' EXIT
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 git init -q --bare "$T/origin.git"
 git clone -q "$T/origin.git" "$T/seed" 2>/dev/null
-( cd "$T/seed" && git commit -q --allow-empty -m init && git branch -M main && git push -q origin main \
-  && git checkout -q -b feat/cool-thing && git commit -q --allow-empty -m pr \
-  && git push -q origin HEAD:refs/pull/5/head )
-export CD_REPO_ROOT="$T/repos"; mkdir -p "$CD_REPO_ROOT"
+(cd "$T/seed" && git commit -q --allow-empty -m init && git branch -M main && git push -q origin main &&
+  git checkout -q -b feat/cool-thing && git commit -q --allow-empty -m pr &&
+  git push -q origin HEAD:refs/pull/5/head)
+export CD_REPO_ROOT="$T/repos"
+mkdir -p "$CD_REPO_ROOT"
 
 _cd_projects() { [[ -d $CD_REPO_ROOT/r ]] && echo "$CD_REPO_ROOT/r (https://github.com/o/r.git)"; }
-_cd_clone() { git clone -q "$T/origin.git" "$2" 2>/dev/null; }          # owner/repo dest
-_cd_pr_head() { echo "feat/cool-thing"; }                                # repo_dir N
+_cd_clone() { git clone -q "$T/origin.git" "$2" 2>/dev/null; } # owner/repo dest
+_cd_pr_head() { echo "feat/cool-thing"; }                      # repo_dir N
 
 # --- _cd_locate_repo ---------------------------------------------------------
 got="$(_cd_locate_repo o r)"
@@ -60,4 +67,4 @@ cd https://github.com/o/r/pull/5 >/dev/null 2>&1 || true
 check cd-url-lands-in-worktree "$wt" "$PWD"
 
 echo "cd-url: $pass passed, $fail failed"
-(( fail == 0 ))
+((fail == 0))
