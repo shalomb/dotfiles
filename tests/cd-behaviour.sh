@@ -51,12 +51,16 @@ check missing-status 0 "$(rc)"
 
 # --- qualifiers --------------------------------------------------------------
 reset "$T"; run newdir -c;    check create-flag "$T/newdir" "$PWD"
-reset "$T/a/b"; run b x;      check substitute-in-pwd "$T/a/x" "$PWD"
+# long unlikely tokens: substitution replaces ALL occurrences in $PWD, incl. the random tmp name
+mkdir -p "$T/sub/bqzq" "$T/sub/xqzq"
+reset "$T/sub/bqzq"; run bqzq xqzq;      check substitute-in-pwd "$T/sub/xqzq" "$PWD"
 reset "$T/a/b"; run zzz q;    check substitute-fail-status 1 "$(rc)"
 check substitute-fail-stays "$T/a/b" "$PWD"
 reset "$T/a/b/c"; run b -u;   check up-by-regex "$T/a/b" "$PWD"
 reset "$T/a/b/c"; run a -u;   check up-by-regex-ancestor "$T/a" "$PWD"
-reset "$T/a/b"; run x -a;     check ancestors-child "$T/a/x" "$PWD"
+mkdir -p "$T/a/zzmark"
+# regex is matched against the full path, so use a token absent from the tmp name
+reset "$T/a/b"; run zzmark -a;     check ancestors-child "$T/a/zzmark" "$PWD"
 reset "$T/a/b"; run nomatch -a; check ancestors-child-none-stays "$T/a/b" "$PWD"
 reset "$T"; run -k a;         check k-builtin-first "$T/a" "$PWD"
 check k-no-pushd 1 "$(dirs -p | wc -l)"
