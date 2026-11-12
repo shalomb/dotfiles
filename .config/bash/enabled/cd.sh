@@ -18,12 +18,121 @@ alias     cd..='cdupto'
 #| cd... - cd ..
 alias     cd...='cd ../..'
 
+# --- cd <github-url> ---------------------------------------------------------
+# Resolves a GitHub URL to a local directory: locate the repo via `gum projects`
+# (clone into $CD_REPO_ROOT if absent); pull URLs get a worktree for the PR head.
+
+# _cd_parse_url URL -> "owner repo kind ref" (ref is "-" when absent)
+function _cd_parse_url {
+  local url="${1%%[?#]*}"
+  local re='^(https?://(www\.)?github\.com/|git@github\.com:)([^/]+)/([^/]+)(/(.*))?$'
+  [[ $url =~ $re ]] || return 1
+  local owner="${BASH_REMATCH[3]}" repo="${BASH_REMATCH[4]%.git}" rest="${BASH_REMATCH[6]}"
+  local kind=repo ref=-
+  case "$rest" in
+    pull/[0-9]*)   kind=pull;   ref="${rest#pull/}";   ref="${ref%%/*}" ;;
+    issues/[0-9]*) kind=issues; ref="${rest#issues/}"; ref="${ref%%/*}" ;;
+    tree/?*)       kind=tree;   ref="${rest#tree/}" ;;
+    blob/?*)       kind=blob;   ref="${rest#blob/}" ;;
+  esac
+  echo "$owner $repo $kind $ref"
+}
+
+# Overridable seams (tests replace these)
+function _cd_projects { gum projects --format default; }
+function _cd_clone { gh repo clone "$1" "$2" >&2; }   # owner/repo dest
+function _cd_pr_head {                                # repo_dir N
+  (cd "$1" && gh pr view "$2" --json headRefName -q .headRefName)
+}
+
+# _cd_normalize_remote URL -> lowercase https://github.com/owner/repo
+function _cd_normalize_remote {
+  local u="$1"
+  u="${u/#git@github.com:/https://github.com/}"
+  u="${u%/}"; u="${u%.git}"
+  echo "${u,,}"
+}
+
+# _cd_locate_repo OWNER REPO -> local path (clones when missing)
+function _cd_locate_repo {
+  local owner="$1" repo="$2" line dir url
+  local want; want="$(_cd_normalize_remote "https://github.com/$owner/$repo")"
+  while read -r line; do
+    dir="${line% (*}"; url="${line##* (}"; url="${url%)}"
+    [[ $(_cd_normalize_remote "$url") == "$want" ]] && { echo "$dir"; return 0; }
+  done < <(_cd_projects)
+
+  dir="${CD_REPO_ROOT:-$HOME/oneTakeda}/$repo"
+  if [[ ! -d $dir/.git ]]; then
+    echo "cd: cloning $owner/$repo into $dir" >&2
+    _cd_clone "$owner/$repo" "$dir" || return 1
+  fi
+  echo "$dir"
+}
+
+# _cd_worktree_for_branch REPO_DIR BRANCH -> existing worktree path
+function _cd_worktree_for_branch {
+  local wt="" line
+  while read -r line; do
+    case "$line" in
+      "worktree "*) wt="${line#worktree }" ;;
+      "branch refs/heads/$2") echo "$wt"; return 0 ;;
+    esac
+  done < <(git -C "$1" worktree list --porcelain)
+  return 1
+}
+
+# _cd_pr_worktree REPO_DIR N -> worktree path for the PR head (created if absent)
+function _cd_pr_worktree {
+  local repo="$1" n="$2" head dir existing
+  head="$(_cd_pr_head "$repo" "$n")" || head=""
+  [[ -n $head ]] || head="pr-$n"
+
+  _cd_worktree_for_branch "$repo" "$head" && return 0
+  for existing in "$repo"/.worktrees/pr-"$n"-*/; do
+    [[ -d $existing ]] && { echo "${existing%/}"; return 0; }
+  done
+
+  dir="$repo/.worktrees/pr-$n-${head//[^[:alnum:]]/-}"
+  git -C "$repo" fetch -q origin "pull/$n/head" || return 1
+  if git -C "$repo" show-ref -q --verify "refs/heads/$head"; then
+    git -C "$repo" worktree add -q "$dir" "$head" >&2 || return 1
+  else
+    git -C "$repo" worktree add -q -b "$head" "$dir" FETCH_HEAD >&2 || return 1
+  fi
+  echo "$dir"
+}
+
+# _cd_url_resolve URL -> directory to cd into
+function _cd_url_resolve {
+  local owner repo kind ref repo_dir
+  read -r owner repo kind ref < <(_cd_parse_url "$1") || {
+    echo "cd: not a GitHub URL: $1" >&2; return 1; }
+  repo_dir="$(_cd_locate_repo "$owner" "$repo")" || return 1
+  case "$kind" in
+    pull) _cd_pr_worktree "$repo_dir" "$ref" ;;
+    tree) _cd_worktree_for_branch "$repo_dir" "$ref" || echo "$repo_dir" ;;
+    blob)
+      local f="${ref#*/}"
+      if [[ -e $repo_dir/$f ]]; then
+        [[ -d $repo_dir/$f ]] && echo "$repo_dir/$f" || dirname "$repo_dir/$f"
+      else echo "$repo_dir"; fi ;;
+    *) echo "$repo_dir" ;;
+  esac
+}
+
 #| cd - smarter cd
 function cd {
   local path="$1"
   local qualifier="$2"
   local alnum='[[:alnum:]]'
   local bookmarks="${XDG_CONFIG_HOME:-$HOME/.config}/dirs"
+
+  # GitHub URL: locate/clone the repo, use a PR worktree for pull URLs
+  if [[ $path == http*://github.com/* || $path == http*://www.github.com/* || $path == git@github.com:* ]]; then
+    path="$(_cd_url_resolve "$path")" || return 1
+    [[ -n $path ]] || return 1
+  fi
 
   if [[ $path == -* ]]; then
 
