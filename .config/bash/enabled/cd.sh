@@ -352,6 +352,18 @@ function _cd_shorthand {
   fi
 }
 
+# _cd_resolves_literally PATH - true if PATH exists as given or under $CDPATH
+function _cd_resolves_literally {
+  local path="${1%/}" cdpaths p
+  [[ -e $path ]] && return 0
+  [[ -n $CDPATH ]] || return 1
+  IFS=: read -r -a cdpaths <<<"$CDPATH"
+  for p in "${cdpaths[@]}"; do
+    [[ -e "$(tildeexpand "$p/$path")" ]] && return 0
+  done
+  return 1
+}
+
 # _cd_special - `-`, `~`, `+`, dirstack refs and shorthand; REPLY is the arg
 function _cd_special {
   local path="$REPLY" alnum='[[:alnum:]]'
@@ -380,7 +392,8 @@ function _cd_special {
     fi
 
   # TODO Make this regex more robust - for shorter cases
-  elif [[ $path =~ ^/?$alnum/?$|^/?$alnum/$alnum/?$|^/?$alnum/$alnum/ ]]; then
+  elif [[ $path =~ ^/?$alnum/?$|^/?$alnum/$alnum/?$|^/?$alnum/$alnum/ ]] \
+    && ! _cd_resolves_literally "$path"; then
     _cd_shorthand "$path"
   fi
 }

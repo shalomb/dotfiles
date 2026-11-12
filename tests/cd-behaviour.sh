@@ -153,10 +153,12 @@ reset "$T"
 run j/k
 check shorthand-no-match-stays "$T" "$PWD"
 check shorthand-no-match-message "WARN: No dirs match: j*/k*" "$(err)"
-# quirk: single-char names are treated as shorthand, so CDPATH is never consulted
-reset "$T"
-CDPATH="$T/a" run b
-check quirk-single-char-shadows-cdpath "$T" "$PWD"
+# a CDPATH entry beats shorthand globbing, even for single-char names
+mkdir -p "$T/cp/k"
+reset "$T"; CDPATH="$T/cp" run k;  check cdpath-beats-shorthand "$T/cp/k" "$PWD"
+# an existing literal directory beats shorthand globbing
+mkdir -p "$T/lit/m" "$T/lit/mmm"
+reset "$T/lit"; CDTO_ANSWER="$T/lit/mmm" run m;  check literal-dir-beats-shorthand "$T/lit/m" "$PWD"
 
 # --- pickers (cdto stubbed) --------------------------------------------------
 reset "$T"
