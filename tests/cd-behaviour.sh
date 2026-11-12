@@ -114,6 +114,9 @@ reset "$T/a"; run -B; reset "$T/var"; run -B; run -B
 check bookmark-adds-pwd-deduped "$T/var
 $T/a" "$(cat "$XDG_CONFIG_HOME/dirs")"
 
+reset "$T/a"; run -B "$T/w"
+check bookmark-explicit-dir "$T/w" "$(head -n1 "$XDG_CONFIG_HOME/dirs")"
+
 # --- dirstack: bare + and +name ---------------------------------------------
 mkdir -p "$T/zebra"
 reset "$T"; run zebra; run "$T/a"; run +zebra; check stack-name-match "$T/zebra" "$PWD"

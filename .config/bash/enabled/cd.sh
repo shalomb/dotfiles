@@ -161,9 +161,7 @@ function _cd_help_qualifiers {
 # _cd_bookmark_add [DIR] - prepend DIR to the bookmarks file, de-duplicated
 function _cd_bookmark_add {
   local bookmarks; bookmarks="$(_cd_bookmarks_file)"
-  local args=( "$@" ) dir=
-  # NOTE: inverted check preserved from the original; see bug-fix commit
-  if [[ -z $args ]]; then dir="${args:-$PWD}"; fi
+  local dir="${1:-$PWD}"
 
   { echo "$dir"
     [[ -e $bookmarks ]] && cat "$bookmarks"
