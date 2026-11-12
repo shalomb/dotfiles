@@ -81,7 +81,7 @@ reset "$T"
 run nope
 check missing-stays "$T" "$PWD"
 check missing-message "cd: nope: No such file or directory. Append -c to create." "$(err)"
-check missing-status 0 "$(rc)"
+check missing-status 1 "$(rc)"
 
 # --- qualifiers --------------------------------------------------------------
 reset "$T"

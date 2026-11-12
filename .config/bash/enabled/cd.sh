@@ -419,7 +419,7 @@ function _cd_finish {
       done
     fi
     echo "cd: $path: No such file or directory. Append -c to create." >&2
-    return
+    return 1
   fi
 
   builtin pushd "$path" >/dev/null
