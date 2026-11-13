@@ -1,22 +1,35 @@
 #!/usr/bin/env bash
-# Fast evaluation of @pi_attn across all tmux panes for tmux status-right
-# Formats with palette #ff6633 warm orange and unicode glyph ●
+# AGENT_CONTEXT: tmux status-right badge for panes whose pi agent set @pi_attn
+# DESIGN_PATTERN: the reason prefix sets urgency and colour; the most urgent pane names the badge
+#   stopped: <why>   needs you now   orange #ff6633
+#   <anything else>  needs you now   orange #ff6633 (ui-gate parks, legacy reasons)
+#   rest stop: <why> when you are ready   cyan #3399cc
+#   arrived: <why>   ready for review     green #339933
 raw=$(tmux list-panes -a -F '#{session_name}|#{window_index}|#{pane_index}|#{@pi_attn}' 2>/dev/null)
 [ -z "$raw" ] && exit 0
 
-count=0
-first_loc=""
-
+count=0 best=0 loc=""
 while IFS='|' read -r session window pane attn; do
     [ -z "$attn" ] && continue
     count=$((count + 1))
-    if [ -z "$first_loc" ]; then
-        first_loc="${session}:${window}.${pane}"
+    case "$attn" in
+        "arrived"*) rank=1 ;;
+        "rest stop"*) rank=2 ;;
+        *) rank=3 ;;
+    esac
+    if [ "$rank" -gt "$best" ]; then
+        best=$rank loc="${session}:${window}.${pane}"
     fi
 done <<< "$raw"
 
+[ "$count" -eq 0 ] && exit 0
+case "$best" in
+    1) colour="#339933" ;;
+    2) colour="#3399cc" ;;
+    *) colour="#ff6633" ;;
+esac
 if [ "$count" -eq 1 ]; then
-    printf "#[fg=#ff6633]● %s#[default] " "$first_loc"
-elif [ "$count" -gt 1 ]; then
-    printf "#[fg=#ff6633]● [%d] %s#[default] " "$count" "$first_loc"
+    printf "#[fg=%s]● %s#[default] " "$colour" "$loc"
+else
+    printf "#[fg=%s]● [%d] %s#[default] " "$colour" "$count" "$loc"
 fi
