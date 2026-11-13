@@ -9,9 +9,10 @@
   "enableInstallTelemetry": false,
   "enableSkillCommands": true,
   "enabledModels": [
-    "anthropic/claude-*-[0-9]",
-    "github-copilot/claude-*-[0-9]",
-    "github-copilot/claude-*-[4-9].[0-9]",
+    "anthropic/claude-@(opus|sonnet|haiku|fable)-[5-9]",
+    "anthropic/claude-@(opus|sonnet|haiku|fable)-[5-9]-[0-9]",
+    "github-copilot/claude-@(opus|sonnet|haiku|fable)-[5-9]",
+    "github-copilot/claude-@(opus|sonnet|haiku|fable)-[5-9].[0-9]",
     "antigravity/*"
   ],
   "hideThinkingBlock": false,
