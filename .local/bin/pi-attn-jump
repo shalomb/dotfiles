@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Jump to tmux pane requiring pi agent attention (@pi_attn)
+set -eo pipefail
+
+raw=$(tmux list-panes -a -F '#{session_name}|#{window_index}|#{pane_index}|#{@pi_attn}' 2>/dev/null)
+[ -z "$raw" ] && exit 0
+
+panes=()
+while IFS='|' read -r session window pane attn; do
+    [ -n "$attn" ] && panes+=("${session}:${window}.${pane}|${attn}")
+done <<< "$raw"
+
+if [ ${#panes[@]} -eq 0 ]; then
+    tmux display-message "No pi agents requiring attention"
+    exit 0
+fi
+
+if [ ${#panes[@]} -eq 1 ]; then
+    target="${panes[0]%%|*}"
+    sess="${target%%:*}"
+    rest="${target#*:}"
+    win="${rest%.*}"
+    pane="${rest#*.}"
+    tmux switch-client -t "$sess" \; select-window -t "${sess}:${win}" \; select-pane -t "${sess}:${win}.${pane}"
+    exit 0
+fi
+
+# Multiple panes: pick via fzf in popup
+picked=$(printf '%s\n' "${panes[@]}" | awk -F'|' '{printf "%-20s  %s\n", $1, $2}' | fzf --reverse --header="Pi Panes Needing Attention" | awk '{print $1}')
+[ -z "$picked" ] && exit 0
+
+sess="${picked%%:*}"
+rest="${picked#*:}"
+win="${rest%.*}"
+pane="${rest#*.}"
+tmux switch-client -t "$sess" \; select-window -t "${sess}:${win}" \; select-pane -t "${sess}:${win}.${pane}"
