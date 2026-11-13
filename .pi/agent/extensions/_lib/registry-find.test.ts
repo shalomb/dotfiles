@@ -175,13 +175,13 @@ describe("runFind", () => {
 	});
 
 	test("--keyword search", () => {
-		const output = runFind(["--keyword", "flux", "--db", dbPath, "--root", root], { write: () => {}, error: () => {} });
+		const output = runFind(["--keyword", "flux", "--db", dbPath, "--root", root], { write: () => {}, error: () => {} }, "/r");
 		expect(output).toContain(A.slice(0, 8));
 		expect(output).not.toContain(B.slice(0, 8));
 	});
 
 	test("positional keywords work", () => {
-		const output = runFind(["hello", "--db", dbPath, "--root", root], { write: () => {}, error: () => {} });
+		const output = runFind(["hello", "--db", dbPath, "--root", root], { write: () => {}, error: () => {} }, "/r");
 		expect(output).toContain(B.slice(0, 8));
 		expect(output).not.toContain(A.slice(0, 8));
 	});
@@ -293,5 +293,20 @@ describe("runFind gum enrichment", () => {
 		expect(withGum[0]).toMatchObject({ repo_name: "rr", remote_url: "https://github.com/o/rr.git" });
 		const without = JSON.parse(runFind(["--json", "--db", dbPath, "--root", root, "--gum-db", join(root, "none.db")]));
 		expect(without[0]).toMatchObject({ repo_name: null, remote_url: null });
+	});
+});
+
+describe("scopeToRepo", () => {
+	const { scopeToRepo } = require("./registry-find");
+	test("bare keyword scopes to repo", () => {
+		expect(scopeToRepo({ keyword: "x" }, { json: false }, "/r")).toEqual({ keyword: "x", repo: "/r" });
+	});
+	test("other filters or --everywhere leave it alone", () => {
+		expect(scopeToRepo({ keyword: "x", branch: "b" }, { json: false }, "/r")).toEqual({ keyword: "x", branch: "b" });
+		expect(scopeToRepo({ keyword: "x" }, { json: false, everywhere: true }, "/r")).toEqual({ keyword: "x" });
+		expect(scopeToRepo({}, { json: false }, "/r")).toEqual({});
+	});
+	test("parses -g", () => {
+		expect(parseFindArgs(["-g", "x"]).options.everywhere).toBe(true);
 	});
 });

@@ -3,12 +3,14 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { enrichRows } from "./registry-gum";
+import { gitFacts } from "./registry";
 import { openRegistry, backfill, search, reapLost, defaultDbPath, type Criteria, type Row } from "./registry";
 
 export interface FindOptions {
 	json: boolean;
 	limit?: number;
 	all?: boolean;
+	everywhere?: boolean;
 	help?: boolean;
 	noScan?: boolean;
 	db?: string;
@@ -86,6 +88,7 @@ export function parseFindArgs(argv: string[], now = new Date()): FindArgs {
 			case "--json": options.json = true; break;
 			case "--limit": options.limit = num(t) || undefined; break;
 			case "--all": options.all = true; break;
+			case "--everywhere": case "-g": options.everywhere = true; break;
 			case "--help": case "-h": options.help = true; break;
 			case "--no-scan": options.noScan = true; break;
 			case "--db": options.db = val(t); break;
@@ -102,6 +105,14 @@ export function parseFindArgs(argv: string[], now = new Date()): FindArgs {
 	}
 
 	return { criteria, options };
+}
+
+/** A bare keyword search (no other filter) is scoped to the current repo (all its branches/worktrees). */
+export function scopeToRepo(c: Criteria, o: FindOptions, repo: string): Criteria {
+	if (o.everywhere || !c.keyword) return c;
+	const { keyword, ...rest } = c;
+	if (Object.values(rest).some((v) => v !== undefined)) return c;
+	return { ...c, repo };
 }
 
 export interface IO {
@@ -142,10 +153,14 @@ Filters:
   --since <when>          7d, 12h, 2w or ISO date
   --keyword <text>        search prompts/digest (bare words work too)
 
+With only a keyword and no other filter, search is limited to the current repo
+(all its branches and worktrees); add -g/--everywhere to search all sessions.
+
 Options:
   --json                  JSON output
   --limit <n>             show at most n rows (default ${DEFAULT_LIMIT})
   --all                   no row cap
+  -g, --everywhere        don't scope a bare keyword search to the current repo
   --no-scan               skip reap/backfill, query the registry as is
   --db <path>             registry database
   --gum-db <path>         gum project db for repo name/remote (default ~/.cache/gum/gum.db)
@@ -183,8 +198,10 @@ function renderTable(rows: Row[], limit?: number): string {
 	return lines.join("\n");
 }
 
-export function runFind(argv: string[], _io?: IO): string {
-	const { criteria, options } = parseFindArgs(argv);
+export function runFind(argv: string[], _io?: IO, cwd = process.cwd()): string {
+	const parsed = parseFindArgs(argv);
+	const { options } = parsed;
+	const criteria = scopeToRepo(parsed.criteria, options, gitFacts(cwd).repo ?? cwd);
 	if (options.help) return USAGE;
 	const cap = options.all ? undefined : (options.limit ?? DEFAULT_LIMIT);
 	const dbPath = options.db ?? defaultDbPath();
