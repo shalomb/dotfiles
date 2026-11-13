@@ -1,7 +1,8 @@
 /**
- * /explain <term> [--ring=<session|docs|code|harness>] [--json]
+ * /explain <term> [--ring=<session-id|session|docs|code|harness>] [--json]
  *
  * Slash command to explain a term economically via concentric ring resolver:
+ * Ring 0: Session ID lookup (prior sessions by hex prefix)
  * Ring 1: Session context
  * Ring 2: Workspace documentation (ADRs, markdown, AGENTS.md)
  * Ring 3: Symbols & code (exports, classes, functions, types)
@@ -14,14 +15,14 @@ export default function (pi: ExtensionAPI) {
 	pi.registerCommand("explain", {
 		description: "Explain a term using hierarchical concentric rings (session -> docs -> code -> harness)",
 		getArgumentCompletions: (prefix: string) => {
-			const flags = ["--ring=session", "--ring=docs", "--ring=code", "--ring=harness", "--json"];
+			const flags = ["--ring=session-id", "--ring=session", "--ring=docs", "--ring=code", "--ring=harness", "--json"];
 			const matches = flags.filter((f) => f.startsWith(prefix));
 			return matches.length ? matches.map((m) => ({ value: m, label: m })) : null;
 		},
 		handler: async (args: string, ctx: any) => {
 			const parsed = parseExplainArgs(args);
 			if (!parsed.term) {
-				ctx.ui.notify("Usage: /explain <term> [--ring=session|docs|code|harness] [--json]", "warning");
+				ctx.ui.notify("Usage: /explain <term> [--ring=session-id|session|docs|code|harness] [--json]", "warning");
 				return;
 			}
 

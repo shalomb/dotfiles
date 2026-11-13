@@ -13,7 +13,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, extname, join, relative, resolve } from "node:path";
 import { homedir } from "node:os";
 
-export type ExplainRing = "session" | "docs" | "code" | "harness";
+export type ExplainRing = "session-id" | "session" | "docs" | "code" | "harness";
 
 export interface SessionMessage {
 	role: string;
@@ -57,10 +57,10 @@ export function parseExplainArgs(rawArgs: string): ExplainArgs {
 		text = text.replace(/--json\b/g, "").trim();
 	}
 
-	const ringMatch = /--ring[ =](\w+)/.exec(text) || /-r\s+(\w+)/.exec(text);
+	const ringMatch = /--ring[ =]([\w-]+)/.exec(text) || /-r\s+([\w-]+)/.exec(text);
 	if (ringMatch) {
 		const val = ringMatch[1].toLowerCase();
-		if (val === "session" || val === "docs" || val === "code" || val === "harness") {
+		if (val === "session-id" || val === "session" || val === "docs" || val === "code" || val === "harness") {
 			ring = val as ExplainRing;
 		}
 		text = text.replace(ringMatch[0], "").trim();
@@ -98,6 +98,71 @@ function truncateLines(text: string, maxLines = 5, maxChars = 300): string {
 	const joined = lines.slice(0, maxLines).join(" ");
 	if (joined.length <= maxChars) return joined;
 	return joined.slice(0, maxChars) + "…";
+}
+
+/**
+ * Ring 0: Session id lookup (hex prefix of a pi session id -> session file card)
+ */
+export function defaultSessionsDir(): string {
+	return join(process.env.PI_CODING_AGENT_DIR || join(homedir(), ".pi", "agent"), "sessions");
+}
+
+export function resolveRing0SessionId(term: string, options: { sessionsDir?: string } = {}): ExplainMatch[] {
+	const id = term.trim().toLowerCase();
+	if (!/^[0-9a-f]{6,}(-[0-9a-f]+)*$/.test(id)) return [];
+	const base = options.sessionsDir ?? defaultSessionsDir();
+	if (!existsSync(base)) return [];
+
+	const matches: ExplainMatch[] = [];
+	try {
+		for (const proj of readdirSync(base)) {
+			const projDir = join(base, proj);
+			let files: string[];
+			try {
+				files = readdirSync(projDir);
+			} catch {
+				continue;
+			}
+			for (const f of files) {
+				const m = /_([0-9a-f-]{8,})\.jsonl$/i.exec(f);
+				if (!m || !m[1].toLowerCase().startsWith(id)) continue;
+				const card = readSessionCard(join(projDir, f), m[1]);
+				if (card) matches.push(card);
+			}
+		}
+	} catch {}
+	return matches.slice(0, 5);
+}
+
+function readSessionCard(file: string, id: string): ExplainMatch | undefined {
+	try {
+		let cwd = "?";
+		let started = "?";
+		let last = "?";
+		let count = 0;
+		let first = "";
+		for (const line of readFileSync(file, "utf8").split("\n")) {
+			if (!line) continue;
+			let e: any;
+			try {
+				e = JSON.parse(line);
+			} catch {
+				continue;
+			}
+			if (e.type === "session") {
+				cwd = e.cwd ?? cwd;
+				started = e.timestamp ?? started;
+			} else if (e.type === "message" && e.message) {
+				count++;
+				last = e.timestamp ?? last;
+				if (!first && e.message.role === "user") first = truncateLines(extractTextFromContent(e.message.content), 1, 120);
+			}
+		}
+		const snippet = `cwd ${cwd}; started ${started}; last ${last}; ${count} messages; first: "${first}"`;
+		return { ring: "session-id", title: `Session ${id}`, source: file, snippet, confidence: 1 };
+	} catch {
+		return undefined;
+	}
 }
 
 /**
@@ -341,6 +406,7 @@ export async function resolveTerm(
 		messages?: SessionMessage[];
 		rootDir?: string;
 		targetRing?: ExplainRing;
+		sessionsDir?: string;
 	} = {}
 ): Promise<ExplainResolution> {
 	const root = options.rootDir ? resolve(options.rootDir) : process.cwd();
@@ -351,6 +417,22 @@ export async function resolveTerm(
 
 	const messages = options.messages || [];
 	const matches: ExplainMatch[] = [];
+
+	// Ring 0: Session id
+	if (!options.targetRing || options.targetRing === "session-id") {
+		const m0 = resolveRing0SessionId(cleanTerm, { sessionsDir: options.sessionsDir });
+		if (m0.length) {
+			matches.push(...m0);
+			if (!options.targetRing) {
+				return {
+					term: cleanTerm,
+					resolved: true,
+					primaryRing: "session-id",
+					matches,
+				};
+			}
+		}
+	}
 
 	// Ring 1: Session
 	if (!options.targetRing || options.targetRing === "session") {

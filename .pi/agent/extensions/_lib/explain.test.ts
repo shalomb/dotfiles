@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import {
 	formatExplanation,
 	parseExplainArgs,
+	resolveRing0SessionId,
 	resolveRing1Session,
 	resolveRing2WorkspaceDocs,
 	resolveRing3SymbolsAndCode,
@@ -202,5 +203,56 @@ describe("formatExplanation", () => {
 		};
 		const formatted = formatExplanation(resolution);
 		expect(formatted).toContain("No explanation found for 'UnknownTermXYZ'");
+	});
+});
+
+describe("resolveRing0SessionId", () => {
+	const mk = () => {
+		const dir = mkdtempSync(join(tmpdir(), "explain-sessions-"));
+		const proj = join(dir, "--home-x-proj--");
+		mkdirSync(proj, { recursive: true });
+		const id = "01a1d64c-84ab-707c-b87e-b08e7f495a74";
+		const lines = [
+			{ type: "session", id, timestamp: "2026-11-13T19:05:01.355Z", cwd: "/home/x/proj" },
+			{ type: "message", timestamp: "2026-11-13T19:06:00.000Z", message: { role: "user", content: [{ type: "text", text: "is the goal done?" }] } },
+			{ type: "message", timestamp: "2026-11-13T19:07:00.000Z", message: { role: "assistant", content: [{ type: "text", text: "yes" }] } },
+		];
+		writeFileSync(join(proj, `2026-11-13T19-05-01-355Z_${id}.jsonl`), lines.map((l) => JSON.stringify(l)).join("\n") + "\n");
+		return { dir, id };
+	};
+
+	it("resolves a short session id prefix to a session card", () => {
+		const { dir, id } = mk();
+		try {
+			const [m] = resolveRing0SessionId("01a1d64c", { sessionsDir: dir });
+			expect(m.ring).toBe("session-id");
+			expect(m.title).toContain(id);
+			expect(m.source).toContain(".jsonl");
+			expect(m.snippet).toContain("/home/x/proj");
+			expect(m.snippet).toContain("is the goal done?");
+			expect(m.snippet).toContain("2 messages");
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+
+	it("ignores non-id terms and unknown ids", () => {
+		const { dir } = mk();
+		try {
+			expect(resolveRing0SessionId("hello", { sessionsDir: dir })).toEqual([]);
+			expect(resolveRing0SessionId("deadbeef", { sessionsDir: dir })).toEqual([]);
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+
+	it("resolveTerm puts the session card first", async () => {
+		const { dir } = mk();
+		try {
+			const r = await resolveTerm("01a1d64c", { rootDir: dir, sessionsDir: dir });
+			expect(r.primaryRing).toBe("session-id");
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
 	});
 });
