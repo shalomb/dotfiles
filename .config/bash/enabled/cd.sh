@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2164  # this file wraps cd; failures propagate via $? / _cd_stop
 
 #| - - cd -
 function  - () { cd -; }
@@ -117,7 +118,7 @@ function _cd_url_resolve {
     blob)
       local f="${ref#*/}"
       if [[ -e $repo_dir/$f ]]; then
-        [[ -d $repo_dir/$f ]] && echo "$repo_dir/$f" || dirname "$repo_dir/$f"
+        if [[ -d $repo_dir/$f ]]; then echo "$repo_dir/$f"; else dirname "$repo_dir/$f"; fi
       else echo "$repo_dir"; fi ;;
     *) echo "$repo_dir" ;;
   esac
@@ -209,7 +210,7 @@ function _cd_dirstack_candidates {
 # _cd_pick_flag FLAG QUERY... - interactive pick for -b/-f/-o/-p/-s/-v
 function _cd_pick_flag {
   local flag="$1"; shift
-  local query=( "$@" ) candidates=()
+  local query="${1:-}" candidates=()
 
   if [[ $flag == -v ]]; then
     # Output goes through a file: the helper rebuilds the dirstack, so it
@@ -250,13 +251,13 @@ function _cd_flag_first {
 
 # _cd_ancestor_child REGEX - first child of any ancestor matching REGEX
 function _cd_ancestor_child {
-  local regex="$1" path= basename="$PWD" d c
+  local regex="$1" path="" basename="$PWD" d c
   while [[ $basename == /* ]]; do
     basename="${basename%/*}"
     for d in "$basename"/*/; do
       if [[ $d =~ $regex ]]; then path="$d" && break 2; fi
       c=( "$d"/"$regex"* )
-      if [[ $c != *\* ]]; then path="$c" && break 2; fi
+      if [[ ${c[0]} != *\* ]]; then path="${c[0]}" && break 2; fi
     done
   done
   REPLY="$path"
@@ -339,11 +340,13 @@ function _cd_shorthand {
   local nullglob=0
   shopt -q nullglob && nullglob=1
   [[ $nullglob == 1 ]] || shopt -s nullglob
-  local dirs=($path)
+  local dirs
+  # shellcheck disable=SC2206  # intentional glob expansion
+  dirs=($path)
   [[ $nullglob == 1 ]] || shopt -u nullglob
 
-  if (( ${#dirs[@]} == 1 )) && [[ "${dirs%/}" != "${path%/}" ]]; then
-    REPLY="$dirs"
+  if (( ${#dirs[@]} == 1 )) && [[ "${dirs[0]%/}" != "${path%/}" ]]; then
+    REPLY="${dirs[0]}"
   elif (( ${#dirs[@]} >= 1 )); then
     REPLY="$(cdto "" 1 "${dirs[@]}")"
   else
@@ -500,7 +503,8 @@ function cdto {
   local dir
 
   while [[ -z $dir ]]; do
-    local block="$(
+    local block
+    block="$(
       printf "%s\n" "${candidates[@]}" |
         fzf --bind='ctrl-s:toggle-sort' \
           --header 'Select a directory' \
@@ -512,7 +516,7 @@ function cdto {
           --print-query \
           --query="$query" \
           --reverse \
-          --tiebreak=index | awk '{ print $'$col' }'
+          --tiebreak=index | awk -v c="$col" '{ print $c }'
     )"
 
     [[ -z $block ]] && return
@@ -536,10 +540,10 @@ function cdto {
           c|esc) return
           ;;
           e)
-            local tmpfile="$(mktemp)"
+            local tmpfile; tmpfile="$(mktemp)"
             echo "$items" > "$tmpfile"
             "${EDITOR:-$(type -P editor)}" "$tmpfile" > /dev/tty
-            local dir="$(< "$tmpfile")"
+            dir="$(< "$tmpfile")"
             rm -f "$tmpfile"
           ;;
         esac
@@ -551,7 +555,7 @@ function cdto {
 
   [[ -z $dir && -z $query ]] && return
 
-  echo "$(tildeexpand "$dir")"
+  tildeexpand "$dir"
 }
 
 # TODO
