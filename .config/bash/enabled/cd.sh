@@ -2,20 +2,20 @@
 # shellcheck disable=SC2164  # this file wraps cd; failures propagate via $? / _cd_stop
 
 #| - - cd -
-function  - () { cd -; }
+function -() { cd -; }
 #| ~ - cd ~
 alias ~='cd ~'
 
 #| .. - cd ..
-alias     ..='cdupto'
+alias ..='cdupto'
 #| ... - cd ...
-alias     ...='cd ../..'
+alias ...='cd ../..'
 #| ... - cd ...
-alias     ....='cd ../../..'
+alias ....='cd ../../..'
 #| cd.. - cd ..
-alias     cd..='cdupto'
+alias cd..='cdupto'
 #| cd... - cd ..
-alias     cd...='cd ../..'
+alias cd...='cd ../..'
 
 # --- cd <github-url> ---------------------------------------------------------
 # Resolves a GitHub URL to a local directory: locate the repo via `gum projects`
@@ -29,17 +29,31 @@ function _cd_parse_url {
   local owner="${BASH_REMATCH[3]}" repo="${BASH_REMATCH[4]%.git}" rest="${BASH_REMATCH[6]}"
   local kind=repo ref=-
   case "$rest" in
-    pull/[0-9]*)   kind=pull;   ref="${rest#pull/}";   ref="${ref%%/*}" ;;
-    issues/[0-9]*) kind=issues; ref="${rest#issues/}"; ref="${ref%%/*}" ;;
-    tree/?*)       kind=tree;   ref="${rest#tree/}" ;;
-    blob/?*)       kind=blob;   ref="${rest#blob/}" ;;
+  pull/[0-9]*)
+    kind=pull
+    ref="${rest#pull/}"
+    ref="${ref%%/*}"
+    ;;
+  issues/[0-9]*)
+    kind=issues
+    ref="${rest#issues/}"
+    ref="${ref%%/*}"
+    ;;
+  tree/?*)
+    kind=tree
+    ref="${rest#tree/}"
+    ;;
+  blob/?*)
+    kind=blob
+    ref="${rest#blob/}"
+    ;;
   esac
   echo "$owner $repo $kind $ref"
 }
 
 # cd is core: do not depend on helpers defined elsewhere in the dotfiles
 function _cd_warn { if declare -F warn >/dev/null; then warn "$@"; else echo "$*" >&2; fi; }
-function _cd_die  { if declare -F die  >/dev/null; then die "$@";  else echo "$*" >&2; fi; }
+function _cd_die { if declare -F die >/dev/null; then die "$@"; else echo "$*" >&2; fi; }
 function _cd_tilde {
   if command -v tildeexpand >/dev/null 2>&1 || declare -F tildeexpand >/dev/null; then
     tildeexpand "$1"
@@ -54,8 +68,8 @@ function _cd_is_github_url {
 
 # Overridable seams (tests replace these)
 function _cd_projects { gum projects --format default; }
-function _cd_clone { gh repo clone "$1" "$2" >&2; }   # owner/repo dest
-function _cd_pr_head {                                # repo_dir N
+function _cd_clone { gh repo clone "$1" "$2" >&2; } # owner/repo dest
+function _cd_pr_head {                              # repo_dir N
   (cd "$1" && gh pr view "$2" --json headRefName -q .headRefName)
 }
 
@@ -63,17 +77,24 @@ function _cd_pr_head {                                # repo_dir N
 function _cd_normalize_remote {
   local u="$1"
   u="${u/#git@github.com:/https://github.com/}"
-  u="${u%/}"; u="${u%.git}"
+  u="${u%/}"
+  u="${u%.git}"
   echo "${u,,}"
 }
 
 # _cd_locate_repo OWNER REPO -> local path (clones when missing)
 function _cd_locate_repo {
   local owner="$1" repo="$2" line dir url
-  local want; want="$(_cd_normalize_remote "https://github.com/$owner/$repo")"
+  local want
+  want="$(_cd_normalize_remote "https://github.com/$owner/$repo")"
   while read -r line; do
-    dir="${line% (*}"; url="${line##* (}"; url="${url%)}"
-    [[ $(_cd_normalize_remote "$url") == "$want" ]] && { echo "$dir"; return 0; }
+    dir="${line% (*}"
+    url="${line##* (}"
+    url="${url%)}"
+    [[ $(_cd_normalize_remote "$url") == "$want" ]] && {
+      echo "$dir"
+      return 0
+    }
   done < <(_cd_projects)
 
   dir="${CD_REPO_ROOT:-$HOME/oneTakeda}/$repo"
@@ -89,8 +110,11 @@ function _cd_worktree_for_branch {
   local wt="" line
   while read -r line; do
     case "$line" in
-      "worktree "*) wt="${line#worktree }" ;;
-      "branch refs/heads/$2") echo "$wt"; return 0 ;;
+    "worktree "*) wt="${line#worktree }" ;;
+    "branch refs/heads/$2")
+      echo "$wt"
+      return 0
+      ;;
     esac
   done < <(git -C "$1" worktree list --porcelain)
   return 1
@@ -104,7 +128,10 @@ function _cd_pr_worktree {
 
   _cd_worktree_for_branch "$repo" "$head" && return 0
   for existing in "$repo"/.worktrees/pr-"$n"-*/; do
-    [[ -d $existing ]] && { echo "${existing%/}"; return 0; }
+    [[ -d $existing ]] && {
+      echo "${existing%/}"
+      return 0
+    }
   done
 
   dir="$repo/.worktrees/pr-$n-${head//[^[:alnum:]]/-}"
@@ -121,17 +148,20 @@ function _cd_pr_worktree {
 function _cd_url_resolve {
   local owner repo kind ref repo_dir
   read -r owner repo kind ref < <(_cd_parse_url "$1") || {
-    echo "cd: not a GitHub URL: $1" >&2; return 1; }
+    echo "cd: not a GitHub URL: $1" >&2
+    return 1
+  }
   repo_dir="$(_cd_locate_repo "$owner" "$repo")" || return 1
   case "$kind" in
-    pull) _cd_pr_worktree "$repo_dir" "$ref" ;;
-    tree) _cd_worktree_for_branch "$repo_dir" "$ref" || echo "$repo_dir" ;;
-    blob)
-      local f="${ref#*/}"
-      if [[ -e $repo_dir/$f ]]; then
-        if [[ -d $repo_dir/$f ]]; then echo "$repo_dir/$f"; else dirname "$repo_dir/$f"; fi
-      else echo "$repo_dir"; fi ;;
-    *) echo "$repo_dir" ;;
+  pull) _cd_pr_worktree "$repo_dir" "$ref" ;;
+  tree) _cd_worktree_for_branch "$repo_dir" "$ref" || echo "$repo_dir" ;;
+  blob)
+    local f="${ref#*/}"
+    if [[ -e $repo_dir/$f ]]; then
+      if [[ -d $repo_dir/$f ]]; then echo "$repo_dir/$f"; else dirname "$repo_dir/$f"; fi
+    else echo "$repo_dir"; fi
+    ;;
+  *) echo "$repo_dir" ;;
   esac
 }
 
@@ -140,12 +170,16 @@ function _cd_url_resolve {
 #   - $REPLY holds the candidate path; helpers read and update it
 #   - return 0   -> proceed with $REPLY
 #   - return 100 -> stop; `cd` returns $_CD_STATUS
-function _cd_stop { _CD_STATUS="${1:-0}"; return 100; }
+function _cd_stop {
+  _CD_STATUS="${1:-0}"
+  return 100
+}
 
 function _cd_bookmarks_file { echo "${XDG_CONFIG_HOME:-$HOME/.config}/dirs"; }
 
 function _cd_help_flags {
-  local bookmarks; bookmarks="$(_cd_bookmarks_file)"
+  local bookmarks
+  bookmarks="$(_cd_bookmarks_file)"
   cat <<-EOD
 		  -B  - add current directory to bookmarks ($bookmarks)
 		  -b  - cd to one of the bookmarked directories
@@ -172,29 +206,32 @@ function _cd_help_qualifiers {
 
 # _cd_bookmark_add [DIR] - prepend DIR to the bookmarks file, de-duplicated
 function _cd_bookmark_add {
-  local bookmarks; bookmarks="$(_cd_bookmarks_file)"
+  local bookmarks
+  bookmarks="$(_cd_bookmarks_file)"
   local dir="${1:-$PWD}"
 
-  { echo "$dir"
+  {
+    echo "$dir"
     [[ -e $bookmarks ]] && cat "$bookmarks"
-  } | awk '!a[$0]++' > "$bookmarks.tmp"
+  } | awk '!a[$0]++' >"$bookmarks.tmp"
   mv -- "$bookmarks.tmp" "$bookmarks"
 }
 
 # _cd_candidates FLAG - print candidate directories for a picker flag
 function _cd_candidates {
-  local bookmarks; bookmarks="$(_cd_bookmarks_file)"
+  local bookmarks
+  bookmarks="$(_cd_bookmarks_file)"
   case "$1" in
-    -s) echo "$(< ~/.cache/dir-selected)" ;;
-    -b) cat "$bookmarks" ;;
-    -f) gum dirs --format simple ;;
-    -p) gum projects --format simple ;;
-    -o)
-      cat ~/.cache/dir-selected
-      dirs -l -p
-      gum dirs --format simple
-      cat "$bookmarks"
-      gum projects --format simple
+  -s) echo "$(<~/.cache/dir-selected)" ;;
+  -b) cat "$bookmarks" ;;
+  -f) gum dirs --format simple ;;
+  -p) gum projects --format simple ;;
+  -o)
+    cat ~/.cache/dir-selected
+    dirs -l -p
+    gum dirs --format simple
+    cat "$bookmarks"
+    gum projects --format simple
     ;;
   esac
 }
@@ -203,9 +240,12 @@ function _cd_candidates {
 function _cd_dirstack_candidates {
   local dir candidates=()
   while read -r dir; do
-    candidates+=( "$dir" )
+    candidates+=("$dir")
   done < <(
-    ( dirs -v; echo "$PWD" ) | awk '!a[$2]++ && $2 { print $2 }' | tac
+    (
+      dirs -v
+      echo "$PWD"
+    ) | awk '!a[$2]++ && $2 { print $2 }' | tac
   )
   dirs -c
   for dir in "${candidates[@]}"; do
@@ -213,28 +253,34 @@ function _cd_dirstack_candidates {
     builtin cd "$(_cd_tilde "$dir")"
   done
   while read -r _ dir; do
-    candidates+=( "$dir" )
-  done < <( dirs -v )
+    candidates+=("$dir")
+  done < <(dirs -v)
   printf '%s\n' "${candidates[@]}"
 }
 
 # _cd_pick_flag FLAG QUERY... - interactive pick for -b/-f/-o/-p/-s/-v
 function _cd_pick_flag {
-  local flag="$1"; shift
+  local flag="$1"
+  shift
   local query="${1:-}" candidates=()
 
   if [[ $flag == -v ]]; then
     # Output goes through a file: the helper rebuilds the dirstack, so it
     # cannot run in a subshell.
-    local tmp; tmp="$(mktemp)"
-    _cd_dirstack_candidates > "$tmp"
-    mapfile -t candidates < "$tmp"; rm -f "$tmp"
+    local tmp
+    tmp="$(mktemp)"
+    _cd_dirstack_candidates >"$tmp"
+    mapfile -t candidates <"$tmp"
+    rm -f "$tmp"
   else
     mapfile -t candidates < <(_cd_candidates "$flag")
   fi
 
   REPLY=$(cdto "$query" 1 "${candidates[@]}")
-  [[ -z $REPLY ]] && { _cd_stop 0; return; }
+  [[ -z $REPLY ]] && {
+    _cd_stop 0
+    return
+  }
   if [[ $flag == -v ]]; then
     builtin cd "$REPLY"
     _cd_stop $?
@@ -247,16 +293,29 @@ function _cd_pick_flag {
 function _cd_flag_first {
   local flag="${1:-}"
   case "$flag" in
-    -h) _cd_help_flags; _cd_stop 0 ;;
-    -B) shift; _cd_bookmark_add "$@"; _cd_stop 0 ;;
-    -b|-f|-o|-p|-s|-v)
-      shift
-      _cd_pick_flag "$flag" "$@" ;;
-    -k) shift; builtin cd "$@"; _cd_stop $? ;;
-    -t|-r)
-      REPLY=$(git rev-parse --show-toplevel)
-      [[ -n $REPLY ]] || _cd_stop 0 ;;
-    *) return 0 ;;   # e.g. `-`, `-1`, `-name`: handled by _cd_special
+  -h)
+    _cd_help_flags
+    _cd_stop 0
+    ;;
+  -B)
+    shift
+    _cd_bookmark_add "$@"
+    _cd_stop 0
+    ;;
+  -b | -f | -o | -p | -s | -v)
+    shift
+    _cd_pick_flag "$flag" "$@"
+    ;;
+  -k)
+    shift
+    builtin cd "$@"
+    _cd_stop $?
+    ;;
+  -t | -r)
+    REPLY=$(git rev-parse --show-toplevel)
+    [[ -n $REPLY ]] || _cd_stop 0
+    ;;
+  *) return 0 ;; # e.g. `-`, `-1`, `-name`: handled by _cd_special
   esac
 }
 
@@ -267,7 +326,7 @@ function _cd_ancestor_child {
     basename="${basename%/*}"
     for d in "$basename"/*/; do
       if [[ $d =~ $regex ]]; then path="$d" && break 2; fi
-      c=( "$d"/"$regex"* )
+      c=("$d"/"$regex"*)
       if [[ ${c[0]} != *\* ]]; then path="${c[0]}" && break 2; fi
     done
   done
@@ -292,7 +351,8 @@ function _cd_descendant {
     candidates+=("$d")
   done < <(
     find . \( -name .git -prune \) -o \
-      -type d -iregex ".*$regex.*" -print0 )
+      -type d -iregex ".*$regex.*" -print0
+  )
   REPLY=$(cdto "$regex" "1" "${candidates[@]}")
 }
 
@@ -302,23 +362,29 @@ function _cd_qualified {
 
   if [[ $qualifier == -* ]]; then
     case "$qualifier" in
-      -h) _cd_help_qualifiers; _cd_stop 0 ;;
-      -b) return 0 ;;   # TODO: unimplemented
-      -a)
-        _cd_ancestor_child "$path"
-        if [[ -z $REPLY ]]; then
-          _cd_warn "cd: No directories under ancestry match: $path"
-          _cd_stop 0
-        fi ;;
-      -c) mkdir -pv "$path" ;;
-      -d)
-        _cd_descendant "$path"
-        [[ -z $REPLY ]] && _cd_stop 0 ;;
-      -u) _cd_ancestor_named "$path" ;;
-      -k)
-        builtin cd "$path"   # NOTE: only first arg, preserved from the original
-        _cd_stop $? ;;
-      *) return 0 ;;
+    -h)
+      _cd_help_qualifiers
+      _cd_stop 0
+      ;;
+    -b) return 0 ;; # TODO: unimplemented
+    -a)
+      _cd_ancestor_child "$path"
+      if [[ -z $REPLY ]]; then
+        _cd_warn "cd: No directories under ancestry match: $path"
+        _cd_stop 0
+      fi
+      ;;
+    -c) mkdir -pv "$path" ;;
+    -d)
+      _cd_descendant "$path"
+      [[ -z $REPLY ]] && _cd_stop 0
+      ;;
+    -u) _cd_ancestor_named "$path" ;;
+    -k)
+      builtin cd "$path" # NOTE: only first arg, preserved from the original
+      _cd_stop $?
+      ;;
+    *) return 0 ;;
     esac
     return
   fi
@@ -356,9 +422,9 @@ function _cd_shorthand {
   dirs=($path)
   [[ $nullglob == 1 ]] || shopt -u nullglob
 
-  if (( ${#dirs[@]} == 1 )) && [[ "${dirs[0]%/}" != "${path%/}" ]]; then
+  if ((${#dirs[@]} == 1)) && [[ "${dirs[0]%/}" != "${path%/}" ]]; then
     REPLY="${dirs[0]}"
-  elif (( ${#dirs[@]} >= 1 )); then
+  elif ((${#dirs[@]} >= 1)); then
     REPLY="$(cdto "" 1 "${dirs[@]}")"
   else
     _cd_warn "No dirs match: $path"
@@ -383,21 +449,30 @@ function _cd_special {
   local path="$REPLY" alnum='[[:alnum:]]'
 
   if [[ $path == '-' ]]; then
-    if [[ -z ${OLDPWD:-} ]]; then echo "cd: OLDPWD not set" >&2; _cd_stop 1; return; fi
-    builtin cd "$OLDPWD"; _cd_stop $?
+    if [[ -z ${OLDPWD:-} ]]; then
+      echo "cd: OLDPWD not set" >&2
+      _cd_stop 1
+      return
+    fi
+    builtin cd "$OLDPWD"
+    _cd_stop $?
 
   elif [[ -z $path ]] || [[ $path =~ ^\~/?$ ]]; then
-    builtin cd ~; _cd_stop $?
+    builtin cd ~
+    _cd_stop $?
 
   elif [[ $path =~ ^\+$ ]]; then
-    cd -v && { _cd_stop 0; return; }
+    cd -v && {
+      _cd_stop 0
+      return
+    }
 
   elif [[ $path =~ ^[+\-][[:alpha:]]+ ]]; then
     REPLY=$(dirs -l -v | grep -iP "${path##+}" | awk 'NR==1{print $2}')
 
   elif [[ $path =~ ^[+\-][0-9]+$ ]]; then
     if builtin dirs "$path" >/dev/null; then
-      path="$( _cd_tilde "$( builtin dirs "$path" )" )"
+      path="$(_cd_tilde "$(builtin dirs "$path")")"
       # Plain cd so already existing stack items are not duplicated
       echo >&2 "+ cd $path"
       builtin cd "$path"
@@ -407,8 +482,8 @@ function _cd_special {
     fi
 
   # TODO Make this regex more robust - for shorter cases
-  elif [[ $path =~ ^/?$alnum/?$|^/?$alnum/$alnum/?$|^/?$alnum/$alnum/ ]] \
-    && ! _cd_resolves_literally "$path"; then
+  elif [[ $path =~ ^/?$alnum/?$|^/?$alnum/$alnum/?$|^/?$alnum/$alnum/ ]] &&
+    ! _cd_resolves_literally "$path"; then
     _cd_shorthand "$path"
   fi
 }
@@ -468,10 +543,13 @@ function _cd_main {
 
   # Builtin options: -L -P -e -@ (combinable) go straight to the builtin
   if [[ $path =~ ^-[LPe@]+$ ]]; then
-    builtin cd "$@"; return
+    builtin cd "$@"
+    return
   # `--` ends option parsing: the next arg is a literal path
   elif [[ $path == -- ]]; then
-    shift; _cd_finish "${1:-$HOME}"; return
+    shift
+    _cd_finish "${1:-$HOME}"
+    return
   fi
 
   if _cd_is_github_url "$path"; then
@@ -479,15 +557,18 @@ function _cd_main {
     [[ -n $REPLY ]] || return 1
     path="$REPLY"
   elif [[ $path == -* ]]; then
-    _cd_flag_first "$@"; rc=$?
-    (( rc == 100 )) && return "$_CD_STATUS"
+    _cd_flag_first "$@"
+    rc=$?
+    ((rc == 100)) && return "$_CD_STATUS"
   elif [[ -n $qualifier ]]; then
-    _cd_qualified "$@"; rc=$?
-    (( rc == 100 )) && return "$_CD_STATUS"
+    _cd_qualified "$@"
+    rc=$?
+    ((rc == 100)) && return "$_CD_STATUS"
   fi
 
-  _cd_special; rc=$?
-  (( rc == 100 )) && return "$_CD_STATUS"
+  _cd_special
+  rc=$?
+  ((rc == 100)) && return "$_CD_STATUS"
 
   _cd_finish "$REPLY"
 }
@@ -525,8 +606,10 @@ function cdupto() {
 }
 
 function cdto {
-  local query="${1:-}"; shift
-  local col="${1:-1}"; shift
+  local query="${1:-}"
+  shift
+  local col="${1:-1}"
+  shift
   local candidates=("$@")
   local dir
 
@@ -550,11 +633,12 @@ function cdto {
     [[ -z $block ]] && return
 
     # Search seed
-    query=$( sed -n '1p'   <<<"$block" );
+    query=$(sed -n '1p' <<<"$block")
     # Key modifier
-    mod=$(   sed -n '2p'   <<<"$block" ); mod="${mod##ctrl-}"
+    mod=$(sed -n '2p' <<<"$block")
+    mod="${mod##ctrl-}"
     # Selected items
-    items=$( sed -n '3,$p' <<<"$block" );
+    items=$(sed -n '3,$p' <<<"$block")
 
     items="${items%$'\n'}"
     items="${items##*$'\n'}"
@@ -565,14 +649,16 @@ function cdto {
     if [[ -n $items ]]; then
       if [[ -n $mod ]]; then
         case "$mod" in
-          c|esc) return
+        c | esc)
+          return
           ;;
-          e)
-            local tmpfile; tmpfile="$(mktemp)"
-            echo "$items" > "$tmpfile"
-            "${EDITOR:-$(type -P editor)}" "$tmpfile" > /dev/tty
-            dir="$(< "$tmpfile")"
-            rm -f "$tmpfile"
+        e)
+          local tmpfile
+          tmpfile="$(mktemp)"
+          echo "$items" >"$tmpfile"
+          "${EDITOR:-$(type -P editor)}" "$tmpfile" >/dev/tty
+          dir="$(<"$tmpfile")"
+          rm -f "$tmpfile"
           ;;
         esac
       else
