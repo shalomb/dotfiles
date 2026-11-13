@@ -27,3 +27,16 @@ and performing scoped inspection via `rg` to return ADR-005 compliant pointer re
    - Path clustering: collapses thousands of child hits inside a repository into anchor roots.
    - Output hard cap: returns `<= 25` lines of markdown containing actionable context pointers (`path:line:col` and 1-line snippets).
    - Never floods the LLM context window with intermediate search traces.
+
+## Picker Mode (default inside tmux)
+
+- `/locate <query>` opens an fzf popup over ranked candidates; Tab multi-selects, Enter inserts the choices into the prompt as `@path` refs (spaces quoted, paths relative to `cwd`). No agent turn is consumed.
+- `--list` / `-l`, or running outside tmux, returns the <=25-line pointer receipt instead.
+- Rows lead with file name, then directory, then age; each row carries the absolute path and matching line. A preview pane shows the file with the match highlighted.
+- Content terms narrow the list to files containing them. If none match, the picker falls back to the path-only list (dropping the last path term if still empty) and shows a note in the header.
+
+## Additional Noise and Duplicate Handling
+
+- Dependency, cache and build trees (venvs, `__pycache__`, `coverage`, `bower_components`, etc.) are pruned; lookalike names are kept.
+- Files under `.worktrees/` are demoted and dropped when a main-tree twin exists, unless `cwd` is inside that worktree.
+- An alternate plocate database may be supplied.
