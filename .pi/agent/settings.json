@@ -9,13 +9,12 @@
   "enableInstallTelemetry": false,
   "enableSkillCommands": true,
   "enabledModels": [
-    "anthropic/claude-*-[0-9]",
-    "github-copilot/claude-*-[0-9]",
-    "github-copilot/claude-*-[4-9].[0-9]",
+    "anthropic/claude-+([a-z])-@([5-9]|[1-9][0-9])?(-[0-9])",
+    "github-copilot/claude-+([a-z])-@([5-9]|[1-9][0-9])?(.[0-9])",
     "antigravity/*"
   ],
   "hideThinkingBlock": false,
-  "lastChangelogVersion": "1.5.0",
+  "lastChangelogVersion": "1.5.2",
   "markdown": {
     "mermaid": "streaming"
   },
@@ -38,7 +37,7 @@
   "powerline": {
     "welcome": false
   },
-  "quietStartup": false,
+  "quietStartup": true,
   "shellCommandPrefix": "shopt -s expand_aliases\nsource ~/.bash_aliases",
   "showHardwareCursor": true,
   "terminal": {
@@ -50,9 +49,18 @@
   "transport": "auto",
   "tuiMode": "regular",
   "extensionChangelogVersions": {
-    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.4.8",
+    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.4.12",
     "{\"source\":\"npm:pi-powerline-footer\",\"scope\":\"user\"}": "0.22.0",
-    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.84.0",
-    "{\"source\":\"npm:@tmustier/pi-usage-extension\",\"scope\":\"user\"}": "0.10.1"
+    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.88.1",
+    "{\"source\":\"npm:@tmustier/pi-usage-extension\",\"scope\":\"user\"}": "0.10.2",
+    "{\"source\":\"npm:@narumitw/pi-tool\",\"scope\":\"user\"}": "0.4.3"
+  },
+  "subagents": {
+    "defaultModel": "anthropic/claude-sonnet-5-5",
+    "agentOverrides": {
+      "scout": {
+        "model": "anthropic/claude-haiku-5-5"
+      }
+    }
   }
 }

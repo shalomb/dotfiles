@@ -47,6 +47,11 @@ describe("registry", () => {
 		backfill(db, root, { git });
 		expect(search(db, { keyword: "flux" })[0].id).toBe(A);
 	});
+	test("multi-word keyword matches each word separately, in any order", () => {
+		backfill(db, root, { git });
+		expect(search(db, { keyword: "capacitor flux" })[0].id).toBe(A);
+		expect(search(db, { keyword: "flux nonexistentword" })).toEqual([]);
+	});
 	test("incremental rescan skips unchanged files", () => {
 		expect(backfill(db, root, { git })).toEqual({ scanned: 3, skipped: 0 });
 		expect(backfill(db, root, { git })).toEqual({ scanned: 0, skipped: 3 });

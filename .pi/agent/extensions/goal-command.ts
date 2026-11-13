@@ -6,7 +6,7 @@
  *   /goal check       run the done-check now: green or red
  *   /goal approve     apply the agent's pending change to the locked done-check (asks first)
  *   /goal reject      discard the pending change
- *   /goal done        close on a green check (or on your confirmation for a human-confirm check), then /persist and lessons
+ *   /goal done        close on a green check (or on your confirmation for a human-confirm check), then suggest /persist and lessons
  *   /goal drop        abandon the goal
  * The agent can reach the store only through goal_propose (a draft, or a pending change; never lock, approve or close),
  * and a tool_call guard blocks direct writes to the goals directory. Only these command handlers, driven by the human,
@@ -70,9 +70,9 @@ export default function (pi: ExtensionAPI) {
 				if (!pane) return ctx.ui.notify(text, "info");
 				void surface(exec, "/goal help", process.env, ctx.hasUI !== false).then(async (r) => {
 					if (r !== "show") return ctx.ui.notify(text, "info");
-					const f = join(tmpdir(), `goal-help-${process.pid}.txt`);
+					const f = join(tmpdir(), `goal-help-${process.pid}.md`);
 					writeFileSync(f, text);
-					await pi.exec("tmux", popupArgs(pane, repo.root, "goal", "help", `less -R ${f}; rm -f ${f}`));
+					await pi.exec("tmux", popupArgs(pane, repo.root, "goal", "help", `if command -v glow >/dev/null; then glow -p -s dark ${f}; else less -R ${f}; fi; rm -f ${f}`));
 				});
 			},
 			tellAgent: (m) => void send(m, false),

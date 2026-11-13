@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node
 import { spawnSync } from "node:child_process";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
+import { sanitizeTime } from "./sessions";
 
 // Runtime adapter for Bun vs Node sqlite
 interface DbAdapter {
@@ -15,24 +16,23 @@ function createDbAdapter(path: string): DbAdapter {
 		// Use bun:sqlite (native Bun API)
 		const { Database } = require("bun:sqlite");
 		return new Database(path) as DbAdapter;
-	} else {
-		// Use node:sqlite (Node v24+ API)
-		const { DatabaseSync } = require("node:sqlite");
-		const db = new DatabaseSync(path);
-		// Node's sqlite doesn't accept undefined - convert to null
-		const normalizeArgs = (args: any[]) => args.map(v => v === undefined ? null : v);
-		return {
-			exec: (sql: string) => db.exec(sql),
-			query: (sql: string) => {
-				const stmt = db.prepare(sql);
-				return {
-					get: (...args: any[]) => stmt.get(...normalizeArgs(args)),
-					all: (...args: any[]) => stmt.all(...normalizeArgs(args)),
-					run: (...args: any[]) => stmt.run(...normalizeArgs(args))
-				};
-			}
-		};
 	}
+	// Use node:sqlite (Node v24+ API)
+	const { DatabaseSync } = require("node:sqlite");
+	const db = new DatabaseSync(path);
+	// Node's sqlite doesn't accept undefined - convert to null
+	const normalizeArgs = (args: any[]) => args.map(v => v === undefined ? null : v);
+	return {
+		exec: (sql: string) => db.exec(sql),
+		query: (sql: string) => {
+			const stmt = db.prepare(sql);
+			return {
+				get: (...args: any[]) => stmt.get(...normalizeArgs(args)),
+				all: (...args: any[]) => stmt.all(...normalizeArgs(args)),
+				run: (...args: any[]) => stmt.run(...normalizeArgs(args))
+			};
+		}
+	};
 }
 
 export type Registry = DbAdapter;
@@ -59,6 +59,14 @@ CREATE INDEX IF NOT EXISTS idx_inst_sid ON instances(session_id);`);
 		db.exec("UPDATE sessions SET mtime_ms = 0 WHERE worktree_path IS NULL");
 		// Bump schema version
 		db.exec("PRAGMA user_version = 1");
+	}
+	
+	// Migration: timestamp clamping (force re-scan for bogus timestamps)
+	const userVersion = (db.query("PRAGMA user_version").get() as any)?.user_version ?? 0;
+	if (userVersion < 2) {
+		// Force re-scan to apply timestamp clamping
+		db.exec("UPDATE sessions SET mtime_ms = 0");
+		db.exec("PRAGMA user_version = 2");
 	}
 	
 	return db;
@@ -226,12 +234,18 @@ export function backfill(db: Registry, root: string, opts: { git?: (cwd: string)
 		const branch = facts.branch ?? null;
 		
 		const last = tailLine(file, st.size);
-		const lastTs = /"timestamp":"([^"]+)"/.exec(last)?.[1] ?? new Date(st.mtimeMs).toISOString();
+		const mtime = new Date(st.mtimeMs);
+		const rawLastTs = /"timestamp":"([^"]+)"/.exec(last)?.[1];
+		
+		// Clamp timestamps: invalid/NaN/pre-2000/>now+1day fall back to mtime
+		const started = sanitizeTime(head.timestamp, mtime).toISOString();
+		const lastActivity = sanitizeTime(rawLastTs, mtime).toISOString();
+		
 		let status = classifyTail(last);
 		const liveInst = db.query("SELECT pid FROM instances WHERE session_id=? AND ended IS NULL").get(head.id) as any;
 		if (liveInst && isAlive(liveInst.pid)) status = "running";
 		const digest = [...prompts, firstA, lastA].filter(Boolean).join("\n");
-		ins.run(head.id, file, head.cwd ?? "", repo, worktree, worktreePath, branch, opts.profile ?? null, model, head.timestamp, status === "ended" ? lastTs : null, status, lastTs, digest, st.mtimeMs, st.size);
+		ins.run(head.id, file, head.cwd ?? "", repo, worktree, worktreePath, branch, opts.profile ?? null, model, started, status === "ended" ? lastActivity : null, status, lastActivity, digest, st.mtimeMs, st.size);
 		scanned++;
 	}
 	return { scanned, skipped };
@@ -243,7 +257,7 @@ export function search(db: Registry, c: Criteria): Row[] {
 	eq("id", c.id); eq("cwd", c.cwd); eq("worktree", c.worktree); eq("branch", c.branch); eq("repo", c.repo); eq("status", c.status);
 	if (c.worktreePath) { w.push("s.worktree_path=?"); a.push(c.worktreePath); }
 	if (c.since) { w.push("s.last_activity>=?"); a.push(c.since); }
-	if (c.keyword) { w.push("s.digest LIKE ? ESCAPE '\\'"); a.push(`%${c.keyword.replace(/[\\%_]/g, "\\$&")}%`); }
+	for (const word of (c.keyword ?? "").split(/\s+/).filter(Boolean)) { w.push("s.digest LIKE ? ESCAPE '\\'"); a.push(`%${word.replace(/[\\%_]/g, "\\$&")}%`); }
 	const ic: string[] = [];
 	if (c.pid !== undefined) { ic.push("pid=?"); a.push(c.pid); }
 	if (c.tmuxSession) { ic.push("tmux_session=?"); a.push(c.tmuxSession); }
@@ -277,10 +291,13 @@ export function registerInstance(db: Registry, data: InstanceData): void {
 	const worktreePath = facts.worktreePath ?? null;
 	const branch = data.branch ?? facts.branch ?? null;
 	
+	// Clamp timestamp: invalid/NaN/pre-2000/>now+1day fall back to now
+	const started = sanitizeTime(data.started, new Date()).toISOString();
+	
 	db.query(`INSERT OR REPLACE INTO sessions (id,file,cwd,repo,worktree,worktree_path,branch,profile,model,started,ended,status,last_activity,digest,mtime_ms,size) VALUES (?,?,?,?,?,?,?,?,?,?,NULL,'running',?,'',-1,-1)`)
-		.run(data.sessionId, data.file, data.cwd, repo, data.worktree ?? worktree, worktreePath, branch, data.profile, data.model, data.started, data.started);
+		.run(data.sessionId, data.file, data.cwd, repo, data.worktree ?? worktree, worktreePath, branch, data.profile, data.model, started, started);
 	db.query(`INSERT INTO instances (session_id,pid,tmux_session,tmux_window,tmux_pane,scope,started,ended) VALUES (?,?,?,?,?,?,?,NULL)`)
-		.run(data.sessionId, data.pid, data.tmuxSession ?? null, data.tmuxWindow ?? null, data.tmuxPane ?? null, data.scope ?? null, data.started);
+		.run(data.sessionId, data.pid, data.tmuxSession ?? null, data.tmuxWindow ?? null, data.tmuxPane ?? null, data.scope ?? null, started);
 }
 
 export function touchActivity(db: Registry, sessionId: string, ts: string): void {

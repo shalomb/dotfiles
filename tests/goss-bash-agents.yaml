@@ -22,3 +22,6 @@ command:
   "tests/support/bash-agents-check.sh ssh-ensure-before-ssh":
     exit-status: 0
     timeout: 20000
+  "tests/support/bash-agents-check.sh startup-fast-path":
+    exit-status: 0
+    timeout: 5000

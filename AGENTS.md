@@ -74,6 +74,16 @@ uv run python -m dotfile_manager export .bashrc
 uv run python -m dotfile_manager export .config/nvim/
 ```
 
+**Run `export` and `import` from the main checkout (`~/.config/dotfiles`) only.**
+The pre-commit hook validates `$HOME` against the main checkout, so an export from a
+linked git worktree repoints `~` at the worktree and blocks the next commit. The tool
+enforces this: from a linked worktree (or, when `repo_root` in `.dotfiles.toml` or
+`DOTFILES_REPO_ROOT` is set, from any other clone) `export` and `import` print
+`refusing: run from the main checkout <path>`, exit non-zero and change nothing.
+`export --dry-run`, `status` and `diff` stay allowed. Override deliberately with
+`--allow-worktree` (prints a loud warning). To restore the links after a mistake:
+`cd ~/.config/dotfiles && PYTHONPATH=src uv run python -m dotfile_manager export .config/bash/ .bashrc`.
+
 ### 3. Development Workflow
 
 **MANDATORY: Test Before Deploy** (See ADR-005)

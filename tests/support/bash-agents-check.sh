@@ -1,10 +1,10 @@
 #!/bin/bash
 # Legacy agent bootstrap is gone; agentctl is the single agent manager.
-# Usage: $0 {no-legacy-bins|no-legacy-refs|keychain-real|agentctl-status|ssh-ensure-wired|ssh-ensure-before-ssh}
+# Usage: $0 {no-legacy-bins|no-legacy-refs|keychain-real|agentctl-status|ssh-ensure-wired|ssh-ensure-before-ssh|startup-fast-path}
 set -u
 legacy=(gpg-agent-bootstrap gpg-agent-recover gpg-recover gpg-unlock-permanent
   ssh-agent-bootstrap update_ssh_agent_info)
-repo=~/.config/dotfiles
+repo="$(cd "$(dirname "$0")/../.." && pwd -P)"
 case "${1:-}" in
 no-legacy-bins)
   for b in "${legacy[@]}"; do
@@ -32,6 +32,27 @@ ssh-ensure-wired)
   rg -q 'agentctl ssh ensure' "$f"
   rg -q '^ssh\(\)' "$f" || rg -q '^function ssh ' "$f"
   ;;
+startup-fast-path)
+  # Interactive startup must NOT invoke `agentctl init` (or uv/python) when
+  # the gpg-agent ssh socket already exists; it must bind SSH_AUTH_SOCK directly.
+  sock="${XDG_RUNTIME_DIR:-/run/user/$UID}/gnupg/S.gpg-agent.ssh"
+  if [[ -S "$sock" ]]; then
+    log=$(mktemp)
+    setsid bash -i -c "
+      bindir=\$(mktemp -d)
+      printf '#!/bin/sh\necho UV-CALLED >> $log\nexit 99\n' > "\$bindir/uv"
+      chmod +x "\$bindir/uv"
+      PATH="\$bindir:\$PATH"
+      source '"$repo"'/.config/bash/enabled/agentctl-integration.sh
+    " </dev/null >/dev/null 2>&1 || true
+    if [[ -s "$log" ]]; then
+      echo "startup-fast-path failed: uv was called during startup: $(<"$log")" >&2
+      rm -f "$log"
+      exit 1
+    fi
+    rm -f "$log"
+  fi
+  ;;
 ssh-ensure-before-ssh)
   # ssh must invoke ensure (when GPG_TTY is set), then the real ssh binary.
   setsid bash -i -c '
@@ -55,7 +76,7 @@ ssh-ensure-before-ssh)
   ' </dev/null 2>&1
   ;;
 *)
-  echo "usage: $0 {no-legacy-bins|no-legacy-refs|keychain-real|agentctl-status|ssh-ensure-wired|ssh-ensure-before-ssh}" >&2
+  echo "usage: $0 {no-legacy-bins|no-legacy-refs|keychain-real|agentctl-status|ssh-ensure-wired|ssh-ensure-before-ssh|startup-fast-path}" >&2
   exit 2
   ;;
 esac
