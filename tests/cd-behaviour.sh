@@ -241,6 +241,26 @@ reset "$T"
 CDPATH="$T/a" run bbb
 check cdpath-hit "$T/a/bbb" "$PWD"
 
+# --- robustness: cd is core, it must not break in odd environments ------------
+SRC="$ROOT/.config/bash/enabled/cd.sh"
+mkdir -p "$T/rb/sp ace" "$T/rb/-dash" "$T/rb/real"; ln -s "$T/rb/real" "$T/rb/link"
+sub() { bash -c "$1" 2>&1; }   # fresh shell, none of our stubs
+
+check strict-unset-vars "$T/rb/real" "$(sub "set -eu; source '$SRC'; cd '$T/rb/real'; pwd")"
+check strict-unset-noargs "$HOME" "$(sub "set -u; source '$SRC'; HOME='$HOME'; cd; pwd")"
+check errexit-survives-plain-cd "$HOME" "$(sub "set -eu; source '$SRC'; HOME='$HOME'; cd '$T/rb/real'; cd; pwd")"
+check errexit-survives-dash "$T/rb/real" "$(sub "set -e; source '$SRC'; cd '$T/rb/real'; cd '$T/rb'; cd -  >/dev/null; pwd")"
+check path-with-spaces "$T/rb/sp ace" "$(sub "source '$SRC'; cd '$T/rb/sp ace' && pwd")"
+check double-dash "$T/rb/-dash" "$(sub "source '$SRC'; cd '$T/rb'; cd -- -dash && pwd")"
+check flag-P-resolves-symlink "$T/rb/real" "$(sub "source '$SRC'; cd -P '$T/rb/link' && pwd")"
+check flag-L-keeps-symlink "$T/rb/link" "$(sub "source '$SRC'; cd -L '$T/rb/link' && pwd")"
+check no-warn-die-helpers "cd: nope: No such file or directory. Append -c to create.
+1" "$(sub "source '$SRC'; cd '$T/rb'; cd nope; echo \$?")"
+check no-tildeexpand-helper "$HOME" "$(sub "source '$SRC'; HOME='$HOME'; PATH=/usr/bin:/bin; cd ~/ && pwd")"
+check oldpwd-unset-message "cd: OLDPWD not set
+1" "$(sub "source '$SRC'; unset OLDPWD; cd -; echo \$?")"
+check no-gum-needed-for-plain-cd "$T/rb/real" "$(sub "source '$SRC'; PATH=/usr/bin:/bin; cd '$T/rb/real' && pwd")"
+
 # --- help --------------------------------------------------------------------
 reset "$T"
 run -h

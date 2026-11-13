@@ -37,6 +37,17 @@ function _cd_parse_url {
   echo "$owner $repo $kind $ref"
 }
 
+# cd is core: do not depend on helpers defined elsewhere in the dotfiles
+function _cd_warn { if declare -F warn >/dev/null; then warn "$@"; else echo "$*" >&2; fi; }
+function _cd_die  { if declare -F die  >/dev/null; then die "$@";  else echo "$*" >&2; fi; }
+function _cd_tilde {
+  if command -v tildeexpand >/dev/null 2>&1 || declare -F tildeexpand >/dev/null; then
+    tildeexpand "$1"
+  else
+    echo "${1/#\~/$HOME}"
+  fi
+}
+
 function _cd_is_github_url {
   [[ $1 == http*://github.com/* || $1 == http*://www.github.com/* || $1 == git@github.com:* ]]
 }
@@ -199,7 +210,7 @@ function _cd_dirstack_candidates {
   dirs -c
   for dir in "${candidates[@]}"; do
     echo "cd $dir" >&2
-    builtin cd "$(tildeexpand "$dir")"
+    builtin cd "$(_cd_tilde "$dir")"
   done
   while read -r _ dir; do
     candidates+=( "$dir" )
@@ -234,7 +245,7 @@ function _cd_pick_flag {
 
 # _cd_flag_first ARGS... - handle `cd -X ...`; REPLY is $1
 function _cd_flag_first {
-  local flag="$1"
+  local flag="${1:-}"
   case "$flag" in
     -h) _cd_help_flags; _cd_stop 0 ;;
     -B) shift; _cd_bookmark_add "$@"; _cd_stop 0 ;;
@@ -287,7 +298,7 @@ function _cd_descendant {
 
 # _cd_qualified ARGS... - handle `cd PATH QUALIFIER`; REPLY is $1
 function _cd_qualified {
-  local path="$1" qualifier="$2"
+  local path="${1:-}" qualifier="${2:-}"
 
   if [[ $qualifier == -* ]]; then
     case "$qualifier" in
@@ -296,7 +307,7 @@ function _cd_qualified {
       -a)
         _cd_ancestor_child "$path"
         if [[ -z $REPLY ]]; then
-          warn "cd: No directories under ancestry match: $path"
+          _cd_warn "cd: No directories under ancestry match: $path"
           _cd_stop 0
         fi ;;
       -c) mkdir -pv "$path" ;;
@@ -313,7 +324,7 @@ function _cd_qualified {
   fi
 
   if [[ -e $path ]] && [[ -e $qualifier ]]; then
-    die "ERROR: Multiple paths match patterns."
+    _cd_die "ERROR: Multiple paths match patterns."
     printf ' - %q\n' "$@"
     _cd_stop 1
     return
@@ -322,7 +333,7 @@ function _cd_qualified {
   # Arg 2 replaces arg 1 in $PWD
   local newpath="${PWD//$path/$qualifier}"
   if [[ $newpath == "$PWD" ]]; then
-    warn "ERROR: Substitution of '$qualifier' with '$path' in '$PWD' failed."
+    _cd_warn "ERROR: Substitution of '$qualifier' with '$path' in '$PWD' failed."
     _cd_stop 1
     return
   fi
@@ -350,7 +361,7 @@ function _cd_shorthand {
   elif (( ${#dirs[@]} >= 1 )); then
     REPLY="$(cdto "" 1 "${dirs[@]}")"
   else
-    warn "No dirs match: $path"
+    _cd_warn "No dirs match: $path"
     _cd_stop 0
   fi
 }
@@ -359,10 +370,10 @@ function _cd_shorthand {
 function _cd_resolves_literally {
   local path="${1%/}" cdpaths p
   [[ -e $path ]] && return 0
-  [[ -n $CDPATH ]] || return 1
+  [[ -n ${CDPATH:-} ]] || return 1
   IFS=: read -r -a cdpaths <<<"$CDPATH"
   for p in "${cdpaths[@]}"; do
-    [[ -e "$(tildeexpand "$p/$path")" ]] && return 0
+    [[ -e "$(_cd_tilde "$p/$path")" ]] && return 0
   done
   return 1
 }
@@ -372,6 +383,7 @@ function _cd_special {
   local path="$REPLY" alnum='[[:alnum:]]'
 
   if [[ $path == '-' ]]; then
+    if [[ -z ${OLDPWD:-} ]]; then echo "cd: OLDPWD not set" >&2; _cd_stop 1; return; fi
     builtin cd "$OLDPWD"; _cd_stop $?
 
   elif [[ -z $path ]] || [[ $path =~ ^\~/?$ ]]; then
@@ -385,7 +397,7 @@ function _cd_special {
 
   elif [[ $path =~ ^[+\-][0-9]+$ ]]; then
     if builtin dirs "$path" >/dev/null; then
-      path="$( tildeexpand "$( builtin dirs "$path" )" )"
+      path="$( _cd_tilde "$( builtin dirs "$path" )" )"
       # Plain cd so already existing stack items are not duplicated
       echo >&2 "+ cd $path"
       builtin cd "$path"
@@ -403,7 +415,7 @@ function _cd_special {
 
 # _cd_finish PATH - normalise files/devices, check existence, then pushd
 function _cd_finish {
-  local path="$1"
+  local path="${1:-}"
 
   if [[ -e ${path%/} ]]; then
     path="${path%/}"
@@ -422,11 +434,11 @@ function _cd_finish {
 
   elif [[ ! -d $path ]]; then
     # $path may be an item in $CDPATH
-    if [[ -n $CDPATH ]]; then
+    if [[ -n ${CDPATH:-} ]]; then
       local cdpaths p _path
       IFS=: read -r -a cdpaths <<<"$CDPATH"
       for p in "${cdpaths[@]}"; do
-        _path="$(tildeexpand "$p/$path")"
+        _path="$(_cd_tilde "$p/$path")"
         if [[ -e $_path ]]; then
           # may be a non-directory: re-enter cd for the special handling
           cd "$_path"
@@ -438,13 +450,29 @@ function _cd_finish {
     return 1
   fi
 
-  builtin pushd "$path" >/dev/null
+  builtin pushd -- "$path" >/dev/null
 }
 
 #| cd - smarter cd
+# Thin wrapper: running the body on the left of `||` keeps `set -e` from killing
+# the caller on the internal "stop" return code used by the helpers.
 function cd {
-  local path="$1" qualifier="$2" rc
+  local rc=0
+  _cd_main "$@" || rc=$?
+  return "$rc"
+}
+
+function _cd_main {
+  local path="${1:-}" qualifier="${2:-}" rc
   REPLY="$path"
+
+  # Builtin options: -L -P -e -@ (combinable) go straight to the builtin
+  if [[ $path =~ ^-[LPe@]+$ ]]; then
+    builtin cd "$@"; return
+  # `--` ends option parsing: the next arg is a literal path
+  elif [[ $path == -- ]]; then
+    shift; _cd_finish "${1:-$HOME}"; return
+  fi
 
   if _cd_is_github_url "$path"; then
     REPLY="$(_cd_url_resolve "$path")" || return 1
@@ -497,7 +525,7 @@ function cdupto() {
 }
 
 function cdto {
-  local query="$1"; shift
+  local query="${1:-}"; shift
   local col="${1:-1}"; shift
   local candidates=("$@")
   local dir
@@ -531,8 +559,8 @@ function cdto {
     items="${items%$'\n'}"
     items="${items##*$'\n'}"
 
-    # warn "query:[$query] mod:[$mod] items:[$items]"
-    # warn "selected: $selected"
+    # _cd_warn "query:[$query] mod:[$mod] items:[$items]"
+    # _cd_warn "selected: $selected"
 
     if [[ -n $items ]]; then
       if [[ -n $mod ]]; then
@@ -555,7 +583,7 @@ function cdto {
 
   [[ -z $dir && -z $query ]] && return
 
-  tildeexpand "$dir"
+  _cd_tilde "$dir"
 }
 
 # TODO
