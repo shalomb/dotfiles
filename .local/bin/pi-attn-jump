@@ -1,36 +1,33 @@
 #!/usr/bin/env bash
-# Jump to tmux pane requiring pi agent attention (@pi_attn)
+# AGENT_CONTEXT: C-a C-p jumps to a tmux pane whose pi agent set @pi_attn
+# DESIGN_PATTERN: same urgency as pi-attn-status (stopped/other > rest stop > arrived);
+#   one pane: jump straight there; several: fzf picker, most urgent first
 set -eo pipefail
 
-raw=$(tmux list-panes -a -F '#{session_name}|#{window_index}|#{pane_index}|#{@pi_attn}' 2>/dev/null)
-[ -z "$raw" ] && exit 0
+raw=$(tmux list-panes -a -F '#{session_name}|#{window_index}|#{pane_index}|#{@pi_attn}' 2>/dev/null) || true
 
-panes=()
-while IFS='|' read -r session window pane attn; do
-    [ -n "$attn" ] && panes+=("${session}:${window}.${pane}|${attn}")
-done <<< "$raw"
+rows=$(while IFS='|' read -r session window pane attn; do
+    [ -z "$attn" ] && continue
+    case "$attn" in
+        "arrived"*) rank=1 ;;
+        "rest stop"*) rank=2 ;;
+        *) rank=3 ;;
+    esac
+    printf '%s\t%-16s  %s\n' "$rank" "${session}:${window}.${pane}" "$attn"
+done <<< "$raw" | sort -t$'\t' -k1,1nr -s | cut -f2-)
 
-if [ ${#panes[@]} -eq 0 ]; then
-    tmux display-message "No pi agents requiring attention"
+if [ -z "$rows" ]; then
+    tmux display-message "No pi agents need attention"
     exit 0
 fi
 
-if [ ${#panes[@]} -eq 1 ]; then
-    target="${panes[0]%%|*}"
-    sess="${target%%:*}"
-    rest="${target#*:}"
-    win="${rest%.*}"
-    pane="${rest#*.}"
-    tmux switch-client -t "$sess" \; select-window -t "${sess}:${win}" \; select-pane -t "${sess}:${win}.${pane}"
-    exit 0
+if [ "$(wc -l <<< "$rows")" -eq 1 ]; then
+    picked=$rows
+else
+    picked=$(fzf --reverse --header="Pi panes needing attention (most urgent first)" <<< "$rows") || exit 0
 fi
 
-# Multiple panes: pick via fzf in popup
-picked=$(printf '%s\n' "${panes[@]}" | awk -F'|' '{printf "%-20s  %s\n", $1, $2}' | fzf --reverse --header="Pi Panes Needing Attention" | awk '{print $1}')
-[ -z "$picked" ] && exit 0
-
-sess="${picked%%:*}"
-rest="${picked#*:}"
-win="${rest%.*}"
-pane="${rest#*.}"
-tmux switch-client -t "$sess" \; select-window -t "${sess}:${win}" \; select-pane -t "${sess}:${win}.${pane}"
+target=${picked%% *}
+sess=${target%%:*}
+win=${target%.*}
+tmux switch-client -t "$sess" \; select-window -t "$win" \; select-pane -t "$target"
