@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test } from "bun:test";
 import { execFileSync, execFile } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { buildBrief, dirNameFor, findWorktree, parseWorktreeArgs, setupWorktree, type Exec } from "./worktree";
 
 const exec: Exec = (cmd, args, o) =>
@@ -90,6 +90,18 @@ test("findWorktree: matches by relative path (trailing slash), absolute path, di
 	const nonGitDir = tmpdir();
 	const fromOutside = await findWorktree(exec, nonGitDir, r.dir);
 	expect(fromOutside).toEqual({ ok: true, dir: r.dir, branch: "feat/x" });
+
+	// expands tilde (~/...) paths correctly
+	const fakeHome = dirname(root);
+	const oldHome = process.env.HOME;
+	process.env.HOME = fakeHome;
+	try {
+		const tildePath = r.dir.replace(fakeHome, "~");
+		const fromTilde = await findWorktree(exec, nonGitDir, tildePath);
+		expect(fromTilde).toEqual({ ok: true, dir: r.dir, branch: "feat/x" });
+	} finally {
+		process.env.HOME = oldHome;
+	}
 });
 
 test("findWorktree: unknown target lists the known worktrees", async () => {

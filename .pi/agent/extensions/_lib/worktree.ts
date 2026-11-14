@@ -83,13 +83,20 @@ export function buildBrief(f: { origin: string; base: string; branch: string; pa
 
 export type FindResult = { ok: true; dir: string; branch: string } | { ok: false; error: string };
 
+function expandHome(p: string): string {
+	if (p === "~") return process.env.HOME ?? "~";
+	if (p.startsWith("~/")) return resolve(process.env.HOME ?? "~", p.slice(2));
+	return p;
+}
+
 /** Resolve an existing worktree by path (relative to cwd or common root), dir name, or branch. */
 export async function findWorktree(exec: Exec, cwd: string, target: string): Promise<FindResult> {
+	const rawTarget = expandHome(target);
 	let contextDir = cwd;
 	let common = await exec("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { cwd: contextDir });
 	if (common.code !== 0) {
 		// If cwd is not a git repo, check if target itself resolves to a git worktree or repo
-		const candidateDir = resolve(cwd, target.replace(/\/+$/, ""));
+		const candidateDir = resolve(cwd, rawTarget.replace(/\/+$/, ""));
 		const targetCommon = await exec("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { cwd: candidateDir }).catch(() => undefined);
 		if (targetCommon && targetCommon.code === 0) {
 			contextDir = candidateDir;
@@ -106,7 +113,7 @@ export async function findWorktree(exec: Exec, cwd: string, target: string): Pro
 		if (!dir) continue;
 		wts.push({ dir, branch: /^branch refs\/heads\/(.+)$/m.exec(block)?.[1] ?? "(detached)" });
 	}
-	const t = target.replace(/\/+$/, "");
+	const t = rawTarget.replace(/\/+$/, "");
 	const paths = new Set([resolve(cwd, t), resolve(commonRoot, t), resolve(commonRoot, ".worktrees", t)]);
 	const hit = wts.find((w) => paths.has(w.dir)) ?? wts.find((w) => w.branch === t || basename(w.dir) === t);
 	if (hit) return { ok: true, ...hit };
