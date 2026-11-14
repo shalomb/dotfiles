@@ -31,7 +31,8 @@ pi() {
   profile="$(_pi_resolve_profile "$PWD")" || return 1
   _pi_profile_prepare "$profile" || return 1
 
-  _PI_PLAN_CWD="$PWD"; _PI_PLAN_ARGS=("${args[@]}")
+  _PI_PLAN_CWD="$PWD"
+  _PI_PLAN_ARGS=("${args[@]}")
   if _pi_should_choose "${#args[@]}" "$no_resume"; then
     _pi_choose "$profile" || return 1
   fi
