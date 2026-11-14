@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { sanitizeTime } from "./sessions";
+import { ensureFts, refreshFts } from "./registry-fts";
 
 // Runtime adapter for Bun vs Node sqlite
 interface DbAdapter {
@@ -74,7 +75,10 @@ CREATE INDEX IF NOT EXISTS idx_inst_sid ON instances(session_id);`);
 		db.exec("UPDATE sessions SET mtime_ms = 0");
 		db.exec("PRAGMA user_version = 2");
 	}
-	
+
+	// Migration: FTS5 trigram index tables (additive; populated by refreshFts after backfill)
+	ensureFts(db);
+
 	return db;
 }
 
@@ -280,6 +284,7 @@ export function backfill(db: Registry, root: string, opts: { git?: (cwd: string)
 		ins.run(head.id, file, head.cwd ?? "", repo, worktree, worktreePath, branch, opts.profile ?? null, model, started, status === "ended" ? lastActivity : null, status, lastActivity, digest, st.mtimeMs, st.size, tokenize(termSrc.join(" ")).join(" ").slice(0, MAX_TERMS_CHARS));
 		scanned++;
 	}
+	refreshFts(db);
 	return { scanned, skipped };
 }
 
