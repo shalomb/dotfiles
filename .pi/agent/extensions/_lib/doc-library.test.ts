@@ -85,6 +85,14 @@ describe("fileDoc", () => {
 		for (const s of ["Connecting teams", "Agree one intake for all PODs.", "brief/2026-11-14-connecting-teams/index.html"]) expect(page).toContain(s);
 	});
 
+	it("writes the Landing/Docked search page and leaves the index.json card keys unchanged", () => {
+		file();
+		const page = readFileSync(join(lib, "index.html"), "utf8");
+		for (const s of ['id="legend"', 'id="guidance"', "docked"]) expect(page).toContain(s);
+		const cards = JSON.parse(readFileSync(join(lib, "index.json"), "utf8"));
+		expect(Object.keys(cards[0]).sort()).toEqual(["date", "kind", "origin", "path", "repo", "summary", "tags", "title"]);
+	});
+
 	it("takes the summary from the html when there is no source", () => {
 		writeFileSync(html, '<html><head><title>T</title><meta name="description" content="From meta."></head><body><p>From body.</p></body></html>');
 		fileDoc({ html, kind: "report", date: "2026-11-14" }, env);

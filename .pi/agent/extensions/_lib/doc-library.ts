@@ -14,6 +14,7 @@ import { execFileSync } from "node:child_process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { renderSearchPage } from "./doc-search.ts";
 
 export const KINDS = ["brief", "one-pager", "report", "deck", "status", "decision", "workshop"] as const;
 
@@ -158,9 +159,8 @@ export function writeIndex(env: Env = process.env): string {
 	const cards = listDocs({}, env);
 	mkdirSync(root, { recursive: true });
 	writeFileSync(join(root, "index.json"), `${JSON.stringify(cards, null, 1)}\n`);
-	const data = JSON.stringify(cards).replace(/<\//g, "<\\/");
 	const page = join(root, "index.html");
-	writeFileSync(page, PAGE.replace("__DATA__", () => data));
+	writeFileSync(page, renderSearchPage(JSON.stringify(cards), KINDS));
 	return page;
 }
 
@@ -196,42 +196,3 @@ export function fileDoc(o: FileOptions, env: Env = process.env): string {
 	writeIndex(env);
 	return current;
 }
-
-const PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>Documents</title>
-<style>
-:root{--paper:#FBFAF8;--ink:#16191D;--slate:#5A6472;--accent:#1B5E6B;--soft:#E8F0F1;--card:#fff;--rule:rgba(22,25,29,.1)}
-@media (prefers-color-scheme:dark){:root{--paper:#101316;--ink:#E6E8EA;--slate:#A2ACB9;--accent:#5FB3C2;--soft:#16282D;--card:#161A1E;--rule:rgba(230,232,234,.14)}}
-body{font:15px/1.5 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;margin:0;background:var(--paper);color:var(--ink)}
-header{max-width:1100px;margin:2.5rem auto 1rem;padding:0 1rem}
-h1{font-family:Charter,Georgia,serif;font-weight:600;margin:0 0 .75rem}
-input{width:100%;box-sizing:border-box;padding:.65rem .8rem;font:inherit;border:1px solid var(--rule);border-radius:8px;background:var(--card);color:var(--ink)}
-.n{color:var(--slate);font-size:.85em;margin-top:.4rem}
-main{max-width:1100px;margin:0 auto 3rem;padding:0 1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem}
-a.c{display:block;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1rem 1.1rem;color:inherit;text-decoration:none}
-a.c:hover{border-color:var(--accent)}
-.c h2{font-family:Charter,Georgia,serif;font-size:1.1rem;margin:.35rem 0}
-.c p{margin:.3rem 0 .6rem;color:var(--slate);font-size:.92em}
-.m{font-size:.8em;color:var(--slate)} .k,.t{display:inline-block;border-radius:4px;padding:0 .4rem;font-size:.78em;margin:0 .2rem .2rem 0}
-.k{background:var(--accent);color:var(--paper)} .t{background:var(--soft);color:var(--accent)}
-</style></head><body>
-<header><h1>Documents</h1>
-<input id="q" placeholder="Search title, summary, tag, kind, repo  (press / to focus)" autofocus>
-<div class="n" id="n"></div></header>
-<main id="cards"></main>
-<script id="data" type="application/json">__DATA__</script>
-<script>
-const docs=JSON.parse(document.getElementById('data').textContent);
-const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const hay=d=>[d.title,d.summary,d.kind,d.repo,d.date,...(d.tags||[])].join(' ').toLowerCase();
-function draw(){const words=q.value.toLowerCase().split(/\\s+/).filter(Boolean);
- const hit=docs.filter(d=>words.every(w=>hay(d).includes(w)));
- n.textContent=hit.length+' of '+docs.length+' documents';
- cards.innerHTML=hit.map(d=>\`<a class="c" href="\${esc(d.path)}"><span class="k">\${esc(d.kind)}</span>
- \${(d.tags||[]).map(t=>\`<span class="t">\${esc(t)}</span>\`).join('')}<h2>\${esc(d.title)}</h2>
- <p>\${esc(d.summary)}</p><div class="m">\${esc(d.date)}\${d.repo?' · '+esc(d.repo):''}</div></a>\`).join('');}
-q.oninput=()=>{history.replaceState(null,'','#'+encodeURIComponent(q.value));draw()};
-addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==q){e.preventDefault();q.focus()}});
-q.value=decodeURIComponent(location.hash.slice(1));draw();
-</script></body></html>
-`;
