@@ -7,3 +7,4 @@
 - **Session root**: a directory that holds session files. There can be many. Avoid: sessions dir.
 - **Profile**: a pi-profile config set. A column on each row; not a filter. Avoid: account.
 - **Target worktree**: the git worktree where a resumed session starts. Never the repo top level.
+- **Repo root**: top directory of a repository, as reported by gum. Avoid: project dir.
