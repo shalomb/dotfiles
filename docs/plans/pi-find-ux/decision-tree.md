@@ -37,3 +37,5 @@ Round 3 note = process request: explain the H numbers in plain STE in every waf 
 Replies: round-01.md, round-02.md, round-03.md
 
 Round 4: final review approved.
+
+Round 5 (re-confirmation): H1, H2, H3 and thresholds kept as written. Replies: round-05.md
