@@ -3,12 +3,15 @@
  * Rendering is the bundled Python renderer (doc-render/build.py, needs pandoc).
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { type BrandConfig, type BrandContext, brandCss as resolveBrandCss } from "./doc-brand.ts";
 import { fileDoc } from "./doc-library.ts";
 import { type Finding, lintDoc } from "./doc-lint.ts";
+import { navCss } from "./doc-nav.ts";
+import { type AudienceProfile, embedProvenance, type ProvenanceRecipe } from "./doc-provenance.ts";
 import { urlsFor } from "./doc-urls.ts";
 
 type Env = Record<string, string | undefined>;
@@ -23,6 +26,19 @@ export interface PublishOptions {
 	eyebrow?: string;
 	summary?: string;
 	downloads?: string;
+	/** The user's request; when set, a folded provenance recipe is embedded in each rendered page. */
+	prompt?: string;
+	/** Extra recipe parameters (purpose and style are always recorded). */
+	params?: Record<string, string | number | boolean>;
+	audience?: AudienceProfile[];
+	/** Source references for the recipe; defaults to the Markdown source's file name. */
+	sources?: string[];
+	/** Inject the adaptive nav stylesheet (nav.doc-nav layouts) into the page. */
+	nav?: boolean;
+	/** Corporate brand isolation: the stylesheet is injected inline only in a corporate context. */
+	brand?: { ctx: BrandContext; cfg: BrandConfig };
+	/** ISO timestamp for the recipe; defaults to now. */
+	now?: string;
 }
 export interface PublishResult {
 	rendered: string[];
@@ -30,6 +46,15 @@ export interface PublishResult {
 	urls: string[];
 	findings: Finding[];
 	brandCss?: string;
+	provenance?: ProvenanceRecipe;
+}
+
+/** Inject a <style> block before </head> (or prepend when the page has none). */
+export function injectStyle(page: string, css: string, id: string): string {
+	if (!css.trim()) return page;
+	const tag = `<style id="${id}">\n${css}\n</style>`;
+	const i = page.indexOf("</head>");
+	return i < 0 ? tag + page : page.slice(0, i) + tag + "\n" + page.slice(i);
 }
 
 /** Library kind for a purpose (the library keeps its historical kinds). */
@@ -59,6 +84,17 @@ export function publishDoc(o: PublishOptions, env: Env = process.env): PublishRe
 	const brandCss = o.style === "formal" ? formalCss(o.source, env) : undefined;
 	const md = readFileSync(o.source, "utf8");
 	const findings = lintDoc(md, purpose);
+	const inlineBrand = o.brand ? resolveBrandCss({ style: o.style, ...o.brand.ctx }, o.brand.cfg) : "";
+	const provenance: ProvenanceRecipe | undefined = o.prompt
+		? {
+				prompt: o.prompt,
+				params: { purpose, style: o.style ?? "house", ...o.params },
+				sources: (o.sources ?? [basename(o.source)]).map((ref) => ({ ref, at: (o.now ?? new Date().toISOString()).slice(0, 10) })),
+				generatedAt: o.now ?? new Date().toISOString(),
+				audience: o.audience,
+				contract: [`python3 doc-render/build.py ${basename(o.source)} -m doc -o ${stem}.html`],
+			}
+		: undefined;
 
 	const modes: ("doc" | "deck")[] = purpose === "deck" ? ["doc", "deck"] : ["doc"];
 	const rendered: string[] = [];
@@ -73,10 +109,17 @@ export function publishDoc(o: PublishOptions, env: Env = process.env): PublishRe
 		} catch (e) {
 			throw new Error(`render failed (${mode}): ${(e as { stderr?: string }).stderr?.trim() || (e as Error).message}`);
 		}
+		if (o.nav || inlineBrand || provenance) {
+			let page = readFileSync(out, "utf8");
+			if (o.nav) page = injectStyle(page, navCss(), "doc-nav-css");
+			if (inlineBrand) page = injectStyle(page, inlineBrand, "doc-brand-css");
+			if (provenance) page = embedProvenance(page, provenance, { homes: [homedir()] });
+			writeFileSync(out, page);
+		}
 		rendered.push(out);
 		const fileKind = mode === "deck" ? "deck" : kind === "deck" ? "report" : kind;
 		filed.push(fileDoc({ html: out, kind: fileKind, source: o.source, summary: o.summary, tags: o.tags }, env));
 	}
 	const urls = filed.flatMap((f) => urlsFor(f).map((u) => u.url));
-	return { rendered, filed, urls, findings, brandCss };
+	return { rendered, filed, urls, findings, brandCss, provenance };
 }

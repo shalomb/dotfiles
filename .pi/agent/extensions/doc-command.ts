@@ -32,6 +32,8 @@ const Params = Type.Object({
 	tags: Type.Optional(Type.Array(Type.String())),
 	eyebrow: Type.Optional(Type.String({ description: "small caps line above the title, e.g. '<team> · Draft'" })),
 	summary: Type.Optional(Type.String({ description: "library card summary; defaults to the one-sentence ask" })),
+	prompt: Type.Optional(Type.String({ description: "the request that produced this document; embeds a folded, sanitised provenance recipe in the page" })),
+	nav: Type.Optional(Type.Boolean({ description: "inject the adaptive navigation stylesheet" })),
 });
 
 export default function (pi: ExtensionAPI) {
