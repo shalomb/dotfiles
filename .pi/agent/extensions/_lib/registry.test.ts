@@ -2,7 +2,7 @@ import { describe, expect, test, beforeEach } from "bun:test";
 import { mkdtempSync, mkdirSync, writeFileSync, utimesSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { openRegistry, backfill, search } from "./registry";
+import { openRegistry, backfill, search, tokenize } from "./registry";
 
 const A = "01a1baf3-6ea3-7482-a108-a7ff027dcec6", B = "01a1bbbb-0000-7000-8000-000000000002", C = "01a1bbbb-0000-7000-8000-000000000003";
 const line = (o: object) => JSON.stringify(o) + "\n";
@@ -59,5 +59,14 @@ describe("registry", () => {
 		utimesSync(f, new Date(), new Date(Date.now() + 5000));
 		expect(backfill(db, root, { git })).toEqual({ scanned: 1, skipped: 2 });
 		expect(search(db, { id: B })[0].status).toBe("died-mid-turn");
+	});
+});
+
+describe("tokenize", () => {
+	test("splits paths, camelCase, snake_case and punctuation; lowercases; dedupes", () => {
+		expect(tokenize("rdsClient/sql_index.ts rds")).toEqual(["rds", "client", "sql", "index", "ts"]);
+	});
+	test("drops 1-char tokens", () => {
+		expect(tokenize("a/bc")).toEqual(["bc"]);
 	});
 });

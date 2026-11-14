@@ -37,8 +37,8 @@ function createDbAdapter(path: string): DbAdapter {
 
 export type Registry = DbAdapter;
 export interface GitFacts { branch?: string; repo?: string; worktree?: string; worktreePath?: string; isLinked?: boolean }
-export interface Row { id: string; file: string; cwd: string; repo: string; worktree: string | null; worktree_path: string | null; branch: string | null; profile: string | null; model: string | null; started: string; ended: string | null; status: string; last_activity: string | null; digest: string }
-export interface Criteria { id?: string; cwd?: string; worktree?: string; branch?: string; repo?: string; status?: string; since?: string; keyword?: string; pid?: number; tmuxSession?: string; tmuxWindow?: string; tmuxPane?: string; worktreePath?: string }
+export interface Row { id: string; file: string; cwd: string; repo: string; worktree: string | null; worktree_path: string | null; branch: string | null; profile: string | null; model: string | null; started: string; ended: string | null; status: string; last_activity: string | null; digest: string; hits?: number }
+export interface Criteria { id?: string; cwd?: string; worktree?: string; branch?: string; repo?: string; status?: string; since?: string; keyword?: string; pid?: number; tmuxSession?: string; tmuxWindow?: string; tmuxPane?: string; worktreePath?: string; anyWords?: boolean }
 
 export const defaultDbPath = () => join(process.env.XDG_STATE_HOME ?? join(homedir(), ".local/state"), "pi-registry/registry.db");
 
@@ -61,6 +61,12 @@ CREATE INDEX IF NOT EXISTS idx_inst_sid ON instances(session_id);`);
 		db.exec("PRAGMA user_version = 1");
 	}
 	
+	// Migration: terms column (identifier/path tokens) -> force re-scan to populate
+	if (!(db.query("PRAGMA table_info(sessions)").all() as any[]).some((col: any) => col.name === "terms")) {
+		db.exec("ALTER TABLE sessions ADD COLUMN terms TEXT DEFAULT ''");
+		db.exec("UPDATE sessions SET mtime_ms = 0");
+	}
+
 	// Migration: timestamp clamping (force re-scan for bogus timestamps)
 	const userVersion = (db.query("PRAGMA user_version").get() as any)?.user_version ?? 0;
 	if (userVersion < 2) {
@@ -72,6 +78,26 @@ CREATE INDEX IF NOT EXISTS idx_inst_sid ON instances(session_id);`);
 	return db;
 }
 
+/** Lowercased, deduped word tokens: splits on non-alphanumerics and camelCase; drops 1-char tokens. */
+export function tokenize(text: string): string[] {
+	const out = new Set<string>();
+	for (const t of text.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase().split(/[^a-z0-9]+/)) if (t.length > 1) out.add(t);
+	return [...out];
+}
+
+/** Path-ish strings a tool call touched (path/file args, plus path-like words in shell commands). */
+function toolPaths(content: any): string[] {
+	if (!Array.isArray(content)) return [];
+	const out: string[] = [];
+	for (const p of content) {
+		if (p?.type !== "toolCall" || !p.arguments) continue;
+		for (const k of ["path", "file_path", "file", "filePath"]) if (typeof p.arguments[k] === "string") out.push(p.arguments[k]);
+		if (typeof p.arguments.command === "string") out.push(...(p.arguments.command.match(/[\w.~-]*\/[\w./-]+/g) ?? []));
+	}
+	return out;
+}
+
+const MAX_TERMS_CHARS = 20000;
 const TAIL = 256 * 1024;
 const safe = (l: string): any => { try { return JSON.parse(l); } catch { return undefined; } };
 const clip = (s: string, n: number) => s.replace(/\s+/g, " ").trim().slice(0, n);
@@ -199,7 +225,7 @@ export function backfill(db: Registry, root: string, opts: { git?: (cwd: string)
 	const git = opts.git ?? gitFacts;
 	const isAlive = opts.isAlive ?? ((pid: number) => { try { process.kill(pid, 0); return true; } catch { return false; } });
 	const known = db.query("SELECT mtime_ms, size FROM sessions WHERE file=?");
-	const ins = db.query(`INSERT OR REPLACE INTO sessions (id,file,cwd,repo,worktree,worktree_path,branch,profile,model,started,ended,status,last_activity,digest,mtime_ms,size) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+	const ins = db.query(`INSERT OR REPLACE INTO sessions (id,file,cwd,repo,worktree,worktree_path,branch,profile,model,started,ended,status,last_activity,digest,mtime_ms,size,terms) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
 	
 	// Cache git results per cwd to avoid repeated git calls
 	const gitCache = new Map<string, GitFacts>();
@@ -220,10 +246,16 @@ export function backfill(db: Registry, root: string, opts: { git?: (cwd: string)
 		if (head?.type !== "session" || !head.id) continue;
 		let model: string | null = null, firstA = "", lastA = "";
 		const prompts: string[] = [];
+		const termSrc: string[] = [];
 		for (const l of lines) {
 			if (l.includes('"type":"model_change"')) { const o = safe(l); if (o?.modelId) model = o.modelId; }
-			else if (l.includes('"role":"user"')) { const t = clip(textOf(safe(l)?.message?.content), 300); if (t) prompts.push(t); }
-			else if (l.includes('"role":"assistant"')) { const t = clip(textOf(safe(l)?.message?.content), 300); if (t) { firstA ||= t; lastA = t; } }
+			else if (l.includes('"role":"user"')) { const t = clip(textOf(safe(l)?.message?.content), 300); if (t) { prompts.push(t); termSrc.push(t); } }
+			else if (l.includes('"role":"assistant"')) {
+				const content = safe(l)?.message?.content;
+				const t = clip(textOf(content), 300);
+				if (t) { firstA ||= t; lastA = t; termSrc.push(t); }
+				termSrc.push(...toolPaths(content));
+			}
 		}
 		
 		// Get git facts (with caching)
@@ -245,7 +277,7 @@ export function backfill(db: Registry, root: string, opts: { git?: (cwd: string)
 		const liveInst = db.query("SELECT pid FROM instances WHERE session_id=? AND ended IS NULL").get(head.id) as any;
 		if (liveInst && isAlive(liveInst.pid)) status = "running";
 		const digest = [...prompts, firstA, lastA].filter(Boolean).join("\n");
-		ins.run(head.id, file, head.cwd ?? "", repo, worktree, worktreePath, branch, opts.profile ?? null, model, started, status === "ended" ? lastActivity : null, status, lastActivity, digest, st.mtimeMs, st.size);
+		ins.run(head.id, file, head.cwd ?? "", repo, worktree, worktreePath, branch, opts.profile ?? null, model, started, status === "ended" ? lastActivity : null, status, lastActivity, digest, st.mtimeMs, st.size, tokenize(termSrc.join(" ")).join(" ").slice(0, MAX_TERMS_CHARS));
 		scanned++;
 	}
 	return { scanned, skipped };
@@ -257,15 +289,23 @@ export function search(db: Registry, c: Criteria): Row[] {
 	eq("id", c.id); eq("cwd", c.cwd); eq("worktree", c.worktree); eq("branch", c.branch); eq("repo", c.repo); eq("status", c.status);
 	if (c.worktreePath) { w.push("s.worktree_path=?"); a.push(c.worktreePath); }
 	if (c.since) { w.push("s.last_activity>=?"); a.push(c.since); }
-	for (const word of (c.keyword ?? "").split(/\s+/).filter(Boolean)) { w.push("s.digest LIKE ? ESCAPE '\\'"); a.push(`%${word.replace(/[\\%_]/g, "\\$&")}%`); }
+	const words = (c.keyword ?? "").split(/\s+/).filter(Boolean);
+	const like = (word: string) => `%${word.replace(/[\\%_]/g, "\\$&")}%`;
+	const hitExpr = words.map(() => "((s.digest LIKE ? ESCAPE '\\' OR s.terms LIKE ? ESCAPE '\\') + 0)").join(" + ");
+	const hitArgs: string[] = words.flatMap((x) => [like(x), like(x)]);
+	if (words.length) {
+		const per = words.map(() => "(s.digest LIKE ? ESCAPE '\\' OR s.terms LIKE ? ESCAPE '\\')");
+		w.push(c.anyWords ? `(${per.join(" OR ")})` : per.join(" AND "));
+		a.push(...hitArgs);
+	}
 	const ic: string[] = [];
 	if (c.pid !== undefined) { ic.push("pid=?"); a.push(c.pid); }
 	if (c.tmuxSession) { ic.push("tmux_session=?"); a.push(c.tmuxSession); }
 	if (c.tmuxWindow) { ic.push("tmux_window=?"); a.push(c.tmuxWindow); }
 	if (c.tmuxPane) { ic.push("tmux_pane=?"); a.push(c.tmuxPane); }
 	if (ic.length) w.push(`s.id IN (SELECT session_id FROM instances WHERE ${ic.join(" AND ")})`);
-	const sql = `SELECT s.id,s.file,s.cwd,s.repo,s.worktree,s.worktree_path,s.branch,s.profile,s.model,s.started,s.ended,s.status,s.last_activity,s.digest FROM sessions s ${w.length ? "WHERE " + w.join(" AND ") : ""} ORDER BY s.last_activity DESC`;
-	return db.query(sql).all(...a) as Row[];
+	const sql = `SELECT s.id,s.file,s.cwd,s.repo,s.worktree,s.worktree_path,s.branch,s.profile,s.model,s.started,s.ended,s.status,s.last_activity,s.digest${words.length ? `, (${hitExpr}) AS hits` : ""} FROM sessions s ${w.length ? "WHERE " + w.join(" AND ") : ""} ORDER BY s.last_activity DESC`;
+	return db.query(sql).all(...(words.length ? [...hitArgs, ...a] : a)) as Row[];
 }
 
 export interface InstanceData {

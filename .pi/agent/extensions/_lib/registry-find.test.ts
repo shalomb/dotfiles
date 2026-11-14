@@ -296,17 +296,71 @@ describe("runFind gum enrichment", () => {
 	});
 });
 
-describe("scopeToRepo", () => {
-	const { scopeToRepo } = require("./registry-find");
-	test("bare keyword scopes to repo", () => {
-		expect(scopeToRepo({ keyword: "x" }, { json: false }, "/r")).toEqual({ keyword: "x", repo: "/r" });
+describe("search ladder", () => {
+	let root: string;
+	let dbPath: string;
+	const io = { write: () => {}, error: () => {} };
+	const toolCall = (path: string) => line({ type: "message", timestamp: "2026-11-08T11:40:00.000Z",
+		message: { role: "assistant", content: [{ type: "toolCall", name: "read", arguments: { path } }] } });
+
+	beforeEach(() => {
+		root = mkdtempSync(join(tmpdir(), "ladder-"));
+		dbPath = join(tmpdir(), `ladder-${Date.now()}-${Math.random()}.db`);
+		put(root, "--r-.worktrees-wt-a--", "2026-11-08T11-37-58-180Z", A, "/r/.worktrees/wt-a",
+			msg("user", undefined, "fix the flux capacitor") + toolCall("/x/db/migrateUsers_v2.sql") + msg("assistant", "stop", "done"));
+		put(root, "--r--", "2026-11-08T12-00-00-000Z", B, "/r",
+			msg("user", undefined, "hello world") + msg("assistant", "stop", "hello back"));
 	});
-	test("other filters or --everywhere leave it alone", () => {
-		expect(scopeToRepo({ keyword: "x", branch: "b" }, { json: false }, "/r")).toEqual({ keyword: "x", branch: "b" });
-		expect(scopeToRepo({ keyword: "x" }, { json: false, everywhere: true }, "/r")).toEqual({ keyword: "x" });
-		expect(scopeToRepo({}, { json: false }, "/r")).toEqual({});
+	const run = (args: string[], cwd: string) => runFind([...args, "--db", dbPath, "--root", root], io, cwd);
+
+	test("rung 1: all words, in repo, no note", () => {
+		const out = run(["flux"], "/r");
+		expect(out).toContain(A.slice(0, 8));
+		expect(out).not.toContain(B.slice(0, 8));
+		expect(out).not.toContain("note:");
 	});
-	test("parses -g", () => {
-		expect(parseFindArgs(["-g", "x"]).options.everywhere).toBe(true);
+
+	test("rung 2: some words, in repo, with note", () => {
+		const out = run(["flux", "hello"], "/r");
+		expect(out).toContain("note:");
+		expect(out).toContain(A.slice(0, 8));
+		expect(out).toContain(B.slice(0, 8));
+	});
+
+	test("rung 3: outside the repo only after the repo is exhausted", () => {
+		const out = run(["flux"], "/other");
+		expect(out).toContain("note:");
+		expect(out).toContain("other repos");
+		expect(out).toContain(A.slice(0, 8));
+	});
+
+	test("last rung: recent sessions in this repo", () => {
+		const out = run(["zzzzqqq"], "/r");
+		expect(out).toContain("note:");
+		expect(out).toContain("recent");
+		expect(out).toContain(B.slice(0, 8));
+	});
+
+	test("-g skips the repo rungs", () => {
+		const out = run(["-g", "flux"], "/other");
+		expect(out).toContain(A.slice(0, 8));
+		expect(out).not.toContain("note:");
+	});
+
+	test("tool-call path tokens are searchable (camelCase and snake_case split)", () => {
+		expect(run(["migrate", "users"], "/r")).toContain(A.slice(0, 8));
+		expect(run(["migrate", "users"], "/r")).not.toContain("note:");
+	});
+
+	test("same-worktree sessions rank above other worktrees in the repo", () => {
+		const out = run(["hello", "flux"], "/r");
+		expect(out.indexOf(B.slice(0, 8))).toBeLessThan(out.indexOf(A.slice(0, 8)));
+	});
+
+	test("--json stays a plain array; note goes to stderr", () => {
+		let err = "";
+		const out = runFind(["flux", "hello", "--json", "--db", dbPath, "--root", root], { write: () => {}, error: (m) => { err += m; } }, "/r");
+		expect(Array.isArray(JSON.parse(out))).toBe(true);
+		expect(err).toContain("note:");
 	});
 });

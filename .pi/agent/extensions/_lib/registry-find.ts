@@ -3,8 +3,7 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { enrichRows } from "./registry-gum";
-import { gitFacts } from "./registry";
-import { openRegistry, backfill, search, reapLost, defaultDbPath, type Criteria, type Row } from "./registry";
+import { gitFacts, openRegistry, backfill, search, reapLost, defaultDbPath, type Criteria, type Registry, type Row } from "./registry";
 
 export interface FindOptions {
 	json: boolean;
@@ -107,12 +106,44 @@ export function parseFindArgs(argv: string[], now = new Date()): FindArgs {
 	return { criteria, options };
 }
 
-/** A bare keyword search (no other filter) is scoped to the current repo (all its branches/worktrees). */
-export function scopeToRepo(c: Criteria, o: FindOptions, repo: string): Criteria {
-	if (o.everywhere || !c.keyword) return c;
-	const { keyword, ...rest } = c;
-	if (Object.values(rest).some((v) => v !== undefined)) return c;
-	return { ...c, repo };
+export interface Where { repoPath: string; worktreePath: string }
+
+export interface Ladder { rows: Row[]; note?: string }
+
+const ZONE_SAME_WORKTREE = 1;
+const ZONE_SAME_REPO = 0.9;
+const ZONE_ELSEWHERE = 0.5;
+
+/**
+ * Keyword search as a ladder of rungs, like /locate: exhaust the current repo
+ * (all words, then some words) before looking elsewhere, then fall back to recent
+ * sessions in this repo. The first rung with results wins; later rungs carry a note.
+ * Results rank by (share of words matched) x (zone: this worktree > this repo > elsewhere).
+ */
+export function ladderSearch(db: Registry, c: Criteria, o: FindOptions, here: Where): Ladder {
+	const words = (c.keyword ?? "").split(/\s+/).filter(Boolean);
+	if (!words.length) return { rows: search(db, c) };
+	const others = Object.entries(c).some(([k, v]) => k !== "keyword" && v !== undefined);
+	const scoped = !o.everywhere && !others;
+	const kw = words.join(" ");
+	const inRepo: Criteria = scoped ? { ...c, repo: here.repoPath } : c;
+	const rungs: { c: Criteria; note?: string }[] = [{ c: inRepo }];
+	if (words.length > 1) rungs.push({ c: { ...inRepo, anyWords: true }, note: `no session has all of "${kw}"; showing sessions matching some of the words` });
+	if (scoped) {
+		rungs.push({ c, note: `nothing for "${kw}" in this repo; showing other repos` });
+		if (words.length > 1) rungs.push({ c: { ...c, anyWords: true }, note: `nothing for "${kw}" in this repo; showing other repos matching some of the words` });
+		const { keyword: _k, ...bare } = c;
+		rungs.push({ c: { ...bare, repo: here.repoPath }, note: `nothing matched "${kw}" anywhere; showing recent sessions in this repo` });
+	}
+	for (const r of rungs) {
+		const rows = search(db, r.c);
+		if (!rows.length) continue;
+		const zone = (x: Row) => ((x.worktree_path ?? x.repo) === here.worktreePath ? ZONE_SAME_WORKTREE : x.repo === here.repoPath ? ZONE_SAME_REPO : ZONE_ELSEWHERE);
+		const score = (x: Row) => (x.hits !== undefined ? Math.min(1, x.hits / words.length) : 1) * zone(x);
+		const ranked = rows.map((x, i) => ({ x, i, s: score(x) })).sort((p, q) => q.s - p.s || p.i - q.i).map((p) => p.x);
+		return { rows: ranked, note: r.note };
+	}
+	return { rows: [] };
 }
 
 export interface IO {
@@ -153,8 +184,10 @@ Filters:
   --since <when>          7d, 12h, 2w or ISO date
   --keyword <text>        search prompts/digest (bare words work too)
 
-With only a keyword and no other filter, search is limited to the current repo
-(all its branches and worktrees); add -g/--everywhere to search all sessions.
+Keyword search widens in rungs, stopping at the first with results (a note says which):
+  all words in this repo -> some words in this repo -> other repos -> recent in this repo.
+Results rank this worktree > this repo > elsewhere. Use -g/--everywhere to skip the repo rungs;
+any other filter also disables them.
 
 Options:
   --json                  JSON output
@@ -174,9 +207,10 @@ Examples:
   pi-find flux capacitor --all
 `;
 
-function renderTable(rows: Row[], limit?: number): string {
+function renderTable(rows: Row[], limit?: number, note?: string): string {
 	const display = limit ? rows.slice(0, limit) : rows;
 	const lines: string[] = [];
+	if (note) lines.push(`note: ${note}`);
 	lines.push("ID        STATUS          LAST ACTIVITY     BRANCH/WORKTREE      CWD");
 	lines.push("─".repeat(100));
 
@@ -198,10 +232,8 @@ function renderTable(rows: Row[], limit?: number): string {
 	return lines.join("\n");
 }
 
-export function runFind(argv: string[], _io?: IO, cwd = process.cwd()): string {
-	const parsed = parseFindArgs(argv);
-	const { options } = parsed;
-	const criteria = scopeToRepo(parsed.criteria, options, gitFacts(cwd).repo ?? cwd);
+export function runFind(argv: string[], io?: IO, cwd = process.cwd()): string {
+	const { criteria, options } = parseFindArgs(argv);
 	if (options.help) return USAGE;
 	const cap = options.all ? undefined : (options.limit ?? DEFAULT_LIMIT);
 	const dbPath = options.db ?? defaultDbPath();
@@ -214,12 +246,15 @@ export function runFind(argv: string[], _io?: IO, cwd = process.cwd()): string {
 		backfill(db, sessionsRoot);
 	}
 
-	const results = search(db, criteria);
+	const facts = gitFacts(cwd);
+	const repoPath = facts.repo ?? cwd;
+	const { rows: results, note } = ladderSearch(db, criteria, options, { repoPath, worktreePath: facts.worktreePath ?? repoPath });
 	const limited = cap ? results.slice(0, cap) : results;
 
 	if (options.json) {
+		if (note) io?.error(`note: ${note}\n`);
 		return JSON.stringify(enrichRows(limited, options.gumDb), null, 2);
 	}
 
-	return renderTable(results, cap);
+	return renderTable(results, cap, note);
 }
