@@ -1,10 +1,12 @@
 // Spike tests for the pi-find hypotheses (docs/plans/pi-find-ux/handoff.md).
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openRegistry, type Registry } from "./registry";
 import { ftsSearch, refreshFts } from "./registry-fts";
+import { defaultResumeDeps, resolveTargetWorktree, type ResumeSession } from "./registry-resume";
 
 /** Deterministic PRNG so the spikes do not flake. */
 function rng(seed: number) {
@@ -81,5 +83,41 @@ describe("H2 speed: p95 <= 300 ms at 5000 sessions", () => {
 });
 
 describe("H3 resume", () => {
-	test.todo("H3 resume never top level");
+	const git = (cwd: string, ...a: string[]) => execFileSync("git", ["-C", cwd, ...a], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+	function fixture(linked: string[]) {
+		const repo = realpathSync(mkdtempSync(join(tmpdir(), "h3-")));
+		git(repo, "init", "-q", "-b", "main");
+		git(repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "init");
+		mkdirSync(join(repo, ".worktrees"));
+		for (const n of linked) git(repo, "worktree", "add", "-q", "-b", n, join(repo, ".worktrees", n));
+		return repo;
+	}
+	const mk = (repo: string, i: number, cwd: string, wt: string | null): ResumeSession => ({ id: `s${i}`, cwd, repo, worktree: wt, worktree_path: wt ? join(repo, ".worktrees", wt) : null, branch: wt, profile: null });
+
+	test("H3 resume never top level when a worktree exists (real git worktrees)", () => {
+		const repo = fixture(["a", "b", "c"]);
+		try {
+			git(repo, "worktree", "remove", "--force", join(repo, ".worktrees", "c"));
+			const sessions: ResumeSession[] = [];
+			let i = 0;
+			for (const n of ["a", "b", "c", "gone"]) for (const sub of ["", "/src"]) sessions.push(mk(repo, i++, join(repo, ".worktrees", n) + sub, n));
+			for (let k = 0; k < 20; k++) sessions.push(mk(repo, i++, repo, null), mk(repo, i++, join(repo, "sub", String(k)), null));
+			let top = 0;
+			for (const s of sessions) {
+				const r = resolveTargetWorktree(s, defaultResumeDeps);
+				if (r.kind === "worktree" && r.path === repo) top++;
+				if (r.kind === "pick" && r.candidates.some((c) => c.path === repo)) top++;
+				expect(r.kind === "create").toBe(false);
+			}
+			expect(top).toBe(0);
+			expect(resolveTargetWorktree(mk(repo, 900, join(repo, ".worktrees/a/src"), "a"), defaultResumeDeps)).toEqual({ kind: "worktree", path: join(repo, ".worktrees/a") });
+			expect(resolveTargetWorktree(mk(repo, 901, join(repo, ".worktrees/c"), "c"), defaultResumeDeps).kind).toBe("pick");
+		} finally { rmSync(repo, { recursive: true, force: true }); }
+	});
+
+	test("H3 resume with no worktrees creates one instead of using the top level", () => {
+		const repo = fixture([]);
+		try { expect(resolveTargetWorktree(mk(repo, 1, repo, null), defaultResumeDeps).kind).toBe("create"); }
+		finally { rmSync(repo, { recursive: true, force: true }); }
+	});
 });
