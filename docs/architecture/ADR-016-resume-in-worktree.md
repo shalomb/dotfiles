@@ -1,6 +1,6 @@
 # ADR-016: Resume sessions inside a worktree, never at the repo top level
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-14
 - **Decider(s):** repo owner
 - **Consulted:** pi-profile owner (same person)

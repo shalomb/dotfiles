@@ -1,6 +1,6 @@
 # ADR-014: Rank sessions by weighted match across widening scopes
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-14
 - **Decider(s):** repo owner
 - **Consulted:** pi-profile owner (same person)

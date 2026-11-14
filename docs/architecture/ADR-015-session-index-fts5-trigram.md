@@ -1,6 +1,6 @@
 # ADR-015: Index sessions with SQLite FTS5 and trigram fuzzy match
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-14
 - **Decider(s):** repo owner
 - **Consulted:** pi-profile owner (same person)
