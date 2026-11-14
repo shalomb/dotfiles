@@ -11,7 +11,7 @@ class TestTmux:
     def test_tmux_configuration(self, cmd, test_env):
         """Test that tmux configuration is valid."""
         # Start tmux server first
-        cmd('tmux start-server', env=test_env)
+        cmd('tmux new-session -d -s cfgtest', env=test_env)
         
         result = cmd('tmux show-options -g default-shell', env=test_env)
         assert result['success'], f"tmux config invalid: {result['stderr']}"
@@ -20,7 +20,7 @@ class TestTmux:
     def test_tmux_environment(self, cmd, test_env):
         """Test that tmux global environment is set."""
         # Start tmux server first
-        cmd('tmux start-server', env=test_env)
+        cmd('tmux new-session -d -s cfgtest', env=test_env)
         
         result = cmd('tmux show-environment -g PATH', env=test_env)
         assert result['success'], f"tmux environment not set: {result['stderr']}"

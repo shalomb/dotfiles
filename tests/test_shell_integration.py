@@ -15,15 +15,15 @@ class TestShellIntegration:
         # Create a test script that sources bash_profile from repo
         test_script = '''
         source .config/bash/profile
-        echo "BASH_RC_SOURCED: $BASH_RC_SOURCED"
         echo "PATH: $PATH"
         '''
         
-        result = cmd(f'bash -c "{test_script}"', env=clean_env)
+        result = cmd(f'bash -c \'{test_script}\'', env=clean_env)
         assert result['success'], f"bash_profile sourcing failed: {result['stderr']}"
         
         output = result['stdout']
-        assert 'BASH_RC_SOURCED: 1' in output, "bashrc not sourced by bash_profile"
+        # ADR-001: profile sets env (PATH) and must NOT source bashrc
+        assert '/home/unop/.local/bin' in output, "PATH not set by profile"
         assert '/home/unop/.local/bin' in output, "PATH not set by bash_profile"
 
     def test_bashrc_sources_profile(self, cmd, test_env):
@@ -37,7 +37,7 @@ class TestShellIntegration:
         echo "PATH: $PATH"
         '''
         
-        result = cmd(f'bash -c "{test_script}"', env=clean_env)
+        result = cmd(f'bash -c \'{test_script}\'', env=clean_env)
         assert result['success'], f"bashrc sourcing failed: {result['stderr']}"
         
         output = result['stdout']
