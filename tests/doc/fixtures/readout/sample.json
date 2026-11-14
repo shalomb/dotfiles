@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "eyebrow": "DEMO-7 · Reporting service in a test account · engineer's view",
+    "title": "The test account by Friday is buildable, but three open choices decide its shape: storage, access and size",
+    "lede": "The ticket asks for two servers. The diagram attached to it also needs a load balancer and a certificate. The reference copy is bigger and older than either. Until three things are settled we cannot approve a plan.",
+    "asof": "3 March 2031",
+    "foot": "Source: a made-up scenario for testing the readout template. Colours are the author's reading, not a measurement."
+  },
+  "layers": ["The ask", "The pattern to copy", "The libraries", "The target", "The handoff"],
+  "nodes": [
+    {"id": "t", "layer": 0, "kind": "Ticket", "title": "2 servers, medium size, test account by Friday", "rag": "A",
+     "plain": "The ticket lists one app server and one database server, both medium. Production follows next month.",
+     "needs": "Confirm sizing and what done includes.", "feeds": ["B", "C"]},
+    {"id": "d", "layer": 0, "kind": "Diagram", "title": "Also an ALB and a certificate", "rag": "A",
+     "plain": "The diagram in a comment needs HTTPS in front of the app. Those pieces are not in the ticket list.",
+     "needs": "Is the front door in scope for the test account?", "feeds": ["B"]},
+    {"id": "p", "layer": 1, "kind": "Reference", "title": "demo-reference: 3 servers, 2 SG, ALB", "rag": "G",
+     "plain": "The reference folder already builds the full pattern and is proven. It uses large servers and keeps database backups with PITR.",
+     "needs": "", "feeds": ["A", "C"]},
+    {"id": "m", "layer": 2, "kind": "Library pins", "title": "Server library 1.3, eight majors behind", "rag": "A",
+     "plain": "The reference pins old library versions. Copying them works but is old.",
+     "needs": "Which source is the truth for versions?", "feeds": ["A"]},
+    {"id": "w", "layer": 3, "kind": "Account", "title": "Test account is empty; name unknown", "rag": "R",
+     "plain": "The test folder is an empty scaffold. The ticket carries no account code, so the name cannot be derived.",
+     "needs": "Account name or code.", "feeds": []},
+    {"id": "b", "layer": 3, "kind": "Branch", "title": "Draft branch reported, not visible", "rag": "R",
+     "plain": "A comment mentions a draft branch, but the branch list shows none. It may be unpushed.",
+     "needs": "Ask the owner before duplicating work.", "feeds": []},
+    {"id": "h", "layer": 4, "kind": "Handoff", "title": "Handoff table lists servers only", "rag": "N",
+     "plain": "After apply, the handoff table may show servers only and miss the ALB.",
+     "needs": "Test with a state holding every resource type.", "feeds": ["B"]}
+  ],
+  "conflicts": [
+    {"a": "t", "b": "d", "label": "scope?"},
+    {"a": "w", "b": "b", "label": "duplicate?"}
+  ],
+  "links": [["t", "p"], ["d", "p"], ["p", "m"], ["m", "w"], ["w", "h"]],
+  "problem": "We are asked to copy a proven pattern into an empty account on a deadline, but the ticket, the diagram and the pattern describe three different systems, and we do not yet know the account name or whether someone has started a branch.",
+  "choices": [
+    {"id": "A", "question": "how to store and back up data", "why": "Decide once we know which library source is the truth.",
+     "options": [
+       {"id": "A1", "title": "Copy the reference storage", "pro": "Known to work", "con": "Old; becomes debt on day one"},
+       {"id": "A2", "title": "Use the newest storage module", "pro": "Current and supported", "con": "Untried for this workload"},
+       {"id": "A3", "title": "Copy now, upgrade in a follow-up", "pro": "Meets the date and keeps the upgrade visible", "con": "Two changes to review", "suggestion": true}]},
+    {"id": "B", "question": "what is in scope for the test account", "why": "Decide once the requester confirms whether HTTPS is needed on day one.",
+     "options": [
+       {"id": "B1", "title": "Servers and SG only", "pro": "Exactly what the ticket lists", "con": "No HTTPS front door"},
+       {"id": "B2", "title": "Servers plus ALB and certificate", "pro": "Matches the diagram", "con": "Needs a DNS name, not yet known"},
+       {"id": "B3", "title": "Servers first, front door second", "pro": "Unblocks servers while DNS is settled", "con": "Test account not fully usable at first"}]},
+    {"id": "C", "question": "what size the servers are", "why": "Decide once the requester confirms the ticket sizing.",
+     "options": [
+       {"id": "C1", "title": "Medium for both, as the ticket says", "pro": "Follows the request, cheaper", "con": "Half the reference size"},
+       {"id": "C2", "title": "Reference sizes (large)", "pro": "Proven for this app", "con": "Contradicts the ticket; costs more"},
+       {"id": "C3", "title": "Medium now, resize if tests show a need", "pro": "Follows the ticket and stays reversible", "con": "Needs a resize step in the runbook"}]}
+  ],
+  "needs": [
+    {"need": "The DNS name and certificate domain", "from": "Requester", "settles": "B2 versus B1 and B3"},
+    {"need": "Confirmation that the front door is in scope", "from": "Requester", "settles": "Choice B"},
+    {"need": "Confirmation of sizing: ticket says medium, reference uses large", "from": "Requester", "settles": "Choice C"},
+    {"need": "Target account name or code", "from": "Requester", "settles": "Whether the change can be drafted at all"},
+    {"need": "Which registry holds the true library versions", "from": "Platform team", "settles": "Choice A"}
+  ],
+  "risks": [
+    {"risk": "Sizing is half the reference; the database may be undersized", "roam": "MITIGATE", "action": "Start at the ticket size and add a resize step to the runbook."},
+    {"risk": "We duplicate work already on an unpushed branch", "roam": "RESOLVE", "action": "Ask the owner before opening anything."},
+    {"risk": "Copied pins are eight majors old", "roam": "OWN", "action": "Record the choice and open the upgrade as its own task."},
+    {"risk": "Test and production arrive in one ticket", "roam": "ACCEPT", "action": "One environment per change; production waits until next month."}
+  ],
+  "glossary": {
+    "ALB": "a load balancer: the front door that spreads web traffic across servers",
+    "SG": "security group: the firewall rules around a server",
+    "PITR": "point-in-time recovery: restore a database to any moment in the last days"
+  }
+}
