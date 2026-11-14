@@ -22,5 +22,6 @@ Each vision capability, where it lives, and how it is verified. Source of truth 
 
 ## Known gaps
 
-- Modules 4 to 10 are pure libraries; wiring into `doc-command.ts` and the rendered pages is follow-up work.
-- Scratch promote is not implemented (deferred in handoff-slice-1).
+- Scratch promote is now implemented (`scratch promote [--to-doc|--to-obsidian]`).
+- Provenance, nav, and brand modules are wired into `doc_publish` / `doc-command.ts`.
+- Remaining pure modules (dossiers, capture, ranking, dashboard) are tested libraries; wiring into slash subcommands is scheduled for the next slice.
