@@ -173,3 +173,122 @@ def test_outside_git_repo_fails(tmp_path, root):
 def test_rejects_note_name_escaping_the_store(repo, root):
     result = scratch(repo, root, "path", "../evil")
     assert result.returncode != 0
+
+
+def write_note(root, name, text, project="proj", wt="proj"):
+    note = root / project / wt / f"{name}.md"
+    note.parent.mkdir(parents=True, exist_ok=True)
+    note.write_text(text)
+    return note
+
+
+def test_scratch_promote_help():
+    result = subprocess.run([str(SCRATCH), "promote", "--help"], capture_output=True, text=True)
+    assert result.returncode == 0
+    assert "--to-doc" in result.stdout and "--to-obsidian" in result.stdout
+
+
+def test_scratch_promote_defaults_to_doc_and_keeps_source(repo, root):
+    note = write_note(root, "ideas", "# Cache Design\n\nbody\n")
+    result = scratch(repo, root, "promote", "ideas")
+    assert result.returncode == 0, result.stderr
+    dest = repo / "docs" / "explanation" / "cache-design.md"
+    assert result.stdout.strip() == str(dest)
+    assert dest.read_text() == "# Cache Design\n\nbody\n"
+    assert note.read_text() == "# Cache Design\n\nbody\n"
+
+
+def test_scratch_promote_default_name_is_notes(repo, root):
+    write_note(root, "notes", "# Hello\n")
+    result = scratch(repo, root, "promote")
+    assert result.returncode == 0, result.stderr
+    assert (repo / "docs" / "explanation" / "hello.md").is_file()
+
+
+def test_scratch_promote_purpose_selects_section(repo, root):
+    write_note(root, "ideas", "# Run It\n")
+    result = scratch(repo, root, "promote", "ideas", "--to-doc", "--purpose", "how-to")
+    assert result.returncode == 0, result.stderr
+    assert (repo / "docs" / "how-to" / "run-it.md").is_file()
+
+
+def test_scratch_promote_rejects_unknown_purpose(repo, root):
+    write_note(root, "ideas", "# X\n")
+    assert scratch(repo, root, "promote", "ideas", "--purpose", "bogus").returncode != 0
+
+
+def test_scratch_promote_title_from_note_name_adds_heading(repo, root):
+    write_note(root, "cache-ideas", "just text\n")
+    result = scratch(repo, root, "promote", "cache-ideas")
+    assert result.returncode == 0, result.stderr
+    dest = repo / "docs" / "explanation" / "cache-ideas.md"
+    assert dest.read_text() == "# Cache Ideas\n\njust text\n"
+
+
+def test_scratch_promote_title_ignores_heading_in_code_fence(repo, root):
+    write_note(root, "ideas", "```\n# not a title\n```\n")
+    result = scratch(repo, root, "promote", "ideas")
+    assert result.returncode == 0, result.stderr
+    assert (repo / "docs" / "explanation" / "ideas.md").is_file()
+
+
+def test_scratch_promote_explicit_title_replaces_heading(repo, root):
+    write_note(root, "ideas", "# Old\n\nbody\n")
+    result = scratch(repo, root, "promote", "ideas", "--title", "New Name")
+    assert result.returncode == 0, result.stderr
+    dest = repo / "docs" / "explanation" / "new-name.md"
+    assert dest.read_text() == "# New Name\n\nbody\n"
+
+
+def test_scratch_promote_missing_note_fails_without_writing(repo, root):
+    result = scratch(repo, root, "promote", "ghost")
+    assert result.returncode != 0
+    assert "no such note" in result.stderr
+    assert not (repo / "docs").exists()
+
+
+def test_scratch_promote_refuses_to_overwrite(repo, root):
+    write_note(root, "ideas", "# Same\n")
+    assert scratch(repo, root, "promote", "ideas").returncode == 0
+    dest = repo / "docs" / "explanation" / "same.md"
+    dest.write_text("edited\n")
+    result = scratch(repo, root, "promote", "ideas")
+    assert result.returncode != 0
+    assert dest.read_text() == "edited\n"
+
+
+def test_scratch_promote_rejects_bad_note_name(repo, root):
+    assert scratch(repo, root, "promote", "../evil").returncode != 0
+
+
+def test_scratch_promote_to_obsidian(repo, root, tmp_path, monkeypatch):
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    monkeypatch.setenv("OBSIDIAN_VAULT", str(vault))
+    write_note(root, "ideas", "# Vault Note\n")
+    result = scratch(repo, root, "promote", "ideas", "--to-obsidian")
+    assert result.returncode == 0, result.stderr
+    dest = vault / "scratch" / "proj" / "vault-note.md"
+    assert result.stdout.strip() == str(dest)
+    assert dest.is_file()
+    assert not (repo / "docs").exists()
+
+
+def test_scratch_promote_obsidian_missing_vault_fails(repo, root, tmp_path, monkeypatch):
+    monkeypatch.setenv("OBSIDIAN_VAULT", str(tmp_path / "nope"))
+    write_note(root, "ideas", "# X\n")
+    result = scratch(repo, root, "promote", "ideas", "--to-obsidian")
+    assert result.returncode != 0
+    assert "vault not found" in result.stderr
+
+
+def test_scratch_promote_both_targets(repo, root, tmp_path, monkeypatch):
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    monkeypatch.setenv("OBSIDIAN_VAULT", str(vault))
+    write_note(root, "ideas", "# Both\n")
+    result = scratch(repo, root, "promote", "ideas", "--to-doc", "--to-obsidian")
+    assert result.returncode == 0, result.stderr
+    assert len(result.stdout.split()) == 2
+    assert (repo / "docs" / "explanation" / "both.md").is_file()
+    assert (vault / "scratch" / "proj" / "both.md").is_file()

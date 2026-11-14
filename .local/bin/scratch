@@ -4,10 +4,14 @@
 usage: scratch [name]        open note in $EDITOR (default name: notes)
        scratch list          list notes of this worktree, plus orphans
        scratch path [name]   print the note path
+       scratch promote [name] [--to-doc [--purpose P]] [--to-obsidian] [--title T]
+                             copy a note into <repo>/docs/<purpose>/ (default) and/or
+                             the Obsidian vault; prints each destination path
 
 store: ${SCRATCH_ROOT:-~/.cache/agent-skills/scratch}/<repo-slug>/<worktree>/<name>.md
 """
 
+import argparse
 import os
 import re
 import shlex
@@ -16,6 +20,15 @@ import sys
 from pathlib import Path
 
 DEFAULT_NAME = "notes"
+PURPOSES = {
+    "tutorials": "tutorials",
+    "tutorial": "tutorials",
+    "how-to": "how-to",
+    "howto": "how-to",
+    "reference": "reference",
+    "explanation": "explanation",
+}
+DEFAULT_PURPOSE = "explanation"
 
 
 def git(*args):
@@ -104,12 +117,98 @@ def cmd_open(name: str) -> int:
     return subprocess.run([*editor, str(path)], check=False).returncode
 
 
+HEADING = re.compile(r"^# +(.+?)\s*#*\s*$")
+
+
+def extract_title(text: str, name: str) -> str:
+    in_fence = False
+    for line in text.splitlines():
+        if line.startswith(("```", "~~~")):
+            in_fence = not in_fence
+        elif not in_fence and (m := HEADING.match(line)):
+            return m.group(1)
+    return name.replace("-", " ").replace("_", " ").strip().title() or name
+
+
+def slugify(title: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-") or "note"
+
+
+def with_title(text: str, title: str) -> str:
+    """Return text whose first H1 is `title` (prepend one if missing)."""
+    lines = text.splitlines(keepends=True)
+    in_fence = False
+    for i, line in enumerate(lines):
+        if line.startswith(("```", "~~~")):
+            in_fence = not in_fence
+        elif not in_fence and HEADING.match(line):
+            lines[i] = f"# {title}\n"
+            return "".join(lines)
+    return f"# {title}\n\n{text}"
+
+
+def write_new(dest: Path, content: str):
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(dest, "x", encoding="utf-8") as fh:
+            fh.write(content)
+    except FileExistsError:
+        die(f"destination exists, not overwriting: {dest}")
+
+
+def cmd_promote(argv) -> int:
+    ap = argparse.ArgumentParser(
+        prog="scratch promote",
+        description="Promote a scratch note (copy; the source note is kept).",
+    )
+    ap.add_argument("name", nargs="?", default=DEFAULT_NAME)
+    ap.add_argument("--to-doc", action="store_true",
+                    help="copy to <repo>/docs/<purpose>/<title-slug>.md (default)")
+    ap.add_argument("--purpose", choices=sorted(PURPOSES),
+                    help=f"Diataxis section for --to-doc (default {DEFAULT_PURPOSE})")
+    ap.add_argument("--to-obsidian", action="store_true",
+                    help="copy to $OBSIDIAN_VAULT (default ~/obsidian)/scratch/<repo>/")
+    ap.add_argument("--title", help="title (default: first '# ' heading, else note name)")
+    args = ap.parse_args(argv)
+    if args.purpose and args.to_obsidian and not args.to_doc:
+        die("--purpose only applies to --to-doc")
+    to_doc = args.to_doc or not args.to_obsidian
+    src = note_path(args.name)
+    if not src.is_file():
+        die(f"no such note: {args.name} ({src})")
+    text = src.read_text(encoding="utf-8")
+    title = args.title or extract_title(text, args.name)
+    content = with_title(text, title)
+    fname = f"{slugify(title)}.md"
+    dests = []
+    if to_doc:
+        top = git("rev-parse", "--show-toplevel")
+        if top is None:
+            die("not inside a git repository")
+        purpose = PURPOSES[args.purpose or DEFAULT_PURPOSE]
+        dests.append(Path(top) / "docs" / purpose / fname)
+    if args.to_obsidian:
+        vault = Path(os.environ.get("OBSIDIAN_VAULT") or Path.home() / "obsidian")
+        if not vault.is_dir():
+            die(f"obsidian vault not found: {vault}")
+        dests.append(vault / "scratch" / repo_slug() / fname)
+    for dest in dests:
+        if dest.exists():
+            die(f"destination exists, not overwriting: {dest}")
+    for dest in dests:
+        write_new(dest, content)
+        print(dest)
+    return 0
+
+
 def main(argv) -> int:
     if argv[:1] in (["-h"], ["--help"]):
         print(__doc__.strip())
         return 0
     if argv[:1] == ["list"]:
         return cmd_list()
+    if argv[:1] == ["promote"]:
+        return cmd_promote(argv[1:])
     if argv[:1] == ["path"]:
         return cmd_path(argv[1] if len(argv) > 1 else DEFAULT_NAME)
     if len(argv) > 1:
