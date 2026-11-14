@@ -22,3 +22,16 @@ Notes sorted from round 1:
 - Round 2 note on source.discovery = decision (constraint): use gum(1) for repo roots. gum already feeds repo name/remote (`~/.cache/gum/gum.db`).
 
 Replies: round-01.md, round-02.md
+
+## waf nodes (round 3)
+| Node | State | Decision |
+| :-- | :-- | :-- |
+| waf.cost-overhead-cap | settled | Incremental index. p95 300 ms at 5000 sessions. |
+| waf.concurrency | settled | SQLite WAL. Short writes. No lock held in fzf. |
+| waf.partial-salvage | settled | Degrade by layer. Skip and count bad files. |
+| waf.cold-start | settled | Plain OR match at small N. Recent list on empty term. |
+| waf.falsifiable-hypotheses | settled | H1-H3 with kill thresholds. See handoff.md. |
+
+Round 3 note = process request: explain the H numbers in plain STE in every waf round. Applied in the final review round. A change to the design-thinking skill is not made yet.
+
+Replies: round-01.md, round-02.md, round-03.md
