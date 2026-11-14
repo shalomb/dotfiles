@@ -86,6 +86,10 @@ test("findWorktree: matches by relative path (trailing slash), absolute path, di
 	}
 	// also from inside another worktree, relative to the common root
 	expect(await findWorktree(exec, r.dir, ".worktrees/feat-x/")).toMatchObject({ ok: true, dir: r.dir });
+	// can hop to an absolute path even when cwd is outside any git repo
+	const nonGitDir = tmpdir();
+	const fromOutside = await findWorktree(exec, nonGitDir, r.dir);
+	expect(fromOutside).toEqual({ ok: true, dir: r.dir, branch: "feat/x" });
 });
 
 test("findWorktree: unknown target lists the known worktrees", async () => {

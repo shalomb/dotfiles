@@ -85,10 +85,21 @@ export type FindResult = { ok: true; dir: string; branch: string } | { ok: false
 
 /** Resolve an existing worktree by path (relative to cwd or common root), dir name, or branch. */
 export async function findWorktree(exec: Exec, cwd: string, target: string): Promise<FindResult> {
-	const common = await exec("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { cwd });
-	if (common.code !== 0) return { ok: false, error: `not a git repository (git: ${common.stderr.trim()})` };
+	let contextDir = cwd;
+	let common = await exec("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { cwd: contextDir });
+	if (common.code !== 0) {
+		// If cwd is not a git repo, check if target itself resolves to a git worktree or repo
+		const candidateDir = resolve(cwd, target.replace(/\/+$/, ""));
+		const targetCommon = await exec("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { cwd: candidateDir }).catch(() => undefined);
+		if (targetCommon && targetCommon.code === 0) {
+			contextDir = candidateDir;
+			common = targetCommon;
+		} else {
+			return { ok: false, error: `not a git repository (git: ${common.stderr.trim()})` };
+		}
+	}
 	const commonRoot = dirname(common.stdout.trim());
-	const list = await exec("git", ["worktree", "list", "--porcelain"], { cwd });
+	const list = await exec("git", ["worktree", "list", "--porcelain"], { cwd: contextDir });
 	const wts: { dir: string; branch: string }[] = [];
 	for (const block of list.stdout.split(/\n\n+/)) {
 		const dir = /^worktree (.+)$/m.exec(block)?.[1];
