@@ -53,40 +53,14 @@ command:
     exit-status: 0
     timeout: 5000
 
-  # === PI PROFILE SWITCHING (mirrors claude-profile) ===
-
-  # pi-profile must be defined
-  "setsid bash -i -c 'type pi-profile >/dev/null' </dev/null 2>&1":
+  # === PI AUTO PROFILE (logic tested by bats: make test-pi-shell) ===
+  "setsid bash -i -c 'type pi >/dev/null && ! type pi-profile >/dev/null 2>&1' </dev/null 2>&1":
     exit-status: 0
     timeout: 5000
-
-  # Isolation: profile gets own auth.json, other entries symlinked
-  "tests/pi-profile-isolation.sh":
-    exit-status: 0
-    stdout:
-      - "/.pi/profiles/work ARGS=--foo"
-      - "ISOLATED"
-    timeout: 5000
-
-  # Shortcuts and worktree resume chooser (flow tested with stubs)
-  "setsid bash -i -c 'type pi-work pi-personal >/dev/null' </dev/null 2>&1":
-    exit-status: 0
-    timeout: 5000
-
-  "tests/pi-profile-resume.sh":
-    exit-status: 0
-    stdout:
-      - "ALL TESTS PASSED"
-    timeout: 20000
 
   # TokenEconomizer pi extension spawns $TE_PYTHON (default python, absent)
   "setsid bash -i -c 'command -v \"$TE_PYTHON\"' </dev/null 2>&1":
     exit-status: 0
     stdout:
       - "/python3"
-    timeout: 5000
-
-  # Invalid profile names are rejected
-  "setsid bash -i -c 'pi-profile bogus' </dev/null >/dev/null 2>&1":
-    exit-status: 1
     timeout: 5000

@@ -387,6 +387,14 @@ test-pi: ## Run pi extension unit tests (bun; cd needed, bun skips dot-dirs by p
 		cd $(PI_EXT_LIB) && bun test; \
 	fi
 
+.PHONY: test-pi-shell
+test-pi-shell: ## Run pi() shell tests (bats: profile resolution, launch, chooser)
+	@if ! command -v bats >/dev/null 2>&1 && [ ! -x $(HOME)/.local/bin/bats ]; then \
+		echo "SKIP test-pi-shell: bats not installed (npm i -g --prefix ~/.local bats)"; \
+	else \
+		PATH="$(HOME)/.local/bin:$$PATH" bats tests/pi; \
+	fi
+
 .PHONY: test test-fast test-cd
 test: ## Run acceptance tests (usage: make test [FAST=1])
 	@echo "Running bash standards validation..."
@@ -396,6 +404,7 @@ test: ## Run acceptance tests (usage: make test [FAST=1])
 	@echo "Running bash function loading tests..."
 	@tests/bash-function-loading.sh
 	@$(MAKE) --no-print-directory test-pi
+	@$(MAKE) --no-print-directory test-pi-shell
 	@echo "Running Python tests..."
 	@if [ "$(FAST)" = "1" ]; then \
 		echo "Running fast tests..."; \

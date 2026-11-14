@@ -1,0 +1,6 @@
+---
+# pi() picks the profile from the cwd: longest matching prefix wins.
+# Override per-run with PI_PROFILE=work|personal.
+default: personal
+paths:
+  ~/oneTakeda: work
