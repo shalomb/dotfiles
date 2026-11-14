@@ -1,15 +1,30 @@
 #!/usr/bin/env bun
-/** pi-find: search the session registry with filters and render table/JSON. */
-import { realpathSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { runFind } from "../../.pi/agent/extensions/_lib/registry-find";
+/** pi-find: search all pi sessions; on a terminal pick one with fzf and resume it in its worktree and profile. */
+import { readSync } from "node:fs";
+import { runPicker, spawnFzf, hasFzf, gitCreateWorktree, spawnResume } from "../../.pi/agent/extensions/_lib/registry-pick";
 
-const scriptPath = realpathSync(process.argv[1]);
-const scriptDir = dirname(scriptPath);
+/** Line prompt on the terminal; empty answer keeps the suggestion, EOF cancels. */
+function prompt(question: string, suggestion: string): string | null {
+	process.stderr.write(`${question} [${suggestion}]: `);
+	const buf = Buffer.alloc(1);
+	let line = "";
+	while (readSync(0, buf, 0, 1, null) === 1) {
+		if (buf[0] === 10) return line.trim() || suggestion;
+		line += buf.toString();
+	}
+	return null;
+}
 
-const output = runFind(process.argv.slice(2), {
-	write: (s: string) => process.stdout.write(s),
-	error: (s: string) => process.stderr.write(s),
+const result = runPicker(process.argv.slice(2), process.cwd(), {
+	isTTY: Boolean(process.stdout.isTTY && process.stdin.isTTY),
+	fzfAvailable: hasFzf(),
+	io: { write: (s: string) => process.stdout.write(s), error: (s: string) => process.stderr.write(s) },
+	run: spawnFzf,
+	prompt,
+	createWorktree: gitCreateWorktree,
+	warn: (m: string) => process.stderr.write(m + "\n"),
+	launch: spawnResume,
 });
 
-console.log(output);
+if (result.output !== undefined) console.log(result.output);
+process.exit(result.exitCode);

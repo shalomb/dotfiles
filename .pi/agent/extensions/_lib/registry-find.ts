@@ -1,9 +1,9 @@
 /** pi-find CLI: search the session registry with filters and render table/JSON. */
-import { existsSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
 import { enrichRows } from "./registry-gum";
-import { gitFacts, openRegistry, backfill, search, reapLost, defaultDbPath, type Criteria, type Registry, type Row } from "./registry";
+import { gitFacts, openRegistry, search, reapLost, defaultDbPath, type Criteria, type Registry, type Row } from "./registry";
+import { ftsSearch, refreshFts } from "./registry-fts";
+import { backfillAll, discoverRoots, type Root } from "./registry-roots";
 
 export interface FindOptions {
 	json: boolean;
@@ -12,6 +12,7 @@ export interface FindOptions {
 	everywhere?: boolean;
 	help?: boolean;
 	noScan?: boolean;
+	noPick?: boolean;
 	db?: string;
 	gumDb?: string;
 	sessionsRoot?: string;
@@ -33,16 +34,6 @@ function parseSince(v: string, now = new Date()): string | undefined {
 	if (!/^\d{4}-\d{2}-\d{2}/.test(v)) return undefined;
 	const d = new Date(v.length === 10 ? `${v}T00:00:00.000Z` : v);
 	return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
-}
-
-/** Resolve sessions root: PI_CODING_AGENT_DIR/sessions if exists, else ~/.pi/profiles/personal/sessions */
-function defaultSessionsRoot(): string {
-	const piDir = process.env.PI_CODING_AGENT_DIR;
-	if (piDir) {
-		const sessionsDir = join(piDir, "sessions");
-		if (existsSync(sessionsDir)) return sessionsDir;
-	}
-	return join(homedir(), ".pi/profiles/personal/sessions");
 }
 
 export function parseFindArgs(argv: string[], now = new Date()): FindArgs {
@@ -90,6 +81,7 @@ export function parseFindArgs(argv: string[], now = new Date()): FindArgs {
 			case "--everywhere": case "-g": options.everywhere = true; break;
 			case "--help": case "-h": options.help = true; break;
 			case "--no-scan": options.noScan = true; break;
+			case "--no-pick": options.noPick = true; break;
 			case "--db": options.db = val(t); break;
 			case "--gum-db": options.gumDb = val(t); break;
 			case "--root": options.sessionsRoot = val(t); break;
@@ -118,7 +110,8 @@ const ZONE_ELSEWHERE = 0.5;
  * Keyword search as a ladder of rungs, like /locate: exhaust the current repo
  * (all words, then some words) before looking elsewhere, then fall back to recent
  * sessions in this repo. The first rung with results wins; later rungs carry a note.
- * Results rank by (share of words matched) x (zone: this worktree > this repo > elsewhere).
+ * When no rung matches exactly, a fuzzy rung (FTS5 trigram, ADR-015) catches typos and one wrong word.
+ * Results rank by (match) x (zone: this worktree > this repo > elsewhere), ADR-014.
  */
 export function ladderSearch(db: Registry, c: Criteria, o: FindOptions, here: Where): Ladder {
 	const words = (c.keyword ?? "").split(/\s+/).filter(Boolean);
@@ -127,23 +120,45 @@ export function ladderSearch(db: Registry, c: Criteria, o: FindOptions, here: Wh
 	const scoped = !o.everywhere && !others;
 	const kw = words.join(" ");
 	const inRepo: Criteria = scoped ? { ...c, repo: here.repoPath } : c;
-	const rungs: { c: Criteria; note?: string }[] = [{ c: inRepo }];
+	const rungs: { c: Criteria; note?: string; fuzzy?: boolean }[] = [{ c: inRepo }];
 	if (words.length > 1) rungs.push({ c: { ...inRepo, anyWords: true }, note: `no session has all of "${kw}"; showing sessions matching some of the words` });
 	if (scoped) {
 		rungs.push({ c, note: `nothing for "${kw}" in this repo; showing other repos` });
 		if (words.length > 1) rungs.push({ c: { ...c, anyWords: true }, note: `nothing for "${kw}" in this repo; showing other repos matching some of the words` });
+	}
+	rungs.push({ c, fuzzy: true, note: `no exact match for "${kw}"; showing closest fuzzy matches` });
+	if (scoped) {
 		const { keyword: _k, ...bare } = c;
 		rungs.push({ c: { ...bare, repo: here.repoPath }, note: `nothing matched "${kw}" anywhere; showing recent sessions in this repo` });
 	}
 	for (const r of rungs) {
-		const rows = search(db, r.c);
+		const rows = r.fuzzy ? fuzzyRows(db, c, words) : search(db, r.c);
 		if (!rows.length) continue;
 		const zone = (x: Row) => ((x.worktree_path ?? x.repo) === here.worktreePath ? ZONE_SAME_WORKTREE : x.repo === here.repoPath ? ZONE_SAME_REPO : ZONE_ELSEWHERE);
-		const score = (x: Row) => (x.hits !== undefined ? Math.min(1, x.hits / words.length) : 1) * zone(x);
-		const ranked = rows.map((x, i) => ({ x, i, s: score(x) })).sort((p, q) => q.s - p.s || p.i - q.i).map((p) => p.x);
+		const match = (x: Row, i: number) => (r.fuzzy ? (rows.length - i) / rows.length : x.hits !== undefined ? Math.min(1, x.hits / words.length) : 1);
+		const score = (x: Row, i: number) => match(x, i) * zone(x);
+		const ranked = rows.map((x, i) => ({ x, i, s: score(x, i) })).sort((p, q) => q.s - p.s || p.i - q.i).map((p) => p.x);
 		return { rows: ranked, note: r.note };
 	}
 	return { rows: [] };
+}
+
+const FUZZY_LIMIT = 50;
+
+/** Fuzzy matches in FTS rank order, restricted to the non-keyword filters. [] when the index is unavailable. */
+function fuzzyRows(db: Registry, c: Criteria, words: string[]): Row[] {
+	try {
+		const ids = ftsSearch(db, words, FUZZY_LIMIT);
+		const { keyword: _k, ...filters } = c;
+		const allowed = Object.values(filters).some((v) => v !== undefined) ? new Set(search(db, filters).map((r) => r.id)) : null;
+		const out: Row[] = [];
+		for (const id of ids) {
+			if (allowed && !allowed.has(id)) continue;
+			const [row] = search(db, { id });
+			if (row) out.push(row);
+		}
+		return out;
+	} catch { return []; }
 }
 
 export interface IO {
@@ -195,9 +210,10 @@ Options:
   --all                   no row cap
   -g, --everywhere        don't scope a bare keyword search to the current repo
   --no-scan               skip reap/backfill, query the registry as is
+  --no-pick               never open fzf, print the table
   --db <path>             registry database
   --gum-db <path>         gum project db for repo name/remote (default ~/.cache/gum/gum.db)
-  --root <path>           sessions root to backfill from
+  --root <path>           one sessions root to backfill from (default: all known pi session roots)
   -h, --help              this text
 
 Examples:
@@ -211,17 +227,18 @@ function renderTable(rows: Row[], limit?: number, note?: string): string {
 	const display = limit ? rows.slice(0, limit) : rows;
 	const lines: string[] = [];
 	if (note) lines.push(`note: ${note}`);
-	lines.push("ID        STATUS          LAST ACTIVITY     BRANCH/WORKTREE      CWD");
+	lines.push("ID        STATUS          PROFILE      LAST ACTIVITY     BRANCH/WORKTREE      CWD");
 	lines.push("─".repeat(100));
 
 	for (const r of display) {
 		const id = r.id.slice(0, 8);
 		const status = (r.status || "?").padEnd(15);
+		const profile = (r.profile || "—").slice(0, 12).padEnd(12);
 		const activity = formatTimestamp(r.last_activity).padEnd(17);
 		// Show worktree name if present, otherwise branch
 		const branchWt = (r.worktree || r.branch || "—").slice(0, 20).padEnd(20);
 		const cwd = shortCwd(r.cwd).slice(0, 40);
-		lines.push(`${id}  ${status} ${activity} ${branchWt} ${cwd}`);
+		lines.push(`${id}  ${status} ${profile} ${activity} ${branchWt} ${cwd}`);
 		lines.push(`         /resume ${r.id}`);
 	}
 
@@ -232,29 +249,38 @@ function renderTable(rows: Row[], limit?: number, note?: string): string {
 	return lines.join("\n");
 }
 
-export function runFind(argv: string[], io?: IO, cwd = process.cwd()): string {
-	const { criteria, options } = parseFindArgs(argv);
-	if (options.help) return USAGE;
-	const cap = options.all ? undefined : (options.limit ?? DEFAULT_LIMIT);
-	const dbPath = options.db ?? defaultDbPath();
-	const sessionsRoot = options.sessionsRoot ?? defaultSessionsRoot();
+export interface FindResult { rows: Row[]; note?: string; options: FindOptions; cap?: number }
 
-	const db = openRegistry(dbPath);
+/** Scan roots, refresh the index and run the ladder. Rows are not capped; `cap` is the display cap. */
+export function findSessions(argv: string[], cwd = process.cwd()): FindResult {
+	const { criteria, options } = parseFindArgs(argv);
+	const cap = options.all ? undefined : (options.limit ?? DEFAULT_LIMIT);
+	const db = openRegistry(options.db ?? defaultDbPath());
 
 	if (!options.noScan) {
+		const roots: Root[] = options.sessionsRoot ? [{ path: options.sessionsRoot, profile: "custom" }] : discoverRoots({ home: homedir(), env: process.env });
 		reapLost(db);
-		backfill(db, sessionsRoot);
+		backfillAll(db, roots);
 	}
+	try { refreshFts(db); } catch { /* fuzzy rung degrades to exact search */ }
 
 	const facts = gitFacts(cwd);
 	const repoPath = facts.repo ?? cwd;
-	const { rows: results, note } = ladderSearch(db, criteria, options, { repoPath, worktreePath: facts.worktreePath ?? repoPath });
-	const limited = cap ? results.slice(0, cap) : results;
+	const { rows, note } = ladderSearch(db, criteria, options, { repoPath, worktreePath: facts.worktreePath ?? repoPath });
+	return { rows, note, options, cap };
+}
 
+/** Stable output for pipes and --json: table, or JSON array with the note on stderr. */
+export function formatFind({ rows, note, options, cap }: FindResult, io?: IO): string {
 	if (options.json) {
 		if (note) io?.error(`note: ${note}\n`);
-		return JSON.stringify(enrichRows(limited, options.gumDb), null, 2);
+		return JSON.stringify(enrichRows(cap ? rows.slice(0, cap) : rows, options.gumDb), null, 2);
 	}
+	return renderTable(rows, cap, note);
+}
 
-	return renderTable(results, cap, note);
+export function runFind(argv: string[], io?: IO, cwd = process.cwd()): string {
+	const { options } = parseFindArgs(argv);
+	if (options.help) return USAGE;
+	return formatFind(findSessions(argv, cwd), io);
 }
