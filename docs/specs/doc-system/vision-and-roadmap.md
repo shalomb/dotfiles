@@ -1,7 +1,7 @@
 ---
 title: "/doc — Vision, Concepts & Capability Evolution"
 tags: [pi, doc, ideas, tooling, documentation, architecture]
-status: draft-synthesis
+status: delivered
 created: 2026-11-14
 ---
 
