@@ -73,6 +73,7 @@ FAILURES = [
     ("bad date", lambda d: d["deadline"].update(date="10/12/2026"), "deadline.date"),
     ("today after date", lambda d: d["deadline"].update(today="2026-12-11"), "deadline.today"),
     ("ask_by outside range", lambda d: d["deadline"].update(ask_by="2027-01-01"), "deadline.ask_by"),
+    ("fact without basis", lambda d: d["facts"][0].pop("basis"), "facts[0].basis"),
     ("reply without text", lambda d: d["reply"].pop("text"), "reply.text"),
 ]
 

@@ -6,9 +6,13 @@
 Schema and rules: docs/specs/doc-system/readout.md. The renderer validates the
 input, enforces the tone rules, adds the derived layout and counts, and fills
 `__DATA__` in readout.template.html. The not-approved gate lives in the template;
-the input cannot change or omit it.
+the input cannot change or omit it. Shared references, claim labels and the embedded
+recipe come from doc_kernel.py.
 """
-import html, json, math, pathlib, re, sys
+import json, math, pathlib, re, sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from doc_kernel import build_page, check_basis, check_refs, fail  # noqa: E402
 
 TEMPLATE = pathlib.Path(__file__).with_name("readout.template.html")
 HYPE_WORDS = ["seamless", "leverage", "synergy", "robust", "cutting-edge", "game-changing",
@@ -18,11 +22,7 @@ JARGON_TERMS = ["ALB", "ACM", "PITR", "GSI", "TFC", "APMS", "SG", "EBS", "ROAM"]
 RAG = {"R", "A", "G", "N"}
 ROAM = {"RESOLVE", "OWN", "ACCEPT", "MITIGATE"}
 META_FIELDS = ["eyebrow", "title", "lede", "asof", "foot"]
-NOT_TEXT = {"id", "layer", "rag", "roam", "feeds", "a", "b"}
-
-
-def fail(field, message):
-    sys.exit(f"error: {field}: {message}")
+NOT_TEXT = {"id", "layer", "rag", "basis", "roam", "feeds", "a", "b"}
 
 
 def need(obj, key, kind, field):
@@ -52,6 +52,7 @@ def check_structure(doc):
             fail(f"{f}.layer", f"must be an index into layers (0 to {len(layers) - 1}), got {n['layer']!r}")
         if need(n, "rag", str, f) not in RAG:
             fail(f"{f}.rag", f"must be one of R, A, G, N, got {n['rag']!r}")
+        check_basis(n, f)
         node_ids.add(n["id"])
     choice_ids = set()
     for i, c in enumerate(need(doc, "choices", list, "")):
@@ -108,7 +109,7 @@ def check_tone(doc):
     if re.match(r"(simulation|report):", title, re.I) or len(title.split()) < 5:
         fail("meta.title", "must state a finding in 5 or more words, not start 'Simulation:' or 'Report:'")
     glossary = doc.get("glossary", {})
-    body = {k: v for k, v in doc.items() if k not in ("links", "conflicts")}
+    body = {k: v for k, v in doc.items() if k not in ("links", "conflicts", "refs")}
     for path, text in text_fields(body, ""):
         for word in HYPE_WORDS:
             if re.search(rf"(?<![\w-]){re.escape(word)}(?![\w-])", text, re.I):
@@ -125,7 +126,7 @@ def derive(doc):
     for n in doc["nodes"]:
         row = rows.get(n["layer"], 0)
         rows[n["layer"]] = row + 1
-        nodes.append({**{k: n[k] for k in ("id", "kind", "title", "rag", "plain")},
+        nodes.append({**{k: n[k] for k in ("id", "kind", "title", "rag", "basis", "plain")},
                       "needs": n.get("needs", ""), "feeds": n.get("feeds", []),
                       "col": n["layer"], "row": row})
     edges = [{"a": a, "b": b, "kind": "link", "label": ""} for a, b in doc.get("links", [])]
@@ -154,11 +155,9 @@ def main(argv):
     except (OSError, json.JSONDecodeError) as exc:
         sys.exit(f"error: cannot read {argv[1]}: {exc}")
     check_structure(doc)
+    check_refs(doc, text_fields({k: v for k, v in doc.items() if k != "refs"}, ""))
     check_tone(doc)
-    data = derive(doc)
-    payload = json.dumps(data).replace("<", "\\u003c")
-    page = (TEMPLATE.read_text().replace("__TITLE__", html.escape(data["meta"]["title"]))
-            .replace("__DATA__", payload))
+    page = build_page(TEMPLATE, __file__, doc, derive(doc))
     out = pathlib.Path(argv[2])
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page)

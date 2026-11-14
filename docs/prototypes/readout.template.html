@@ -42,6 +42,10 @@ td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
 .foot{color:var(--mut);font-size:13px;margin-top:26px;max-width:860px}
 .tag{display:inline-block;border:1px dashed var(--acc);color:var(--acc);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:0 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
 .gloss{margin:10px 0 0;max-width:860px}.gloss dt{font-weight:700;display:inline}.gloss dd{display:inline;margin:0 0 0 6px}.gloss div{margin:2px 0}
+.basis,.kind{display:inline-block;font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:0 6px;border-radius:4px;margin-left:6px;vertical-align:middle;border:1px solid var(--line);color:var(--mut)}
+.b-measured{color:var(--G);border-color:var(--G)}.b-derived{color:#355c9a;border-color:#355c9a}.b-judged{color:var(--A);border-color:var(--A)}
+.refs li{margin:4px 0}.cite{font-size:.8em;vertical-align:super;text-decoration:none}
+details.made{margin-top:26px;font-size:13px;color:var(--mut);max-width:860px}details.made summary{cursor:pointer}details.made code{font:12px ui-monospace,monospace;word-break:break-all}
 </style></head><body><main>
 <div class="eyebrow" id="eyebrow"></div>
 <h1 id="title"></h1>
@@ -67,18 +71,27 @@ td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
 <h2>Risks and what we do about them</h2>
 <table id="risks"><thead><tr><th>Risk</th><th>ROAM</th><th>What we do</th></tr></thead><tbody></tbody></table>
 
+<div id="refsbox"></div>
 <div class="gate"><b>Nothing here is approved.</b> Read-only: this page describes and changes nothing. A human approves the plan before anything is built.</div>
 <p class="foot" id="foot"></p>
 <div class="foot" id="gloss"></div>
+<details class="made" id="made"><summary>How this page was made</summary><div id="madebody"></div></details>
 </main>
+<script type="application/json" id="recipe">__RECIPE__</script>
 <script>
 const DATA=__DATA__;
 const NS="http://www.w3.org/2000/svg";
 const RAGC={R:"#c0392b",A:"#b7791f",G:"#2f7d57",N:"#8a8f98"},RAGN={R:"Blocked",A:"Open question",G:"Known good",N:"Not started"};
 function el(tag,attrs,kids,ns){const e=ns?document.createElementNS(NS,tag):document.createElement(tag);
-  for(const k in (attrs||{})){if(k==="text")e.textContent=attrs[k];else e.setAttribute(k,attrs[k]);}
+  for(const k in (attrs||{})){if(k==="text"){if(ns)e.textContent=attrs[k];else cite(e,attrs[k]);}else e.setAttribute(k,attrs[k]);}
   (kids||[]).forEach(c=>e.appendChild(c));return e;}
 const S=(t,a,k)=>el(t,a,k,true);
+const REFN={};DATA.refs.forEach(r=>{REFN[r.id]=r.n;});
+function cite(e,text){text.split(/\[(r\d+)\]/).forEach((part,i)=>{
+  if(i%2===0){if(part)e.appendChild(document.createTextNode(part));return;}
+  const a=document.createElement("a");a.setAttribute("href","#ref-"+REFN[part]);a.setAttribute("class","cite");a.setAttribute("data-n",String(REFN[part]));a.textContent="["+REFN[part]+"]";e.appendChild(a);});}
+function backTo(n){const c=document.querySelector('a.cite[data-n="'+n+'"]');if(c)c.scrollIntoView({behavior:"smooth",block:"center"});}
+function basisTag(b){return el("em",{class:"basis b-"+b,text:b});}
 function clear(e){while(e.firstChild)e.removeChild(e.firstChild);}
 function byId(id){return document.getElementById(id);}
 
@@ -109,7 +122,7 @@ function drawMap(sel){
 function wrap(s,n,max){const w=s.split(" "),out=[];let cur="";w.forEach(x=>{if((cur+" "+x).trim().length>n){out.push(cur);cur=x;}else cur=(cur+" "+x).trim();});out.push(cur);
   if(out.length>max){out.length=max;out[max-1]=out[max-1].slice(0,n-1)+"…";}return out;}
 function show(n){drawMap(n.id);const p=byId("panel");clear(p);
-  p.appendChild(el("span",{class:"badge",style:"background:"+RAGC[n.rag],text:RAGN[n.rag]}));
+  p.appendChild(el("span",{class:"badge",style:"background:"+RAGC[n.rag],text:RAGN[n.rag]}));p.appendChild(basisTag(n.basis));
   p.appendChild(el("h3",{text:n.title}));
   p.appendChild(el("div",{class:"l",text:"In plain words"}));p.appendChild(el("div",{text:n.plain}));
   if(n.needs){p.appendChild(el("div",{class:"l",text:"Needs from you"}));p.appendChild(el("div",{class:"need",text:n.needs}));}
@@ -141,19 +154,30 @@ function update(){renderAxes();const n=plans();const s=byId("sum");clear(s);
   s.appendChild(el("div",{text:(n===1?"One plan left. It still needs a human to approve it. ":"complete plans still possible. ")+parts.join(" · ")}));
   kpis();}
 function kpis(){const k=byId("kpis");clear(k);const d=DATA.derived;
-  [[d.layers,"layers to line up ("+COLS.join(", ").toLowerCase()+")"],[d.conflicts,"places where two sources disagree"],
-   [d.choices,"choices open, "+d.plans+" plans at the start"],[plans(),"complete plans still possible"]]
-   .forEach(x=>k.appendChild(el("div",{class:"kpi"},[el("b",{text:String(x[0])}),el("span",{text:x[1]})])));}
+  [[d.layers,"layers to line up ("+COLS.join(", ").toLowerCase()+")","layers"],[d.conflicts,"places where two sources disagree","conflicts"],
+   [d.choices,"choices open, "+d.plans+" plans at the start","choices"],[plans(),"complete plans still possible","plans"]]
+   .forEach(x=>k.appendChild(el("div",{class:"kpi"},[el("b",{text:String(x[0])}),el("span",{text:x[1]}),basisTag(DATA.derived_basis[x[2]])])));}
 function fill(id,rows){const tb=document.querySelector("#"+id+" tbody");rows.forEach(r=>{const tr=el("tr");r.forEach((c,i)=>tr.appendChild(el("td",{text:c,class:(id==="risks"&&i===1)?"roam":""})));tb.appendChild(tr);});}
 
 document.title=DATA.meta.title;
 byId("eyebrow").textContent=DATA.meta.eyebrow+" · as of "+DATA.meta.asof;
-byId("title").textContent=DATA.meta.title;byId("lede").textContent=DATA.meta.lede;byId("problem").textContent=DATA.problem;
+byId("title").textContent=DATA.meta.title;cite(byId("lede"),DATA.meta.lede);cite(byId("problem"),DATA.problem);
 fill("needs",DATA.needs.map(r=>[r.need,r.from,r.settles]));
 fill("risks",DATA.risks.map(r=>[r.risk,r.roam,r.action]));
-byId("foot").textContent=DATA.meta.foot+(DATA.derived.suggestions?" Options tagged suggestion are the author's and are untested.":"");
+cite(byId("foot"),DATA.meta.foot+(DATA.derived.suggestions?" Options tagged suggestion are the author's and are untested.":""));
 const terms=Object.keys(DATA.glossary);
 if(terms.length){const g=byId("gloss");g.appendChild(el("b",{text:"In plain words"}));
   const dl=el("dl",{class:"gloss"});terms.forEach(t=>dl.appendChild(el("div",{},[el("dt",{text:t}),el("dd",{text:DATA.glossary[t]})])));g.appendChild(dl);}
 drawMap(null);if(NODES.length)show(NODES[0]);update();
+if(DATA.refs.length){const box=byId("refsbox");box.appendChild(el("h2",{text:"References"}));
+  const ol=el("ol",{class:"refs"});
+  DATA.refs.forEach(r=>{const li=el("li",{id:"ref-"+r.n},[el("a",{href:r.href,text:r.title}),el("span",{class:"kind",text:r.kind})]);
+    if(r.cited){const back=el("a",{href:"#",text:" ↩"});back.addEventListener("click",ev=>{ev.preventDefault();backTo(r.n);});li.appendChild(back);}
+    else li.appendChild(el("span",{class:"kind",text:"also relevant"}));
+    ol.appendChild(li);});
+  box.appendChild(ol);}
+const RECIPE=JSON.parse(byId("recipe").textContent),made=byId("madebody");
+[["Template",RECIPE.template],["Renderer",RECIPE.renderer_file+" (sha256 "+RECIPE.renderer_sha256.slice(0,12)+")"],["Rebuild",RECIPE.rebuild]]
+  .forEach(x=>made.appendChild(el("div",{},[el("b",{text:x[0]+": "}),el("code",{text:x[1]})])));
+made.appendChild(el("div",{text:RECIPE.note+" The input is embedded in this page as JSON."}));
 </script></body></html>

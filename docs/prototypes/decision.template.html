@@ -2,7 +2,11 @@
 .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.opt{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:16px}.opt.rec{border-color:var(--G);box-shadow:0 0 0 2px #2f7d5722}.opt h3{font:400 21px Georgia,serif;margin:6px 0}.opt ul{margin:6px 0;padding-left:18px;font-size:14px}.g{color:var(--G)}.c{color:var(--R)}
 .clock{display:flex;gap:18px;align-items:center}.bar{flex:1;height:14px;background:#eee9da;border-radius:7px;position:relative}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:7px;background:var(--A)}.bar u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--R)}
 .rec2{background:#fff;border:1px solid var(--line);border-left:5px solid var(--G);border-radius:10px;padding:14px 18px}pre{white-space:pre-wrap;font:14px/1.5 ui-monospace,monospace;background:#f3f1e9;border-radius:10px;padding:14px}
-.gloss dt{font-weight:700;margin-top:6px}.gloss dd{margin:0 0 0 0;color:var(--mut);font-size:14px}.tag{font-size:11px;font-weight:700;color:var(--A);letter-spacing:.08em;text-transform:uppercase}</style></head><body><main>
+.gloss dt{font-weight:700;margin-top:6px}.gloss dd{margin:0 0 0 0;color:var(--mut);font-size:14px}.tag{font-size:11px;font-weight:700;color:var(--A);letter-spacing:.08em;text-transform:uppercase}.basis,.kind{display:inline-block;font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:0 6px;border-radius:4px;margin-left:6px;vertical-align:middle;border:1px solid var(--line);color:var(--mut)}
+.b-measured{color:var(--G);border-color:var(--G)}.b-derived{color:#355c9a;border-color:#355c9a}.b-judged{color:var(--A);border-color:var(--A)}
+.refs li{margin:4px 0}.cite{font-size:.8em;vertical-align:super;text-decoration:none}
+details.made{margin-top:26px;font-size:13px;color:var(--mut);max-width:860px}details.made summary{cursor:pointer}details.made code{font:12px ui-monospace,monospace;word-break:break-all}
+</style></head><body><main>
 <div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="lede" id="lede"></p>
 <div class="kpis" id="kpis"></div>
 <h2>How long we have</h2><div class="card clock" id="clock"></div><p class="sub" id="clocknote" style="margin-top:8px"></p>
@@ -11,14 +15,25 @@
 <h2>What I need, and from whom</h2><table id="needs"><thead><tr><th>I need</th><th>From</th><th>By</th></tr></thead><tbody></tbody></table>
 <div id="replybox"></div>
 <div id="glossbox"></div>
+<div id="refsbox"></div>
 <div class="gate"><b>Nothing here is approved.</b> Read-only: nothing is posted, deleted, renewed or changed by this page. A human decides.</div>
-<p class="foot" id="foot"></p></main>
+<p class="foot" id="foot"></p>
+<details class="made" id="made"><summary>How this page was made</summary><div id="madebody"></div></details>
+</main>
+<script type="application/json" id="recipe">__RECIPE__</script>
 <script>
 const DATA=__DATA__;
-function el(t,a,k){const e=document.createElement(t);for(const x in (a||{})){x==="text"?e.textContent=a[x]:e.setAttribute(x,a[x]);}(k||[]).forEach(c=>e.appendChild(c));return e;}
+function el(t,a,k){const e=document.createElement(t);for(const x in (a||{})){x==="text"?cite(e,a[x]):e.setAttribute(x,a[x]);}(k||[]).forEach(c=>e.appendChild(c));return e;}
+const REFN={};DATA.refs.forEach(r=>{REFN[r.id]=r.n;});
+function cite(e,text){text.split(/\[(r\d+)\]/).forEach((part,i)=>{
+  if(i%2===0){if(part)e.appendChild(document.createTextNode(part));return;}
+  const a=document.createElement("a");a.setAttribute("href","#ref-"+REFN[part]);a.setAttribute("class","cite");a.setAttribute("data-n",String(REFN[part]));a.textContent="["+REFN[part]+"]";e.appendChild(a);});}
+function backTo(n){const c=document.querySelector('a.cite[data-n="'+n+'"]');if(c)c.scrollIntoView({behavior:"smooth",block:"center"});}
+function basisTag(b){return el("em",{class:"basis b-"+b,text:b});}
+
 const $=id=>document.getElementById(id),M=DATA.meta,D=DATA.derived,L=DATA.deadline;
-$("eyebrow").textContent=M.eyebrow;$("title").textContent=M.title;$("lede").textContent=M.lede;
-[[String(D.days_left),"days to "+L.date_label.replace(/^renews$/,"renewal")]].concat(DATA.facts.map(f=>[f.value,f.label]),[[String(D.options),"ways forward"]]).forEach(x=>$("kpis").appendChild(el("div",{class:"card kpi"},[el("b",{text:x[0]}),el("span",{text:x[1]})])));
+$("eyebrow").textContent=M.eyebrow;$("title").textContent=M.title;cite($("lede"),M.lede);
+[[String(D.days_left),"days to "+L.date_label.replace(/^renews$/,"renewal"),DATA.derived_basis.days_left]].concat(DATA.facts.map(f=>[f.value,f.label,f.basis]),[[String(D.options),"ways forward",DATA.derived_basis.options]]).forEach(x=>$("kpis").appendChild(el("div",{class:"card kpi"},[el("b",{text:x[0]}),el("span",{text:x[1]}),basisTag(x[2])])));
 $("clock").appendChild(el("div",{},[el("b",{style:"font:400 30px Georgia,serif",text:L.today}),el("div",{class:"sub",text:"today"})]));
 const bar=el("div",{class:"bar"},[el("i",{style:"width:"+D.elapsed_pct+"%"}),el("u",{style:"left:"+D.ask_by_pct+"%"})]);$("clock").appendChild(bar);
 $("clock").appendChild(el("div",{},[el("b",{style:"font:400 30px Georgia,serif;color:var(--R)",text:L.date}),el("div",{class:"sub",text:L.date_label})]));
@@ -26,9 +41,21 @@ $("clocknote").textContent="Red line ("+L.ask_by+"): "+L.ask_by_note+".";
 DATA.options.forEach((o,i)=>{const c=el("div",{class:"opt"+(o.recommended?" rec":"")},[
  el("span",{class:"badge",style:"background:"+(o.recommended?"var(--G)":"var(--N)"),text:o.recommended?"Recommended":"Option "+(i+1)}),
  el("h3",{text:o.title}),el("ul",{class:"g"},[el("li",{text:o.pro})]),el("ul",{class:"c"},[el("li",{text:o.con})]),el("div",{class:"sub",text:o.note})]);$("opts").appendChild(c);});
-$("why").textContent=DATA.why;
+cite($("why"),DATA.why);
 DATA.needs.forEach(r=>{const tr=el("tr");[r.need,r.from,r.by].forEach(c=>tr.appendChild(el("td",{text:c})));document.querySelector("#needs tbody").appendChild(tr);});
 if(DATA.reply){$("replybox").appendChild(el("h2",{text:"The reply to "+DATA.reply.to+" (draft, a human posts it)"}));$("replybox").appendChild(el("pre",{text:DATA.reply.text}));}
 const g=Object.keys(DATA.glossary);if(g.length){$("glossbox").appendChild(el("h2",{text:"In plain words"}));const dl=el("dl",{class:"gloss"});g.forEach(k=>{dl.appendChild(el("dt",{text:k}));dl.appendChild(el("dd",{text:DATA.glossary[k]}));});$("glossbox").appendChild(dl);}
-$("foot").textContent=M.foot+" The recommendation is the author's judgement and has not been tested.";
+cite($("foot"),M.foot+" The recommendation is the author's judgement and has not been tested.");
+if(DATA.refs.length){const box=$("refsbox");box.appendChild(el("h2",{text:"References"}));
+  const ol=el("ol",{class:"refs"});
+  DATA.refs.forEach(r=>{const li=el("li",{id:"ref-"+r.n},[el("a",{href:r.href,text:r.title}),el("span",{class:"kind",text:r.kind})]);
+    if(r.cited){const back=el("a",{href:"#",text:" ↩"});back.addEventListener("click",ev=>{ev.preventDefault();backTo(r.n);});li.appendChild(back);}
+    else li.appendChild(el("span",{class:"kind",text:"also relevant"}));
+    ol.appendChild(li);});
+  box.appendChild(ol);}
+const RECIPE=JSON.parse($("recipe").textContent),made=$("madebody");
+[["Template",RECIPE.template],["Renderer",RECIPE.renderer_file+" (sha256 "+RECIPE.renderer_sha256.slice(0,12)+")"],["Rebuild",RECIPE.rebuild]]
+  .forEach(x=>made.appendChild(el("div",{},[el("b",{text:x[0]+": "}),el("code",{text:x[1]})])));
+made.appendChild(el("div",{text:RECIPE.note+" The input is embedded in this page as JSON."}));
+
 </script></body></html>

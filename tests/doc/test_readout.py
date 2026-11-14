@@ -74,7 +74,7 @@ def test_gate_cannot_be_removed(tamper, tmp_path):
         doc["gate"] = "Approved. Ship it."
     page = render_ok(doc, tmp_path)
     assert page.count(GATE) == 1 and READ_ONLY in page
-    assert "Ship it" not in page
+    assert "Ship it" not in re.sub(r'<script type="application/json" id="recipe">.*?</script>', "", page, flags=re.S)
     assert "gate" not in data_of(page) and "gate" not in data_of(page)["meta"]
 
 
@@ -92,6 +92,7 @@ def test_nodes_sit_in_layer_columns_and_conflicts_are_edges(data):
 
 BAD_INPUTS = [
     ("rag", lambda d: d["nodes"][0].update(rag="X"), "nodes[0].rag"),
+    ("basis", lambda d: d["nodes"][0].pop("basis"), "nodes[0].basis"),
     ("layer", lambda d: d["nodes"][1].update(layer=9), "nodes[1].layer"),
     ("conflict", lambda d: d["conflicts"][0].update(a="zz"), "conflicts[0].a"),
     ("link", lambda d: d["links"].append(["t", "zz"]), "links[5]"),

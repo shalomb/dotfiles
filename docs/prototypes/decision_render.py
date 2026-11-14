@@ -6,17 +6,19 @@
 Schema and rules: docs/specs/doc-system/decision.md. The renderer validates the
 input, enforces the readout tone rules, derives the countdown and fills `__DATA__`
 in decision.template.html. The not-approved gate lives in the template; the input
-cannot change or omit it. The author picks the recommendation; the renderer only
+cannot change or omit it. Shared references, claim labels and the embedded recipe
+come from doc_kernel.py. The author picks the recommendation; the renderer only
 checks that exactly one option carries it, with a reason.
 """
-import datetime, html, json, pathlib, re, sys
+import datetime, json, pathlib, re, sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from readout_render import HYPE_WORDS, JARGON_TERMS, fail, need, text_fields  # noqa: E402
+from doc_kernel import build_page, check_basis, check_refs, fail  # noqa: E402
+from readout_render import HYPE_WORDS, JARGON_TERMS, need, text_fields  # noqa: E402
 
 TEMPLATE = pathlib.Path(__file__).with_name("decision.template.html")
 META_FIELDS = ["eyebrow", "title", "lede", "asof", "foot"]
-NOT_TEXT = {"id", "recommended", "start", "today", "date", "ask_by"}
+NOT_TEXT = {"id", "recommended", "start", "today", "date", "ask_by", "refs"}
 
 
 def day(deadline, key):
@@ -43,6 +45,7 @@ def check_structure(doc):
     for i, f in enumerate(doc.get("facts", [])):
         for key in ("value", "label"):
             need(f, key, str, f"facts[{i}]")
+        check_basis(f, f"facts[{i}]")
     options = need(doc, "options", list, "")
     if len(options) < 2:
         fail("options", f"needs at least 2 options, got {len(options)}")
@@ -110,10 +113,9 @@ def main(argv):
     except (OSError, json.JSONDecodeError) as exc:
         sys.exit(f"error: cannot read {argv[1]}: {exc}")
     check_structure(doc)
+    check_refs(doc, text_fields({k: v for k, v in doc.items() if k != "refs"}, ""))
     check_tone(doc)
-    data = derive(doc)
-    payload = json.dumps(data).replace("<", "\\u003c")
-    page = TEMPLATE.read_text().replace("__TITLE__", html.escape(data["meta"]["title"])).replace("__DATA__", payload)
+    page = build_page(TEMPLATE, __file__, doc, derive(doc))
     out = pathlib.Path(argv[2])
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page)
