@@ -1,0 +1,215 @@
+#!/usr/bin/env python3
+"""doc - headless query interface over the /doc library (index.json).
+
+Commands: find, list, origin, source, export. Read-only: never modifies the library.
+Output: aligned table (default), --paths (one path per line), or --json.
+Library root: $DOC_ROOT, else $LEAD_DOCS_ROOT, else $XDG_CACHE_HOME/agent-skills/docs
+(same layout and fallbacks as docRoot() in .pi/agent/extensions/_lib/doc-library.ts).
+"""
+import argparse
+import json
+import os
+import shlex
+import subprocess
+import sys
+import zipfile
+from pathlib import Path
+
+
+class DocError(Exception):
+    def __init__(self, message, code=1):
+        super().__init__(message)
+        self.code = code
+
+
+def doc_root(env=os.environ):
+    for var in ("DOC_ROOT", "LEAD_DOCS_ROOT"):
+        if env.get(var):
+            return Path(env[var])
+    cache = env.get("XDG_CACHE_HOME") or str(Path.home() / ".cache")
+    return Path(cache) / "agent-skills" / "docs"
+
+
+def load_cards(root):
+    index = root / "index.json"
+    if not index.is_file():
+        raise DocError(f"no index.json in {root} (set DOC_ROOT, or file a document with /doc)")
+    cards = json.loads(index.read_text())
+    for c in cards:
+        entry = Path(c["path"]).parent
+        c["id"] = entry.name
+        c["abs_path"] = str(root / c["path"])
+        c["dir"] = str(root / entry)
+    return cards
+
+
+def resolve(root, cards, ref):
+    """Find one card by id, kind/id, unique id prefix, or path to its index.html / directory."""
+    if os.sep in ref and Path(ref).exists():
+        p = Path(ref).resolve()
+        p = p.parent if p.is_file() else p
+        hits = [c for c in cards if Path(c["dir"]).resolve() == p]
+    else:
+        hits = [c for c in cards if ref in (c["id"], f"{Path(c['path']).parts[0]}/{c['id']}")]
+        if not hits:
+            hits = [c for c in cards if c["id"].startswith(ref)]
+        if not hits:
+            hits = [c for c in cards if ref.lower() in c["id"] or ref.lower() in c["title"].lower()]
+    if not hits:
+        raise DocError(f"no document matches '{ref}'")
+    if len(hits) > 1:
+        names = ", ".join(f"{Path(c['path']).parts[0]}/{c['id']}" for c in hits)
+        raise DocError(f"ambiguous '{ref}': {names}", 2)
+    return hits[0]
+
+
+def table(rows, headers):
+    widths = [max(len(str(x)) for x in col) for col in zip(headers, *rows)]
+    fmt = lambda r: "  ".join(str(v).ljust(w) for v, w in zip(r, widths)).rstrip()
+    return "\n".join([fmt(headers), *(fmt(r) for r in rows)])
+
+
+def emit_cards(cards, args):
+    if args.json:
+        print(json.dumps([{k: v for k, v in c.items() if k != "dir"} for c in cards], indent=1))
+    elif args.paths:
+        for c in cards:
+            print(c["abs_path"])
+    elif cards:
+        print(table([(c["date"], c["kind"], c["id"], c["title"], ",".join(c.get("tags") or [])) for c in cards],
+                    ("DATE", "KIND", "ID", "TITLE", "TAGS")))
+
+
+def newest_first(cards):
+    return sorted(cards, key=lambda c: (c["date"], c["title"]), reverse=True)
+
+
+def cmd_list(args, root, cards):
+    out = cards
+    if args.kind:
+        out = [c for c in out if c["kind"] == args.kind]
+    if args.tag:
+        out = [c for c in out if args.tag.lower() in [t.lower() for t in c.get("tags") or []]]
+    emit_cards(out, args)
+
+
+def cmd_find(args, root, cards):
+    words = [w.lower() for w in args.query]
+
+    def hay(c):
+        return " ".join([c["title"], c.get("summary") or "", c["kind"], c.get("repo") or "", c["date"],
+                         *(c.get("tags") or [])]).lower()
+
+    emit_cards([c for c in cards if all(w in hay(c) for w in words)], args)
+
+
+def git_toplevel(path):
+    d = Path(path)
+    while not d.is_dir() and d != d.parent:
+        d = d.parent
+    r = subprocess.run(["git", "-C", str(d), "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else ""
+
+
+def cmd_origin(args, root, cards):
+    c = resolve(root, cards, args.ref)
+    origin = c.get("origin") or ""
+    info = {"id": c["id"], "repo": c.get("repo") or "", "worktree": git_toplevel(origin) if origin else "",
+            "origin": origin}
+    if args.json:
+        print(json.dumps(info, indent=1))
+    elif args.paths:
+        print(origin)
+    else:
+        print(table([(k, v) for k, v in info.items()], ("FIELD", "VALUE")))
+
+
+def cmd_source(args, root, cards):
+    c = resolve(root, cards, args.ref)
+    src = Path(c["dir"]) / "source.md"
+    if not src.is_file():
+        raise DocError(f"no source.md stored for '{c['id']}'")
+    if args.open:
+        editor = shlex.split(os.environ.get("VISUAL") or os.environ.get("EDITOR") or "vi")
+        sys.exit(subprocess.call([*editor, str(src)]))
+    if args.json:
+        print(json.dumps({"id": c["id"], "path": str(src), "content": src.read_text()}, indent=1))
+    elif args.paths:
+        print(src)
+    else:
+        sys.stdout.write(src.read_text())
+
+
+def default_export_dir(root):
+    return root.parent / f"{root.name}-exports"
+
+
+def cmd_export(args, root, cards):
+    if not args.zip:
+        raise DocError("export needs --zip", 2)
+    c = resolve(root, cards, args.ref)
+    out = Path(args.output) if args.output else default_export_dir(root) / f"{c['id']}.zip"
+    out = out.resolve()
+    if git_toplevel(out.parent):
+        raise DocError(f"refusing to write {out}: inside a git tree (pick another -o)", 2)
+    entry = Path(c["dir"])
+    meta = json.loads((entry / "meta.json").read_text())
+    meta["origin"] = Path(meta.get("origin") or "").name  # never ship private absolute paths
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        for f in sorted(entry.rglob("*")):
+            rel = f.relative_to(entry)
+            if f.is_file() and rel.parts[0] != "versions" and rel.as_posix() != "meta.json":
+                z.write(f, rel.as_posix())
+        z.writestr("meta.json", json.dumps(meta, indent=2) + "\n")
+    if args.json:
+        print(json.dumps({"id": c["id"], "zip": str(out)}))
+    else:
+        print(out)
+
+
+def build_parser():
+    p = argparse.ArgumentParser(prog="doc", description=__doc__.split("\n\n")[0])
+    sub = p.add_subparsers(dest="cmd", required=True)
+    fmt = argparse.ArgumentParser(add_help=False)
+    fmt.add_argument("--json", action="store_true", help="machine-readable JSON")
+    fmt.add_argument("-p", "--paths", action="store_true", help="path-only output (pipe to xargs/fzf)")
+
+    s = sub.add_parser("find", parents=[fmt], help="search title, summary, kind, repo, date, tags")
+    s.add_argument("query", nargs="+")
+    s.set_defaults(fn=cmd_find)
+    s = sub.add_parser("list", parents=[fmt], help="list documents, newest first")
+    s.add_argument("--tag")
+    s.add_argument("--kind")
+    s.set_defaults(fn=cmd_list)
+    s = sub.add_parser("origin", parents=[fmt], help="origin repo, worktree and source path")
+    s.add_argument("ref", help="id, kind/id, unique prefix, or path")
+    s.set_defaults(fn=cmd_origin)
+    s = sub.add_parser("source", parents=[fmt], help="print the stored Markdown source")
+    s.add_argument("ref")
+    s.add_argument("--open", action="store_true", help="open source.md in $VISUAL/$EDITOR")
+    s.set_defaults(fn=cmd_source)
+    s = sub.add_parser("export", parents=[fmt], help="pack document, assets and metadata")
+    s.add_argument("ref")
+    s.add_argument("--zip", action="store_true")
+    s.add_argument("-o", "--output", help="zip path (default: <root>-exports/<id>.zip, never in a git tree)")
+    s.set_defaults(fn=cmd_export)
+    return p
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    try:
+        root = doc_root()
+        cards = newest_first(load_cards(root))
+        args.fn(args, root, cards)
+    except DocError as e:
+        print(f"doc: {e}", file=sys.stderr)
+        return e.code
+    except BrokenPipeError:
+        return 0
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
