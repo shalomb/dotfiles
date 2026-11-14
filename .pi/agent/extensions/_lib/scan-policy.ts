@@ -12,6 +12,21 @@ import { commandsOf } from "./shell-segments.ts";
 const ALWAYS_RECURSIVE = new Set(["fd", "find", "rg", "du", "tree"]);
 const BROAD_ROOTS = new Set(["/", "/proc", "/sys", "/dev", "/mnt", "/media", "/usr", "/etc", "/var", "/opt", "/boot", "/home"]);
 
+/** Directory names that hold heavy dependencies/caches and should never be the target of recursive scans. */
+const NOISE_DIRS = new Set([
+	"node_modules",
+	".venv",
+	"venv",
+	"site-packages",
+	"__pycache__",
+	".pytest_cache",
+	".ruff_cache",
+	".mypy_cache",
+	".tox",
+	"vendor",
+	"bower_components",
+]);
+
 function realOrSelf(p: string): string {
 	try { return realpathSync(p); } catch { return p; }
 }
@@ -40,6 +55,16 @@ export function checkScan(command: string, cwd: string, home: string): string | 
 		for (const raw of paths) {
 			const resolved = resolve(cwd, raw);
 			if (inScratch(resolved)) continue;
+
+			const parts = resolved.split("/");
+			const hitNoise = parts.find((seg) => NOISE_DIRS.has(seg));
+			if (hitNoise) {
+				return (
+					`Blocked: recursive "${cmd}" targeting "${raw}" enters dependency/cache directory "${hitNoise}". ` +
+					`Scope the search to source directories or inspect specific files directly.`
+				);
+			}
+
 			if (BROAD_ROOTS.has(resolved) && resolved !== home && resolved !== cwd) {
 				return (
 					`Blocked: recursive "${cmd}" rooted at "${resolved}" is a broad filesystem scan. ` +

@@ -33,3 +33,25 @@ test("commands on later lines / after pipes are still seen", () => {
 	expect(blocked("echo hi\nfind / -name x")).toBe(true);
 	expect(blocked("echo a | rg 'a|b' /usr/lib")).toBe(false);
 });
+
+test("recursive scans directly targeting vendor and dependency directories are blocked", () => {
+	for (const c of [
+		"rg foo node_modules",
+		"rg foo ./node_modules",
+		"fd file .venv",
+		"find venv -name x",
+		"grep -r pattern vendor",
+		"rg foo path/to/node_modules",
+		"fd test .pi/npm/node_modules",
+		"rg foo site-packages",
+		"rg foo __pycache__",
+	]) {
+		expect(blocked(c)).toBe(true);
+	}
+});
+
+test("scans targeting normal directories are not blocked by noise directory check", () => {
+	for (const c of ["rg foo src", "fd file lib", "find app -name x", "rg foo .pi/agent/extensions"]) {
+		expect(blocked(c)).toBe(false);
+	}
+});
