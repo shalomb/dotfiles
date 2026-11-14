@@ -1,15 +1,19 @@
-# Decision Tree: /doc System Evolution & Shadow Scratch
+# Design tree: /doc system evolution & shadow scratch
 
-Topic: `/doc` system evolution, search UX, and persistent shadow scratch store.
-Location: `docs/specs/doc-system/decision-tree.md`
+Goal: Ship a first slice that proves the /doc evolution: a docking search page and a persistent shadow scratch store.
+Stance: long horizon (code is evidence, not authority)
 
-## Outline
-
-- stance [open]
-  - options: Long horizon (recommended) | Mid-execution
-- scope.first_slice [open]
-  - options: Homepage Search UX + Shadow Scratch (recommended) | Full CLI & Navigator Skill | Dossier Package & Meta-Doc Engine
-- scratch.storage_path [open]
-  - options: XDG cache shadowed per repo slug (recommended) | XDG state per repo and branch | In-repo untracked git exclude
-- search.ui_transition [open]
-  - options: CSS state toggle on non-empty query (recommended) | Two distinct page modes
+- [settled] stance -- Long horizon. Round 1.
+- [settled] scope.first_slice -- Homepage search UX + shadow scratch. Round 1.
+  - [settled] scratch.storage_path -- XDG cache shadowed per repo slug (`~/.cache/agent-skills/scratch/<repo-slug>/`). Round 1.
+  - [settled] scratch.key -- Repo slug / worktree name. Round 1.
+  - [open] scratch.cli -- Command surface of `scratch` and `/scratch`.
+  - [open] scratch.agent_access -- How other agents find and read a scratch note.
+  - [open] scratch.promote -- Does promote to /doc ship in slice 1?
+  - [open] scratch.undo -- Is Neovim undofile enforced for the store?
+  - [settled] search.ui_transition -- CSS state toggle on non-empty query. Esc resets. Round 1.
+  - [open] search.legend -- What does the idle legend show, and where does it fold?
+  - [open] search.index_seam -- Does the page keep reading index.json only?
+- [deferred] doc.cli -- Reason: full CLI and navigator skill are after slice 1.
+- [deferred] doc.dossier -- Reason: dossier and meta-docs are after slice 1.
+- [open] waf.* -- Stress-test round after the functional nodes settle.
