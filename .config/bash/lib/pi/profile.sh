@@ -18,7 +18,7 @@ _pi_profile_dir() {
 # Expand leading ~ and normalise a settings path
 _pi_norm_path() {
   local p="$1"
-  [[ "" == \~ || "" == \~/* ]] && p="$HOME${p#\~}"
+  [[ "$p" == \~ || "$p" == \~/* ]] && p="$HOME${p#\~}"
   realpath -m -- "$p"
 }
 
