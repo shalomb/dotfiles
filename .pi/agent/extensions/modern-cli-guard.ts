@@ -20,6 +20,7 @@ import { basename, join } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { deepSegments, stripPrefixes, tokenize } from "./_lib/shell-segments.ts";
 import { fixFor } from "./_lib/modern-cli-fix.ts";
+import { logGuardEvent } from "./_lib/guard-log.ts";
 import { blockReason } from "./_lib/modern-cli-message.ts";
 
 const MODERN_REPLACEMENTS: Record<string, string> = {
@@ -81,6 +82,7 @@ export default function (pi: ExtensionAPI) {
 		// A prompt *section* (rendered as <modern_cli_overrides>…</modern_cli_overrides>), not a forced
 		// `systemPrompt`: forcing makes the prompt opaque, so later before_agent_start hooks (e.g. the
 		// skills-loader tier filter) could no longer change it.
+		logGuardEvent({ guard: "modern-cli", kind: "prompt", sections: ["modern_cli_overrides"] });
 		event.systemPromptOptions.sections = { ...event.systemPromptOptions.sections, modern_cli_overrides: `${NEVER_TYPE}\n\n${body.replace("(references/tool-mappings.md)", `(${REF_PATH})`)}` };
 		return undefined;
 	});
@@ -98,6 +100,7 @@ export default function (pi: ExtensionAPI) {
 			if (!(cmd in MODERN_REPLACEMENTS)) continue;
 			const fix = fixFor(tokens, seg.pipedIn);
 			const reason = blockReason({ cmd, tokens, hint: hintFor(cmd, tokens.slice(1)), fix, hasBody: !!skillBody(), skillInstruction: SKILL_INSTRUCTION });
+			logGuardEvent({ guard: "modern-cli", kind: "block", rule: cmd, command: seg.text, fix });
 			if (ctx.hasUI) ctx.ui.notify(reason, "warning");
 			return { block: true, reason };
 		}

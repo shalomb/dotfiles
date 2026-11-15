@@ -10,6 +10,7 @@
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { logGuardEvent } from "./_lib/guard-log.ts";
 import { uvBlockReason, uvViolation } from "./_lib/uv-policy.ts";
 
 const GUIDANCE =
@@ -20,6 +21,7 @@ const GUIDANCE =
 
 export default function (pi: ExtensionAPI) {
 	pi.on("before_agent_start", async (event) => {
+		logGuardEvent({ guard: "uv", kind: "prompt", sections: ["uv_guardrails"] });
 		event.systemPromptOptions.sections = { ...event.systemPromptOptions.sections, uv_guardrails: GUIDANCE };
 		return undefined;
 	});
@@ -31,6 +33,7 @@ export default function (pi: ExtensionAPI) {
 		const v = uvViolation(command);
 		if (!v) return undefined;
 		const reason = uvBlockReason(v);
+		logGuardEvent({ guard: "uv", kind: "block", rule: v.rule, command: v.segment, fix: v.use });
 		if (ctx.hasUI) ctx.ui.notify(reason, "warning");
 		return { block: true, reason };
 	});
