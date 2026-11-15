@@ -68,3 +68,27 @@ todo batch --goal --claim
 - `spec-dispute` -> Steward re-reads; if the spec stands, Builder retries once;
   else glovebox (motorway) or rest stop (scenic). Never a Builder spec edit.
 - Two failed gates on one task -> stop the task, report, carry on with others.
+
+## Gate strictness: context (decision open)
+
+A reject costs one Builder retry. A warn costs a Verifier call, or noise.
+Reject only where the check is precise.
+
+| Check | Precision | False positives | Mitigation |
+| :-- | :-- | :-- | :-- |
+| G1 red-first | high | refactor/chore tasks: no behaviour change, already green | task kind; refactor = green at base and head |
+| G2 spec untouched | high (paths) | Builder needs test plumbing | plumbing outside Steward dirs; spec edits are Steward tasks |
+| G3 no weakening | high for .feature; rough for assertion counts | rare for Builders | - |
+| G4 in scope | medium | coarse scopes, shared helper, lockfile | allow-list shared paths; measure first |
+| G5/G6 trace, glossary | low (heuristic) | frequent | warn only |
+
+Recommendation: G1-G3 reject from day one; G4 warns, every gate result is
+logged to trajectories.jsonl, promote G4 when its false-positive rate is low;
+G5-G6 warn.
+
+## Verifier (settled)
+
+Catches what the gate cannot: code that fits the example, not the rule;
+glossary words used in the wrong sense; side effects, security, public API.
+Runs on triggers. Agent: `bart-verifier` (Bart skill, read-only, different
+model family from the Builder).
