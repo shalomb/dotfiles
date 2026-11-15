@@ -1,0 +1,51 @@
+flowchart TB
+  classDef human fill:#fde68a,stroke:#b45309,color:#111
+  classDef cmd fill:#bfdbfe,stroke:#1d4ed8,color:#111
+  classDef art fill:#f3f4f6,stroke:#374151,color:#111
+  classDef out fill:#ddd6fe,stroke:#6d28d9,color:#111
+
+  U((Human)):::human
+  RE["Review engine<br/>vim rounds, deltas, kept"]:::cmd
+
+  subgraph INTENT["1 Intent: high friction"]
+    direction LR
+    GR["/grill-me<br/>right thing?"]:::cmd --> |handoff| PL["/plan<br/>vision, right way"]:::cmd --> |auto-drafts| GO["/goal<br/>done for this branch"]:::cmd
+  end
+
+  subgraph ANCHORS["2 Anchors: repo docs/"]
+    direction LR
+    ES[("End-state doc<br/>objectives, KRs")]:::art
+    DOM[("docs/domain<br/>glossary, context map")]:::art
+    FEAT[("Features<br/>@KR scenarios")]:::art
+    ADR[("ADRs")]:::art
+  end
+
+  subgraph STORE["3 Goal store: cache"]
+    direction LR
+    GC[("Goal contract<br/>serves KR, outcome check")]:::art
+    TODO[("TODO.md<br/>tasks per goal")]:::art
+    TRJ[("trajectories.jsonl<br/>events, gate log")]:::art
+  end
+
+  subgraph EXEC["4 Execution: low friction"]
+    direction LR
+    NX["/next, /prev<br/>goal-aware"]:::cmd
+    DR["/drive<br/>waves, see map 2"]:::cmd
+  end
+
+  LD["Living docs page<br/>via /doc"]:::out
+
+  U --> |answers| RE
+  U --> |locks| GO
+  INTENT -.-> |grill, review, retro| RE
+  PL --> |writes| ES & DOM & ADR & FEAT
+  GR --> |TERMS| DOM
+  GO --> |writes| GC
+  ES --> |next goal from| GO
+  GC --> |scopes| NX & DR
+  TODO --> NX & DR
+  DR --> |red to green| FEAT
+  DR --> |gate log| TRJ
+  GO --> |outcome check runs| FEAT
+  TRJ --> |KR moved? replan| PL
+  ES & FEAT & TRJ --> LD

@@ -1,0 +1,16 @@
+flowchart LR
+  classDef cmd fill:#bfdbfe,stroke:#1d4ed8,color:#111
+  classDef agent fill:#bbf7d0,stroke:#15803d,color:#111
+  classDef gate fill:#fecaca,stroke:#b91c1c,color:#111
+  classDef art fill:#f3f4f6,stroke:#374151,color:#111
+
+  GC[("Locked goal")]:::art --> CO
+  CO["Copilot<br/>todo batch --goal --claim"]:::cmd --> |1 per wave| ST["Spec Steward<br/>adzic-bdd, domain-modeling"]:::agent
+  ST --> |"scenarios + DSL<br/>red commit"| RED[("Feature branch<br/>red")]:::art
+  RED --> |rebase| B1["Builder 1"]:::agent & B2["Builder 2"]:::agent & B3["Builder 3"]:::agent
+  B1 & B2 & B3 --> |"drivers, units<br/>Farley TDD"| G{{"Gate<br/>G1 red first<br/>G2 spec untouched<br/>G3 no weakening<br/>G4 scope, G5 trace, G6 glossary"}}:::gate
+  G --> |reject| B1
+  G --> |warn, hub, retry, P0| VE["Verifier<br/>bart-verifier"]:::agent
+  VE --> |"BLOCK / OK"| G
+  G --> |pass| M["ff-merge<br/>todo done<br/>checkpoint"]:::cmd
+  B1 -.-> |spec-dispute| ST
