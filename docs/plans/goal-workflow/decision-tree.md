@@ -1,72 +1,128 @@
-# Goal workflow (grill -> plan -> goal -> drive): decision tree
+# Goal workflow (grill -> plan -> goal -> drive): intent and decisions
 
 Stance: mid-execution. /goal, /grill-me, /plan, /drive and todo exist and work.
-Aim: high friction on intent, low friction on execution. DWIM by default.
+Single source of intent for this work. `drive-roles.md` holds the /drive detail.
+
+## Intent
+
+1. **High friction on intent, low friction on execution.** Humans decide what
+   and why, and lock it. Everything after the lock is DWIM, with few prompts.
+2. **One coherent chain** from vision to code, each step with one job and one
+   artefact, so short-term goals always serve the end-state.
+3. **Feedback is first-class** at every human touchpoint (grill, goal review,
+   close retro), captured as structured deltas and kept.
+4. **DDD artefacts anchor development**: shared names, scopes and behaviour.
+5. **The BDD spec set is a product asset**: living documentation that LT,
+   compliance, QA and support can read and interrogate.
+6. **Guardrails are mechanical where they can be**, and judgement (LLM review)
+   is spent only where a machine cannot see.
+7. **Agents are thin; skills do the work.**
 
 ## Chain
 
 ```
-/grill-me   right thing?      decisions, handoff, TERMS -> glossary
-/plan       vision + right    end-state doc: objectives, KRs, goal queue;
-            way to build      context map; example maps per KR; ADRs
-/goal       done for branch   locked contract; serves KR; outcome check
-                              runs the KR's scenarios
-/drive      execute           waves of Builders, outside-in; gates
-close retro did KR move?      feeds /plan (replan), prunes scenarios
+/grill-me   right thing?        decisions, handoff, TERMS -> glossary
+/plan       vision, right way   end-state doc: objectives, KRs, goal queue;
+            to build it         context map; example maps per KR; ADRs
+/goal       done for branch     locked contract; serves KR; outcome check
+                                runs the KR's scenarios
+/drive      execute             waves: Steward (red specs) -> Builders
+                                (outside-in) -> mechanical gate -> Verifier
+close retro did the KR move?    feeds /plan (replan), prunes scenarios
 ```
+
+## Anchors and coherence
+
+- **DDD anchors**: glossary (names), context map (scope), domain events and
+  aggregates (behaviour), ADRs (structure). Home: `docs/domain/` (Q7).
+- **BDD anchors**: glossary (step words), events/aggregates (Given = state,
+  When = command, Then = event), KRs (`@KR-n.m`), context map (one feature
+  directory per context), anti-goals (negative scenarios).
+- **Coherence chain**: Objective -> KR -> `@KR` scenarios -> goal `serves` +
+  outcome check -> `// Scenario:` acceptance tests -> code names in glossary.
+- **Rules**: every KR has a scenario, no orphan scenarios; a goal's outcome
+  check runs its KR's scenarios; step words, DSL methods and identifiers are
+  in the glossary, avoid-list names never appear; every scenario has a tagged
+  acceptance test; a goal's features stay in one context.
+
+## Tests: Adzic outside, Farley inside
+
+- **Acceptance (outer loop)**: Adzic scenarios say what, as key examples.
+  Farley's four layers make them run without becoming UI scripts:
+  test case (scenario) -> DSL (glossary verbs) -> protocol drivers -> system.
+  Spec Steward owns test cases and DSL; Builder owns drivers and system.
+- **Unit (inner loop)**: Farley TDD by Builders: test first, small steps,
+  Properties of Good Tests (fast, maintainable, repeatable, atomic,
+  necessary, understandable). Unit tests are a design tool: they need not
+  trace to a scenario.
+- **Pipeline**: commit stage = repo fast target (unit); acceptance stage =
+  scenarios. The gate runs both. G1 (red first) is at acceptance level.
+- **Quality**: `test-design-review` scores tests on Farley's properties; the
+  Verifier uses it when triggered; the close retro reports the trend.
+
+## Living documentation
+
+- Spec set conditions: domain language, key examples, organised by capability
+  (goals reference scenarios, never own them), always executable and green,
+  published.
+- Feature home: `docs/domain/<context>/features/<capability>.feature`.
+  Tags: `@KR-n.m`, `@control-<id>`, `@manual`.
+- Readers: LT (objective > KR status), compliance (`@control` -> passing run
+  -> commit, date), QA (gaps, single-example rules, missing negatives),
+  support (search by glossary term).
+- Guard against: UI-script scenarios, scenario bloat, red or skipped rot.
 
 ## Settled
 
-| Node | Decision |
-| :-- | :-- |
-| goal.lock-dialog | One dialog; Outcome Check pick locks it; agent suggestion first. (shipped d053277..42d30cd) |
-| goal.close-green | /goal on a green check offers Close / Not yet. (shipped f686907) |
-| goal.guard-reads | Goal-store reads with harmless redirects pass the write guard. (shipped 5d95468) |
-| goal.start-from-grill-plan | Always auto-draft a goal when /grill-me or /plan finishes. |
-| goal.outcome-check | Preselect; Enter accepts. |
-| goal.default-branch | On main/develop: offer a worktree + branch first. |
-| goal.next-dwim | After close, draft the next goal at once: end-state doc, then backlog, then chat. (branch feat/goal-next-dwim) |
-| next.goal-aware | todo next scopes to the active goal; none ready -> point at /goal; --all = whole backlog. (agent-skills feat/todo-goal-aware) |
-| prev.goal | todo prev also reports the last finished goal. (agent-skills feat/todo-goal-aware) |
-| review.lock-gesture | Ticking `[x] Lock` in the final review round locks; extension enforces rules; /goal lock stays. |
-| review.scope | Vim rounds for review (draft, close retro); dialogs for gates. |
-| review.store | Goal round replies kept next to the goal in the cache store. |
-| roadmap.home | Structured end-state doc: headings = objectives, KRs with ids. |
-| plan.grill | Both: /grill-me stands alone; /plan uses the same grill_round engine. |
-| drive.spec-author | Separate Spec Steward per wave writes scenarios + red acceptance tests; Builders cannot touch them. |
-| drive.gate-home | Gate as tested code the drive skill calls, not skill text. |
-| drive.verifier-trigger | LLM Verifier on gate warnings, hub/security files, retries, P0. Steward writes >= 2 contrasting key examples per rule, so example-overfitting fails a test. |
-| agents.thin | Agent files are thin role boundaries (model, tools, extensions, `skills:`, brief, do/never, receipt); skills do the work. |
-| drive.verifier-agent | Verifier = Bart: a `bart-verifier` agent definition (beside lean-worker) that loads `bart-adversarial-reviewer`, read-only tools, pinned to a different model family from the Builder; brief = diff, scenarios, glossary, gate warnings; returns a verdict receipt. |
+| Node | Decision | State |
+| :-- | :-- | :-- |
+| goal.guard-reads | Goal-store reads with harmless redirects pass the write guard. | shipped 5d95468 |
+| goal.lock-dialog | One dialog; the Outcome Check pick locks it; agent suggestion first. | shipped 42d30cd |
+| goal.close-green | /goal on a green check offers Close / Not yet. | shipped f686907 |
+| goal.next-dwim | After close, draft the next goal at once: end-state doc, backlog, chat; record `serves`. | built (45774e5) |
+| drive.gate-goal | /drive refuses without an intact locked goal; motorway/scenic; checkpoint resume. | built (076a89d), not wired to a command |
+| next.goal-aware | `todo next` scopes to the active goal; none ready -> point at /goal; `--all` = whole backlog. | built (agent-skills feat/todo-goal-aware) |
+| prev.goal | `todo prev` also reports the last finished goal. | built (agent-skills feat/todo-goal-aware) |
+| goal.start-from-grill-plan | Always auto-draft a goal when /grill-me or /plan finishes. | to build |
+| goal.outcome-check | Preselect; Enter accepts. | shipped with lock-dialog |
+| goal.default-branch | On main/develop: offer a worktree + branch first. | to build |
+| review.engine | One shared review engine (grill_round machinery) for /grill-me, /plan, goal draft review, close retro. | to build |
+| review.lock-gesture | Ticking `[x] Lock` in the final review round locks; the extension enforces the rules; /goal lock stays. | to build |
+| review.scope | Vim rounds for review (draft, close retro); dialogs for gates. | to build |
+| review.store | Goal round replies kept next to the goal in the cache store. | to build |
+| roadmap.home | Structured end-state doc: headings = objectives, KRs with ids. | to build |
+| plan.grill | Both: /grill-me stands alone; /plan uses the same engine. | to build |
+| drive.spec-author | Separate Spec Steward per wave writes scenarios + red acceptance tests. | agent drafted |
+| drive.gate-home | Gate as tested code the drive skill calls. | to build |
+| drive.verifier-trigger | Verifier on gate warnings, hub/security files, retries, P0; Steward writes >= 2 contrasting examples per rule. | settled |
+| drive.verifier-agent | Verifier = Bart (`bart-verifier`), read-only, different model family from the Builder. | agent drafted |
+| agents.thin | Agent files are thin role boundaries; skills do the work. | settled |
+| tests.layers | Adzic scenarios outside via Farley's four layers; Farley TDD inside; G5 applies to acceptance tests only. | settled |
 
-## Open: round 1 (where artefacts live, how they link)
+## Open
 
-| Node | Recommended |
-| :-- | :-- |
-| plan.output (Q1) | /plan edits the end-state doc (objectives, KRs, goal queue) + ADRs. |
-| plan.kr-shape (Q2) | KR = id, one sentence, check command where possible, else `human`. |
-| plan.goal-link (Q3) | Goal field `serves: KR-n.m`; review shows it; retro asks if it moved. |
-| plan.domain (Q7) | `docs/domain/`: repo glossary, CONTEXT-MAP.md, per-context glossaries; agent maintains; review warns on drift. |
+| Node | Recommended | Round |
+| :-- | :-- | :-- |
+| plan.output (Q1) | /plan edits the end-state doc (objectives, KRs, goal queue) + ADRs. | 1 |
+| plan.kr-shape (Q2) | KR = id, one sentence, check command where possible, else `human`. | 1 |
+| plan.goal-link (Q3) | Goal field `serves: KR-n.m`; review shows it; retro asks if it moved. | 1 |
+| plan.domain (Q7) | `docs/domain/`: repo glossary, CONTEXT-MAP.md, per-context glossaries; agent maintains; review warns on drift. | 1 |
+| plan.mode (Q4) | Keep the design-only guard; end with "draft first goal and leave plan mode". | 2 |
+| plan.grill-use (Q5) | /plan reads any /grill-me handoff first, grills vision/KR/architecture. | 2 |
+| plan.replan (Q6) | Offer /plan when an objective's KRs are all met, or a retro says a KR did not move. | 2 |
+| plan.bdd (Q8) | Progressive: /plan example maps -> /goal full feature, runner = outcome check -> /drive outside-in; advisory chain linter. | 2 |
+| plan.living-docs (Q9) | Generated living-docs page (objective > KR > feature > scenario, status, commit, `@control` evidence) published via /doc on goal close. | 2 |
+| drive.gate-strictness | G1-G3 reject; G4 warns until measured; G5-G6 warn. See `drive-roles.md`. | 3 (user reading) |
+| drive.verifier-model | `antigravity/gemini-4-hydrogen` drafted; confirm. | 3 |
 
-## Open: round 2 (when things run)
+## Known gaps
 
-| Node | Recommended |
-| :-- | :-- |
-| plan.mode (Q4) | Keep the design-only guard; end with "draft first goal and leave plan mode". |
-| plan.grill-use (Q5) | /plan reads any /grill-me handoff first, grills vision/KR/architecture. |
-| plan.replan (Q6) | Offer /plan when an objective's KRs are all met or a retro says a KR did not move. |
-| plan.bdd (Q8) | Progressive: /plan example maps (titles) -> /goal full feature, runner = outcome check -> /drive outside-in; advisory chain linter. |
-| plan.living-docs (Q9) | Generated living-docs page (Objective > KR > Feature > Scenario, status, commit, @control evidence) published via /doc on goal close. |
-
-## Open: round 3 (/drive division of labour, BDD guardrails)
-
-See `drive-roles.md`. Open: drive.gate-strictness (user is reading the context in drive-roles.md, section "Gate strictness: context").
-
-## Notes
-
-- DDD artefacts are the anchors: glossary (names), context map (scope), domain events/aggregates (behaviour), ADRs (structure).
-- BDD anchors: glossary (step words), events/aggregates (Given=state, When=command, Then=event), KRs (@KR tags), context map (feature dirs), anti-goals (negative scenarios).
-- Coherence chain: Objective -> KR -> @KR scenarios -> goal serves + outcome check -> `// Scenario:` tagged tests -> code names in glossary.
-- Spec set = living documentation for LT, compliance, QA, support. Conditions: domain language, key examples, organised by capability (goals reference, never own), always executable and green, published.
-- Adzic failure modes to guard: UI-script scenarios, scenario bloat, red/skipped rot.
-- Feature home: `docs/domain/<context>/features/<capability>.feature`. Tags: `@KR-n.m`, `@control-<id>`, `@manual`.
+- Repo agents deploy to `~/.pi/agent/agents/`; the personal profile reads
+  `~/.pi/profiles/personal/agents/` (a real directory), so repo agents do not
+  reach it. Fix in `lib/pi/profile.sh`.
+- `g-develop` is a stale goal on a default branch (outcome "confirm"). With
+  goal-aware `todo next` it now narrows `/next`. User to `/goal drop` it.
+- Footer goal status is stale; a live one (`goal locked, check red, wave 2/3`)
+  is wanted.
+- todo-navigator changes live in a separate repo (agent-skills,
+  `feat/todo-goal-aware`); they ship with that repo, not this branch.
