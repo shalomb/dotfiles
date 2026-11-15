@@ -1,5 +1,6 @@
 /** fzf front end for pi-find (ADR-016): pick a session, resolve its worktree, resume in its profile. All side effects are injected. */
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { Row } from "./registry";
@@ -88,25 +89,32 @@ export interface EnterDeps {
 	/** `git worktree add`; returns the new worktree path, throws on failure. */
 	createWorktree: (repo: string, name: string) => string;
 	warn: (message: string) => void;
+	/** Profile pi() would pick for a directory (null = unknown). Used only when the stored profile is `default`. */
+	cwdProfile?: (cwd: string) => string | null;
 	home?: string;
 }
 
 export interface EnterResult { command: ResumeCommand; warning?: string }
 
-const profileEnv = (s: ResumeSession, home: string): Record<string, string> => ({ PI_CODING_AGENT_DIR: profileAgentDir(s.profile, home) });
+/** `default` is ambiguous: profile session dirs may be symlinks to ~/.pi/agent/sessions, so dedupe labels them all default. Resolve from cwd like pi() does. */
+const profileEnv = (s: ResumeSession, home: string, deps?: Pick<EnterDeps, "cwdProfile">): Record<string, string> => {
+	const stored = !s.profile || s.profile === "default";
+	const profile = stored && deps?.cwdProfile ? deps.cwdProfile(s.cwd) ?? s.profile : s.profile;
+	return { PI_CODING_AGENT_DIR: profileAgentDir(profile, home) };
+};
 
 /** Degrade (ADR-016): worktree creation failed, so start at the repo with a warning rather than losing the session. */
 function repoFallback(s: ResumeSession, home: string, why: string, deps: EnterDeps): EnterResult {
 	const warning = `${why}; resuming at the repo top level ${s.repo}`;
 	deps.warn(`warning: ${warning}`);
-	return { command: resumeCommand(s, { kind: "worktree", path: s.repo }, profileEnv(s, home)), warning };
+	return { command: resumeCommand(s, { kind: "worktree", path: s.repo }, profileEnv(s, home, deps)), warning };
 }
 
 function createAndResume(s: ResumeSession, repo: string, suggested: string, home: string, deps: EnterDeps): EnterResult | null {
 	const name = deps.prompt("New worktree name", suggested);
 	if (name === null) return null;
 	try {
-		return { command: resumeCommand(s, { kind: "worktree", path: deps.createWorktree(repo, name || suggested) }, profileEnv(s, home)) };
+		return { command: resumeCommand(s, { kind: "worktree", path: deps.createWorktree(repo, name || suggested) }, profileEnv(s, home, deps)) };
 	} catch (e) {
 		return repoFallback(s, home, `could not create worktree: ${(e as Error).message}`, deps);
 	}
@@ -116,7 +124,7 @@ function createAndResume(s: ResumeSession, repo: string, suggested: string, home
 export function onEnter(session: ResumeSession, deps: EnterDeps): EnterResult | null {
 	const home = deps.home ?? homedir();
 	const target = resolveTargetWorktree(session, deps.resume ?? defaultResumeDeps);
-	if (target.kind === "worktree") return { command: resumeCommand(session, target, profileEnv(session, home)) };
+	if (target.kind === "worktree") return { command: resumeCommand(session, target, profileEnv(session, home, deps)) };
 	if (target.kind === "create") return createAndResume(session, target.repo, target.suggestedName, home, deps);
 
 	const label = (w: Worktree) => `${w.path}${SEP}${w.branch ?? ""}`;
@@ -126,7 +134,7 @@ export function onEnter(session: ResumeSession, deps: EnterDeps): EnterResult | 
 	const chosen = r.stdout.replace(/\n$/, "").split(SEP)[0];
 	if (!chosen) return null;
 	if (chosen === NEW_WORKTREE_LABEL) return createAndResume(session, session.repo, suggestedName(session), home, deps);
-	return { command: resumeCommand(session, { kind: "worktree", path: chosen }, profileEnv(session, home)) };
+	return { command: resumeCommand(session, { kind: "worktree", path: chosen }, profileEnv(session, home, deps)) };
 }
 
 /** The name resolveTargetWorktree suggests for a new worktree (resolved against no worktrees). */
@@ -177,6 +185,14 @@ export function gitCreateWorktree(repo: string, name: string): string {
 	if (r.status !== 0) r = git([path, name]);
 	if (r.status !== 0) throw new Error((r.stderr || "git worktree add failed").trim().split("\n").pop()!);
 	return path;
+}
+
+/** Ask the shell resolver pi() uses (~/.config/bash/lib/pi/profile.sh) which profile owns a directory. */
+export function shellCwdProfile(cwd: string, home = homedir()): string | null {
+	const lib = join(home, ".config/bash/lib/pi/profile.sh");
+	if (!existsSync(lib)) return null;
+	const r = spawnSync("bash", ["-c", 'source "$1" && _pi_resolve_profile "$2"', "_", lib, cwd], { encoding: "utf8", env: { ...process.env, PI_PROFILE: "" } });
+	return r.status === 0 ? r.stdout.trim() || null : null;
 }
 
 export function spawnResume(c: ResumeCommand): number {

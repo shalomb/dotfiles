@@ -101,6 +101,20 @@ describe("onEnter", () => {
 	test("default profile resumes under ~/.pi/agent", () => {
 		expect(onEnter(row({ profile: "default" }), deps({ resume: resume([MAIN, WT]) }))!.command.env.PI_CODING_AGENT_DIR).toBe("/home/x/.pi/agent");
 	});
+	test("default profile is ambiguous (work shares the sessions dir): resolve it from the session cwd", () => {
+		const seen: string[] = [];
+		const cwdProfile = (c: string) => { seen.push(c); return "work"; };
+		const r = onEnter(row({ profile: "default" }), deps({ resume: resume([MAIN, WT]), cwdProfile }))!;
+		expect(r.command.env.PI_CODING_AGENT_DIR).toBe("/home/x/.pi/profiles/work");
+		expect(seen).toEqual([WT]);
+	});
+	test("an explicit non-default profile is never overridden by the cwd resolver", () => {
+		const r = onEnter(row({ profile: "personal" }), deps({ resume: resume([MAIN, WT]), cwdProfile: () => "work" }))!;
+		expect(r.command.env.PI_CODING_AGENT_DIR).toBe("/home/x/.pi/profiles/personal");
+	});
+	test("cwd resolver returning null falls back to ~/.pi/agent", () => {
+		expect(onEnter(row({ profile: "default" }), deps({ resume: resume([MAIN, WT]), cwdProfile: () => null }))!.command.env.PI_CODING_AGENT_DIR).toBe("/home/x/.pi/agent");
+	});
 	test("original gone -> second fzf lists candidates plus 'create'; choosing one resumes there, never at the top level", () => {
 		const calls: { args: string[]; input: string }[] = [];
 		const r = onEnter(row(), deps({ resume: resume([MAIN, WT, OTHER], [MAIN, OTHER]), run: runner({ status: 0, stdout: `${OTHER}\t\n` }, calls) }))!;
