@@ -1,6 +1,7 @@
 // Run: bun test doc-intent.test.ts
 import { describe, expect, it } from "bun:test";
 import { buildDocPrompt, parseDocArgs } from "./doc-intent.ts";
+import { HYPE_WORDS, principleRules, templateGuide } from "./doc-principles.ts";
 
 describe("parseDocArgs", () => {
 	it("bare /doc infers everything from the session", () => {
@@ -99,5 +100,45 @@ describe("buildDocPrompt", () => {
 		const p = buildDocPrompt(parseDocArgs("decision template formal"));
 		expect(p).toMatch(/style=formal/);
 		expect(p).not.toContain("Assumed:");
+	});
+});
+
+describe("buildDocPrompt carries the principles", () => {
+	const prompts = {
+		"with a purpose": buildDocPrompt(parseDocArgs("report the demo topic")),
+		"with no purpose": buildDocPrompt(parseDocArgs("")),
+		"a decision": buildDocPrompt(parseDocArgs("decision the demo topic")),
+	};
+	for (const [name, p] of Object.entries(prompts)) {
+		it(`${name}: the short rules, verbatim from doc-principles`, () => {
+			expect(p).toContain(principleRules());
+		});
+		it(`${name}: points template-shaped content at the templates and doc_template`, () => {
+			expect(p).toContain(templateGuide());
+			expect(p).toContain("doc_template");
+			for (const t of ["epicmap", "readout", "decision"]) expect(p).toContain(t);
+		});
+	}
+	it("a revision keeps the rules too, because 'deeper' can add claims", () => {
+		const p = buildDocPrompt(parseDocArgs("deeper"));
+		expect(p).toContain(principleRules());
+		expect(p).not.toContain(templateGuide());
+	});
+	it("a template prompt does not repeat the Markdown rules (the template enforces them)", () => {
+		const p = buildDocPrompt(parseDocArgs("readout the demo topic"));
+		expect(p).not.toContain(principleRules());
+	});
+	it("the rules come after the facts-only line and before the publish step", () => {
+		const p = buildDocPrompt(parseDocArgs("report the demo topic"));
+		const facts = p.indexOf("Use only facts already in this session");
+		const rules = p.indexOf(principleRules());
+		const publish = p.indexOf("call the doc_publish tool");
+		expect(facts).toBeGreaterThan(-1);
+		expect(rules).toBeGreaterThan(facts);
+		expect(publish).toBeGreaterThan(rules);
+	});
+	it("the prompt itself follows the tone rule", () => {
+		const text = Object.values(prompts).join("\n").split(principleRules()).join("");   // the rules list the banned words on purpose
+		for (const w of HYPE_WORDS) expect(text.toLowerCase()).not.toContain(w);
 	});
 });

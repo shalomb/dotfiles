@@ -18,7 +18,7 @@ const env = () => ({ ...process.env, LEAD_DOCS_ROOT: join(tmp, "lib") });
 beforeEach(() => {
 	tmp = mkdtempSync(join(tmpdir(), "doc-pub-"));
 	src = join(tmp, "pin-or-vendor.md");
-	writeFileSync(src, "# Pin or vendor the SDK?\n\n**The ask in one sentence:** Choose one.\n\n## Takeaways\n\n1. Pinning is reversible ([§2](#options)).\n\n## Options\n\nA or B.\n\n## Recommendation\n\nA.\n");
+	writeFileSync(src, "# Pin or vendor the SDK?\n\n**The ask in one sentence:** Choose one.\n\n## Takeaways\n\n1. Pinning is reversible (judged) ([§2](#options)).\n\n## Options\n\nA or B.\n\n## Recommendation\n\n**Recommended (judged): A.** It is the cheaper way back.\n\n## What we do not know\n\nWhether the vendor will keep the old API.\n");
 });
 afterEach(() => rmSync(tmp, { recursive: true, force: true }));
 

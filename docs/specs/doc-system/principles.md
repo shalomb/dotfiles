@@ -71,4 +71,4 @@ A document is an argument that a reader can check. It carries data, claims, hypo
 | P16 | gate banner present, input cannot override it |
 | P18 | hype list and jargon-needs-gloss |
 
-Already enforced: P3 (derived counts), P5 (one recommendation), P6 (suggestion tag), P9 and P16, P18 in the readout and decision templates under `.pi/agent/extensions/_lib/doc-render/templates/`. Not yet enforced: P1, P2, P7, P13, P14.
+Enforced by the templates (`.pi/agent/extensions/_lib/doc-render/templates/kernel.py`): P1, P2, P3, P5, P6, P9, P13, P14, P16, P18. Warned on in Markdown by `doc-lint.ts` (see `lint.md`): P2, P5, P6, P9, P18. Carried in the `/doc` prompt and the `docs-authoring` skill: P1, P2, P5, P6, P18. Not enforced anywhere yet: P4, P7, P8, P10 to P12, P15, P17, P19.

@@ -2,6 +2,8 @@
  * Checks a /doc Markdown source against the authoring rules before it is filed.
  * Findings are warnings: the document is still rendered and filed.
  */
+import { HYPE_WORDS, JARGON_TERMS } from "./doc-principles.ts";
+
 export interface Finding {
 	code: string;
 	message: string;
@@ -44,10 +46,55 @@ function section(md: string, title: RegExp): string | null {
 const has = (md: string, re: RegExp) => headings(md).some((h) => h.level <= 3 && re.test(h.text));
 const FIGURE = /\b\d+(?:[.,]\d+)?\s*(?:%|percent|x\b)|\b\d{2,}(?:,\d{3})*\b/;
 
+/** Markdown with code, links' targets and heading anchors removed: what a reader reads as prose. */
+function prose(md: string): string {
+	return md
+		.replace(/^(```|~~~)[\s\S]*?^\1.*$/gm, " ")
+		.replace(/`[^`\n]*`/g, " ")
+		.replace(/\]\([^)]*\)/g, "]")
+		.replace(/https?:\/\/\S+/g, " ")
+		.replace(/\{#[^}]*\}/g, " ")
+		.replace(/^\[\^[^\]]+\]:.*$/gm, " ");
+}
+
+/**
+ * Escape a literal for use inside a RegExp. The patterns below are built from the constant word lists in
+ * doc-principles.ts, escaped here, and never from the document being checked.
+ */
+const reEscape = (word: string) => word.replace(/[.*+?^${}()|[\]\\-]/g, "\\$&");
+
+const BASIS = /\((measured|derived|judged)\b[^)]*\)/i;
+const LABEL_TITLE = /^(simulation|report|decision|status|update|summary|notes?)\s*:/i;
+
+/** Principles checkable from plain text (docs/specs/doc-system/principles.md): hype, jargon, label titles. Warnings only. */
+function checkPrinciples(md: string): Finding[] {
+	const f: Finding[] = [];
+	const add = (code: string, message: string) => f.push({ code, message });
+	const text = prose(md);
+	for (const w of HYPE_WORDS)
+		for (const m of text.matchAll(new RegExp(`(?<![\\w-])${reEscape(w)}(?![\\w-])`, "gi")))
+			add("hype-word", `'${m[0]}' says nothing a reader can check: say what it does instead.`);
+	for (const term of JARGON_TERMS) {
+		const first = text.search(new RegExp(`\\b${term}\\b`));
+		if (first < 0) continue;
+		// explained AT first use: 'plain words (TERM)' around it, or 'TERM (plain words)' straight after it
+		const before = text.slice(Math.max(0, first - 70), first + term.length);
+		const after = text.slice(first + term.length, first + term.length + 90);
+		const glossed = new RegExp(`[a-z][a-z -]{3,60}\\s\\(${term}$`, "i").test(before) || /^\s*\([^()]{4,80}\)/.test(after);
+		if (!glossed) add("unglossed-jargon", `${term} is used before it is explained: write 'plain meaning (${term})' at first use.`);
+	}
+	const title = md.match(/^#\s+(.+?)\s*$/m)?.[1] ?? "";
+	if (title && (LABEL_TITLE.test(title) || (!/[?]$/.test(title) && title.split(/\s+/).length < 4)))
+		add("label-title", `The title '${title.slice(0, 60)}' names a topic. State the finding, or ask the decision as a question.`);
+	return f;
+}
+
 export function lintDoc(md: string, purpose = "report"): Finding[] {
 	const f: Finding[] = [];
 	const add = (code: string, message: string) => f.push({ code, message });
 	const ids = new Set(headings(md).map((h) => h.id));
+
+	for (const x of checkPrinciples(md)) f.push(x);
 
 	if (!/^\*\*(?:The ask|In one sentence|The goal|The decision)[^*]*:\*\*\s*\S/m.test(md))
 		add("no-ask", "Add a '**The ask in one sentence:**' line under the title.");
@@ -58,6 +105,7 @@ export function lintDoc(md: string, purpose = "report"): Finding[] {
 		else {
 			for (const item of take.split("\n").filter((l) => /^\s*(\d+\.|[-*])\s/.test(l))) {
 				if (!/\]\(#[^)]+\)/.test(item)) add("takeaway-unlinked", `Takeaway has no link to the section that proves it: ${item.trim().slice(0, 70)}`);
+				if (!BASIS.test(item)) add("takeaway-no-basis", `Say whether the takeaway is (measured), (derived: the rule) or (judged): ${item.trim().slice(0, 70)}`);
 				if (FIGURE.test(item.replace(/\]\(#[^)]*\)|§\d+/g, "")) && !/\[\^[^\]]+\]|\]\(https?:/.test(item))
 					add("uncited-figure", `Figure in a takeaway has no source: ${item.trim().slice(0, 70)}`);
 			}
@@ -75,6 +123,10 @@ export function lintDoc(md: string, purpose = "report"): Finding[] {
 
 	if (PURPOSES_NEEDING_METHOD.has(purpose) && !has(md, /method|limits|how far to trust/i))
 		add("no-method", "Add '## Method and limits': where the data came from and what it cannot show.");
+	if (PURPOSES_NEEDING_METHOD.has(purpose) || purpose === "decision") {
+		if (!has(md, /(do not|don't|does not) know|unknowns?|limits|open questions?/i) && !/\[OPEN\s*[—-]/.test(md))
+			add("no-unknowns", "State what you do not know: a '## What we do not know' section, a 'Method and limits' section, or inline [OPEN — ...].");
+	}
 
 	if (purpose === "brief") {
 		if (!has(md, /bias/i)) add("no-biases", "Add '## Our biases, in the open': who wrote it, who graded the evidence, what each bias could distort.");
@@ -85,6 +137,8 @@ export function lintDoc(md: string, purpose = "report"): Finding[] {
 	if (purpose === "decision") {
 		if (!has(md, /options?\b/i)) add("no-options", "Add '## Options' with 2–4 options and their cost, risk and reversibility.");
 		if (!has(md, /recommend/i)) add("no-recommendation", "Add '## Recommendation': one option and the reason that decides it.");
+		else if (!/recommended\s*\(judged\)/i.test(md))
+			add("recommendation-basis", "Mark the recommendation as yours: 'Recommended (judged): B', then the one reason and what would change your mind.");
 	}
 	return f;
 }

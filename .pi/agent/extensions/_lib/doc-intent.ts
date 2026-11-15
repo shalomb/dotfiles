@@ -2,6 +2,7 @@
  * /doc intent: read purpose, depth, audience and style from the arguments, and
  * leave everything else (topic, facts, sources) to be inferred from the session.
  */
+import { principleRules, templateGuide } from "./doc-principles.ts";
 import { isTemplateType, type TemplateType } from "./doc-templates.ts";
 
 export const PURPOSES = ["decision", "report", "status", "workshop", "deck", "brief"] as const;
@@ -127,6 +128,9 @@ export function buildDocPrompt(i: DocIntent): string {
 		return [
 			"/skill:docs-authoring Revise the last document written or filed in this session (its Markdown source).",
 			`Changes: ${changes.join("; ")}.`,
+			"",
+			principleRules(),
+			"",
 			"Edit the same source file, then call doc_publish on it again (the library keeps the old render under versions/).",
 		].join("\n");
 	}
@@ -154,6 +158,11 @@ export function buildDocPrompt(i: DocIntent): string {
 	lines.push(
 		"",
 		"Use only facts already in this session (files read, commands run, tickets, data); every figure gets a citation to where it came from.",
+		"",
+		principleRules(),
+		"",
+		templateGuide(),
+		"",
 		"Start the draft with one line: 'Assumed: <purpose> for <audience>, <depth>, from <topic>. Say deeper, shorter, for <who> or formal to change.'",
 		"Write the Markdown next to the work it describes, then call the doc_publish tool on it. It renders, checks, files and returns the URLs. Fix what its findings flag that you can fix from the facts, then publish once more.",
 	);
