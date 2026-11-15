@@ -14,9 +14,10 @@
    judges it. Tests drift to fit the code; scenarios get edited to pass.
 2. **No spec ownership.** Nothing stops a Builder from changing a `.feature`,
    deleting an assertion, or tagging a scenario `@skip`.
-3. **Guards do not reach Builders.** `lean-worker` loads no extensions, so the
-   pi tool_call guards (goal store, scan policy) do not run inside it. Any
-   guardrail must be mechanical, in the gate the Copilot runs on the diff.
+3. **Only some guards reach Builders.** `lean-worker` loads no ambient
+   extensions; `subagentOnlyExtensions` adds the commit, hooks, signing and
+   CLI guards only. Spec, goal-store and scan guards do not run inside it, so
+   BDD guardrails must be mechanical, in the gate the Copilot runs on the diff.
 4. **Red is never proven.** No step shows the acceptance test failed before
    the change, so a test that cannot fail passes the gate.
 5. **Critic is rare and judgement-only.** Cheap mechanical checks are missing;
@@ -92,3 +93,31 @@ Catches what the gate cannot: code that fits the example, not the rule;
 glossary words used in the wrong sense; side effects, security, public API.
 Runs on triggers. Agent: `bart-verifier` (Bart skill, read-only, different
 model family from the Builder).
+
+## Agents: thin definitions, skills do the work
+
+Principle: an agent file is a role boundary, not a manual. It holds only
+frontmatter (model pin, tools, extensions, `skills:`) and a short body:
+brief inputs, do / never, receipt shape. Method lives in skills.
+
+| Agent | File | Skills (the heavy lifting) |
+| :-- | :-- | :-- |
+| Builder | `.pi/agent/agents/lean-worker.md` | test-driven-development, farley-tdd, git-commit-formatter, git-safety-guardrails, verification-before-completion |
+| Spec Steward | `.pi/agent/agents/spec-steward.md` | adzic-bdd, domain-modeling, test-driven-development, git-commit-formatter, git-safety-guardrails, verification-before-completion |
+| Verifier | `.pi/agent/agents/bart-verifier.md` | bart-adversarial-reviewer, test-design-review, adzic-bdd, domain-modeling |
+
+Persona skills, wrap as thin agents only when a step needs a sub-agent:
+
+| Skill | Likely home | Note |
+| :-- | :-- | :-- |
+| marge-product-agent | /grill-me (user needs) | runs in the main session today |
+| lisa-planning-agent | /plan (breakdown) | runs in the main session today |
+| lovejoy-release-agent | close retro, release | candidate for a close-retro agent |
+| ralph-build-agent | overlaps /drive | decide: retire, or make it /drive's unattended mode |
+
+Open: bart-verifier model pin (`antigravity/gemini-4-hydrogen` drafted; check
+it is the newest non-Claude model offered).
+Known gap: the repo deploys agents to `~/.pi/agent/agents/`, but the personal
+profile reads `~/.pi/profiles/personal/agents/` (a real directory, not a
+symlink), so repo agents do not reach the profile. Fix in
+`lib/pi/profile.sh` (profile prepare should link `agents/`).

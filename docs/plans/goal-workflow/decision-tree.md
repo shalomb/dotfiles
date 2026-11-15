@@ -36,6 +36,7 @@ close retro did KR move?      feeds /plan (replan), prunes scenarios
 | drive.spec-author | Separate Spec Steward per wave writes scenarios + red acceptance tests; Builders cannot touch them. |
 | drive.gate-home | Gate as tested code the drive skill calls, not skill text. |
 | drive.verifier-trigger | LLM Verifier on gate warnings, hub/security files, retries, P0. Steward writes >= 2 contrasting key examples per rule, so example-overfitting fails a test. |
+| agents.thin | Agent files are thin role boundaries (model, tools, extensions, `skills:`, brief, do/never, receipt); skills do the work. |
 | drive.verifier-agent | Verifier = Bart: a `bart-verifier` agent definition (beside lean-worker) that loads `bart-adversarial-reviewer`, read-only tools, pinned to a different model family from the Builder; brief = diff, scenarios, glossary, gate warnings; returns a verdict receipt. |
 
 ## Open: round 1 (where artefacts live, how they link)
