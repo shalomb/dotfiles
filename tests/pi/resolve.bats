@@ -62,3 +62,14 @@ YAML
   p="$PI_PROFILE_DIR/work"
   [ ! -e "$p/auth.json" ]; [ -L "$p/settings.json" ]; [ -L "$p/skills" ]
 }
+
+@test "profile prepare replaces a stale real agents/ dir with the shared link, keeping a backup" {
+  mkdir -p "$PI_AGENT_DIR/agents" "$PI_PROFILE_DIR/personal/agents"
+  echo shared >"$PI_AGENT_DIR/agents/a.md"
+  echo stale >"$PI_PROFILE_DIR/personal/agents/a.md"
+  _pi_profile_prepare personal
+  p="$PI_PROFILE_DIR/personal"
+  [ -L "$p/agents" ]
+  [ "$(cat "$p/agents/a.md")" = shared ]
+  [ "$(cat "$p"/agents.local-*/a.md)" = stale ]
+}

@@ -62,6 +62,12 @@ _pi_profile_prepare() {
     name="${entry##*/}"
     case "$name" in
     auth.json | install | bin | antigravity-accounts.json) continue ;;
+    agents)
+      # Shared on purpose (repo-deployed); a real dir here is a stale copy that shadows it
+      if [[ -d "$dir/$name" && ! -L "$dir/$name" ]]; then
+        mv "$dir/$name" "$dir/$name.local-$(date +%Y%m%d%H%M%S)"
+      fi
+      ;;
     esac
     [[ -e "$dir/$name" || -L "$dir/$name" ]] || ln -s "$entry" "$dir/$name"
   done
