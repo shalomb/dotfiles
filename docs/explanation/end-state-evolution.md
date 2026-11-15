@@ -1,127 +1,52 @@
 # End-State Evolution
 
-## Overview
+The destination of this repository's agent workflow. `/n` (the gas pedal) reads this file to pick the next hop.
+Intent lives here and nowhere else: only the human changes the key results below.
 
-The **end-state** of the dotfiles repository is not static but evolves over time based on:
-- **User needs**: Changing workflows and requirements
-- **Technology changes**: New tools, deprecations, best practices
-- **Architectural learnings**: Discoveries about what works and what doesn't
-- **Community standards**: Evolving conventions and practices
+Scope: the local need (one person, this machine, code work in this repo). See
+[ADR-012](../../.pi/docs/specs/agentic-coding/adr/ADR-012-intent-upstream-loop-runs-itself.md).
 
-## End-State Definition
+## Vision
 
-The **end-state** represents the ideal state of the repository at any given time, including:
+From any idea, the human reaches a verified, committed change in this repo by pressing the gas pedal. The human
+makes every intent decision, the machine does the rest, and it stops by itself at one-way doors and unclear roads.
 
-### **Functional Requirements**
-- **User Experience**: All essential functions, aliases, and workflows working
-- **Performance**: Fast shell startup, quick function execution
-- **Reliability**: Stable, predictable behavior across environments
-- **Usability**: Intuitive interfaces and clear documentation
+## Key results
 
-### **Technical Requirements**
-- **Architecture**: Clean, maintainable code structure
-- **Testing**: Comprehensive test coverage with fast feedback
-- **Documentation**: Clear, accurate, and up-to-date
-- **Standards**: Consistent coding practices and conventions
+Format: `- **KR-n.m** sentence — check: \`command\``. A check exits 0 when the key result is met. Checks run from
+the repo root. The first red key result, in file order, is the next hop.
 
-### **Evolutionary Requirements**
-- **Scalability**: Easy to add new tools/configurations
-- **Maintainability**: Simple to modify and extend
-- **Compatibility**: Works across different environments
-- **Future-proofing**: Adaptable to changing needs
+### O1. Intent is captured once, upstream
 
-## End-State Discovery Process
+- **KR-1.1** The key results in this file parse into id, sentence and check — check: `bun test ./.pi/agent/extensions/_lib/kr.test.ts`
 
-### **1. Current State Assessment**
+### O2. The gas pedal works
+
+- **KR-2.1** `/n` picks the first red key result and drafts a goal whose done-check is that key result's check — check: `bun test ./.pi/agent/extensions/_lib/next-hop.test.ts`
+- **KR-2.2** A goal on an approved, unchanged key-result check locks itself; a changed key result stops the car — check: `bun test ./.pi/agent/extensions/_lib/next-hop.test.ts -t self-lock`
+
+### O3. Every Builder commit is graded mechanically, never by the agent itself
+
+- **KR-3.1** The gate and the `drive_gate` tool are tested code — check: `bun test ./.pi/agent/extensions/_lib/drive-gate.test.ts ./.pi/agent/extensions/_lib/drive-gate-io.test.ts`
+- **KR-3.2** The `drive_gate` tool is deployed where pi loads it — check: `test -f ~/.pi/agent/extensions/drive-gate-tool.ts`
+
+### O4. The sensors are honest
+
+- **KR-4.1** The fast test target is green and fails on any failure — check: `make test-fast`
+- **KR-4.2** Tests leave no litter in `/tmp` — check: `bun test ./.pi/agent/extensions/_lib/registry-spikes.test.ts && test -z "$(fd -d1 -t d '^spike-h2-' /tmp)"`
+
+## Approval
+
+The human approves the key results once by writing the hash of the key-result lines below. `/n` stops if the hash
+no longer matches. Compute it with:
+
 ```bash
-# Discover current capabilities
-compgen -A function | wc -l  # Function count
-alias | wc -l                # Alias count
-make test                    # Test suite status
+rg '^- \*\*KR-' docs/explanation/end-state-evolution.md | sha256sum | cut -c1-16
 ```
 
-### **2. Gap Analysis**
-- **Missing functionality**: What should work but doesn't
-- **Performance issues**: Slow or inefficient operations
-- **User pain points**: Friction in daily workflows
-- **Technical debt**: Code quality and maintainability issues
+Approved: (pending)
 
-### **3. End-State Recalculation**
-- **Review user feedback**: What's working, what's not
-- **Assess new requirements**: Emerging needs and tools
-- **Evaluate architectural changes**: What patterns are proving effective
-- **Update success criteria**: Refine what "done" looks like
+## Later, not now
 
-## End-State Documentation
-
-### **Location**: `docs/explanation/end-state-evolution.md`
-- **Current end-state**: What we're working toward now
-- **Evolution history**: How the end-state has changed
-- **Discovery process**: How to assess current state
-- **Recalculation triggers**: When to update the end-state
-
-### **Integration Points**
-- **TODO.md**: Recovery plan based on current end-state
-- **AGENTS.md**: Definition of Done aligned with end-state
-- **Recovery plan**: Phases and priorities reflect end-state goals
-
-## Recalculation Triggers
-
-### **Automatic Triggers**
-- **Major architectural changes**: New patterns or structures
-- **User experience issues**: Broken workflows or missing functionality
-- **Technology updates**: New tools or deprecated practices
-- **Performance degradation**: Slower operations or test failures
-
-### **Manual Triggers**
-- **Regular reviews**: Monthly assessment of progress and needs
-- **User feedback**: Reports of issues or desired improvements
-- **Community changes**: New best practices or standards
-- **Project milestones**: Completion of major phases
-
-## End-State Communication
-
-### **Agent Awareness**
-- **Read end-state docs**: Understand current goals before starting work
-- **Assess current state**: Discover what's working and what's not
-- **Recalculate plans**: Update TODO.md based on current end-state
-- **Update documentation**: Keep end-state docs current
-
-### **Process Integration**
-- **Before major work**: Check current end-state and adjust plans
-- **After significant changes**: Reassess end-state and update documentation
-- **During planning**: Use end-state to prioritize and scope work
-- **At completion**: Verify work aligns with current end-state goals
-
-## Examples
-
-### **End-State Evolution Example**
-```
-v1.0: Basic dotfile management
-  → v2.0: + Python tooling, testing framework
-  → v3.0: + Diataxis docs, agent context standards
-  → v4.0: + Comprehensive function audit, performance benchmarks
-  → v5.0: + Scalability framework, evolution tools
-```
-
-### **Recalculation Example**
-```
-Current State: Core functions working, some convenience functions missing
-End-State v4.0: All functions working + performance benchmarks
-Gap: Missing convenience functions + performance testing
-Plan: Focus on function audit and performance testing
-```
-
-## Best Practices
-
-### **Keep End-State Current**
-- **Regular updates**: Monthly review and update
-- **Change documentation**: Record why end-state changed
-- **Version tracking**: Maintain history of end-state evolution
-- **Stakeholder alignment**: Ensure end-state reflects user needs
-
-### **Agent Integration**
-- **Always check end-state**: Before starting any major work
-- **Discover current state**: Use tools to assess actual capabilities
-- **Recalculate plans**: Update TODO.md based on current end-state
-- **Document changes**: Update end-state docs when making changes
+- O5. Autonomy is visible: every hop logs the key result it targeted, whether it moved, tokens and time.
+- O6. The docs do not lie: one source of truth; no ADR is Accepted without cited evidence.
