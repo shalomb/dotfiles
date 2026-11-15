@@ -310,4 +310,18 @@ return {
     end,
   },
 
+  -- Conversational Copilot chat (reuses copilot.lua's auth token)
+  {
+    "CopilotC-Nvim/CopilotChat.nvim",
+    dependencies = { "zbirenbaum/copilot.lua", "nvim-lua/plenary.nvim" },
+    cmd = { "CopilotChat", "CopilotChatToggle", "CopilotChatModels" },
+    keys = {
+      { "<leader>cc", "<cmd>CopilotChatToggle<cr>", mode = { "n", "v" }, desc = "Copilot chat" },
+    },
+    cond = function()
+      return not vim.g.pass_redact_mode
+    end,
+    opts = {},
+  },
+
 }
