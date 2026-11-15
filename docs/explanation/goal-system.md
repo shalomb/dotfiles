@@ -1,7 +1,7 @@
 # The goal system: what it is and how it runs
 
 Date: 2026-11-15. Status: opinionated position, supersedes the human-facing framing of `/goal`.
-Decisions: [ADR-012](../../.pi/docs/specs/agentic-coding/adr/ADR-012-next-advances-one-hop.md).
+Decisions: [ADR-012](../../.pi/docs/specs/agentic-coding/adr/ADR-012-intent-upstream-loop-runs-itself.md).
 Design history: [decision tree](../plans/goal-workflow/decision-tree.md), [drive roles](../plans/goal-workflow/drive-roles.md).
 
 ## In one sentence

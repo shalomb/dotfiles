@@ -24,6 +24,7 @@ promotes_to:
   - adr/ADR-009-precommitted-done-check-gates-closure.md
   - adr/ADR-010-goal-lock-tamper-evidence-on-private-ref.md
   - adr/ADR-011-discovery-before-goal-draft.md
+  - adr/ADR-012-intent-upstream-loop-runs-itself.md
 ---
 
 # Handoff Specification: Agentic Coding System
@@ -389,7 +390,7 @@ Raised by the 2026-11-02 appraisals and not yet decided (tracked in [decision-tr
 ## 10. Links
 
 - [decision-tree.md](decision-tree.md), [GLOSSARY.md](GLOSSARY.md)
-- ADRs: [001](adr/ADR-001-copilot-deterministic-topology.md), [002](adr/ADR-002-single-out-of-repo-todo-store.md), [003](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md), [004](adr/ADR-004-risk-tiered-critic-gate.md), [005](adr/ADR-005-context-hygiene-and-pointer-receipts.md), [006](adr/ADR-006-three-stream-learning-loop.md), [007](adr/ADR-007-two-stage-intent-governor.md), [008](adr/ADR-008-branch-scoped-goal-contract.md), [009](adr/ADR-009-precommitted-done-check-gates-closure.md), [010](adr/ADR-010-goal-lock-tamper-evidence-on-private-ref.md), [011](adr/ADR-011-discovery-before-goal-draft.md)
+- ADRs: [001](adr/ADR-001-copilot-deterministic-topology.md), [002](adr/ADR-002-single-out-of-repo-todo-store.md), [003](adr/ADR-003-cohesive-wave-batching-and-prefix-salvage.md), [004](adr/ADR-004-risk-tiered-critic-gate.md), [005](adr/ADR-005-context-hygiene-and-pointer-receipts.md), [006](adr/ADR-006-three-stream-learning-loop.md), [007](adr/ADR-007-two-stage-intent-governor.md), [008](adr/ADR-008-branch-scoped-goal-contract.md), [009](adr/ADR-009-precommitted-done-check-gates-closure.md), [010](adr/ADR-010-goal-lock-tamper-evidence-on-private-ref.md), [011](adr/ADR-011-discovery-before-goal-draft.md), [012](adr/ADR-012-intent-upstream-loop-runs-itself.md)
 - Scenarios: [goal-contract](features/goal-contract.feature), [batch-execution-and-merge](features/batch-execution-and-merge.feature), [learning-and-intent-governor](features/learning-and-intent-governor.feature), [waf-guardrails-and-recovery](features/waf-guardrails-and-recovery.feature)
 - Rounds: [rounds/](rounds/) (v1.0), [rounds/v1.1/](rounds/v1.1/), [rounds/goal-v2/](rounds/goal-v2/), [rounds/goal-ux/](rounds/goal-ux/)
 - Evidence: `~/shalomb/agentic-falsify/runs/FINDINGS.md`

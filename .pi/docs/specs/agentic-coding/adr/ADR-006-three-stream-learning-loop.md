@@ -1,6 +1,6 @@
 # ADR-006: Three-Stream Learning Loop with Cold-Start Guards
 
-- **Status:** Accepted
+- **Status:** Accepted; amended 2026-11-15 (goal loop, see Amendment 1)
 - **Date:** 2026-10-31
 - **Decider(s):** unop, Main Copilot (Design Session)
 - **Consulted:** Obsidian `Tech/AI/AgenticLoops.md` (`OLA`, `RDS`, `TALAR`), Lexler `Learning Loop` & `Memory Grooming`
@@ -97,3 +97,9 @@ Implement a **Three-Stream Learning Loop with Proportional Telemetry and Cold-St
 ## Revisit Criteria
 
 - Revisit the $N = 20$ trajectory threshold once cross-session telemetry from 3+ repositories is available to calibrate bandit convergence speed.
+
+## Amendment 1 (2026-11-15): the goal loop feeds Forward Refinement and Course Correction
+
+In the goal loop ([ADR-012](ADR-012-intent-upstream-loop-runs-itself.md)) each hop writes one retro line (Forward Refinement: the next draft reads it). Its
+tripwires (key result not moved, repeated rejects, glovebox outgrowing progress, a contradicted key result or ADR,
+budget overrun) are Course Correction triggers: the loop stops and reorients instead of carrying on.
