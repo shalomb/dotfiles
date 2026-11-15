@@ -24,6 +24,15 @@ def day(deadline, key):
         sys.exit(f"error: deadline.{key}: must be a date like 2026-12-10, got {value!r}")
 
 
+MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+LABEL_MAX = 40
+
+
+def words(date):
+    """A date as people say it: '10 Dec 2026'."""
+    return f"{date.day} {MONTHS[date.month - 1]} {date.year}"
+
+
 def check_structure(doc):
     meta = need(doc, "meta", dict, "")
     for key in META_FIELDS:
@@ -37,6 +46,8 @@ def check_structure(doc):
         fail("deadline.ask_by", "must fall between start and date")
     for key in ("date_label", "ask_by_note"):
         need(deadline, key, str, "deadline")
+    if not deadline["date_label"].strip() or len(deadline["date_label"]) > LABEL_MAX:
+        fail("deadline.date_label", f"must be a short noun phrase of 1 to {LABEL_MAX} characters, like 'renewal'")
     for i, f in enumerate(doc.get("facts", [])):
         for key in ("value", "label"):
             need(f, key, str, f"facts[{i}]")
@@ -71,7 +82,8 @@ def derive(doc):
     span = max((date - start).days, 1)
     data = {
         "meta": {k: doc["meta"][k] for k in META_FIELDS},
-        "deadline": {k: d[k] for k in ("start", "today", "date", "ask_by", "date_label", "ask_by_note")},
+        "deadline": {**{k: d[k] for k in ("start", "today", "date", "ask_by", "date_label", "ask_by_note")},
+                     "today_text": words(today), "date_text": words(date), "ask_by_text": words(ask_by)},
         "facts": doc.get("facts", []),
         "options": [{**{k: o[k] for k in ("id", "title", "pro", "con", "note")},
                      "recommended": o.get("recommended") is True} for o in doc["options"]],

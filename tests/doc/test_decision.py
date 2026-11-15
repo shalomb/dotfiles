@@ -55,3 +55,40 @@ def test_reply_is_optional(tmp_path):
     doc = fixture_doc(NAME)
     doc.pop("reply")
     page_data(doc, tmp_path)
+
+
+# ---- D5: dates in people's words, the label is a plain noun phrase ----
+
+def test_dates_are_shown_in_words_not_iso(tmp_path):
+    page, data = page_data(fixture_doc(NAME), tmp_path)
+    d = data["deadline"]
+    assert (d["today_text"], d["date_text"], d["ask_by_text"]) == ("14 Nov 2026", "10 Dec 2026", "6 Dec 2026")
+    script = page.split("const M=DATA.meta", 1)[1].split("renderMade();")[0]
+    for iso in ("L.today)", "L.date)", "L.ask_by+"):
+        assert iso not in script
+
+
+def test_a_day_below_ten_has_no_leading_zero_and_every_month_has_a_name(tmp_path):
+    doc = fixture_doc(NAME)
+    doc["deadline"].update(start="2026-01-01", today="2026-01-02", ask_by="2026-09-03", date="2026-12-31")
+    d = page_data(doc, tmp_path)[1]["deadline"]
+    assert (d["today_text"], d["ask_by_text"], d["date_text"]) == ("2 Jan 2026", "3 Sep 2026", "31 Dec 2026")
+
+
+@pytest.mark.parametrize("label", ["renewal", "expiry", "contract end"])
+def test_the_tile_and_the_bar_end_use_the_label_as_given(tmp_path, label):
+    doc = fixture_doc(NAME)
+    doc["deadline"]["date_label"] = label
+    page, data = page_data(doc, tmp_path)
+    assert data["deadline"]["date_label"] == label
+    script = page.split("const M=DATA.meta", 1)[1].split("renderMade();")[0]
+    assert '"days to "+L.date_label' in script and "text:L.date_label" in script and ".replace(" not in script
+
+
+@pytest.mark.parametrize("label,ok", [("x" * 40, True), ("x" * 41, False), ("", False)])
+def test_label_is_a_short_noun_phrase(tmp_path, label, ok):
+    doc = fixture_doc(NAME)
+    doc["deadline"]["date_label"] = label
+    result, _ = render(NAME, doc, tmp_path)
+    assert (result.returncode == 0) is ok
+    assert ok or "deadline.date_label" in result.stderr

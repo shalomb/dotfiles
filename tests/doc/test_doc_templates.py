@@ -162,13 +162,54 @@ def test_style_keys_do_not_trigger_on_ordinary_text(name, tmp_path):
 
 # 4. tone
 
-@pytest.mark.parametrize("word", KERNEL.HYPE_WORDS)
+# Literal copies: removing or adding a word fails here and forces a deliberate edit of both places.
+EXPECTED_HYPE_WORDS = ["seamless", "leverage", "synergy", "robust", "cutting-edge", "game-changing",
+                       "revolutionary", "best-in-class", "powerful", "blazing", "world-class",
+                       "awesome", "amazing"]
+EXPECTED_JARGON_TERMS = ["ALB", "ACM", "PITR", "GSI", "TFC", "APMS", "SG", "EBS", "ROAM"]
+
+
+def test_hype_word_list_is_pinned():
+    assert KERNEL.HYPE_WORDS == EXPECTED_HYPE_WORDS
+
+
+def test_jargon_term_list_is_pinned():
+    assert KERNEL.JARGON_TERMS == EXPECTED_JARGON_TERMS
+
+
+@pytest.mark.parametrize("word", EXPECTED_HYPE_WORDS)
 def test_every_hype_word_is_rejected_by_name(name, case, tmp_path, word):
     authored(name, "tone")
     doc = fixture_doc(name)
     doc[case["text_field"]] += f" This is a {word.upper()} plan."
     err = fails(name, doc, tmp_path)
     assert word in err.lower() and case["text_field"] in err
+
+
+# Matching rule (kernel.check_tone): a hype word counts only as a whole word, in any case. A letter, digit,
+# underscore or hyphen on either side means it is part of another word and is allowed.
+@pytest.mark.parametrize("phrase,rejected", [
+    ("This is Robust.", True), ("It is ROBUST, mostly.", True), ("Our robust plan", True),
+    ("A powerful tool", True), ("Powerful, yes", True),
+    ("Its robustness is unknown.", False), ("an awesomely long queue", False),
+    ("a powerfully built queue", False), ("the non-robust path", False), ("robust-ish", False),
+])
+def test_hype_matching_is_whole_word_and_case_insensitive(name, case, tmp_path, phrase, rejected):
+    authored(name, "tone")
+    doc = fixture_doc(name)
+    doc[case["text_field"]] += f" {phrase}"
+    result, _ = render(name, doc, tmp_path)
+    assert (result.returncode != 0) is rejected, result.stderr
+
+
+@pytest.mark.parametrize("term", EXPECTED_JARGON_TERMS)
+def test_every_jargon_term_needs_a_glossary_entry(name, case, tmp_path, term):
+    authored(name, "tone")
+    doc = fixture_doc(name)
+    doc.setdefault("glossary", {}).pop(term, None)
+    doc[case["text_field"]] += f" The {term} setting matters."
+    err = fails(name, doc, tmp_path)
+    assert f"{term!r} needs a plain meaning in glossary" in err
 
 
 def test_unglossed_jargon_is_rejected_then_accepted_when_glossed(name, case, tmp_path):

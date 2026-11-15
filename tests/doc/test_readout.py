@@ -1,5 +1,10 @@
 """Readout-specific behaviour, run through template.py. Shared rules live in test_doc_templates.py."""
 import copy
+import html
+import json
+import re
+import shutil
+import subprocess
 
 import pytest
 
@@ -63,3 +68,50 @@ def test_suggestion_options_are_tagged_and_footer_says_untested(tmp_path):
     assert data["derived"]["suggestions"] == 1
     assert 'text:"suggestion"' in page
     assert "untested" in page
+
+
+# ---- D4: the readout on a phone ----
+
+CHROMIUM = shutil.which("chromium-headless-shell") or shutil.which("chromium")
+PROBE = """<script>
+(function(){
+  var w=document.querySelector('.mapwrap'),s=document.getElementById('map'),c=document.getElementById('sum');
+  var out={wrap:!!w,overflowX:w?getComputedStyle(w).overflowX:null,
+    svgWidth:s.getBoundingClientRect().width,svgMinWidth:parseFloat(getComputedStyle(s).minWidth)||0,
+    wrapWidth:w?w.getBoundingClientRect().width:null,sumPosition:getComputedStyle(c).position,
+    inWrap:!!(w&&w.contains(s))};
+  document.body.setAttribute('data-pos',JSON.stringify(out));
+})();
+</script>"""
+
+
+def measure(tmp_path, width):
+    out = tmp_path / "out" / "page.html"
+    render_ok(NAME, fixture_doc(NAME), tmp_path)
+    out.write_text(out.read_text() + PROBE)
+    run = subprocess.run([CHROMIUM, "--no-sandbox", "--disable-gpu", "--virtual-time-budget=4000",
+                          f"--window-size={width},900", "--dump-dom", f"file://{out}"],
+                         capture_output=True, text=True, timeout=90)
+    assert run.returncode == 0, run.stderr
+    found = re.search(r"data-pos=\"([^\"]*)\"", run.stdout)
+    assert found, "probe did not write data-pos"
+    return json.loads(html.unescape(found.group(1)))
+
+
+@pytest.mark.skipif(CHROMIUM is None, reason="no headless chromium")
+def test_phone_map_scrolls_sideways_at_a_readable_width(tmp_path):
+    pos = measure(tmp_path, 390)
+    assert pos["inWrap"] and pos["overflowX"] in ("auto", "scroll")
+    assert pos["svgMinWidth"] >= 800 and pos["svgWidth"] >= pos["svgMinWidth"]
+    assert pos["wrapWidth"] <= 390
+
+
+@pytest.mark.skipif(CHROMIUM is None, reason="no headless chromium")
+def test_phone_plan_counter_is_not_sticky_or_fixed(tmp_path):
+    assert measure(tmp_path, 390)["sumPosition"] not in ("sticky", "fixed")
+
+
+@pytest.mark.skipif(CHROMIUM is None, reason="no headless chromium")
+def test_desktop_plan_counter_is_still_sticky_and_map_fits(tmp_path):
+    pos = measure(tmp_path, 1300)
+    assert pos["sumPosition"] == "sticky" and pos["svgMinWidth"] == 0

@@ -64,6 +64,19 @@ class DecisionTest(unittest.TestCase):
 
 
 class BarsTest(unittest.TestCase):
+    def test_a_caption_right_after_the_last_bar_keeps_that_bar(self):
+        out = w.bars(pandoc("::: bars\n- As first settled: 63%\n- **+ redirect: 97%**\nThe redirect depends on OD-1.\n:::\n"))
+        self.assertEqual(out.count('<div class="bar'), 2)
+        self.assertIn("+ redirect", out)
+        self.assertIn("97%", out)
+        self.assertIn("The redirect depends on OD-1.", out)
+
+    def test_a_caption_after_the_kill_line_keeps_the_kill_line(self):
+        out = w.bars(pandoc("::: bars\n- As first settled: 63%\n- kill: 75%\nThe redirect depends on OD-1.\n:::\n"))
+        self.assertEqual(out.count('<div class="bar'), 1)
+        self.assertIn('class="kill" style="left:75%"', out)
+        self.assertIn("The redirect depends on OD-1.", out)
+
     def test_bars_with_kill_line_and_happy_path(self):
         out = w.bars(pandoc("::: bars\n- As first settled: 63%\n- **+ redirect: 97%**\n- kill: 75%\n\nThe redirect depends on OD-1.\n:::\n"))
         self.assertIn('<figure class="bars">', out)

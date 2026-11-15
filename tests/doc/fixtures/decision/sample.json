@@ -7,7 +7,7 @@
     "foot": "Source: a made-up scenario for tests."
   },
   "deadline": {"start": "2026-11-01", "today": "2026-11-14", "date": "2026-12-10", "ask_by": "2026-12-06",
-               "date_label": "renews", "ask_by_note": "last sensible day to ask the owner"},
+               "date_label": "renewal", "ask_by_note": "last sensible day to ask the owner"},
   "facts": [{"value": "0", "label": "messages in ninety days", "basis": "measured"}, {"value": "0", "label": "owners named so far", "basis": "judged"}],
   "options": [
     {"id": "lapse", "title": "Let it renew unnoticed", "pro": "No effort", "con": "Pays for something nobody owns", "note": "Only if usage is clean."},

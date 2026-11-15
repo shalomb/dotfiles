@@ -28,7 +28,7 @@ svg{width:100%;height:auto;display:block}
 .sum b{font:400 34px Georgia,serif;color:#ffd9a8}.sum div{font-size:14px;line-height:1.4}
 .roam{font-weight:700;font-size:12px;letter-spacing:.08em}
 .tag{display:inline-block;border:1px dashed var(--acc);color:var(--acc);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:0 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
-@media (max-width:768px){.opts,.two{grid-template-columns:1fr}}
+@media (max-width:768px){.opts,.two{grid-template-columns:1fr}.sum{position:static}.two>*{min-width:0}}
 </style></head><body><main>
 <div class="eyebrow" id="eyebrow"></div>
 <h1 id="title"></h1>
@@ -37,7 +37,7 @@ svg{width:100%;height:auto;display:block}
 
 <h2>Why it is hairy</h2>
 <p class="sub">Each box is one thing we have to line up. Red dashed lines are places where two sources disagree. Click a box.</p>
-<div class="two"><div class="card"><svg id="map" role="img" aria-label="Map of what the request needs against what exists"></svg></div>
+<div class="two"><div class="card"><div class="mapwrap"><svg id="map" role="img" aria-label="Map of what the request needs against what exists"></svg></div></div>
 <div class="card panel" id="panel"></div></div>
 
 <h2>The problem as I see it</h2>

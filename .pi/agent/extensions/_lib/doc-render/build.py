@@ -101,7 +101,7 @@ def take_title(body, override):
     m = re.search(r"<h1[^>]*>(.*?)</h1>", body, flags=re.S)
     if m:
         body = body[m.end():]
-        found = re.sub(r"\s+", " ", re.sub("<[^>]+>", "", m.group(1))).strip()
+        found = html.unescape(re.sub(r"\s+", " ", re.sub("<[^>]+>", "", m.group(1))).strip())
     else:
         found = None
     return body, (override or found or "Untitled")

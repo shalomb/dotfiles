@@ -150,11 +150,17 @@ def decisions(body):
 
 def bars(body):
     def build(inner):
-        rows, kill = [], None
-        for li in _items(inner):
+        rows, kill, tail = [], None, []
+        items = _items(inner)
+        for i, li in enumerate(items):
             hp = li.startswith("<strong>")
             text = _text(li)
             m = re.match(r"^(.*?):\s*([\d.]+)\s*%$", text)
+            if not m and i == len(items) - 1:
+                # a caption typed right under the last bar (no blank line) joins that item: split it off
+                m = re.match(r"^(.*?):\s*([\d.]+)\s*%\s+(\S.*)$", text)
+                if m:
+                    tail.append(m.group(3))
             if not m:
                 continue
             label, value = m.group(1).strip(), m.group(2)
@@ -167,7 +173,7 @@ def bars(body):
             f'<div class="bar{" hp" if hp else ""}"><span>{html.escape(label)}</span><span class="track">'
             f'<span class="fill" style="width:{v}%"></span>{k}</span><output>{v}%</output></div>'
             for label, v, hp in rows)
-        notes = " ".join(_text(p) for p in re.findall(r"<p>(.*?)</p>", inner, flags=re.S))
+        notes = " ".join([_text(p) for p in re.findall(r"<p>(.*?)</p>", inner, flags=re.S)] + tail)
         legend = " ".join(x for x in [f"kill line {kill}%." if kill else "", html.escape(notes)] if x)
         cap = f'<figcaption class="legend">{"<i></i>" if kill else ""}{legend}</figcaption>' if legend else ""
         return f'<figure class="bars">{bars_html}{cap}</figure>'

@@ -30,11 +30,11 @@ const DATA=__DATA__;
 /*__KERNEL_JS__*/
 const M=DATA.meta,D=DATA.derived,L=DATA.deadline;
 $("eyebrow").textContent=M.eyebrow;$("title").textContent=M.title;cite($("lede"),M.lede);
-[[String(D.days_left),"days to "+L.date_label.replace(/^renews$/,"renewal"),DATA.derived_basis.days_left]].concat(DATA.facts.map(f=>[f.value,f.label,f.basis]),[[String(D.options),"ways forward",DATA.derived_basis.options]]).forEach(x=>$("kpis").appendChild(el("div",{class:"card kpi"},[el("b",{text:x[0]}),el("span",{text:x[1]}),basisTag(x[2])])));
-$("clock").appendChild(el("div",{},[el("b",{style:"font:400 30px Georgia,serif",text:L.today}),el("div",{class:"sub",text:"today"})]));
+[[String(D.days_left),"days to "+L.date_label,DATA.derived_basis.days_left]].concat(DATA.facts.map(f=>[f.value,f.label,f.basis]),[[String(D.options),"ways forward",DATA.derived_basis.options]]).forEach(x=>$("kpis").appendChild(el("div",{class:"card kpi"},[el("b",{text:x[0]}),el("span",{text:x[1]}),basisTag(x[2])])));
+$("clock").appendChild(el("div",{},[el("b",{style:"font:400 30px Georgia,serif",text:L.today_text}),el("div",{class:"sub",text:"today"})]));
 const bar=el("div",{class:"bar"},[el("i",{style:"width:"+D.elapsed_pct+"%"}),el("u",{style:"left:"+D.ask_by_pct+"%"})]);$("clock").appendChild(bar);
-$("clock").appendChild(el("div",{},[el("b",{style:"font:400 30px Georgia,serif;color:var(--R)",text:L.date}),el("div",{class:"sub",text:L.date_label})]));
-$("clocknote").textContent="Red line ("+L.ask_by+"): "+L.ask_by_note+".";
+$("clock").appendChild(el("div",{},[el("b",{style:"font:400 30px Georgia,serif;color:var(--R)",text:L.date_text}),el("div",{class:"sub",text:L.date_label})]));
+$("clocknote").textContent="Red line ("+L.ask_by_text+"): "+L.ask_by_note+".";
 DATA.options.forEach((o,i)=>{const c=el("div",{class:"opt"+(o.recommended?" rec":"")},[
  el("span",{class:"badge",style:"background:"+(o.recommended?"var(--G)":"var(--N)"),text:o.recommended?"Recommended":"Option "+(i+1)}),
  el("h3",{text:o.title}),el("ul",{class:"g"},[el("li",{text:o.pro})]),el("ul",{class:"c"},[el("li",{text:o.con})]),el("div",{class:"sub",text:o.note})]);$("opts").appendChild(c);});

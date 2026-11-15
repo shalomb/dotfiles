@@ -33,6 +33,17 @@ class BuildTest(unittest.TestCase):
         self.assertIn('id="evidence"', page)
         self.assertNotIn("{#evidence}", page)
 
+    def test_an_ampersand_in_the_title_is_escaped_once(self):
+        self.src.write_text("# Plans & risks\n\n## 1. Plans & risks\n\nx\n")
+        page = self.build("-m", "doc")
+        self.assertIn("<title>Plans &amp; risks</title>", page)
+        self.assertIn("<h1>Plans &amp; risks</h1>", page)
+        self.assertNotIn("&amp;amp;", page)
+
+    def test_an_ampersand_in_a_deck_title_is_escaped_once(self):
+        self.src.write_text("# Plans & risks\n\n## 1. Plans & risks\n\nx\n")
+        self.assertNotIn("&amp;amp;", self.build("-m", "deck"))
+
     def test_deck_mode_is_the_story_page_opening_in_present_mode(self):
         self.src.write_text("# T\n\n## 1. A\n\n::: kpis\n- **9%** x\n:::\n")
         page = self.build("-m", "deck")

@@ -12,7 +12,7 @@ Design source: `docs/prototypes/decision-mock.html`. Sibling of `readout.md`; it
 | Field | Rule |
 | :-- | :-- |
 | `meta` | `eyebrow`, `title`, `lede`, `asof`, `foot`, all text. Title states a finding: 5+ words, not starting `Decision:`, `Report:` or `Simulation:`. |
-| `deadline` | `start`, `today`, `date`, `ask_by` as `YYYY-MM-DD`, in order `start <= today <= date` and `start <= ask_by <= date`; plus `date_label`, `ask_by_note`. |
+| `deadline` | `start`, `today`, `date`, `ask_by` as `YYYY-MM-DD`, in order `start <= today <= date` and `start <= ask_by <= date`; plus `date_label` (a short noun phrase, 40 characters at most, such as `renewal` or `expiry`: the tile reads "days to renewal" and the bar's right end shows it) and `ask_by_note`. |
 | `facts` | Optional list of `{value, label}` shown beside the day count. |
 | `options` | 2 or more of `{id, title, pro, con, note}`. Exactly one has `recommended: true`. |
 | `why` | The reason for the recommendation. Required. |
@@ -36,7 +36,7 @@ Design source: `docs/prototypes/decision-mock.html`. Sibling of `readout.md`; it
 
 ## Derived
 
-`days_left`, `elapsed_pct` and `ask_by_pct` (for the countdown bar), option and need counts.
+`days_left`, `elapsed_pct` and `ask_by_pct` (for the countdown bar), option and need counts, and the shown dates `today_text`, `date_text`, `ask_by_text` in people's words (`10 Dec 2026`).
 
 ## Not in scope
 

@@ -201,7 +201,7 @@ def render(body_html, title, kind, source_label, brand_css=None, mermaid=render_
     """pandoc HTML (title still inside) → full story page."""
     m = re.search(r"<h1[^>]*>(.*?)</h1>", body_html, flags=re.S)
     if m:
-        title = title or re.sub(r"\s+", " ", re.sub("<[^>]+>", "", m.group(1))).strip()
+        title = title or html.unescape(re.sub(r"\s+", " ", re.sub("<[^>]+>", "", m.group(1))).strip())
         body_html = body_html[:m.start()] + body_html[m.end():]
     title = title or "Untitled"
     body, fields = take_meta(widgets.dedupe_footnotes(body_html))
