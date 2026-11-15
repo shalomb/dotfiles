@@ -59,6 +59,22 @@ describe("rewriteAntigravityPayload", () => {
 		expect(rewriteAntigravityPayload(payload(text))).toBeUndefined();
 	});
 
+	// pi 1.5.2's <docs> block; this exact clause alone 429s (bisected 2026-11-15).
+	const DOCS_LINE = (mid: string) =>
+		`\n- When asked about: packages (docs/packages.md), MCP servers (docs/mcp.md)${mid}\n- Before implementing harness changes`;
+	const CODEMODE = ", codemode scripts and non-LLM models such as classifiers and image models (docs/codemode.md)";
+
+	test("drops the pi 1.5.2 codemode docs clause, after the opener rewrite", () => {
+		const out = rewriteAntigravityPayload(payload(PI_OPENER + DOCS_LINE(CODEMODE) + TAIL));
+		expect(sys(out as never)).toBe(OPENER_REPLACEMENT + DOCS_LINE("") + TAIL);
+	});
+
+	test("drops the codemode docs clause even when the opener is already fixed", () => {
+		const text = "You are a coding agent helping the user." + DOCS_LINE(CODEMODE) + TAIL;
+		const out = rewriteAntigravityPayload(payload(text));
+		expect(sys(out as never)).toBe("You are a coding agent helping the user." + DOCS_LINE("") + TAIL);
+	});
+
 	test("handles multiple parts, rewriting only matching ones", () => {
 		const p = payload(PI_OPENER + TAIL);
 		p.request.systemInstruction.parts.push({ text: "extra skill block" });

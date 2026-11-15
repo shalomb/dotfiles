@@ -21,6 +21,14 @@ export const OPENER_RULES: RegExp[] = [
 	/^You are a coding assistant (?:running|operating) inside [^.]*\./i,
 ];
 
+/**
+ * Clauses elsewhere in the prompt that the backend also rejects. pi 1.5.2's
+ * <docs> block added one; bisected to this exact clause (its parts alone pass).
+ */
+export const CLAUSE_RULES: RegExp[] = [
+	/,?[ \t]*codemode scripts and non-LLM models such as classifiers and image models \(docs\/codemode\.md\)/g,
+];
+
 const FALSE_429 = /resource has been exhausted/i;
 
 export function isFalse429(errorMessage: unknown): boolean {
@@ -28,10 +36,11 @@ export function isFalse429(errorMessage: unknown): boolean {
 }
 
 function rewriteText(text: string): string | undefined {
-	for (const rule of OPENER_RULES) {
-		if (rule.test(text)) return text.replace(rule, OPENER_REPLACEMENT);
-	}
-	return undefined;
+	let next = text;
+	const opener = OPENER_RULES.find((rule) => rule.test(next));
+	if (opener) next = next.replace(opener, OPENER_REPLACEMENT);
+	for (const rule of CLAUSE_RULES) next = next.replace(rule, "");
+	return next === text ? undefined : next;
 }
 
 /**
