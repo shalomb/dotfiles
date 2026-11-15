@@ -58,16 +58,20 @@ def reject_style_keys(value, path=""):
 # personal-location marker followed by one more segment. Public http(s) links, bare mentions ('/tmp/', '/home')
 # and system paths ('/etc/nginx/x') are never private. Spec: docs/specs/doc-system/kernel.md.
 MARKERS = ("/home", "/Users", "/root", "/tmp", "/var/folders", "/private", "/mnt", "/media", "/Volumes", "/run/user")
-_MARKER = re.compile("(?:" + "|".join(re.escape(m) for m in MARKERS) + r")/[^/\s]")
+_SEG = r"(?:[\w~$%@-]|\.[\w-])"   # a path segment starts with a word character; '/tmp/.' at a sentence end is not one
+_MARKER = re.compile("(?:" + "|".join(re.escape(m) for m in MARKERS) + ")/" + _SEG)
+# after a delimiter ('host:/home/x', 'path=/home/x', 'user@/root/x') a marker with one segment already counts
+_MARKER_AFTER_DELIM = re.compile(r"(?<=[:=@])" + _MARKER.pattern)
 # a marker inside a longer token ('docs/home/guide.md' is honest, 'extra_/home/alice/x.md' is a leak) needs two more segments
-_MARKER_EMBEDDED = re.compile("(?:" + "|".join(re.escape(m) for m in MARKERS) + r")/[^/\s]+/[^/\s]")
-_URL = re.compile(r"(?i)\bhttps?://[^\s\"'<>()]+")
+_MARKER_EMBEDDED = re.compile("(?:" + "|".join(re.escape(m) for m in MARKERS) + r")/[^/\s]+/" + _SEG)
+_HOMEVAR = re.compile(r"\$\{?(?:HOME|USERPROFILE|HOMEPATH)\}?[/\\]|%(?:USERPROFILE|HOMEPATH|APPDATA|LOCALAPPDATA)%", re.I)
+_URL = re.compile(r"(?i)\bhttps?://(?=[a-z0-9\[])[^\s\"'<>()]+")   # a host must follow '//': 'https:///home/x' is not a public link
 _FILE = re.compile(r"(?i)(?<![a-z])file:/")
 _DRIVE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z]:/")
 _UNC_BACK = re.compile(r"\\\\[^\\/\s]+\\[^\\/\s]")   # \\host\share anywhere in the token
 _UNC_FWD = re.compile(r"^//[^/\s]+/[^/\s]")                 # //host/share at the start of the token
 _TILDE = re.compile(r"(?<![\w~])~(?:/|[A-Za-z][\w.-]*/)")
-_TOKEN = re.compile(r"[^\s\"'<>(),]+")
+_TOKEN = re.compile(r"(?:\$\{[A-Za-z_]+\}|[^\s\"'<>(),`\[\]{}])+")
 _EXTRA_ROOTS = []
 
 
@@ -110,11 +114,12 @@ def _private(token):
         return True
     t = raw.replace("\\", "/")
     anywhere, temps = _roots()
-    if any(r in t for r in anywhere) or any(re.search(re.escape(r) + r"/[^/\s]", t) for r in temps):
+    if any(r in t for r in anywhere) or any(re.search(re.escape(r) + "/" + _SEG, t) for r in temps):
         return True
     absolute = t.startswith("/")   # 'a/home/b' is a relative path, '/var/home/x' is absolute
-    marker = _MARKER.search(t) if absolute else _MARKER_EMBEDDED.search(t)
-    return bool(_FILE.search(t) or _DRIVE.search(t) or _UNC_FWD.search(t.strip()) or _TILDE.search(t) or marker)
+    marker = _MARKER.search(t) if absolute else (_MARKER_AFTER_DELIM.search(t) or _MARKER_EMBEDDED.search(t))
+    return bool(_FILE.search(t) or _DRIVE.search(t) or _UNC_FWD.search(t.strip()) or _TILDE.search(t)
+                or _HOMEVAR.search(t) or marker)
 
 
 def private_tokens(text):
@@ -126,30 +131,48 @@ def has_private(text):
     return any(_private(m.group(0)) for m in _TOKEN.finditer(str(text)))
 
 
-def redact(text):
-    """(text with every private token replaced by LOCAL, how many were replaced)."""
+_QUOTED = re.compile(r'"([^"\n]*)"|\'([^\'\n]*)\'')
+_PATH_START = re.compile(r"\s*(?:/|~|[A-Za-z]:[/\\]|\\\\|file:)", re.I)
+
+
+def redact(text, seen=None):
+    """(text with every private token replaced by LOCAL, how many were replaced). A quoted path that holds spaces
+    is replaced whole. `seen`, when given, collects each distinct original so a caller can count sources, not shows."""
     n = 0
 
-    def swap(m):
+    def note(original):
         nonlocal n
+        n += 1
+        if seen is not None:
+            seen.add(original)
+
+    def quoted(m):
+        inner = next(g for g in m.groups() if g is not None)
+        if " " in inner.strip() and _PATH_START.match(inner) and has_private(inner):
+            note(inner)
+            q = m.group(0)[0]
+            return q + LOCAL + q
+        return m.group(0)
+
+    def swap(m):
         if _private(m.group(0)):
-            n += 1
+            note(m.group(0))
             return LOCAL
         return m.group(0)
-    return _TOKEN.sub(swap, str(text)), n
+    return _TOKEN.sub(swap, _QUOTED.sub(quoted, str(text))), n
 
 
-def redact_deep(value: Any) -> tuple[Any, int]:
+def redact_deep(value: Any, seen: Any = None) -> tuple[Any, int]:
     """(a copy of a data structure with every private token in its string values redacted, the count)."""
     if isinstance(value, str):
-        return redact(value)
+        return redact(value, seen)
     if isinstance(value, list):
-        pairs = [redact_deep(v) for v in value]
+        pairs = [redact_deep(v, seen) for v in value]
         return [p[0] for p in pairs], sum(p[1] for p in pairs)
     if isinstance(value, dict):
         out, total = {}, 0
         for k, v in value.items():
-            out[k], n = redact_deep(v)
+            out[k], n = redact_deep(v, seen)
             total += n
         return out, total
     return value, 0
@@ -185,9 +208,13 @@ def _walk_private(value):
 
 
 def page_findings(page):
-    """Checkpoint 3: where a private path survives in a finished page: 'recipe', 'DATA' or 'page text'."""
+    """Checkpoint 3: where a private path survives in a finished page: 'recipe', 'DATA' or 'page text'.
+    JSON blocks and the decoded DATA are walked by key and value; EVERYTHING else (page code and comments,
+    styles, attributes, visible text) is scanned as text."""
     found = []
-    for attrs, body in re.findall(r"<script([^>]*)>(.*?)</script>", page, re.S):
+
+    def script(m):
+        attrs, body = m.group(1), m.group(2)
         if 'type="application/json"' in attrs:
             where = "recipe" if 'id="recipe"' in attrs else "page text"
             try:
@@ -196,15 +223,21 @@ def page_findings(page):
                 bad = has_private(body)
             if bad:
                 found.append(where)
-        elif "const DATA=" in body:
+            return " "
+        if "const DATA=" in body:
+            at = body.index("const DATA=") + len("const DATA=")
             try:
-                bad = _walk_private(json.JSONDecoder().raw_decode(body[body.index("const DATA=") + len("const DATA="):])[0])
+                data, length = json.JSONDecoder().raw_decode(body[at:])
             except ValueError:
-                bad = True
-            if bad:
                 found.append("DATA")
-    # everything else, styles and page code included: a stylesheet or a script comment can leak a path too
-    if has_private(re.sub(r"<script[^>]*>.*?</script>", lambda m: m.group(0) if "const DATA=" not in m.group(0) and 'type="application/json"' not in m.group(0) else " ", page, flags=re.S)):
+                return body
+            if _walk_private(data):
+                found.append("DATA")
+            return body[:at] + " " + body[at + length:]   # the rest of the script is page code: scan it
+        return body
+
+    rest = re.sub(r"<script([^>]*)>(.*?)</script>", script, page, flags=re.S)
+    if has_private(rest):
         found.append("page text")
     return found
 

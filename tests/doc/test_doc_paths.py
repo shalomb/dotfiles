@@ -263,3 +263,85 @@ def test_glossary_keys_and_definitions_get_the_tone_check_wherever_they_sit(name
         doc["glossary"] = {**doc.get("glossary", {}), **glossary}   # keep the fixture's own terms glossed
         result, out = render(name, doc, tmp_path)
         assert result.returncode != 0 and word in result.stderr, (glossary, result.stderr)
+
+
+# ---- the structural bugs the third review found, each pinned by a test that failed first -------------------
+
+def check_page(tmp_path, page, *roots):
+    f = tmp_path / "p.html"
+    f.write_text(page)
+    args = ["--check-page", str(f)] + [x for r in roots for x in ("--root", r)]
+    return tpl(*args)
+
+
+def test_the_gate_reads_the_page_script_outside_its_data(tmp_path):
+    page = '<html><script>const DATA={"meta":{}};\n// built at /home/alice/x\nlet y=1;</script></html>'
+    bad = check_page(tmp_path, page)
+    assert bad.returncode != 0 and "private path survived in page text" in bad.stderr
+    clean = check_page(tmp_path, '<html><script>const DATA={"meta":{"a":"/etc/hosts"}};\nlet y=1;</script></html>')
+    assert clean.returncode == 0, clean.stderr
+    inside = check_page(tmp_path, '<html><script>const DATA={"meta":{"a":"/home/alice/x"}};\n</script></html>')
+    assert inside.returncode != 0 and "survived in DATA" in inside.stderr
+
+
+def test_every_shipped_template_page_still_passes_the_stricter_gate(tmp_path):
+    for name in ("readout", "decision", "epicmap"):
+        render_ok(name, fixture_doc(name), tmp_path / name)
+        assert tpl("--check-page", str(tmp_path / name / "out" / "page.html")).returncode == 0, name
+
+
+def test_a_link_with_no_host_is_not_public(k):
+    for text in ("https:///home/alice/secret", "https://:80/home/alice/x"):
+        assert k.has_private(text), text
+    assert not k.has_private("https://example.com/home/alice/x") and not k.has_private("http://localhost:8080/home/a")
+
+
+def test_the_check_and_redact_commands_take_the_input_folder_as_a_root(tmp_path):
+    page = "<html><body><p>kept in /srv/acme/plans/x.md</p></body></html>"
+    assert check_page(tmp_path, page).returncode == 0                       # nothing says /srv/acme is private yet
+    assert check_page(tmp_path, page, "/srv/acme").returncode != 0
+    run = tpl("--redact", "--root", "/srv/acme", stdin="see /srv/acme/plans/x.md and /etc/hosts\n")
+    assert run.stdout == "see \u2039local path\u203a and /etc/hosts\n"
+
+
+def test_one_source_path_is_one_removal_however_often_it_is_shown(tmp_path):
+    jira(tmp_path / "cache", "In short: see /home/alice/only-once.md for the plan.")
+    data = data_of(render_ok("epicmap", {"cache": str(tmp_path / "cache"), "epic": "PRV-1"}, tmp_path / "o"))
+    assert data["derived"]["redactions"] == 1
+    assert data["meta"]["foot"].endswith("1 local path was removed from the Jira text.")
+
+
+def test_a_path_in_the_jira_status_is_redacted_not_refused(tmp_path):
+    jira(tmp_path / "cache", "In short: ok.")
+    rows = [json.loads(x) for x in (tmp_path / "cache" / "issues.jsonl").read_text().splitlines()]
+    rows[0]["fields"]["status"]["name"] = "Blocked at /home/bob/secret"
+    (tmp_path / "cache" / "issues.jsonl").write_text(json.dumps(rows[0]) + "\n")
+    page = render_ok("epicmap", {"cache": str(tmp_path / "cache"), "epic": "PRV-1"}, tmp_path / "o")
+    assert "bob" not in page and "\u2039local path\u203a" in page
+
+
+# ---- cheap, principled boundary rules: a delimiter before a marker, home variables, punctuation ----------
+
+@pytest.mark.parametrize("text", ["user@host:/home/x", "path=/home/alice", "`/home/alice`", "(/Users/bob)", "x:/mnt/c/Users/z",
+                                  "$HOME/secret.md", "${HOME}/secret.md", "%USERPROFILE%/Documents/p.docx", "$USERPROFILE\\x",
+                                  "'/home/alice/notes.md'", "[/root/x]"])
+def test_delimited_and_variable_forms_are_private(k, text):
+    assert k.has_private(text), text
+
+
+@pytest.mark.parametrize("text", ["end of sentence /tmp/.", "see /tmp/, then", "the $HOME variable", "set $HOME", "about ~5 items",
+                                  "a/home/b", "docs/home/guide.md", "1/2", "and/or", "a:b", "v1.2/3"])
+def test_sentence_punctuation_and_bare_variable_names_are_honest(k, text):
+    assert not k.has_private(text), k.private_tokens(text)
+
+
+def test_a_quoted_path_with_spaces_is_redacted_whole(k):
+    text, n = k.redact('open "/home/Alice Smith/Secret Plan.md" now and \'C:\\Users\\Bob Jones\\My Notes.txt\' too')
+    assert "Smith" not in text and "Secret" not in text and "Jones" not in text and "Notes" not in text
+    assert text == "open \"\u2039local path\u203a\" now and '\u2039local path\u203a' too" and n == 2
+
+
+def test_distinct_counting_through_redact_deep(k):
+    seen = set()
+    out, _ = k.redact_deep({"a": "/home/x/y.md", "b": ["/home/x/y.md and /home/z/w.md"]}, seen)
+    assert len(seen) == 2 and "x/y.md" not in json.dumps(out)

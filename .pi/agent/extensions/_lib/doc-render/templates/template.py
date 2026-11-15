@@ -4,8 +4,9 @@
   template.py <readout|decision|epicmap> in.json out.html
   template.py --list              the template types, as a JSON array
   template.py --example <type>    a valid example input for that type (examples/<type>.json)
-  template.py --check-page FILE   exit 0 if the finished page holds no private path, else an error
-  template.py --redact            read text on stdin, write it with private paths replaced
+  template.py --check-page FILE [--root DIR]...   exit 0 if the finished page holds no private path, else an error
+  template.py --redact [--root DIR]...            read text on stdin, write it with private paths replaced
+  (--root names a folder that counts as private, e.g. the input's folder; the working directory always does)
 
 Dispatches to the template module of that type. Works from any working directory.
 Any failure prints `error: <reason>` on stderr and exits non-zero; no page is written.
@@ -36,17 +37,27 @@ def main(argv):
             unknown(argv[2])
         print((HERE / "examples" / f"{argv[2]}.json").read_text(), end="")
         return
-    if argv[1:2] == ["--check-page"]:
-        if len(argv) != 3:
-            sys.exit("error: usage: template.py --check-page FILE")
+    if argv[1:2] in (["--check-page"], ["--redact"]):
+        rest, roots = argv[2:], []
+        while "--root" in rest:
+            at = rest.index("--root")
+            if at + 1 >= len(rest):
+                sys.exit(f"error: usage: template.py {argv[1]} ... --root DIR")
+            roots.append(rest[at + 1])
+            del rest[at:at + 2]
+        set_roots([*roots, pathlib.Path.cwd()])
+        if argv[1] == "--redact":
+            if rest:
+                sys.exit("error: usage: template.py --redact [--root DIR]...")
+            sys.stdout.write(redact(sys.stdin.read())[0])
+            return
+        if len(rest) != 1:
+            sys.exit("error: usage: template.py --check-page FILE [--root DIR]...")
         try:
-            page = pathlib.Path(argv[2]).read_text()
+            page = pathlib.Path(rest[0]).read_text()
         except OSError as exc:
-            sys.exit(f"error: cannot read {argv[2]}: {exc}")
+            sys.exit(f"error: cannot read {rest[0]}: {exc}")
         gate_page(page)
-        return
-    if argv[1:] == ["--redact"]:
-        sys.stdout.write(redact(sys.stdin.read())[0])
         return
     if len(argv) != 4:
         sys.exit(f"error: usage: template.py <{types}> in.json out.html")

@@ -157,6 +157,12 @@ describe("publishDoc with a template", () => {
 		writeFileSync(join(dir, "leak.css"), "/* built at /home/alice/projects/brand */ body{color:#123}");
 		expect(() => publishDoc({ source: input("readout"), template: "readout", downloads: tmp, style: "formal" }, { ...env(), XDG_CONFIG_HOME: join(tmp, "brandcfg") })).toThrow(/error: final page: a private path survived/);
 	});
+	it("redacts the whole provenance structure and leaves public links alone", () => {
+		const r = publishDoc({ source: input("readout"), template: "readout", downloads: tmp, prompt: "see https://example.com/tmp/manual and d:/work/x", params: { where: "d:/work/y", note: "/mnt/c/Users/a/z", n: 3 }, now: "2031-02-02T00:00:00Z" }, env());
+		const html = readFileSync(r.rendered[0], "utf8");
+		for (const leak of ["d:/work", "/mnt/c/Users"]) expect(html).not.toContain(leak);
+		expect(html).toContain("https://example.com/tmp/manual");
+	});
 	it("refuses a template input that names a private path, naming the field", () => {
 		const bad = input("readout", (d) => {
 			d.problem = "see /home/alice/private.md";

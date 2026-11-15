@@ -4,8 +4,8 @@
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { homedir, tmpdir } from "node:os";
-import { basename, dirname, join } from "node:path";
+import { homedir } from "node:os";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type BrandConfig, type BrandContext, brandCss as resolveBrandCss } from "./doc-brand.ts";
 import { fileDoc } from "./doc-library.ts";
@@ -105,9 +105,6 @@ function pageLede(page: string): string | undefined {
 	return undefined;
 }
 
-/** Temp locations a template page must not name, beside the home paths embedProvenance already masks. */
-const TEMP_ROOTS = (): string[] => [tmpdir(), "/tmp", "/var/folders", "/private/var"];
-
 /** Template path: structured JSON in, kernel page out; the post-processing is the same as for Markdown. */
 function publishTemplate(o: PublishOptions, type: TemplateType, env: Env): PublishResult {
 	if (!isTemplateType(type)) throw new Error(`unknown template type: ${String(type)}`);
@@ -120,14 +117,16 @@ function publishTemplate(o: PublishOptions, type: TemplateType, env: Env): Publi
 	const brandCss = o.style === "formal" ? formalCss(o.source, env) : undefined;
 	const inlineBrand = o.brand ? resolveBrandCss({ style: o.style, ...o.brand.ctx }, o.brand.cfg) : "";
 	const at = o.now ?? new Date().toISOString();
-	const clean = (text: string) => redactPrivate(text, env).replace(/\n$/, "");
+	// one classifier, in Python: every free-text string of the recipe goes through it, the input's folder counts as private
+	const roots = [dirname(resolve(o.source))];
+	const clean = (text: string) => redactPrivate(text, env, roots).replace(/\n$/, "");
 	const provenance: ProvenanceRecipe | undefined = o.prompt
 		? {
 				prompt: clean(o.prompt),
-				params: { purpose, style: o.style ?? "house", template: type, ...o.params },
+				params: Object.fromEntries(Object.entries({ purpose, style: o.style ?? "house", template: type, ...o.params }).map(([k, v]) => [clean(k), typeof v === "string" ? clean(v) : v])),
 				sources: (o.sources ?? [basename(o.source)]).map((ref) => ({ ref: clean(ref), at: at.slice(0, 10) })),
 				generatedAt: at,
-				audience: o.audience,
+				audience: o.audience?.map((a) => ({ persona: clean(a.persona), prefers: a.prefers.map(clean) })),
 				contract: [`python3 doc-render/templates/template.py ${type} ${basename(o.source)} ${stem}.html`],
 			}
 		: undefined;
@@ -136,10 +135,10 @@ function publishTemplate(o: PublishOptions, type: TemplateType, env: Env): Publi
 	if (o.nav) page = injectStyle(page, navCss(), "doc-nav-css");
 	if (brandCss) page = injectStyle(page, readFileSync(brandCss, "utf8"), "doc-brand-css");
 	if (inlineBrand) page = injectStyle(page, inlineBrand, "doc-brand-css");
-	if (provenance) page = embedProvenance(page, provenance, { homes: [homedir(), ...TEMP_ROOTS()] });
+	if (provenance) page = embedProvenance(page, provenance, { homes: [homedir()] }); // secrets and home only: paths were classified above
 	writeFileSync(out, page);
 	try {
-		checkPage(out, env); // the finished page is the authority: nav, brand and provenance are all in it now
+		checkPage(out, env, roots); // the finished page is the authority: nav, brand and provenance are all in it now
 	} catch (e) {
 		rmSync(out, { force: true });
 		throw e;
