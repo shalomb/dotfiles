@@ -2,6 +2,8 @@
  * /doc intent: read purpose, depth, audience and style from the arguments, and
  * leave everything else (topic, facts, sources) to be inferred from the session.
  */
+import { isTemplateType, type TemplateType } from "./doc-templates.ts";
+
 export const PURPOSES = ["decision", "report", "status", "workshop", "deck", "brief"] as const;
 export type Purpose = (typeof PURPOSES)[number];
 export type Depth = 1 | 6 | 20 | "deeper" | "shorter";
@@ -13,6 +15,8 @@ export interface DocIntent {
 	depth?: Depth;
 	audience?: string;
 	style?: "formal" | "house";
+	/** epicmap | readout | decision: write structured input and publish it with that template. */
+	template?: TemplateType;
 	topic: string;
 }
 
@@ -55,6 +59,14 @@ export function parseDocArgs(raw: string): DocIntent {
 		return { action: first as Action, topic: rest.join(" ") };
 	}
 
+	// "decision" is also a purpose: it is the template only for `decision <input>.json` or `decision template [topic]`.
+	const second = words[1]?.toLowerCase();
+	if (first && isTemplateType(first) && (first !== "decision" || second === "template" || second?.endsWith(".json"))) {
+		const rest = words.slice(second === "template" ? 2 : 1);
+		const style = rest.map((w) => STYLE_WORDS[w.toLowerCase()]).find(Boolean);
+		return { action: "write", template: first, ...(style ? { style } : {}), topic: rest.filter((w) => !(w.toLowerCase() in STYLE_WORDS)).join(" ") };
+	}
+
 	const intent: DocIntent = { action: "write", purpose: undefined, depth: undefined, audience: undefined, style: undefined, topic: "" };
 	const topic: string[] = [];
 	for (let i = 0; i < words.length; i++) {
@@ -83,7 +95,27 @@ export function parseDocArgs(raw: string): DocIntent {
 
 const pages = (d: 1 | 6 | 20) => (d === 1 ? "1 page" : `${d} pages`);
 
+function buildTemplatePrompt(type: TemplateType, i: DocIntent): string {
+	const lines = [
+		`Write a document from what this session already knows, as structured input for the ${type} template.`,
+		`- topic: ${i.topic || "the most recent unresolved difficulty, open question or analysis in this conversation; if there is nothing to work from, ask what it is about"}`,
+	];
+	if (type === "epicmap") lines.push("- the input is a local Jira cache folder and an epic key; never fetch from Jira, and ask for the cache folder or the key if you do not have them");
+	lines.push(
+		"",
+		`1. Call doc_template with type=${type} to get a valid example input and the rules.`,
+		"2. Write the structured input as JSON to a scratch file in the OS temp directory (not inside a git tree).",
+		"3. Never add brand, theme, css or colour keys; the renderer rejects them and the page's look is fixed.",
+		`4. Call doc_publish with template=${type} and source=<that file>${i.style ? `, style=${i.style}` : ""}.`,
+		"5. If it answers with 'error: <field> ...', fix that field in the input and publish again.",
+		"6. The page's gate, references, labels and recipe are fixed by the template; do not try to imitate them in the input.",
+		"Use only facts already in this session; cite where each figure came from.",
+	);
+	return lines.join("\n");
+}
+
 export function buildDocPrompt(i: DocIntent): string {
+	if (i.template) return buildTemplatePrompt(i.template, i);
 	if (i.action === "revise") {
 		const changes = [
 			i.depth === "deeper" && "go one depth deeper (1 → 6 → 20 pages: add argument, then appendices)",

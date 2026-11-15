@@ -42,4 +42,13 @@ All of D4 to D8 reproduced and were fixed in one commit (`fix: pin the tone list
 
 ## Reaching the templates
 
-Wave 4.
+The three types are reachable the same way the Markdown purposes are: one tool, one command, one library.
+
+- **`doc_publish` with `template`.** `template` is `epicmap`, `readout` or `decision`; `source` is then the structured input (a JSON file), not Markdown. The page is written to `<downloads>/<json file stem>.html` and filed in the library. The Markdown lint is skipped (`findings` is empty): the renderer enforces its own rules and answers a bad input with `error: <field path>: <reason>`, which `doc_publish` returns as its error. Calls without `template` behave exactly as before.
+- **Purpose and kind.** They come from the type: `decision` files as `decision`, `readout` as `report`, `epicmap` as `status`. A `purpose` that differs is refused with `template <type> files as purpose <p>`.
+- **`/doc <type> <input.json> [formal]`.** When the second word ends with `.json` and the file exists, the page is published directly, with no model, and the urls and any brand line are shown like the tool does. Renderer errors are shown as errors. Otherwise `/doc epicmap [topic]` and `/doc readout [topic]` ask the model to write the input and publish it. `decision` is also a purpose word, so `/doc decision [topic]` still writes a Markdown decision; use `/doc decision template [topic]` for the structured one.
+- **`doc_template {type}`.** Read-only: returns the purpose the type files as, a valid example input and the pointer to this file. The same example is `template.py --example <type>` (files in `doc-render/templates/examples/`); `template.py --list` prints the types as a JSON array. `_lib/doc-templates.ts` keeps the same list, and a test compares the two.
+- **Brand, nav and provenance** apply after rendering, as for Markdown: `nav` injects the navigation style; `style: formal` injects the brand stylesheet found for the input path (`<style id="doc-brand-css">`), and the corporate-context brand css is injected the same way; `prompt` adds the folded provenance block. The page then holds two blocks: the kernel's `#recipe` (the input and the rebuild command) and the provenance block (the request and parameters). Both are free of absolute paths and the home folder. Brand and theme are never read from the input: a style key is rejected with its field path.
+- **Library limitation.** `fileDoc` ties a document's origin to its `source`, so the library keeps the JSON input as the source copy, not Markdown. The library shows its text and the page's lede as summary (the caller's `summary` wins); `doc-library.ts` is unchanged.
+
+Not covered: there is no live Jira fetch (`epicmap` reads a local cache folder only), and the pointer from the docs-authoring skill to these types is still missing.

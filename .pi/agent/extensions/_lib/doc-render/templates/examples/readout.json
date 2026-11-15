@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "eyebrow": "EX-9 · Search page in a sandbox · engineer's view",
+    "title": "The sandbox search page by Monday is buildable, but two open choices decide its shape: index and size",
+    "lede": "The ticket asks for one search page. The mock-up attached to it also needs a typo-tolerant index. The old page is slower and smaller than either. Until two things are settled we cannot approve a plan. Ticket [r1].",
+    "asof": "2 Feb 2031",
+    "foot": "Source: an invented example. Colours are the author's reading, not a measurement."
+  },
+  "layers": ["The ask", "The old page", "The target"],
+  "nodes": [
+    {"id": "t", "layer": 0, "kind": "Ticket", "title": "One search page, sandbox, by Monday", "rag": "A", "basis": "judged",
+     "plain": "The ticket lists one page with a text box and a result list.",
+     "needs": "Confirm what done includes.", "feeds": ["A", "B"]},
+    {"id": "m", "layer": 0, "kind": "Mock-up", "title": "Also typo tolerance", "rag": "A", "basis": "judged",
+     "plain": "The mock-up shows suggestions for misspelled words. That is not in the ticket list.",
+     "needs": "Is typo tolerance in scope for the sandbox?", "feeds": ["A"]},
+    {"id": "o", "layer": 1, "kind": "Reference", "title": "old-search: exact match only", "rag": "G", "basis": "judged",
+     "plain": "The old page works and is proven. It matches whole words only and is slow on long lists.",
+     "needs": "", "feeds": ["A", "B"]},
+    {"id": "s", "layer": 2, "kind": "Sandbox", "title": "Sandbox exists; index size unknown", "rag": "R", "basis": "judged",
+     "plain": "The sandbox is an empty scaffold. No one has said how many records the index will hold.",
+     "needs": "Expected record count.", "feeds": []}
+  ],
+  "conflicts": [{"a": "t", "b": "m", "label": "scope?"}],
+  "links": [["t", "o"], ["m", "o"], ["o", "s"]],
+  "problem": "We are asked to rebuild a proven page in an empty sandbox by a fixed day, but the ticket, the mock-up and the old page describe three different things [r1], and we do not yet know how big the index will be.",
+  "choices": [
+    {"id": "A", "question": "how the search matches words", "why": "Decide once the requester confirms whether typo tolerance is needed.",
+     "options": [
+       {"id": "A1", "title": "Exact match, as the old page", "pro": "Known to work", "con": "No help with typing mistakes"},
+       {"id": "A2", "title": "Typo-tolerant index", "pro": "Matches the mock-up", "con": "Untried for this data"},
+       {"id": "A3", "title": "Exact first, typo tolerance later", "pro": "Meets Monday and keeps the upgrade visible", "con": "Two changes to review", "suggestion": true}]},
+    {"id": "B", "question": "how big the sandbox index is", "why": "Decide once the record count is known.",
+     "options": [
+       {"id": "B1", "title": "Small, as the ticket says", "pro": "Cheaper", "con": "May be slow on real data"},
+       {"id": "B2", "title": "Same size as the old page", "pro": "Proven", "con": "Costs more"}]}
+  ],
+  "needs": [
+    {"need": "Confirmation that typo tolerance is in scope", "from": "Requester", "settles": "Choice A"},
+    {"need": "Expected record count", "from": "Data owner", "settles": "Choice B"}
+  ],
+  "risks": [
+    {"risk": "A small index may be slow on real data", "roam": "MITIGATE", "action": "Start small and add a resize step to the runbook."},
+    {"risk": "Ticket and mock-up stay out of step", "roam": "RESOLVE", "action": "Ask the requester before building."}
+  ],
+  "refs": [
+    {"id": "r1", "title": "EX-9: sandbox search page by Monday", "href": "https://jira.example.test/browse/EX-9", "kind": "ticket"}
+  ],
+  "glossary": {}
+}

@@ -2,6 +2,8 @@
 """Render a structured doc (JSON) to one self-contained HTML page.
 
   template.py <readout|decision|epicmap> in.json out.html
+  template.py --list              the template types, as a JSON array
+  template.py --example <type>    a valid example input for that type (examples/<type>.json)
 
 Dispatches to the template module of that type. Works from any working directory.
 Any failure prints `error: <reason>` on stderr and exits non-zero; no page is written.
@@ -16,13 +18,27 @@ from kernel import reject_style_keys  # noqa: E402
 REGISTRY = {"readout": "readout", "decision": "decision", "epicmap": "epicmap"}  # type -> module in this directory
 
 
+def unknown(kind):
+    sys.exit(f"error: unknown template type {kind!r}; known types: {', '.join(sorted(REGISTRY))}")
+
+
 def main(argv):
     types = "|".join(sorted(REGISTRY))
+    if argv[1:] == ["--list"]:
+        print(json.dumps(sorted(REGISTRY)))
+        return
+    if argv[1:2] == ["--example"]:
+        if len(argv) != 3:
+            sys.exit(f"error: usage: template.py --example <{types}>")
+        if argv[2] not in REGISTRY:
+            unknown(argv[2])
+        print((HERE / "examples" / f"{argv[2]}.json").read_text(), end="")
+        return
     if len(argv) != 4:
         sys.exit(f"error: usage: template.py <{types}> in.json out.html")
     kind, src, dst = argv[1:]
     if kind not in REGISTRY:
-        sys.exit(f"error: unknown template type {kind!r}; known types: {', '.join(sorted(REGISTRY))}")
+        unknown(kind)
     try:
         doc = json.loads(pathlib.Path(src).read_text())
     except (OSError, json.JSONDecodeError) as exc:

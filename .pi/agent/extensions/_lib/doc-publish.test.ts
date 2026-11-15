@@ -1,10 +1,15 @@
 // Run: bun test doc-publish.test.ts
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { extractProvenance } from "./doc-provenance.ts";
 import { publishDoc } from "./doc-publish.ts";
+import { urlsFor } from "./doc-urls.ts";
+import { TEMPLATE_TYPES, type TemplateType, TEMPLATES, templateExample } from "./doc-templates.ts";
+
+const FIXTURES = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../tests/doc/fixtures");
 
 let tmp: string;
 let src: string;
@@ -63,5 +68,92 @@ describe("publishDoc", () => {
 		expect(html).toContain(".acme{color:red}");
 		const neutral = publishDoc({ source: src, purpose: "decision", downloads: tmp, style: "formal", brand: { ctx: { host: "x.acme.com", personal: true }, cfg: { domains: ["acme.com"], css: ".acme{color:red}" } } }, env());
 		expect(readFileSync(neutral.rendered[0], "utf8")).not.toContain(".acme{color:red}");
+	});
+});
+
+describe("publishDoc with a template", () => {
+	const KINDS: Record<TemplateType, string> = { decision: "decision", readout: "report", epicmap: "status" };
+	/** Write a usable structured input named <type>-input.json (epicmap pointed at the Jira fixture). */
+	function input(type: TemplateType, edit?: (d: Record<string, any>) => void): string {
+		const doc = JSON.parse(templateExample(type));
+		if (type === "epicmap") Object.assign(doc, { cache: join(FIXTURES, "jira_epic"), epic: "DEMO-1" });
+		edit?.(doc);
+		const p = join(tmp, `${type}-input.json`);
+		writeFileSync(p, JSON.stringify(doc));
+		return p;
+	}
+	/** An isolated brand folder with one stylesheet, as formalCss looks it up. */
+	const brandEnv = () => {
+		const cfg = join(tmp, "xdg");
+		mkdirSync(join(cfg, "agent-skills", "brands"), { recursive: true });
+		writeFileSync(join(cfg, "agent-skills", "brands", "acme.css"), ".acme-formal{color:teal}");
+		return { ...env(), XDG_CONFIG_HOME: cfg };
+	};
+
+	for (const type of TEMPLATE_TYPES) {
+		it(`${type}: renders, files as ${KINDS[type]} in the isolated library and returns urls`, () => {
+			const r = publishDoc({ source: input(type), template: type, downloads: tmp }, env());
+			expect(r.rendered).toEqual([join(tmp, `${type}-input.html`)]);
+			expect(r.filed).toHaveLength(1);
+			expect(r.filed[0]).toContain(join("lib", KINDS[type]));
+			expect(r.urls).toEqual(urlsFor(r.filed[0]).map((u) => u.url));
+			expect(r.findings).toEqual([]);
+			expect(TEMPLATES[type].purpose).toBe(KINDS[type] === "report" ? "report" : KINDS[type]);
+			expect(readFileSync(r.filed[0], "utf8")).toContain('id="recipe"');
+		});
+	}
+	it("uses the caller's summary, else the page's lede", () => {
+		const r = publishDoc({ source: input("decision"), template: "decision", downloads: tmp, summary: "my summary" }, env());
+		expect(readFileSync(join(dirname(r.filed[0]), "..", "..", "index.json"), "utf8")).toContain("my summary");
+		const l = publishDoc({ source: input("readout"), template: "readout", downloads: tmp }, env());
+		expect(readFileSync(join(dirname(l.filed[0]), "..", "..", "index.json"), "utf8")).toContain("The ticket asks for one search page");
+	});
+	it("formal style injects the brand css when one exists; house does not", () => {
+		const e = brandEnv();
+		const formal = publishDoc({ source: input("decision"), template: "decision", downloads: tmp, style: "formal" }, e);
+		expect(readFileSync(formal.rendered[0], "utf8")).toContain('<style id="doc-brand-css">\n.acme-formal{color:teal}');
+		expect(formal.brandCss).toContain("acme.css");
+		const house = publishDoc({ source: input("decision"), template: "decision", downloads: tmp, style: "house" }, e);
+		expect(readFileSync(house.rendered[0], "utf8")).not.toContain(".acme-formal");
+	});
+	it("applies the corporate-context brand css and the nav style", () => {
+		const r = publishDoc({ source: input("readout"), template: "readout", downloads: tmp, nav: true, style: "formal", brand: { ctx: { host: "x.acme.com" }, cfg: { domains: ["acme.com"], css: ".acme{color:red}" } } }, env());
+		const html = readFileSync(r.rendered[0], "utf8");
+		expect(html).toContain('id="doc-nav-css"');
+		expect(html).toContain(".acme{color:red}");
+		const plain = publishDoc({ source: input("readout"), template: "readout", downloads: tmp }, env());
+		expect(readFileSync(plain.rendered[0], "utf8")).not.toContain("doc-nav-css");
+	});
+	it("a prompt embeds the provenance block next to the single recipe, with no path leaks", () => {
+		const r = publishDoc({ source: input("decision"), template: "decision", downloads: tmp, prompt: `decide it, notes in ${homedir()}/secret/n.md`, now: "2031-02-02T00:00:00Z" }, env());
+		const html = readFileSync(r.rendered[0], "utf8");
+		expect(html.match(/id="recipe"/g)).toHaveLength(1);
+		expect(html).toContain("doc-provenance-data");
+		expect(extractProvenance(html)?.params).toMatchObject({ purpose: "decision", template: "decision" });
+		expect(html).not.toContain("/home/");
+		expect(html).not.toContain(homedir());
+		expect(html).not.toContain(tmp);
+	});
+	it("refuses a purpose that differs from the template's", () => {
+		expect(() => publishDoc({ source: input("decision"), template: "decision", purpose: "report", downloads: tmp }, env())).toThrow("template decision files as purpose decision");
+		expect(() => publishDoc({ source: input("decision"), template: "decision", purpose: "decision", downloads: tmp }, env())).not.toThrow();
+	});
+	it("never reads brand from the input: a brand key throws with its field path", () => {
+		const bad = input("decision", (d) => {
+			d.meta.brand = "acme";
+		});
+		expect(() => publishDoc({ source: bad, template: "decision", downloads: tmp }, env())).toThrow(/meta\.brand/);
+	});
+	it("surfaces a renderer error naming the field", () => {
+		const bad = input("decision", (d) => {
+			delete d.why;
+		});
+		expect(() => publishDoc({ source: bad, template: "decision", downloads: tmp }, env())).toThrow(/error: .*why/);
+	});
+	it("a Markdown publish keeps its result shape", () => {
+		const r = publishDoc({ source: src, purpose: "decision", downloads: tmp }, env());
+		expect(Object.keys(r).sort()).toEqual(["brandCss", "filed", "findings", "provenance", "rendered", "urls"]);
+		expect(r.rendered).toHaveLength(1);
+		expect(r.urls).toEqual(urlsFor(r.filed[0]).map((u) => u.url));
 	});
 });

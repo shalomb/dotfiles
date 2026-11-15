@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from doc_helpers import (GATE, REPO, TEMPLATES_DIR, data_of, escaped, fixture_doc, load_kernel, page_script,
+from doc_helpers import (FIXTURES, GATE, REPO, TEMPLATES_DIR, data_of, escaped, fixture_doc, load_kernel, page_script,
                          recipe_of, render, render_ok, scripts)
 
 TEMPLATES = ["readout", "decision", "epicmap"]
@@ -89,6 +89,55 @@ def test_works_from_any_working_directory(name, tmp_path):
     result, out = render(name, fixture_doc(name), tmp_path / "r", cwd=work)
     assert result.returncode == 0, result.stderr
     assert out.exists()
+
+
+# 0b. discovery: --list and --example
+
+def run_template(*args):
+    return subprocess.run([sys.executable, str(TEMPLATES_DIR / "template.py"), *args], capture_output=True, text=True)
+
+
+def style_keys_in(value):
+    if isinstance(value, dict):
+        return {k for k in value if k.lower() in STYLE_KEYS} | {x for v in value.values() for x in style_keys_in(v)}
+    if isinstance(value, list):
+        return {x for v in value for x in style_keys_in(v)}
+    return set()
+
+
+def test_list_prints_the_registry_types_as_json():
+    result = run_template("--list")
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == sorted(TEMPLATES)
+
+
+def test_example_prints_valid_json_without_style_keys(name):
+    result = run_template("--example", name)
+    assert result.returncode == 0, result.stderr
+    assert style_keys_in(json.loads(result.stdout)) == set()
+
+
+def test_example_for_an_unknown_type_is_an_error():
+    result = run_template("--example", "nope")
+    assert result.returncode != 0 and result.stderr.startswith("error: ") and "nope" in result.stderr
+
+
+def test_every_template_has_an_example_file():
+    assert sorted(p.stem for p in (TEMPLATES_DIR / "examples").glob("*.json")) == sorted(TEMPLATES)
+
+
+def example_doc(name):
+    doc = json.loads(run_template("--example", name).stdout)
+    if name == "epicmap":
+        doc.update(cache=str(FIXTURES / "jira_epic"), epic="DEMO-1")
+    return doc
+
+
+def test_every_example_renders_once_pointed_at_real_data(name, tmp_path):
+    page = render_ok(name, example_doc(name), tmp_path)
+    assert page.count(f"<b>{GATE}</b>") == 1 and "Read-only" in page
+    assert recipe_of(page)
+    assert not re.search(r"<script[^>]*\ssrc=|<link\b", page)
 
 
 # 1. self-contained page

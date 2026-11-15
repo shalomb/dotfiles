@@ -35,6 +35,23 @@ describe("parseDocArgs", () => {
 	});
 });
 
+describe("parseDocArgs templates", () => {
+	it("a template type as the first word sets template, topic and style", () => {
+		expect(parseDocArgs("epicmap")).toMatchObject({ action: "write", template: "epicmap", topic: "" });
+		expect(parseDocArgs("readout the sandbox account")).toMatchObject({ template: "readout", topic: "the sandbox account" });
+		expect(parseDocArgs("Decision template queue renewal formal")).toMatchObject({ template: "decision", topic: "queue renewal", style: "formal" });
+	});
+	it("keeps the input file as the topic", () => {
+		expect(parseDocArgs("decision /tmp/in.json formal")).toMatchObject({ template: "decision", topic: "/tmp/in.json", style: "formal" });
+	});
+	it("decision stays a purpose unless it is followed by a .json input or the word template", () => {
+		expect(parseDocArgs("decision")).toMatchObject({ purpose: "decision" });
+		expect(parseDocArgs("decision").template).toBeUndefined();
+		expect(parseDocArgs("decision queue renewal").template).toBeUndefined();
+		expect(parseDocArgs("report on x").template).toBeUndefined();
+	});
+});
+
 describe("buildDocPrompt", () => {
 	it("tells the model to infer the topic from the session and state assumptions", () => {
 		const p = buildDocPrompt(parseDocArgs("decision"));
@@ -59,5 +76,28 @@ describe("buildDocPrompt", () => {
 	});
 	it("revise works on the last document's source", () => {
 		expect(buildDocPrompt(parseDocArgs("shorter"))).toMatch(/last document/i);
+	});
+	it("a template prompt names the tools, the scratch file and the no-brand rule", () => {
+		for (const t of ["epicmap", "readout", "decision"]) {
+			const p = buildDocPrompt(parseDocArgs(t === "decision" ? "decision template the demo topic" : `${t} the demo topic`));
+			expect(p).toContain("doc_template");
+			expect(p).toContain(`template=${t}`);
+			expect(p).toContain("doc_publish");
+			expect(p).toMatch(/temp/i);
+			expect(p).toMatch(/never add brand, theme, css or colou?r/i);
+			expect(p).toMatch(/error: <field>/);
+			expect(p).toContain("topic: the demo topic");
+		}
+	});
+	it("an epicmap prompt says the input is a local cache and never Jira", () => {
+		const p = buildDocPrompt(parseDocArgs("epicmap"));
+		expect(p).toMatch(/local Jira cache folder and an epic key/);
+		expect(p).toMatch(/never fetch from Jira/i);
+		expect(buildDocPrompt(parseDocArgs("readout"))).not.toMatch(/Jira cache/);
+	});
+	it("a template prompt carries style formal and does not use the Markdown skeleton text", () => {
+		const p = buildDocPrompt(parseDocArgs("decision template formal"));
+		expect(p).toMatch(/style=formal/);
+		expect(p).not.toContain("Assumed:");
 	});
 });

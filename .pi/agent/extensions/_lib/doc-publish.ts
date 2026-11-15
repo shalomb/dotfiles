@@ -12,6 +12,7 @@ import { fileDoc } from "./doc-library.ts";
 import { type Finding, lintDoc } from "./doc-lint.ts";
 import { navCss } from "./doc-nav.ts";
 import { type AudienceProfile, embedProvenance, type ProvenanceRecipe } from "./doc-provenance.ts";
+import { isTemplateType, renderTemplate, TEMPLATES, type TemplateType } from "./doc-templates.ts";
 import { urlsFor } from "./doc-urls.ts";
 
 type Env = Record<string, string | undefined>;
@@ -19,7 +20,10 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 export const BUILD = join(HERE, "doc-render", "build.py");
 
 export interface PublishOptions {
+	/** The Markdown source; with `template`, the structured-input JSON file instead. */
 	source: string;
+	/** epicmap | readout | decision: render `source` (JSON) with that template instead of Markdown. */
+	template?: TemplateType;
 	purpose?: string;
 	style?: "formal" | "house";
 	tags?: string[];
@@ -75,8 +79,68 @@ export function formalCss(source: string, env: Env = process.env): string | unde
 	return css.length === 1 ? join(dir, css[0]) : undefined;
 }
 
+/** The page's lede: `meta.lede` of the DATA object the kernel embeds in the page script, if readable. */
+function pageLede(page: string): string | undefined {
+	const at = page.indexOf("const DATA=");
+	if (at < 0) return undefined;
+	const start = at + "const DATA=".length;
+	let depth = 0;
+	let inString = false;
+	for (let i = start; i < page.length; i++) {
+		const c = page[i];
+		if (inString) {
+			if (c === "\\") i++;
+			else if (c === '"') inString = false;
+		} else if (c === '"') inString = true;
+		else if (c === "{") depth++;
+		else if (c === "}" && --depth === 0) {
+			try {
+				const lede = (JSON.parse(page.slice(start, i + 1)) as { meta?: { lede?: unknown } }).meta?.lede;
+				return typeof lede === "string" && lede.trim() ? lede.replace(/\s*\[r\d+\]/g, "").trim() : undefined;
+			} catch {
+				return undefined;
+			}
+		}
+	}
+	return undefined;
+}
+
+/** Template path: structured JSON in, kernel page out; the post-processing is the same as for Markdown. */
+function publishTemplate(o: PublishOptions, type: TemplateType, env: Env): PublishResult {
+	if (!isTemplateType(type)) throw new Error(`unknown template type: ${String(type)}`);
+	const purpose = TEMPLATES[type].purpose;
+	if (o.purpose && o.purpose !== purpose) throw new Error(`template ${type} files as purpose ${purpose}`);
+	const stem = basename(o.source).replace(/\.json$/i, "").toLowerCase();
+	const downloads = o.downloads ?? join(homedir(), "Downloads");
+	const out = join(downloads, `${stem}.html`);
+	renderTemplate({ type, input: o.source, out, env });
+	const brandCss = o.style === "formal" ? formalCss(o.source, env) : undefined;
+	const inlineBrand = o.brand ? resolveBrandCss({ style: o.style, ...o.brand.ctx }, o.brand.cfg) : "";
+	const at = o.now ?? new Date().toISOString();
+	const provenance: ProvenanceRecipe | undefined = o.prompt
+		? {
+				prompt: o.prompt,
+				params: { purpose, style: o.style ?? "house", template: type, ...o.params },
+				sources: (o.sources ?? [basename(o.source)]).map((ref) => ({ ref, at: at.slice(0, 10) })),
+				generatedAt: at,
+				audience: o.audience,
+				contract: [`python3 doc-render/templates/template.py ${type} ${basename(o.source)} ${stem}.html`],
+			}
+		: undefined;
+	let page = readFileSync(out, "utf8");
+	const summary = o.summary ?? pageLede(page);
+	if (o.nav) page = injectStyle(page, navCss(), "doc-nav-css");
+	if (brandCss) page = injectStyle(page, readFileSync(brandCss, "utf8"), "doc-brand-css");
+	if (inlineBrand) page = injectStyle(page, inlineBrand, "doc-brand-css");
+	if (provenance) page = embedProvenance(page, provenance, { homes: [homedir()] });
+	writeFileSync(out, page);
+	const filed = fileDoc({ html: out, kind: KIND[purpose], source: o.source, summary, tags: o.tags }, env);
+	return { rendered: [out], filed: [filed], urls: urlsFor(filed).map((u) => u.url), findings: [], brandCss, provenance };
+}
+
 export function publishDoc(o: PublishOptions, env: Env = process.env): PublishResult {
 	if (!existsSync(o.source)) throw new Error(`no such source: ${o.source}`);
+	if (o.template) return publishTemplate(o, o.template, env);
 	const purpose = o.purpose ?? "report";
 	const kind = KIND[purpose] ?? "report";
 	const stem = basename(o.source).replace(/\.md$/i, "").toLowerCase();
