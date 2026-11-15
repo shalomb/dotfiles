@@ -7,7 +7,9 @@ presses `/n` again to resume. Never change the key results: they are the human's
 
 **Before the first hop (and after any stop):**
 1. Compute `rg '^- \*\*KR-' docs/explanation/end-state-evolution.md | sha256sum | cut -c1-16` and compare with
-   the `Approved:` line. Pending or mismatch → STOP (destination not approved).
+   the `Approved:` line. Pending or mismatch → ask one yes/no question: "Approve these key results (hash <h>)?"
+   Yes → write `Approved: <date> <h>` (the only edit allowed to the end-state file), commit it alone with the
+   trailer `Approved-By: human (in session)`, and drive on. No or anything else → STOP (destination not approved).
 2. If the human left a note during the stop, apply it first.
 
 **Each hop:**
