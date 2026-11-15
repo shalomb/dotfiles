@@ -321,7 +321,7 @@ return {
     cond = function()
       return not vim.g.pass_redact_mode
     end,
-    opts = {},
+    opts = { model = "claude-sonnet-5.5" },
   },
 
 }
