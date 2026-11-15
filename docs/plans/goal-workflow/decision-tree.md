@@ -1,7 +1,7 @@
 # Goal workflow (grill -> plan -> goal -> drive): intent and decisions
 
 Stance: mid-execution. /goal, /grill-me, /plan, /drive and todo exist and work.
-Single source of intent for this work. `drive-roles.md` holds the /drive detail.
+Single source of intent for this work. All design decisions settled 2026-11-15; /doc work is parked until this lands. `drive-roles.md` holds the /drive detail.
 
 ## Intent
 
@@ -97,23 +97,18 @@ close retro did the KR move?    feeds /plan (replan), prunes scenarios
 | drive.verifier-trigger | Verifier on gate warnings, hub/security files, retries, P0; Steward writes >= 2 contrasting examples per rule. | settled |
 | drive.verifier-agent | Verifier = Bart (`bart-verifier`), read-only, different model family from the Builder. | agent drafted |
 | agents.thin | Agent files are thin role boundaries; skills do the work. | settled |
+| plan.output | /plan edits the end-state doc (objectives, KRs, goal queue) + ADRs. | to build |
+| plan.kr-shape | KR = id (KR-n.m), one sentence, check command where possible, else `human`. | to build |
+| plan.goal-link | Goal field `serves: KR-n.m`; review shows it; retro asks if it moved. | to build |
+| plan.domain | `docs/domain/`: repo glossary, CONTEXT-MAP.md, per-context glossaries and features; agent maintains; review warns on drift. | to build |
+| plan.mode | Keep the design-only guard; /plan ends by auto-drafting the first goal. | to build |
+| plan.grill-use | /plan reads any /grill-me handoff first, grills vision, KRs, architecture. | to build |
+| plan.replan | Offer /plan when an objective's KRs are all met, or a retro says a KR did not move. | to build |
+| plan.bdd | Progressive: /plan example maps -> /goal full feature, runner = outcome check -> /drive outside-in; advisory chain linter. | to build |
+| plan.living-docs | Living-docs page (objective > KR > feature > scenario, status, commit, `@control` evidence) published via /doc on goal close. | to build (after /doc) |
+| drive.gate-strictness | G1-G3 reject; G4 warns, logged, promoted when precise; G5-G6 warn. | to build |
+| drive.verifier-model | Not pinned in the agent file; each profile sets `subagents.agentOverrides.bart-verifier.model` to a non-Builder model family. | settled |
 | tests.layers | Adzic scenarios outside via Farley's four layers; Farley TDD inside; G5 applies to acceptance tests only. | settled |
-
-## Open
-
-| Node | Recommended | Round |
-| :-- | :-- | :-- |
-| plan.output (Q1) | /plan edits the end-state doc (objectives, KRs, goal queue) + ADRs. | 1 |
-| plan.kr-shape (Q2) | KR = id, one sentence, check command where possible, else `human`. | 1 |
-| plan.goal-link (Q3) | Goal field `serves: KR-n.m`; review shows it; retro asks if it moved. | 1 |
-| plan.domain (Q7) | `docs/domain/`: repo glossary, CONTEXT-MAP.md, per-context glossaries; agent maintains; review warns on drift. | 1 |
-| plan.mode (Q4) | Keep the design-only guard; end with "draft first goal and leave plan mode". | 2 |
-| plan.grill-use (Q5) | /plan reads any /grill-me handoff first, grills vision/KR/architecture. | 2 |
-| plan.replan (Q6) | Offer /plan when an objective's KRs are all met, or a retro says a KR did not move. | 2 |
-| plan.bdd (Q8) | Progressive: /plan example maps -> /goal full feature, runner = outcome check -> /drive outside-in; advisory chain linter. | 2 |
-| plan.living-docs (Q9) | Generated living-docs page (objective > KR > feature > scenario, status, commit, `@control` evidence) published via /doc on goal close. | 2 |
-| drive.gate-strictness | G1-G3 reject; G4 warns until measured; G5-G6 warn. See `drive-roles.md`. | 3 (user reading) |
-| drive.verifier-model | `antigravity/gemini-4-hydrogen` drafted; confirm. | 3 |
 
 ## Known gaps
 

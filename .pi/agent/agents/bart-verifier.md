@@ -1,9 +1,8 @@
 ---
 name: bart-verifier
-description: /drive Verifier. Bart, read-only, on a different model family from the Builder; judges whether a gated diff implements the rule, not just the example
+description: /drive Verifier. Bart, read-only, on a different model family from the Builder (pin per profile via subagents.agentOverrides.bart-verifier.model); judges whether a gated diff implements the rule, not just the example
 aliases: verifier, bart
 acceptanceRole: read-only
-model: antigravity/gemini-4-hydrogen
 thinking: high
 systemPromptMode: replace
 inheritProjectContext: false
