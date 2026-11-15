@@ -106,15 +106,6 @@ brief inputs, do / never, receipt shape. Method lives in skills.
 | Spec Steward | `.pi/agent/agents/spec-steward.md` | adzic-bdd, domain-modeling, test-driven-development, git-commit-formatter, git-safety-guardrails, verification-before-completion |
 | Verifier | `.pi/agent/agents/bart-verifier.md` | bart-adversarial-reviewer, test-design-review, adzic-bdd, domain-modeling |
 
-Persona skills, wrap as thin agents only when a step needs a sub-agent:
-
-| Skill | Likely home | Note |
-| :-- | :-- | :-- |
-| marge-product-agent | /grill-me (user needs) | runs in the main session today |
-| lisa-planning-agent | /plan (breakdown) | runs in the main session today |
-| lovejoy-release-agent | close retro, release | candidate for a close-retro agent |
-| ralph-build-agent | overlaps /drive | decide: retire, or make it /drive's unattended mode |
-
 Open: bart-verifier model pin (`antigravity/gemini-4-hydrogen` drafted; check
 it is the newest non-Claude model offered).
 Known gap: the repo deploys agents to `~/.pi/agent/agents/`, but the personal
