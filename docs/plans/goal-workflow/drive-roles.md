@@ -58,9 +58,9 @@ todo batch --goal --claim
 | Id | Check | On fail |
 | :-- | :-- | :-- |
 | G1 | Scenario fails at wave base, passes at Builder head (reuse `runChecksAtCommit`) | reject |
-| G2 | Diff touches no `.feature` or acceptance assertion file (unless a spec task) | reject |
+| G2 | Diff touches no Steward path: `docs/domain/<ctx>/features/**`, `**/*.acceptance.test.*`, `**/dsl/**` (unless a spec task) | reject |
 | G3 | No scenario removed, `@skip`/`@wip` added, or assertion deleted | reject; needs human (as goal weakening) |
-| G4 | Diff stays inside task scope / one context | reject |
+| G4 | Diff stays inside task scope / one context | warn (logged; promote to reject when precise) |
 | G5 | Each new test names a scenario or rule (`// Scenario:` / `@KR`) | warn -> Verifier |
 | G6 | New identifiers and step words in glossary; no avoid-list names | warn -> Verifier |
 
@@ -70,7 +70,7 @@ todo batch --goal --claim
   else glovebox (motorway) or rest stop (scenic). Never a Builder spec edit.
 - Two failed gates on one task -> stop the task, report, carry on with others.
 
-## Gate strictness: context (decision open)
+## Gate strictness (settled: G1-G3 reject, G4 measured, G5-G6 warn)
 
 A reject costs one Builder retry. A warn costs a Verifier call, or noise.
 Reject only where the check is precise.
@@ -106,9 +106,24 @@ brief inputs, do / never, receipt shape. Method lives in skills.
 | Spec Steward | `.pi/agent/agents/spec-steward.md` | adzic-bdd, domain-modeling, test-driven-development, git-commit-formatter, git-safety-guardrails, verification-before-completion |
 | Verifier | `.pi/agent/agents/bart-verifier.md` | bart-adversarial-reviewer, test-design-review, adzic-bdd, domain-modeling |
 
-Open: bart-verifier model pin (`antigravity/gemini-4-hydrogen` drafted; check
-it is the newest non-Claude model offered).
+Verifier model: not pinned in the agent file; set per profile via
+`subagents.agentOverrides.bart-verifier.model`.
 Known gap: the repo deploys agents to `~/.pi/agent/agents/`, but the personal
 profile reads `~/.pi/profiles/personal/agents/` (a real directory, not a
 symlink), so repo agents do not reach the profile. Fix in
 `lib/pi/profile.sh` (profile prepare should link `agents/`).
+
+## Review amendments (2026-11-15, see review-response.md)
+
+- Builder owns protocol drivers; any Builder diff to `**/drivers/**` or
+  `**/dsl/**` triggers the Verifier. Steward owns scenarios and the DSL.
+- Verifier brief adds the goal's raw `outcome` and `anti_goals`.
+- Verifier policy (ADR-004 Amendment 2): runs on unmeasured modules, on
+  driver/DSL changes, and on triggers; skips only when holdout >= 0.85 and no
+  driver/DSL change.
+- Builder step 2 honours task kind (refactor: green at base and head).
+  `already-green` on a behaviour task: orchestrator checks G1-G6 at head.
+- Confirmed `spec-dispute`: Steward fixes and recommits in-wave; escalate to
+  the human only when the locked contract is wrong.
+- G1a red run is recorded at the Steward commit in the feature worktree;
+  G1b runs at Builder head.

@@ -49,6 +49,7 @@ This documentation follows the **Diataxis framework** for technical documentatio
   - [Drive roles](./plans/goal-workflow/drive-roles.md) - Spec Steward, Builder, gate, Verifier
   - [Component map](./plans/goal-workflow/component-map.md) - Diagrams of components and relationships
   - [Review brief](./plans/goal-workflow/review-brief.md) - How to peer review this branch
+  - [Review response](./plans/goal-workflow/review-response.md) - Findings, dispositions, thesis
 - [pi-find UX](./plans/pi-find-ux/decision-tree.md) - Session recall and resume
 
 ## Key Documentation Areas

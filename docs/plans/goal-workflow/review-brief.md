@@ -22,7 +22,7 @@ the build is planned in slices, not started.
 
 | Commit | Files | Change |
 | :-- | :-- | :-- |
-| fbb115b | `.pi/agent/extensions/_lib/goal-flow.ts`, `goal-flow.test.ts` | After a goal closes, bare `/goal` drafts the next goal from the end-state doc, then `todo next --all`, then chat, without asking; records `serves`. Adds `findEndStateDoc`. |
+| fbb115b | `.pi/agent/extensions/_lib/goal-flow.ts`, `goal-flow.test.ts` | After a goal closes, bare `/goal` drafts the next goal from the end-state doc, then `todo next --all`, then chat, without asking; records `serves`. Adds `findEndStateDoc`. (`serves` is prose in the prompt only; a field comes in slice 2.) |
 | 92a28dd | same files | `driveGoal`: refuses without an intact locked goal; motorway/scenic; checkpoint path and resume; checkpoint cleared on `/goal done`. Not wired to a command yet. |
 | 019d873, 292ab1a | `.pi/agent/agents/spec-steward.md`, `bart-verifier.md` | Thin agent definitions; skills do the work. Verifier model not pinned (set per profile via `subagents.agentOverrides`). |
 

@@ -1,7 +1,7 @@
 # Goal workflow (grill -> plan -> goal -> drive): intent and decisions
 
 Stance: mid-execution. /goal, /grill-me, /plan, /drive and todo exist and work.
-Single source of intent for this work. All design decisions settled 2026-11-15; /doc work is parked until this lands. `drive-roles.md` holds the /drive detail.
+Single source of intent for this work. Peer review folded in: see `review-response.md`. All design decisions settled 2026-11-15; /doc work is parked until this lands. `drive-roles.md` holds the /drive detail.
 
 ## Intent
 
@@ -108,6 +108,9 @@ close retro did the KR move?    feeds /plan (replan), prunes scenarios
 | plan.living-docs | Living-docs page (objective > KR > feature > scenario, status, commit, `@control` evidence) published via /doc on goal close. | to build (after /doc) |
 | drive.gate-strictness | G1-G3 reject; G4 warns, logged, promoted when precise; G5-G6 warn. | to build |
 | drive.verifier-model | Not pinned in the agent file; each profile sets `subagents.agentOverrides.bart-verifier.model` to a non-Builder model family. | settled |
+| review.f11 | Keep drafting the next goal at once (thesis: drafting is frictionless, lock is the gate); archive the closed goal first; add `/goal show <id>`. | to build |
+| review.drivers | Builder owns drivers; driver/DSL diffs trigger the Verifier; Steward owns scenarios + DSL; G2 globs `features/**`, `*.acceptance.test.*`, `dsl/**`. | to build |
+| review.verifier | ADR-004 Amendment 2: Verifier on unmeasured modules, driver/DSL changes, triggers; skip only at holdout >= 0.85 with no driver/DSL change. Brief includes raw outcome and anti-goals. | to build |
 | tests.layers | Adzic scenarios outside via Farley's four layers; Farley TDD inside; G5 applies to acceptance tests only. | settled |
 
 ## Known gaps

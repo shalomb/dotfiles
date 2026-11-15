@@ -18,7 +18,7 @@ title: Goal workflow component map
 2. Every step has one job and one artefact, and goals always serve a key result in the end-state doc. See [components](#components).
 3. The BDD spec set is the spine: plan maps examples, goal locks the check that runs them, drive turns them from red to green. See [relationships](#relationships).
 4. In /drive the Spec Steward owns the specs, Builders own the code, and a mechanical gate stands between them, with Bart on triggers only. See [the drive wave](#drive-wave).
-5. Some decisions are still open; they are listed, with the recommended option. See [open decisions](#open-decisions).
+5. All decisions are settled, including the peer review's amendments. See [decisions](#decisions).
 
 ## Overall map
 
@@ -87,15 +87,9 @@ title: Goal workflow component map
 4. Every scenario has a tagged acceptance test; unit tests need not trace.
 5. A goal's features stay in one bounded context.
 
-## Open decisions
+## Decisions
 
-| Node | Recommended |
-| :-- | :-- |
-| plan.output, kr-shape, goal-link, domain | /plan edits the end-state doc; KR = id + sentence + check; goal `serves: KR`; `docs/domain/` |
-| plan.mode, grill-use, replan | keep the design-only guard; read the grill handoff first; replan when KRs are met or did not move |
-| plan.bdd, living-docs | progressive scenarios from plan to drive; living-docs page via /doc on goal close |
-| drive.gate-strictness | G1 to G3 reject; G4 warns until measured; G5, G6 warn |
-| drive.verifier-model | a non-Claude model for Bart; confirm the pin |
+All settled 2026-11-15; see `decision-tree.md` and `review-response.md`.
 
 ## Method and limits
 
