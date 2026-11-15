@@ -3,7 +3,7 @@
  * Rendering is the bundled Python renderer (doc-render/build.py, needs pandoc).
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,7 +12,7 @@ import { fileDoc } from "./doc-library.ts";
 import { type Finding, lintDoc } from "./doc-lint.ts";
 import { navCss } from "./doc-nav.ts";
 import { type AudienceProfile, embedProvenance, type ProvenanceRecipe } from "./doc-provenance.ts";
-import { isTemplateType, renderTemplate, TEMPLATES, type TemplateType } from "./doc-templates.ts";
+import { checkPage, isTemplateType, redactPrivate, renderTemplate, TEMPLATES, type TemplateType } from "./doc-templates.ts";
 import { urlsFor } from "./doc-urls.ts";
 
 type Env = Record<string, string | undefined>;
@@ -120,11 +120,12 @@ function publishTemplate(o: PublishOptions, type: TemplateType, env: Env): Publi
 	const brandCss = o.style === "formal" ? formalCss(o.source, env) : undefined;
 	const inlineBrand = o.brand ? resolveBrandCss({ style: o.style, ...o.brand.ctx }, o.brand.cfg) : "";
 	const at = o.now ?? new Date().toISOString();
+	const clean = (text: string) => redactPrivate(text, env).replace(/\n$/, "");
 	const provenance: ProvenanceRecipe | undefined = o.prompt
 		? {
-				prompt: o.prompt,
+				prompt: clean(o.prompt),
 				params: { purpose, style: o.style ?? "house", template: type, ...o.params },
-				sources: (o.sources ?? [basename(o.source)]).map((ref) => ({ ref, at: at.slice(0, 10) })),
+				sources: (o.sources ?? [basename(o.source)]).map((ref) => ({ ref: clean(ref), at: at.slice(0, 10) })),
 				generatedAt: at,
 				audience: o.audience,
 				contract: [`python3 doc-render/templates/template.py ${type} ${basename(o.source)} ${stem}.html`],
@@ -137,6 +138,12 @@ function publishTemplate(o: PublishOptions, type: TemplateType, env: Env): Publi
 	if (inlineBrand) page = injectStyle(page, inlineBrand, "doc-brand-css");
 	if (provenance) page = embedProvenance(page, provenance, { homes: [homedir(), ...TEMP_ROOTS()] });
 	writeFileSync(out, page);
+	try {
+		checkPage(out, env); // the finished page is the authority: nav, brand and provenance are all in it now
+	} catch (e) {
+		rmSync(out, { force: true });
+		throw e;
+	}
 	const filed = fileDoc({ html: out, kind: KIND[purpose], source: o.source, summary, tags: o.tags }, env);
 	return { rendered: [out], filed: [filed], urls: urlsFor(filed).map((u) => u.url), findings: [], brandCss, provenance };
 }

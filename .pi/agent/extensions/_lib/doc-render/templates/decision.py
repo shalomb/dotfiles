@@ -7,7 +7,7 @@ rules, references, claim labels, gate banner and recipe come from kernel.py.
 """
 import datetime, sys
 
-from kernel import (build_page, check_basis, check_glossary, check_refs, check_tone, fail, keep_known, need, opt_flag, opt_object,
+from kernel import (glossary_texts, build_page, check_basis, check_glossary, check_refs, check_tone, fail, keep_known, need, opt_flag, opt_object,
                     text_fields)
 
 TEMPLATE = "decision.html"
@@ -85,11 +85,11 @@ def check_structure(doc):
 
 def tone_texts(doc):
     """All prose the author supplies. Dates, ids and enums are exempt; the deadline labels and ref titles are not."""
-    body = {k: v for k, v in doc.items() if k != "deadline"}
+    body = {k: v for k, v in doc.items() if k not in ("deadline", "glossary")}
     texts = [(path, text) for path, text in text_fields(body, "", DEEP_SKIP)
              if path.split("[")[0].split(".")[0] not in NOT_TEXT]
     texts += [(f"deadline.{k}", doc["deadline"][k]) for k in ("date_label", "ask_by_note")]
-    return texts + [(f"refs[{i}].title", r["title"]) for i, r in enumerate(doc.get("refs", []))]
+    return texts + glossary_texts(doc) + [(f"refs[{i}].title", r["title"]) for i, r in enumerate(doc.get("refs", []))]
 
 
 def derive(doc):

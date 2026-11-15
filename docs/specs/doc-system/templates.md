@@ -20,7 +20,7 @@ Status: three template types on one kernel (`readout`, `decision`, `epicmap`). S
 4. Tone: all author prose goes through `check_tone` (hype words, unglossed jargon, label-style titles), including date labels, ref titles and conflict labels. The lists are pinned in `test_doc_templates.py`; changing one means editing both.
 5. References: author citations `[r1]` go through `check_refs` and are numbered by first citation.
 6. Labels: every computed number is `derived`; author facts carry `measured` or `judged`.
-7. The embedded recipe holds the validated input (known fields only; a cache is kept by folder name), `href` must be `http(s)` or relative, and private paths in any value are rejected except the `PATH_FIELDS` of the module (details in `kernel.md`) and a hash over `kernel.*` and the type's files.
+7. The embedded recipe holds the validated input (known fields only; a cache is kept by folder name), `href` must be `http(s)` or relative, and private paths in any key or value are rejected except the `PATH_FIELDS` of the module; Jira text is redacted instead, and the finished page is gated (the rule and its three checkpoints are in `kernel.md`) and a hash over `kernel.*` and the type's files.
 8. Mobile and print: the page needs the `@media (max-width:768px)` and `@media print` blocks (kernel.css has them). Wide diagrams go in `.mapwrap`. A sticky or fixed bar must be static below 768px.
 9. No network, no `innerHTML`, no external `src` or `href`.
 10. The shared contract tests must pass for the new type; skips need a written reason.

@@ -4,6 +4,8 @@
   template.py <readout|decision|epicmap> in.json out.html
   template.py --list              the template types, as a JSON array
   template.py --example <type>    a valid example input for that type (examples/<type>.json)
+  template.py --check-page FILE   exit 0 if the finished page holds no private path, else an error
+  template.py --redact            read text on stdin, write it with private paths replaced
 
 Dispatches to the template module of that type. Works from any working directory.
 Any failure prints `error: <reason>` on stderr and exits non-zero; no page is written.
@@ -13,7 +15,7 @@ import importlib, json, pathlib, sys
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from kernel import reject_private_paths, reject_style_keys  # noqa: E402
+from kernel import gate_page, redact, reject_private_paths, reject_style_keys, set_roots  # noqa: E402
 
 REGISTRY = {"readout": "readout", "decision": "decision", "epicmap": "epicmap"}  # type -> module in this directory
 
@@ -34,6 +36,18 @@ def main(argv):
             unknown(argv[2])
         print((HERE / "examples" / f"{argv[2]}.json").read_text(), end="")
         return
+    if argv[1:2] == ["--check-page"]:
+        if len(argv) != 3:
+            sys.exit("error: usage: template.py --check-page FILE")
+        try:
+            page = pathlib.Path(argv[2]).read_text()
+        except OSError as exc:
+            sys.exit(f"error: cannot read {argv[2]}: {exc}")
+        gate_page(page)
+        return
+    if argv[1:] == ["--redact"]:
+        sys.stdout.write(redact(sys.stdin.read())[0])
+        return
     if len(argv) != 4:
         sys.exit(f"error: usage: template.py <{types}> in.json out.html")
     kind, src, dst = argv[1:]
@@ -44,12 +58,14 @@ def main(argv):
     except (OSError, json.JSONDecodeError) as exc:
         sys.exit(f"error: cannot read {src}: {exc}")
     reject_style_keys(doc)
+    set_roots([pathlib.Path(src).resolve().parent, pathlib.Path.cwd()])  # this machine's private places, as well as home and temp
     module = importlib.import_module(REGISTRY[kind])
     reject_private_paths(doc, getattr(module, "PATH_FIELDS", ()))
     if getattr(module, "NEEDS_BASE", False):  # the input points at local files: resolve them from the input's folder
         page = module.build(doc, base=pathlib.Path(src).resolve().parent)
     else:
         page = module.build(doc)
+    gate_page(page)  # checkpoint 3: the finished page is the authority, whatever put a path there
     out = pathlib.Path(dst)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page)

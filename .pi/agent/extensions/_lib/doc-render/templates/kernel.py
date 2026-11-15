@@ -4,8 +4,9 @@ One place for the tone rules, numbered and linked references (P14), the measured
 label on every KPI and status (P2), the fixed gate banner, the style-key rule and the embedded
 recipe block for rebuilding the page (P13). Spec: docs/specs/doc-system/kernel.md. Stdlib only.
 """
-import hashlib, html, json, os, pathlib, re, sys
-from urllib.parse import urlsplit
+import hashlib, html, json, os, pathlib, re, sys, tempfile, unicodedata
+from typing import Any, NoReturn
+from urllib.parse import unquote, urlsplit
 
 HERE = pathlib.Path(__file__).resolve().parent
 KINDS = ("decision", "spec", "ticket", "source", "edition")
@@ -22,11 +23,10 @@ LABEL_TITLES = re.compile(r"(simulation|report|decision):", re.I)
 STYLE_KEYS = {"brand", "theme", "style", "styles", "css", "stylesheet", "color", "colour", "colors",
               "colours", "font", "fonts", "palette"}
 GATE_LEAD = "Nothing here is approved."
-PRIVATE_PATH = re.compile(r"(?<![\w.~])(?:/home/\S|/Users/\S|/root(?![\w.-])|/tmp/|/var/folders/|/private/var(?![\w.-]))"
-                          r"|(?<![\w~])~/|[A-Za-z]:\\Users\\")
+LOCAL = "\u2039local path\u203a"
 
 
-def fail(field, message):
+def fail(field: str, message: str) -> NoReturn:
     sys.exit(f"error: {field}: {message}")
 
 
@@ -53,23 +53,178 @@ def reject_style_keys(value, path=""):
             reject_style_keys(item, f"{path}[{i}]")
 
 
-def reject_private_paths(value, exempt=(), path=""):
-    """No string value anywhere may hold a home or temp path (or this user's HOME); `exempt` names top-level fields."""
-    home = os.path.expanduser("~").rstrip("/\\")
+# ---- private paths: ONE classifier, run at three checkpoints (input, derived text, the finished page) ----
+# A token is a private path if it holds one of this machine's own roots, is a file:/UNC/drive/~ form, or holds a
+# personal-location marker followed by one more segment. Public http(s) links, bare mentions ('/tmp/', '/home')
+# and system paths ('/etc/nginx/x') are never private. Spec: docs/specs/doc-system/kernel.md.
+MARKERS = ("/home", "/Users", "/root", "/tmp", "/var/folders", "/private", "/mnt", "/media", "/Volumes", "/run/user")
+_MARKER = re.compile("(?:" + "|".join(re.escape(m) for m in MARKERS) + r")/[^/\s]")
+# a marker inside a longer token ('docs/home/guide.md' is honest, 'extra_/home/alice/x.md' is a leak) needs two more segments
+_MARKER_EMBEDDED = re.compile("(?:" + "|".join(re.escape(m) for m in MARKERS) + r")/[^/\s]+/[^/\s]")
+_URL = re.compile(r"(?i)\bhttps?://[^\s\"'<>()]+")
+_FILE = re.compile(r"(?i)(?<![a-z])file:/")
+_DRIVE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z]:/")
+_UNC_BACK = re.compile(r"\\\\[^\\/\s]+\\[^\\/\s]")   # \\host\share anywhere in the token
+_UNC_FWD = re.compile(r"^//[^/\s]+/[^/\s]")                 # //host/share at the start of the token
+_TILDE = re.compile(r"(?<![\w~])~(?:/|[A-Za-z][\w.-]*/)")
+_TOKEN = re.compile(r"[^\s\"'<>(),]+")
+_EXTRA_ROOTS = []
+
+
+def _usable(root):
+    root = str(root or "")
+    return root if len(root.strip("/")) >= 3 and root.strip("/") != "." else None
+
+
+def set_roots(extra=()):
+    """Replace the extra private roots (the input's folder, the working directory, a Jira cache folder)."""
+    _EXTRA_ROOTS[:] = [r for x in extra for r in {_usable(x), _usable(os.path.realpath(str(x))) if x else None} if r]
+
+
+def _roots():
+    """(roots found anywhere, temp roots that only count with one more segment)."""
+    home = os.path.expanduser("~")
+    anywhere = [r for r in {_usable(home), _usable(os.path.realpath(home)), *_EXTRA_ROOTS} if r]
+    temps = [r.rstrip("/") for r in {tempfile.gettempdir(), os.path.realpath(tempfile.gettempdir()), "/var/tmp"} if _usable(r)]
+    return anywhere, temps
+
+
+def _decode(token):
+    """Undo HTML entities, percent-encoding, \\uXXXX escapes and fancy Unicode, up to three rounds."""
+    for _ in range(3):
+        before = token
+        token = html.unescape(token)
+        token = unquote(token)
+        token = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), token)
+        token = unicodedata.normalize("NFKC", token)
+        if token == before:
+            break
+    return token
+
+
+def _private(token):
+    raw = _URL.sub(" ", _decode(token))          # a public link is never judged
+    if not raw.strip():
+        return False
+    if _UNC_BACK.search(raw):
+        return True
+    t = raw.replace("\\", "/")
+    anywhere, temps = _roots()
+    if any(r in t for r in anywhere) or any(re.search(re.escape(r) + r"/[^/\s]", t) for r in temps):
+        return True
+    absolute = t.startswith("/")   # 'a/home/b' is a relative path, '/var/home/x' is absolute
+    marker = _MARKER.search(t) if absolute else _MARKER_EMBEDDED.search(t)
+    return bool(_FILE.search(t) or _DRIVE.search(t) or _UNC_FWD.search(t.strip()) or _TILDE.search(t) or marker)
+
+
+def private_tokens(text):
+    """The tokens of `text` that are private paths, as written."""
+    return [m.group(0) for m in _TOKEN.finditer(str(text)) if _private(m.group(0))]
+
+
+def has_private(text):
+    return any(_private(m.group(0)) for m in _TOKEN.finditer(str(text)))
+
+
+def redact(text):
+    """(text with every private token replaced by LOCAL, how many were replaced)."""
+    n = 0
+
+    def swap(m):
+        nonlocal n
+        if _private(m.group(0)):
+            n += 1
+            return LOCAL
+        return m.group(0)
+    return _TOKEN.sub(swap, str(text)), n
+
+
+def redact_deep(value: Any) -> tuple[Any, int]:
+    """(a copy of a data structure with every private token in its string values redacted, the count)."""
     if isinstance(value, str):
-        if PRIVATE_PATH.search(value) or (len(home) > 1 and home in value):
+        return redact(value)
+    if isinstance(value, list):
+        pairs = [redact_deep(v) for v in value]
+        return [p[0] for p in pairs], sum(p[1] for p in pairs)
+    if isinstance(value, dict):
+        out, total = {}, 0
+        for k, v in value.items():
+            out[k], n = redact_deep(v)
+            total += n
+        return out, total
+    return value, 0
+
+
+def reject_private_paths(value, exempt=(), path=""):
+    """Checkpoint 1: no key or string value anywhere may hold a private path; `exempt` names top-level fields
+    whose VALUE may (a local file location the renderer reads and never embeds)."""
+    if isinstance(value, str):
+        if has_private(value):
             fail(path, "private paths are not allowed in a document")
     elif isinstance(value, dict):
         for key, item in value.items():
+            here = f"{path}.{key}" if path else str(key)
+            if has_private(str(key)):
+                fail(f"{here} (key)", "private paths are not allowed in a document")
             if path == "" and key in exempt:
                 continue
-            reject_private_paths(item, exempt, f"{path}.{key}" if path else str(key))
+            reject_private_paths(item, exempt, here)
     elif isinstance(value, list):
         for i, item in enumerate(value):
             reject_private_paths(item, exempt, f"{path}[{i}]")
 
 
-def keep_known(value, schema):
+def _walk_private(value):
+    if isinstance(value, str):
+        return has_private(value)
+    if isinstance(value, dict):
+        return any(has_private(str(k)) or _walk_private(v) for k, v in value.items())
+    if isinstance(value, list):
+        return any(_walk_private(v) for v in value)
+    return False
+
+
+def page_findings(page):
+    """Checkpoint 3: where a private path survives in a finished page: 'recipe', 'DATA' or 'page text'."""
+    found = []
+    for attrs, body in re.findall(r"<script([^>]*)>(.*?)</script>", page, re.S):
+        if 'type="application/json"' in attrs:
+            where = "recipe" if 'id="recipe"' in attrs else "page text"
+            try:
+                bad = _walk_private(json.loads(body))
+            except ValueError:
+                bad = has_private(body)
+            if bad:
+                found.append(where)
+        elif "const DATA=" in body:
+            try:
+                bad = _walk_private(json.JSONDecoder().raw_decode(body[body.index("const DATA=") + len("const DATA="):])[0])
+            except ValueError:
+                bad = True
+            if bad:
+                found.append("DATA")
+    # everything else, styles and page code included: a stylesheet or a script comment can leak a path too
+    if has_private(re.sub(r"<script[^>]*>.*?</script>", lambda m: m.group(0) if "const DATA=" not in m.group(0) and 'type="application/json"' not in m.group(0) else " ", page, flags=re.S)):
+        found.append("page text")
+    return found
+
+
+def gate_page(page):
+    """The authority: fail the build when the finished page still holds a private path, whatever put it there."""
+    found = page_findings(page)
+    if found:
+        fail("final page", f"a private path survived in {found[0]}; this is a renderer bug, nothing was written")
+
+
+def glossary_texts(doc):
+    """Every visible glossary string, located by where it sits: terms and meanings, never skipped by key name."""
+    out = []
+    for term, meaning in (doc.get("glossary") or {}).items():
+        out += [(f"glossary.{term} (key)", term), (f"glossary.{term}", meaning)]
+    return out
+
+
+def keep_known(value: Any, schema: Any) -> Any:
     """Copy `value` keeping only the keys `schema` knows: a dict maps key to a sub-schema (None for a leaf),
     a one-item list is the schema of each list element. What is not in the schema never reaches the page or recipe."""
     if isinstance(schema, dict) and isinstance(value, dict):
@@ -106,7 +261,7 @@ def opt_object(obj, key):
         fail(key, "must be an object")
 
 
-def text_fields(value, path, skip=frozenset()):
+def text_fields(value, path, skip=()):
     """Yield (path, text) for every free-text string; keys named in `skip` (ids, enums) are left out."""
     if isinstance(value, str):
         yield path, value
@@ -146,7 +301,7 @@ def _text(obj, key, field):
     value = obj.get(key) if isinstance(obj, dict) else None
     if not isinstance(value, str) or not value.strip():
         fail(f"{field}.{key}", "required, must be a non-empty str")
-    return value
+    return str(value)
 
 
 def href_ok(href):

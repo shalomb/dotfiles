@@ -140,6 +140,29 @@ describe("publishDoc with a template", () => {
 		expect(html).toContain("doc-provenance-data");
 		for (const leak of ["/tmp/x/y.json", "/home/alice/z", `${tmpdir()}/q`, "/var/folders/ab", tmp]) expect(html).not.toContain(leak);
 	});
+	it("redacts every private path flavour in the prompt and sources of a template page (one classifier, in Python)", () => {
+		const leaks = ["/home/alice/x", "file:///etc/private.conf", "\\\\srv\\share\\f", "/mnt/c/Users/a/b", "/var/home/carol/n", "C:\\Users\\Bob\\d", "~/secret.md"];
+		const r = publishDoc({ source: input("readout"), template: "readout", downloads: tmp, prompt: `use ${leaks.join(" then ")} and https://example.com/home/ok and /etc/hosts`, sources: leaks, now: "2031-02-02T00:00:00Z" }, env());
+		const html = readFileSync(r.rendered[0], "utf8");
+		expect(html).toContain("doc-provenance-data");
+		for (const leak of ["alice", "private.conf", "srv", "Users/a", "carol", "Bob", "secret.md"]) expect(html).not.toContain(leak);
+		expect(html).toContain("https://example.com/home/ok");
+	});
+	it("runs the final-page gate after nav, brand and provenance are injected, and refuses a leaking page", () => {
+		const r = publishDoc({ source: input("readout"), template: "readout", downloads: tmp, nav: true, prompt: "plain request", now: "2031-02-02T00:00:00Z" }, env());
+		expect(readFileSync(r.rendered[0], "utf8")).toContain("doc-nav-css");
+		// a brand stylesheet that names a private path must stop the publish: the gate looks at the finished page
+		const dir = join(tmp, "brandcfg", "agent-skills", "brands");
+		mkdirSync(dir, { recursive: true });
+		writeFileSync(join(dir, "leak.css"), "/* built at /home/alice/projects/brand */ body{color:#123}");
+		expect(() => publishDoc({ source: input("readout"), template: "readout", downloads: tmp, style: "formal" }, { ...env(), XDG_CONFIG_HOME: join(tmp, "brandcfg") })).toThrow(/error: final page: a private path survived/);
+	});
+	it("refuses a template input that names a private path, naming the field", () => {
+		const bad = input("readout", (d) => {
+			d.problem = "see /home/alice/private.md";
+		});
+		expect(() => publishDoc({ source: bad, template: "readout", downloads: tmp }, env())).toThrow(/error: problem: private paths are not allowed/);
+	});
 	it("refuses a purpose that differs from the template's", () => {
 		expect(() => publishDoc({ source: input("decision"), template: "decision", purpose: "report", downloads: tmp }, env())).toThrow("template decision files as purpose decision");
 		expect(() => publishDoc({ source: input("decision"), template: "decision", purpose: "decision", downloads: tmp }, env())).not.toThrow();

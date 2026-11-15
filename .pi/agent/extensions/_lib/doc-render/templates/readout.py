@@ -6,7 +6,7 @@ rules, references, claim labels, gate banner and recipe come from kernel.py.
 """
 import math
 
-from kernel import (build_page, check_basis, check_glossary, check_refs, check_tone, fail, keep_known, need, opt_flag, opt_list,
+from kernel import (glossary_texts, build_page, check_basis, check_glossary, check_refs, check_tone, fail, keep_known, need, opt_flag, opt_list,
                     opt_text, text_fields)
 
 TEMPLATE = "readout.html"
@@ -90,8 +90,9 @@ def check_structure(doc):
 
 def tone_texts(doc):
     """All prose the author supplies: ids, enums, links and ref ids/kinds/hrefs are the only exemptions."""
-    body = {k: v for k, v in doc.items() if k not in ("links", "refs")}
-    return list(text_fields(body, "", NOT_TEXT)) + [(f"refs[{i}].title", r["title"]) for i, r in enumerate(doc.get("refs", []))]
+    body = {k: v for k, v in doc.items() if k not in ("links", "refs", "glossary")}
+    return (list(text_fields(body, "", NOT_TEXT)) + glossary_texts(doc)
+            + [(f"refs[{i}].title", r["title"]) for i, r in enumerate(doc.get("refs", []))])
 
 
 def derive(doc):

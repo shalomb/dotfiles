@@ -72,6 +72,27 @@ def escaped(text):
 def load_kernel():
     """Import kernel.py from the templates directory under a private module name."""
     spec = importlib.util.spec_from_file_location("kernel_under_test", TEMPLATES_DIR / "kernel.py")
+    assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def cite_nodes(inputs, refn=None):
+    """Run kernel.js `cite()` in node against a minimal DOM stub for each input; return the nodes it built.
+
+    A node is {"t": text} or {"a": href, "c": link text}. Raises the node error text if `cite` throws."""
+    js = (TEMPLATES_DIR / "kernel.js").read_text()
+    start, end = js.index("function cite("), js.index("function backTo(")
+    refn = {"r1": 1, "r2": 2} if refn is None else refn
+    harness = (
+        f"const REFN={json.dumps(refn)};\n{js[start:end]}\n"
+        "const document={createTextNode:t=>({text:t}),createElement:t=>({attrs:{},setAttribute(k,v){this.attrs[k]=v},textContent:''})};\n"
+        f"const inputs={json.dumps(inputs)};\nconst out=[];\n"
+        "for(const v of inputs.concat([undefined])){const e={kids:[],appendChild(k){this.kids.push(k)}};\n"
+        " try{cite(e,v);out.push({ok:true,kids:e.kids.map(k=>k.text!==undefined?{t:k.text}:{a:k.attrs.href,c:k.textContent})});}\n"
+        " catch(x){out.push({ok:false,err:String(x)});}}\n"
+        "console.log(JSON.stringify(out));\n")
+    run = subprocess.run(["node", "-e", harness], capture_output=True, text=True)
+    assert run.returncode == 0, run.stderr
+    return json.loads(run.stdout)

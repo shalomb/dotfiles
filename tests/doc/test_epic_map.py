@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from doc_helpers import FIXTURES, TEMPLATES_DIR, data_of, load_kernel, page_script, recipe_of, render, render_ok
+from doc_helpers import cite_nodes, FIXTURES, TEMPLATES_DIR, data_of, load_kernel, page_script, recipe_of, render, render_ok
 
 FIXTURE = FIXTURES / "jira_epic"
 FOCUS = "DEMO-1"
@@ -248,7 +248,7 @@ def test_page_renders_the_references_list_and_citations(page):
 
 
 def test_rag_and_kpis_are_derived_and_status_is_measured(data):
-    assert data["derived_basis"] == {"kpi": "derived"}
+    assert data["derived_basis"] == {"kpi": "derived", "redactions": "derived"}   # both are counted by the renderer
     for n in data["top"]["nodes"]:
         assert n["basis"] == {"rag": "derived", "status": "measured"}
     for sub in data["sub"].values():
@@ -494,6 +494,13 @@ def test_literal_jira_citation_text_is_not_a_citation(tmp_path):
     assert [r["id"] for r in data["refs"]] == ["r1", "r2"] and all(r["cited"] for r in data["refs"])
 
 
+@pytest.mark.skipif(shutil.which("node") is None, reason="node missing")
 def test_the_page_turns_only_unescaped_markers_into_citations(page):
-    js = (KERNEL.HERE / "kernel.js").read_text()
-    assert r"(?<!\\)\[(r\d+)\]" in js and "REFN[part]===undefined" in js
+    out = cite_nodes(["see [r1] now", "see \\[r1] now", "see \\\\\\[r1] now", "[r9]", "a [r1][r2] b"])
+    assert [n for n in out[0]["kids"] if "a" in n] == [{"a": "#ref-1", "c": "[1]"}]          # no backslash: a citation
+    for escaped in (out[1], out[2]):                                                        # one or many: never a citation
+        assert not any("a" in n for n in escaped["kids"]), escaped
+    assert "".join(n["t"] for n in out[1]["kids"]) == "see [r1] now"                        # one backslash is removed
+    assert out[2]["kids"][0]["t"].endswith("[r1] now") and out[2]["kids"][0]["t"].count("\\") == 2
+    assert out[3]["kids"] == [{"t": "[r9]"}]                                                 # unknown id stays literal text
+    assert [n["a"] for n in out[4]["kids"] if "a" in n] == ["#ref-1", "#ref-2"]

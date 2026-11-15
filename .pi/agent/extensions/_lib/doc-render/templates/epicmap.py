@@ -12,7 +12,7 @@ import json
 import pathlib
 import re
 
-from kernel import build_page, fail, need
+from kernel import build_page, fail, need, redact_deep
 
 TEMPLATE = "epicmap.html"
 PATH_FIELDS = {"cache"}  # the cache path may be absolute; it is never embedded in the page
@@ -343,6 +343,14 @@ def build(doc, base=None):
     if epic not in issues:
         fail("epic", f"{epic} is not in {jsonl}")
     data, refs, cited = derive(issues, epic)
+    # checkpoint 2: text read from Jira is not the author's to edit, so private paths in it are removed, not refused
+    data, n_data = redact_deep(data)
+    refs, n_refs = redact_deep(refs)
+    cited, n_cited = redact_deep(cited)
+    removed = n_data + n_refs + n_cited
+    data["derived"]["redactions"] = removed
+    if removed:
+        data["meta"]["foot"] += f" {removed} local path{'s were' if removed != 1 else ' was'} removed from the Jira text."
     read_at = datetime.datetime.fromtimestamp(jsonl.stat().st_mtime).strftime("%Y-%m-%d")
     data["meta"]["eyebrow"] = f"{epic} · {issues[epic]['fields']['status']['name']} · epic map · Jira read {read_at}"
     # the kernel numbers references by first citation, so hand it the cited texts in page order

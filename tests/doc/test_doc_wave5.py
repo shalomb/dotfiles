@@ -4,11 +4,12 @@ The epic map findings live in test_epic_map.py. Each test here fails on the code
 import json
 import os
 import re
+import shutil
 import sys
 
 import pytest
 
-from doc_helpers import data_of, fixture_doc, load_kernel, recipe_of, render, render_ok
+from doc_helpers import cite_nodes, fixture_doc, load_kernel, recipe_of, render, render_ok
 
 KERNEL = load_kernel()
 WITH_REFS = ["readout", "decision"]
@@ -36,7 +37,9 @@ def test_unsafe_hrefs_are_rejected(name, href, tmp_path):
     doc = fixture_doc(name)
     doc["refs"][0]["href"] = href
     error = fails(name, doc, tmp_path)
-    assert f"error: refs[0].href: {HREF_MESSAGE}" in error
+    # a file: URL or a //host/share link is also a private path, which the input checkpoint reports first
+    assert (f"error: refs[0].href: {HREF_MESSAGE}" in error
+            or "error: refs[0].href: private paths are not allowed in a document" in error), error
 
 
 @pytest.mark.parametrize("href", ["https://example.com/x?a=1#top", "http://example.com", "docs/a.md", "../a.md#h", "editions/v1.html"])
@@ -156,9 +159,13 @@ def test_optional_fields_are_type_checked(name, change, message, tmp_path):
     assert result.stderr.startswith("error: ") and message in result.stderr, result.stderr
 
 
+@pytest.mark.skipif(shutil.which("node") is None, reason="node missing")
 def test_the_page_citation_code_tolerates_a_non_string():
-    js = (KERNEL.HERE / "kernel.js").read_text()
-    assert re.search(r'function cite\(e,text\)\{if\(typeof text!=="string"\)', js)
+    inputs = [1, 0, None, {}, [], True, "plain"]
+    results = cite_nodes(inputs)
+    assert all(r["ok"] for r in results), results       # includes undefined, run last by the helper
+    assert results[-2]["kids"] == [{"t": "plain"}]
+    assert results[2]["kids"] == [] and results[0]["kids"] == [{"t": "1"}]
 
 
 # P2f: ROAM is explained in the heading itself

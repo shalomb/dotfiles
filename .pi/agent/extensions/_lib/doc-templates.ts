@@ -39,6 +39,20 @@ export function renderTemplate(o: { type: TemplateType; input: string; out: stri
 	run([o.type, o.input, o.out], o.env);
 }
 
+/** Text with every private path replaced: the same Python classifier the renderers use, so there is one rule. */
+export function redactPrivate(text: string, env?: Env): string {
+	try {
+		return execFileSync("python3", [TEMPLATE_SCRIPT, "--redact"], { encoding: "utf8", input: text, env: (env ?? process.env) as NodeJS.ProcessEnv, stdio: ["pipe", "pipe", "pipe"] });
+	} catch (e) {
+		throw new Error(`error: cannot redact: ${(e as Error).message}`);
+	}
+}
+
+/** The final-page gate: throws the dispatcher's `error: final page: ...` line when a private path survives in the file. */
+export function checkPage(file: string, env?: Env): void {
+	run(["--check-page", file], env);
+}
+
 /** A valid example input (JSON text) for a type. */
 export function templateExample(type: TemplateType): string {
 	return run(["--example", type]);
