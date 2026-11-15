@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render a structured doc (JSON) to one self-contained HTML page.
 
-  template.py <readout|decision> in.json out.html
+  template.py <readout|decision|epicmap> in.json out.html
 
 Dispatches to the template module of that type. Works from any working directory.
 Any failure prints `error: <reason>` on stderr and exits non-zero; no page is written.
@@ -13,7 +13,7 @@ sys.path.insert(0, str(HERE))
 
 from kernel import reject_style_keys  # noqa: E402
 
-REGISTRY = {"readout": "readout", "decision": "decision"}  # type -> module in this directory
+REGISTRY = {"readout": "readout", "decision": "decision", "epicmap": "epicmap"}  # type -> module in this directory
 
 
 def main(argv):
@@ -28,7 +28,11 @@ def main(argv):
     except (OSError, json.JSONDecodeError) as exc:
         sys.exit(f"error: cannot read {src}: {exc}")
     reject_style_keys(doc)
-    page = importlib.import_module(REGISTRY[kind]).build(doc)
+    module = importlib.import_module(REGISTRY[kind])
+    if getattr(module, "NEEDS_BASE", False):  # the input points at local files: resolve them from the input's folder
+        page = module.build(doc, base=pathlib.Path(src).resolve().parent)
+    else:
+        page = module.build(doc)
     out = pathlib.Path(dst)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page)

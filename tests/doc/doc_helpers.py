@@ -18,7 +18,11 @@ def fixture_path(name):
 
 
 def fixture_doc(name):
-    return json.loads(fixture_path(name).read_text())
+    doc = json.loads(fixture_path(name).read_text())
+    if isinstance(doc.get("cache"), str) and not Path(doc["cache"]).is_absolute():
+        # render() writes the input elsewhere, so a fixture's relative cache is made absolute here
+        doc["cache"] = str((fixture_path(name).parent / doc["cache"]).resolve())
+    return doc
 
 
 def render(name, doc, tmp_path, templates=TEMPLATES_DIR, cwd=None):

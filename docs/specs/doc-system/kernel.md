@@ -1,10 +1,10 @@
 # Doc kernel
 
-`.pi/agent/extensions/_lib/doc-render/templates/kernel.py` is the shared core of the doc template types (`readout`, `decision`; the epic map joins later). Stdlib only. It enforces principles P2, P13 and P14 (see `principles.md`). Each type has `<type>.py` (validation, `derive()`, `TEMPLATE`, `GATE_DETAIL`) and `<type>.html`; the shared styles and script are `kernel.css` and `kernel.js`.
+`.pi/agent/extensions/_lib/doc-render/templates/kernel.py` is the shared core of the doc template types (`readout`, `decision`, `epicmap`). Stdlib only. It enforces principles P2, P13 and P14 (see `principles.md`). Each type has `<type>.py` (validation, `derive()`, `TEMPLATE`, `GATE_DETAIL`) and `<type>.html`; the shared styles and script are `kernel.css` and `kernel.js`.
 
 ## Run
 
-    python3 .pi/agent/extensions/_lib/doc-render/templates/template.py <readout|decision> in.json out.html
+    python3 .pi/agent/extensions/_lib/doc-render/templates/template.py <readout|decision|epicmap> in.json out.html
 
 `template.py` works from any directory. An unknown type or bad arguments print `error: ...` and exit non-zero.
 

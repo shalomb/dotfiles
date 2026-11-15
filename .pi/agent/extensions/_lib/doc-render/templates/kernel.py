@@ -181,15 +181,17 @@ def gate_html(detail):
     return f'<div class="gate"><b>{GATE_LEAD}</b> {html.escape(detail)}</div>'
 
 
-def build_page(renderer_path, template_name, doc, data, gate_detail):
-    """Fill the template: kernel css/js, the gate, references and claim labels into DATA, the recipe block."""
+def build_page(renderer_path, template_name, doc, data, gate_detail, recipe_input=None):
+    """Fill the template: kernel css/js, the gate, references and claim labels into DATA, the recipe block.
+
+    `recipe_input` replaces `doc` as the recorded input when the doc holds more than the author gave."""
     data = {**data, "refs": reference_list(doc), "derived_basis": claim_labels(data["derived"])}
     fills = {
         "__TITLE__": html.escape(data["meta"]["title"]),
         "__GATE__": gate_html(gate_detail),
         "/*__KERNEL_CSS__*/": (HERE / "kernel.css").read_text(),
         "/*__KERNEL_JS__*/": (HERE / "kernel.js").read_text(),
-        "__RECIPE__": _embed(recipe(doc, template_name, renderer_path)),
+        "__RECIPE__": _embed(recipe(doc if recipe_input is None else recipe_input, template_name, renderer_path)),
         "__DATA__": _embed(data),
     }
     pattern = re.compile("|".join(re.escape(k) for k in fills))
