@@ -10,10 +10,12 @@ KPIs; the gate, references, claim labels and recipe come from kernel.py. Read-on
 import datetime
 import json
 import pathlib
+import re
 
 from kernel import build_page, fail, need
 
 TEMPLATE = "epicmap.html"
+PATH_FIELDS = {"cache"}  # the cache path may be absolute; it is never embedded in the page
 NEEDS_BASE = True  # template.py passes the input file's folder, so a relative cache resolves from there
 GATE_DETAIL = "Read-only view of Jira: nothing here is written back. A human decides."
 JIRA_BASE = "https://onetakeda.atlassian.net/browse/"
@@ -109,6 +111,11 @@ def status_rag(role, status):
     if role == "downstream":
         return "G" if s in DONE else "A"
     return "G" if s in DONE | STARTED else "N"
+
+
+def lit(text):
+    """Jira text shown where [rN] markers become citations: escape any marker, so only the ones we generate cite."""
+    return re.sub(r"\[(r\d+)\]", r"\\[\1]", text)
 
 
 def person(f):
@@ -223,24 +230,28 @@ def derive(issues, focus):
             linked[k] = (role, other["fields"])
     linked[focus] = ("focus", f0)
 
+    def status_of(k):
+        """One status per issue: the cached issue's own, else the link snapshot."""
+        return (issues[k]["fields"] if k in issues else linked[k][1])["status"]["name"]
+
     def epic_node(k, role, fields, x, y):
         full = issues.get(k)
         sec = sections(full["fields"].get("description")) if full else {}
         ff = full["fields"] if full else fields
         status = ff["status"]["name"]
         owner = person(ff) if full else None
-        plain = " ".join((sec.get("short") or ["Not in the local cache: only the summary and status come from the link."])[:1]
+        plain = " ".join(lit(p) for p in (sec.get("short") or ["Not in the local cache: only the summary and status come from the link."])[:1]
                          + (sec.get("outcome") or [])[:1])
         nxt = (sec.get("next step") or [""])[0]
         if nxt:
-            plain += " Next step: " + nxt
+            plain += " Next step: " + lit(nxt)
         rid = ref_id(k)
         plain += f" [{rid}]"
         cited.append(plain)
         node = {"id": k, "full": ff["summary"], "lines": wrap(ff["summary"]),
                 "s": status + (f" · {owner.split()[0]}" if owner else ""), "x": x, "y": y,
                 "rag": status_rag(role, status), "h": f"{k} · {status}" + (f" · owner {owner}" if owner else ""),
-                "plain": plain, "needs": (sec.get("decision needed") or [""])[0], "ref": rid,
+                "plain": plain, "needs": lit((sec.get("decision needed") or [""])[0]), "ref": rid,
                 "basis": {"rag": "derived", "status": "measured"}}
         node["ragname"] = RAG_NAMES[node["rag"]]
         if full and (sec["produce"] or sec["not"]):
@@ -251,17 +262,17 @@ def derive(issues, focus):
     for k, role in roles.items():
         cols[role].append(k)
     for lst in cols.values():
-        lst.sort(key=lambda k: (status_rag("related", linked[k][1]["status"]["name"]) == "X", k))
-    rows = max(len(c) for c in cols.values())
+        lst.sort(key=lambda k: (status_rag("related", status_of(k)) == "X", k))
+    rows = max(*(len(c) for c in cols.values()), 1)  # an isolated epic still gets its focus row
     height = 44 + rows * ROW_PITCH + 30
-    blockers_open = [k for k in cols["blocker"] if status_rag("blocker", linked[k][1]["status"]["name"]) == "R"]
+    blockers_open = [k for k in cols["blocker"] if status_rag("blocker", status_of(k)) == "R"]
     nodes, pairs = [], []
 
     def place(role, x, label):
         for i, k in enumerate(cols[role]):
             nodes.append(epic_node(k, role, linked[k][1], x, 44 + i * ROW_PITCH))
             if role == "blocker":
-                st = linked[k][1]["status"]["name"].lower()
+                st = status_of(k).lower()
                 pairs.append((k, focus, label, 1 if status_rag("blocker", st) in ("R", "A") else 0))
             elif role == "downstream":
                 pairs.append((focus, k, label, 0))
@@ -295,7 +306,7 @@ def derive(issues, focus):
         rid = ref_id(k)
 
         def deliverable(item, idx, x, rag, status, note):
-            text = f"{item} [{rid}]"
+            text = f"{lit(item)} [{rid}]"
             cited.append(text)
             return {"id": f"{k}-{idx}", "full": item.rstrip("."), "lines": wrap(item.rstrip(".")), "s": status, "x": x,
                     "y": 44 + int(idx[1:]) * ROW_PITCH, "rag": rag, "ragname": "OUT OF SCOPE" if rag == "X" else RAG_NAMES[rag],

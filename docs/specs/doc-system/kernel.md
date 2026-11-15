@@ -16,8 +16,8 @@
 
 ## References (P14)
 - Input `refs`: list of `{id, title, href, kind}`. Optional. `id` looks like `r1`; `kind` is `decision`, `spec`, `ticket`, `source` or `edition`.
-- `href` is a relative path or an `https://` URL, kept as data and never fetched. Absolute paths and other schemes are rejected.
-- Free text cites with `[r1]`. A citation to an unknown id fails the build: `error: <field path>: unknown reference 'r9'`. Duplicate ids, bad kinds and bad hrefs are rejected naming the field.
+- `href` is an `http(s)` URL with a host, or a relative path, kept as data and never fetched. Any control character or whitespace (U+0000 to U+0020, U+007F to U+009F, U+2028, U+2029) rejects it, because browsers strip those and then run what is left. Other schemes (`javascript:`, `data:`, `file:`, any case), `//host`, backslash starts and absolute or `~` paths are rejected: `error: refs[0].href: href must be an http(s) link or a relative path`.
+- Free text cites with `[r1]`. A marker written `\[r1]` is literal text (the epic map escapes Jira text this way, so only its own markers cite). A citation to an unknown id fails the build: `error: <field path>: unknown reference 'r9'`. Duplicate ids, bad kinds and bad hrefs are rejected naming the field.
 - Refs are numbered by first citation in input order. Uncited refs go last, tagged "also relevant".
 - The page script turns each citation into a link to `#ref-N` (DOM nodes only, never `innerHTML`). The References section links each title and has a back-link to the first citation.
 
@@ -27,6 +27,10 @@
 - Author-supplied facts (decision `facts[]`, readout node `rag`) must carry `basis` of `measured` or `judged`. Missing or any other value fails naming `<field>.basis`.
 
 ## Recipe (P13)
+- `reject_private_paths(doc, exempt=())` runs in the dispatcher right after `reject_style_keys`: a string value anywhere that holds `/home/<x>`, `/Users/<x>`, `/root`, `/tmp/`, `/var/folders/`, `/private/var`, `~/`, `C:\Users\` or the current HOME fails with `error: <field path>: private paths are not allowed in a document`. A module may list top-level fields in `PATH_FIELDS` (epic map: `cache`) that are exempt; the epic map never embeds it.
+- The recipe `input` is the validated, normalised input only: each renderer's `SCHEMA` lists its known keys and `keep_known` drops the rest before checks, page and recipe.
+- Tone covers all prose the author supplies, including `deadline.date_label`, `deadline.ask_by_note`, ref titles and readout conflict labels; only dates, ids and enum values are exempt.
+- Optional fields are type-checked (`error: nodes[0].needs: must be text`); `cite()` in the page tolerates a non-string.
 - Embedded as `<script type="application/json" id="recipe">`, with `<` escaped as `\u003c`.
 - Fields: `template`, `renderer_file` (base name only), `renderer_sha256` (renderer module, `kernel.py`, `kernel.css`, `kernel.js` and the template html), `input` (the input JSON, verbatim), `rebuild`, `note`.
 - `rebuild` is `python3 doc-render/templates/template.py <type> in.json out.html`. The note says the page alone is not enough: a rebuild needs the renderer.

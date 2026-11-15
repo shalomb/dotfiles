@@ -4,12 +4,14 @@ One place for the tone rules, numbered and linked references (P14), the measured
 label on every KPI and status (P2), the fixed gate banner, the style-key rule and the embedded
 recipe block for rebuilding the page (P13). Spec: docs/specs/doc-system/kernel.md. Stdlib only.
 """
-import hashlib, html, json, pathlib, re, sys
+import hashlib, html, json, os, pathlib, re, sys
+from urllib.parse import urlsplit
 
 HERE = pathlib.Path(__file__).resolve().parent
 KINDS = ("decision", "spec", "ticket", "source", "edition")
 AUTHOR_BASES = ("measured", "judged")
-CITATION = re.compile(r"\[(r\d+)\]")
+# a marker written \[r1] is literal text, not a citation (Jira text is escaped this way)
+CITATION = re.compile(r"(?<!\\)\[(r\d+)\]")
 REF_ID = re.compile(r"r\d+")
 RECIPE_NOTE = "Rebuilding needs this renderer; the page alone is not enough."
 HYPE_WORDS = ["seamless", "leverage", "synergy", "robust", "cutting-edge", "game-changing",
@@ -20,6 +22,8 @@ LABEL_TITLES = re.compile(r"(simulation|report|decision):", re.I)
 STYLE_KEYS = {"brand", "theme", "style", "styles", "css", "stylesheet", "color", "colour", "colors",
               "colours", "font", "fonts", "palette"}
 GATE_LEAD = "Nothing here is approved."
+PRIVATE_PATH = re.compile(r"(?<![\w.~])(?:/home/\S|/Users/\S|/root(?![\w.-])|/tmp/|/var/folders/|/private/var(?![\w.-]))"
+                          r"|(?<![\w~])~/|[A-Za-z]:\\Users\\")
 
 
 def fail(field, message):
@@ -47,6 +51,59 @@ def reject_style_keys(value, path=""):
     elif isinstance(value, list):
         for i, item in enumerate(value):
             reject_style_keys(item, f"{path}[{i}]")
+
+
+def reject_private_paths(value, exempt=(), path=""):
+    """No string value anywhere may hold a home or temp path (or this user's HOME); `exempt` names top-level fields."""
+    home = os.path.expanduser("~").rstrip("/\\")
+    if isinstance(value, str):
+        if PRIVATE_PATH.search(value) or (len(home) > 1 and home in value):
+            fail(path, "private paths are not allowed in a document")
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            if path == "" and key in exempt:
+                continue
+            reject_private_paths(item, exempt, f"{path}.{key}" if path else str(key))
+    elif isinstance(value, list):
+        for i, item in enumerate(value):
+            reject_private_paths(item, exempt, f"{path}[{i}]")
+
+
+def keep_known(value, schema):
+    """Copy `value` keeping only the keys `schema` knows: a dict maps key to a sub-schema (None for a leaf),
+    a one-item list is the schema of each list element. What is not in the schema never reaches the page or recipe."""
+    if isinstance(schema, dict) and isinstance(value, dict):
+        return {k: keep_known(v, schema[k]) for k, v in value.items() if k in schema}
+    if isinstance(schema, list) and isinstance(value, list):
+        return [keep_known(v, schema[0]) for v in value]
+    return value
+
+
+def opt_text(obj, key, field):
+    """An optional field must be text when present."""
+    if key in obj and not isinstance(obj[key], str):
+        fail(f"{field}.{key}", "must be text")
+
+
+def opt_list(obj, key, field, of=str):
+    """An optional field must be a list (of text when `of` is str) when present."""
+    if key not in obj:
+        return
+    if not isinstance(obj[key], list):
+        fail(f"{field}.{key}", "must be a list")
+    for i, item in enumerate(obj[key]):
+        if of is str and not isinstance(item, str):
+            fail(f"{field}.{key}[{i}]", "must be text")
+
+
+def opt_flag(obj, key, field):
+    if key in obj and not isinstance(obj[key], bool):
+        fail(f"{field}.{key}", "must be true or false")
+
+
+def opt_object(obj, key):
+    if key in obj and not isinstance(obj[key], dict):
+        fail(key, "must be an object")
 
 
 def text_fields(value, path, skip=frozenset()):
@@ -92,6 +149,22 @@ def _text(obj, key, field):
     return value
 
 
+def href_ok(href):
+    """An http(s) link with a host, or a relative path. No control characters or whitespace anywhere (browsers
+    strip them and then run what is left), no other scheme, no '//host' and no absolute or home path."""
+    if not isinstance(href, str) or any(ord(c) <= 0x20 or 0x7F <= ord(c) <= 0x9F or c in "\u2028\u2029" for c in href):
+        return False
+    if href.startswith(("/", "\\", "~")):
+        return False
+    try:
+        parts = urlsplit(href)
+    except ValueError:
+        return False
+    if parts.scheme:
+        return parts.scheme.lower() in ("http", "https") and bool(parts.hostname)
+    return not parts.netloc
+
+
 def check_refs(doc, text_paths):
     """Validate `refs` and require every [rN] citation in `text_paths` ((path, text) pairs) to resolve."""
     refs = doc.get("refs", [])
@@ -109,9 +182,8 @@ def check_refs(doc, text_paths):
         _text(ref, "title", field)
         if ref.get("kind") not in KINDS:
             fail(f"{field}.kind", f"must be one of {', '.join(KINDS)}, got {ref.get('kind')!r}")
-        href = _text(ref, "href", field)
-        if href.startswith(("/", "~", "//")) or (re.match(r"[A-Za-z][A-Za-z0-9+.-]*:", href) and not href.startswith("https://")):
-            fail(f"{field}.href", f"must be a relative path or an https URL, got {href!r}")
+        if not href_ok(_text(ref, "href", field)):
+            fail(f"{field}.href", "href must be an http(s) link or a relative path")
     for path, text in text_paths:
         for cited in CITATION.findall(text):
             if cited not in known:
@@ -165,6 +237,7 @@ def renderer_hash(renderer_path, template_name):
 
 
 def recipe(doc, template_name, renderer_path):
+    """`doc` is the validated, normalised input the renderer used (known fields only)."""
     renderer = pathlib.Path(renderer_path)
     kind = pathlib.Path(template_name).stem
     return {"template": template_name, "renderer_file": renderer.name,

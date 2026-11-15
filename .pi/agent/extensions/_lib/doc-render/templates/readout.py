@@ -6,7 +6,8 @@ rules, references, claim labels, gate banner and recipe come from kernel.py.
 """
 import math
 
-from kernel import build_page, check_basis, check_glossary, check_refs, check_tone, fail, need, text_fields
+from kernel import (build_page, check_basis, check_glossary, check_refs, check_tone, fail, keep_known, need, opt_flag, opt_list,
+                    opt_text, text_fields)
 
 TEMPLATE = "readout.html"
 GATE_DETAIL = "Read-only: this page describes and changes nothing. A human approves the plan before anything is built."
@@ -14,6 +15,16 @@ RAG = {"R", "A", "G", "N"}
 ROAM = {"RESOLVE", "OWN", "ACCEPT", "MITIGATE"}
 META_FIELDS = ["eyebrow", "title", "lede", "asof", "foot"]
 NOT_TEXT = {"id", "layer", "rag", "basis", "roam", "feeds", "a", "b"}
+REF = {"id": None, "title": None, "kind": None, "href": None}
+SCHEMA = {  # the input keys this renderer knows; anything else is dropped before the recipe and the page
+    "meta": {k: None for k in META_FIELDS}, "layers": None, "problem": None,
+    "nodes": [{k: None for k in ("id", "kind", "title", "plain", "layer", "rag", "basis", "needs", "feeds")}],
+    "choices": [{"id": None, "question": None, "why": None,
+                 "options": [{k: None for k in ("id", "title", "pro", "con", "suggestion")}]}],
+    "conflicts": [{"a": None, "b": None, "label": None}], "links": None,
+    "needs": [{k: None for k in ("need", "from", "settles")}],
+    "risks": [{k: None for k in ("risk", "action", "roam")}], "glossary": None, "refs": [REF],
+}
 
 
 def check_structure(doc):
@@ -35,6 +46,8 @@ def check_structure(doc):
         if need(n, "rag", str, f) not in RAG:
             fail(f"{f}.rag", f"must be one of R, A, G, N, got {n['rag']!r}")
         check_basis(n, f)
+        opt_text(n, "needs", f)
+        opt_list(n, "feeds", f)
         node_ids.add(n["id"])
     choice_ids = set()
     for i, c in enumerate(need(doc, "choices", list, "")):
@@ -47,7 +60,11 @@ def check_structure(doc):
         for j, o in enumerate(options):
             for key in ("id", "title", "pro", "con"):
                 need(o, key, str, f"{f}.options[{j}]")
+            opt_flag(o, "suggestion", f"{f}.options[{j}]")
         choice_ids.add(c["id"])
+    for key in ("conflicts", "links"):
+        if key in doc and not isinstance(doc[key], list):
+            fail(key, "must be a list")
     for i, n in enumerate(doc["nodes"]):
         for fed in n.get("feeds", []):
             if fed not in choice_ids:
@@ -72,8 +89,9 @@ def check_structure(doc):
 
 
 def tone_texts(doc):
-    body = {k: v for k, v in doc.items() if k not in ("links", "conflicts", "refs")}
-    return text_fields(body, "", NOT_TEXT)
+    """All prose the author supplies: ids, enums, links and ref ids/kinds/hrefs are the only exemptions."""
+    body = {k: v for k, v in doc.items() if k not in ("links", "refs")}
+    return list(text_fields(body, "", NOT_TEXT)) + [(f"refs[{i}].title", r["title"]) for i, r in enumerate(doc.get("refs", []))]
 
 
 def derive(doc):
@@ -103,6 +121,7 @@ def derive(doc):
 
 
 def build(doc):
+    doc = keep_known(doc, SCHEMA)
     check_structure(doc)
     check_refs(doc, text_fields({k: v for k, v in doc.items() if k != "refs"}, "", NOT_TEXT))
     check_tone(doc, tone_texts(doc))

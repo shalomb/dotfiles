@@ -134,6 +134,12 @@ describe("publishDoc with a template", () => {
 		expect(html).not.toContain(homedir());
 		expect(html).not.toContain(tmp);
 	});
+	it("masks temp and home paths in the prompt and sources of a template page", () => {
+		const r = publishDoc({ source: input("readout"), template: "readout", downloads: tmp, prompt: `read /tmp/x/y.json and /home/alice/z, cache in ${tmpdir()}/q/r.json and /var/folders/ab/c`, sources: ["/tmp/x/y.json", "/home/alice/z"], now: "2031-02-02T00:00:00Z" }, env());
+		const html = readFileSync(r.rendered[0], "utf8");
+		expect(html).toContain("doc-provenance-data");
+		for (const leak of ["/tmp/x/y.json", "/home/alice/z", `${tmpdir()}/q`, "/var/folders/ab", tmp]) expect(html).not.toContain(leak);
+	});
 	it("refuses a purpose that differs from the template's", () => {
 		expect(() => publishDoc({ source: input("decision"), template: "decision", purpose: "report", downloads: tmp }, env())).toThrow("template decision files as purpose decision");
 		expect(() => publishDoc({ source: input("decision"), template: "decision", purpose: "decision", downloads: tmp }, env())).not.toThrow();

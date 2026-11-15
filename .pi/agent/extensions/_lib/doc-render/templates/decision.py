@@ -7,13 +7,22 @@ rules, references, claim labels, gate banner and recipe come from kernel.py.
 """
 import datetime, sys
 
-from kernel import build_page, check_basis, check_glossary, check_refs, check_tone, fail, need, text_fields
+from kernel import (build_page, check_basis, check_glossary, check_refs, check_tone, fail, keep_known, need, opt_flag, opt_object,
+                    text_fields)
 
 TEMPLATE = "decision.html"
 GATE_DETAIL = "Read-only: nothing is posted, deleted, renewed or changed by this page. A human decides."
 META_FIELDS = ["eyebrow", "title", "lede", "asof", "foot"]
 NOT_TEXT = {"id", "recommended", "start", "today", "date", "ask_by", "refs"}  # top-level fields that are not prose
 DEEP_SKIP = {"id", "basis"}  # keys that are ids or enums at any depth
+SCHEMA = {  # the input keys this renderer knows; anything else is dropped before the recipe and the page
+    "meta": {k: None for k in META_FIELDS}, "why": None,
+    "deadline": {k: None for k in ("start", "today", "date", "ask_by", "date_label", "ask_by_note")},
+    "facts": [{"value": None, "label": None, "basis": None}],
+    "options": [{k: None for k in ("id", "title", "pro", "con", "note", "recommended")}],
+    "needs": [{k: None for k in ("need", "from", "by")}], "reply": {"to": None, "text": None},
+    "glossary": None, "refs": [{"id": None, "title": None, "kind": None, "href": None}],
+}
 
 
 def day(deadline, key):
@@ -48,6 +57,9 @@ def check_structure(doc):
         need(deadline, key, str, "deadline")
     if not deadline["date_label"].strip() or len(deadline["date_label"]) > LABEL_MAX:
         fail("deadline.date_label", f"must be a short noun phrase of 1 to {LABEL_MAX} characters, like 'renewal'")
+    if "facts" in doc and not isinstance(doc["facts"], list):
+        fail("facts", "must be a list")
+    opt_object(doc, "reply")
     for i, f in enumerate(doc.get("facts", [])):
         for key in ("value", "label"):
             need(f, key, str, f"facts[{i}]")
@@ -61,6 +73,7 @@ def check_structure(doc):
     for i, o in enumerate(options):
         for key in ("id", "title", "pro", "con", "note"):
             need(o, key, str, f"options[{i}]")
+        opt_flag(o, "recommended", f"options[{i}]")
     for i, r in enumerate(need(doc, "needs", list, "")):
         for key in ("need", "from", "by"):
             need(r, key, str, f"needs[{i}]")
@@ -71,9 +84,12 @@ def check_structure(doc):
 
 
 def tone_texts(doc):
+    """All prose the author supplies. Dates, ids and enums are exempt; the deadline labels and ref titles are not."""
     body = {k: v for k, v in doc.items() if k != "deadline"}
-    return [(path, text) for path, text in text_fields(body, "", DEEP_SKIP)
-            if path.split("[")[0].split(".")[0] not in NOT_TEXT]
+    texts = [(path, text) for path, text in text_fields(body, "", DEEP_SKIP)
+             if path.split("[")[0].split(".")[0] not in NOT_TEXT]
+    texts += [(f"deadline.{k}", doc["deadline"][k]) for k in ("date_label", "ask_by_note")]
+    return texts + [(f"refs[{i}].title", r["title"]) for i, r in enumerate(doc.get("refs", []))]
 
 
 def derive(doc):
@@ -98,6 +114,7 @@ def derive(doc):
 
 
 def build(doc):
+    doc = keep_known(doc, SCHEMA)
     check_structure(doc)
     check_refs(doc, text_fields({k: v for k, v in doc.items() if k != "refs"}, "", DEEP_SKIP))
     check_tone(doc, tone_texts(doc))

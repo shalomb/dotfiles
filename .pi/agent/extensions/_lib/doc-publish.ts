@@ -4,7 +4,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type BrandConfig, type BrandContext, brandCss as resolveBrandCss } from "./doc-brand.ts";
@@ -105,6 +105,9 @@ function pageLede(page: string): string | undefined {
 	return undefined;
 }
 
+/** Temp locations a template page must not name, beside the home paths embedProvenance already masks. */
+const TEMP_ROOTS = (): string[] => [tmpdir(), "/tmp", "/var/folders", "/private/var"];
+
 /** Template path: structured JSON in, kernel page out; the post-processing is the same as for Markdown. */
 function publishTemplate(o: PublishOptions, type: TemplateType, env: Env): PublishResult {
 	if (!isTemplateType(type)) throw new Error(`unknown template type: ${String(type)}`);
@@ -132,7 +135,7 @@ function publishTemplate(o: PublishOptions, type: TemplateType, env: Env): Publi
 	if (o.nav) page = injectStyle(page, navCss(), "doc-nav-css");
 	if (brandCss) page = injectStyle(page, readFileSync(brandCss, "utf8"), "doc-brand-css");
 	if (inlineBrand) page = injectStyle(page, inlineBrand, "doc-brand-css");
-	if (provenance) page = embedProvenance(page, provenance, { homes: [homedir()] });
+	if (provenance) page = embedProvenance(page, provenance, { homes: [homedir(), ...TEMP_ROOTS()] });
 	writeFileSync(out, page);
 	const filed = fileDoc({ html: out, kind: KIND[purpose], source: o.source, summary, tags: o.tags }, env);
 	return { rendered: [out], filed: [filed], urls: urlsFor(filed).map((u) => u.url), findings: [], brandCss, provenance };

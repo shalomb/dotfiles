@@ -113,15 +113,15 @@ function kpis(){
 function crumbs(){
   const c=$("crumbs");clear(c);
   const top=el("button",{text:"Whole epic"});top.addEventListener("click",()=>go(null,null));c.appendChild(top);
-  if(level){c.appendChild(document.createTextNode(" › "));c.appendChild(el("b",{text:SUB[level].title}));c.appendChild(el("span",{text:" · one level deeper"}));}}
+  if(level){c.appendChild(document.createTextNode(" › "));c.appendChild(el("b",{plain:SUB[level].title}));c.appendChild(el("span",{text:" · one level deeper"}));}}
 function panel(){
   const g=graph(),p=$("panel"),n=sel&&nodeOf(g,sel),d=n||nodeOf(TOP,level||TOP.focus);
-  const kids=[el("span",{class:"badge pill "+d.rag,text:d.ragname}),basisTag(d.basis.rag),el("h2",{text:d.full}),
+  const kids=[el("span",{class:"badge pill "+d.rag,text:d.ragname}),basisTag(d.basis.rag),el("h2",{plain:d.full}),
     el("p",{class:"sub"},[document.createTextNode(d.h+" "),basisTag(d.basis.status)]),
     el("div",{class:"l",text:"In plain words"}),el("p",{text:d.plain}),el("div",{class:"l",text:"Needs from you"}),
     d.needs?el("p",{class:"ask",text:d.needs}):el("p",{class:"ask none",text:"Nothing right now."})];
   if(n){
-    const items=g.edges.filter(e=>e.a===n.id||e.b===n.id).map(e=>{const out=e.a===n.id,other=nodeOf(g,out?e.b:e.a),a=el("a",{text:other.full});
+    const items=g.edges.filter(e=>e.a===n.id||e.b===n.id).map(e=>{const out=e.a===n.id,other=nodeOf(g,out?e.b:e.a),a=el("a",{plain:other.full});
       a.addEventListener("click",()=>select(other.id));return el("li",{},[document.createTextNode((out?"→ ":"← ")),a,el("span",{class:"sub",text:" ("+e.label+")"})]);});
     if(items.length){kids.push(el("div",{class:"l",text:"Depends on and feeds"}),el("ul",{class:"flow"},items));}}
   if(n&&n.drill){const b=el("button",{class:"go",text:"Go one level deeper ▸"});b.addEventListener("click",()=>go(n.drill,null));kids.push(b);}

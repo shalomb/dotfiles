@@ -13,7 +13,7 @@ import importlib, json, pathlib, sys
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from kernel import reject_style_keys  # noqa: E402
+from kernel import reject_private_paths, reject_style_keys  # noqa: E402
 
 REGISTRY = {"readout": "readout", "decision": "decision", "epicmap": "epicmap"}  # type -> module in this directory
 
@@ -45,6 +45,7 @@ def main(argv):
         sys.exit(f"error: cannot read {src}: {exc}")
     reject_style_keys(doc)
     module = importlib.import_module(REGISTRY[kind])
+    reject_private_paths(doc, getattr(module, "PATH_FIELDS", ()))
     if getattr(module, "NEEDS_BASE", False):  # the input points at local files: resolve them from the input's folder
         page = module.build(doc, base=pathlib.Path(src).resolve().parent)
     else:

@@ -3,7 +3,9 @@
 The shared contract (gate, style keys, recipe hash, offline page, mobile and print) lives in
 test_doc_templates.py; this file covers what is specific to the epic map.
 """
+import datetime
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -229,8 +231,7 @@ def test_gate_constant_and_banner(page):
 
 def test_every_issue_shown_is_a_reference_and_panels_cite_it(data):
     refs = {r["id"]: r for r in data["refs"]}
-    keys = {n["id"] for n in data["top"]["nodes"]}
-    assert {r["href"] for r in refs.values()} == {BASE + k for k in keys}
+    assert {r["href"] for r in refs.values()} == {BASE + f"DEMO-{i}" for i in range(1, 7)}
     assert all(r["kind"] == "ticket" and r["title"].startswith(r["href"].rsplit("/", 1)[1] + ": ") for r in refs.values())
     for n in data["top"]["nodes"]:
         r = refs[n["ref"]]
@@ -259,12 +260,14 @@ def test_page_shows_the_labels_next_to_badge_status_and_kpis(page):
     assert script.count("basisTag(") >= 4 and "derived_basis" in script and "basis.status" in script
 
 
-def test_recipe_input_is_sanitised(cache, tmp_path, page):
+def test_recipe_input_is_sanitised(cache, tmp_path):
+    stamp = datetime.datetime(2031, 3, 4, 12, 0).timestamp()
+    os.utime(cache / "issues.jsonl", (stamp, stamp))
+    page = render_ok("epicmap", {"cache": "cache", "epic": FOCUS}, tmp_path)
     recipe = recipe_of(page)
     count = len((cache / "issues.jsonl").read_text().splitlines())
-    assert recipe["input"] == {"epic": FOCUS, "cache": "cache", "issues": count,
-                               "read_at": recipe["input"]["read_at"]}
-    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", recipe["input"]["read_at"])
+    assert recipe["input"] == {"epic": FOCUS, "cache": "cache", "issues": count, "read_at": "2031-03-04"}
+    assert "Jira read 2031-03-04" in data_of(page)["meta"]["eyebrow"]
     assert str(tmp_path) not in page and "/home/" not in page
 
 
@@ -437,3 +440,60 @@ def test_place_labels_separates_edges_that_share_a_midpoint():
     assert len({(e["lx"], e["ly"]) for e in edges}) == 5
     assert not any(intersects(a, b) for i, a in enumerate(boxes) for b in boxes[i + 1:])
     assert all(0 <= b[0] and b[2] <= 1100 and 0 <= b[1] and b[3] <= 300 for b in boxes)
+
+
+# ---- wave 5: one status per issue, isolated epic, literal Jira text, generated links ----
+
+def all_boxes_inside(view):
+    return all(0 <= n["x"] and n["x"] + view["nw"] <= view["vw"] and 0 <= n["y"] and n["y"] + view["nh"] <= view["vh"]
+               for n in view["nodes"])
+
+
+def test_a_cached_status_beats_the_link_snapshot(tmp_path):
+    links = [link("Blocks", "CAN-2", "Cached blocker", "Funnel", False), link("Blocks", "CAN-3", "Other blocker", "Funnel", False)]
+    write_cache(tmp_path / "cache", [issue("CAN-1", "Canonical focus", "Implementing", links),
+                                     issue("CAN-2", "Cached blocker", "Done")])
+    data = data_of(render_ok("epicmap", {"cache": "cache", "epic": "CAN-1"}, tmp_path))
+    assert node(data, "CAN-2")["rag"] == "G"
+    assert edge(data, "CAN-2", "CAN-1")["kind"] == 0
+    assert node(data, "CAN-3")["rag"] == "R" and edge(data, "CAN-3", "CAN-1")["kind"] == 1
+    assert "but 1 blocker not started" in data["meta"]["title"]
+    assert node(data, "CAN-1")["rag"] == "A"
+
+
+def test_a_done_cached_blocker_alone_leaves_the_focus_unblocked(tmp_path):
+    write_cache(tmp_path / "cache", [issue("CAN-1", "Canonical focus", "Implementing",
+                                           [link("Blocks", "CAN-2", "Cached blocker", "Funnel", False)]),
+                                     issue("CAN-2", "Cached blocker", "Done")])
+    data = data_of(render_ok("epicmap", {"cache": "cache", "epic": "CAN-1"}, tmp_path))
+    assert "not started" not in data["meta"]["title"]
+    assert node(data, "CAN-1")["rag"] == "A" and data["derived"]["kpi"]["top"][1]["value"] == 0
+
+
+def test_an_isolated_epic_keeps_its_focus_box_inside_the_view(tmp_path):
+    write_cache(tmp_path / "cache", [issue("ISO-1", "Lonely epic", "Implementing")])
+    top = data_of(render_ok("epicmap", {"cache": "cache", "epic": "ISO-1"}, tmp_path))["top"]
+    assert [n["id"] for n in top["nodes"]] == ["ISO-1"] and all_boxes_inside(top)
+
+
+def test_every_box_is_inside_the_view_in_the_fixture_and_a_dense_map(data, tmp_path):
+    assert all_boxes_inside(data["top"]) and all(all_boxes_inside(v) for v in data["sub"].values())
+    dense = data_of(render_ok("epicmap", {"cache": str(dense_cache(tmp_path / "d")), "epic": "DEN-1"}, tmp_path / "r"))
+    assert all_boxes_inside(dense["top"])
+
+
+def test_literal_jira_citation_text_is_not_a_citation(tmp_path):
+    description = {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Mentions [r99] and [r1] in prose."}]}]}
+    write_cache(tmp_path / "cache", [issue("LIT-1", "Literal focus", "Implementing", [link("Relates", "LIT-2", "Other", "Analyzing", True)],
+                                           description=description), issue("LIT-2", "Other", "Analyzing")])
+    data = data_of(render_ok("epicmap", {"cache": "cache", "epic": "LIT-1"}, tmp_path))
+    assert sorted(r["n"] for r in data["refs"]) == list(range(1, len(data["refs"]) + 1))
+    plain = node(data, "LIT-1")["plain"]
+    assert "\\[r99]" in plain and "\\[r1]" in plain
+    assert KERNEL.CITATION.findall(plain) == [node(data, "LIT-1")["ref"]]
+    assert [r["id"] for r in data["refs"]] == ["r1", "r2"] and all(r["cited"] for r in data["refs"])
+
+
+def test_the_page_turns_only_unescaped_markers_into_citations(page):
+    js = (KERNEL.HERE / "kernel.js").read_text()
+    assert r"(?<!\\)\[(r\d+)\]" in js and "REFN[part]===undefined" in js
