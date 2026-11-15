@@ -13,8 +13,9 @@ presses `/n` again to resume. Never change the key results: they are the human's
 2. If the human left a note during the stop, apply it first.
 
 **Each hop:**
-1. Run every key-result check in file order, with a timeout. Exit 126/127 or a missing tool → STOP (blocked
-   road). All green → STOP (arrived).
+1. Ask the satnav: `timeout 1200 bun .pi/agent/extensions/_lib/next-hop.ts --context <your context %>`. It runs
+   every key-result check in file order and ends with `drive KR-n.m` or `stop <reason>` (not-approved, blocked,
+   budget, arrived). Obey it.
 2. Take the first red key result. Read the last glovebox and `trajectories.jsonl` lines for lessons.
 3. Classify the road by rule, not by feel. Motorway: diff about 150 lines or less, no one-way door, and no change
    to a check, a test that a check runs, or the end-state file. Anything else inside the destination is City: use
