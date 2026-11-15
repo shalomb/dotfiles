@@ -43,9 +43,9 @@ says the destination is wrong; two rejects on one task; context near 60% (checkp
 and its `Road:` recomputed from the diff. Show one table: key result, commits, replay verdict.
 
 At a stop, the human may arrive cold in a new session. Show the dashboard first, then the discussion:
-1. Call the `card` tool (type `status`, state `blocked` for a stop or `ok` on arrival): `title` = `⛔ STOP <kind>`;
-   `metrics` = one row per key result (label `KR-n.m <short sentence>`, value 1 green / 0 red, total 1);
-   `done` = the hops of this leg (`KR → commit sha`); `blocked` = why the car stopped; `next` = the one decision
-   needed; `how` = where to investigate (the satnav command, `git log --format='%h %s %(trailers:key=Serves)'`,
-   the failing check verbatim); `gaps` = anything not verified.
+1. Call the `card` tool twice. First type `scorecard`: `title` = `⛔ STOP <kind>`, `metrics` = one row per key
+   result (label `KR-n.m <short sentence>`, value 1 green / 0 red, total 1), `result` = `<n>/<m> green`, `gaps`.
+   Then type `status` (state `blocked` for a stop, `ok` on arrival): `done` = this leg's hops (`KR → sha`),
+   `blocked` = why the car stopped, `next` = the one decision needed, `unknown` = where to investigate (the
+   satnav command, `git log --format='%h %s %(trailers:key=Serves)'`, the failing check verbatim), `gaps`.
 2. Then one line: `⛔ STOP <kind> · where: <n>/<m> green, on <KR> · needs: <one decision>`.
