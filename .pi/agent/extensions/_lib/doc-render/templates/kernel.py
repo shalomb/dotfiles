@@ -254,6 +254,30 @@ def gate_html(detail):
     return f'<div class="gate"><b>{GATE_LEAD}</b> {html.escape(detail)}</div>'
 
 
+_SKIP_OUTLINE = {"derived_basis", "meta"}
+
+
+def _outline(value, depth=0):
+    """Nested lists of whatever the data holds, escaped: the page logic draws the same content with script."""
+    if isinstance(value, dict):
+        items = [f"<li><b>{html.escape(str(k))}</b> {_outline(v, depth + 1)}</li>" for k, v in value.items()
+                 if depth or k not in _SKIP_OUTLINE]
+        return "<ul>" + "".join(items) + "</ul>" if items else ""
+    if isinstance(value, list):
+        return "<ul>" + "".join(f"<li>{_outline(v, depth + 1)}</li>" for v in value) + "</ul>" if value else ""
+    return html.escape("" if value is None else str(value))
+
+
+def noscript_html(data):
+    """The no-JavaScript page: title, lede and an outline of the data (the diagrams are drawn by script)."""
+    meta = data["meta"]
+    head = f"<h1>{html.escape(meta['title'])}</h1>"
+    if meta.get("lede"):
+        head += f"<p>{html.escape(meta['lede'])}</p>"
+    note = "<p><i>This page draws its diagrams and counters with JavaScript. Without it, here is the content as an outline.</i></p>"
+    return f"<noscript>{head}{note}{_outline(data)}</noscript>"
+
+
 def build_page(renderer_path, template_name, doc, data, gate_detail, recipe_input=None):
     """Fill the template: kernel css/js, the gate, references and claim labels into DATA, the recipe block.
 
@@ -262,6 +286,7 @@ def build_page(renderer_path, template_name, doc, data, gate_detail, recipe_inpu
     fills = {
         "__TITLE__": html.escape(data["meta"]["title"]),
         "__GATE__": gate_html(gate_detail),
+        "__NOSCRIPT__": noscript_html(data),
         "/*__KERNEL_CSS__*/": (HERE / "kernel.css").read_text(),
         "/*__KERNEL_JS__*/": (HERE / "kernel.js").read_text(),
         "__RECIPE__": _embed(recipe(doc if recipe_input is None else recipe_input, template_name, renderer_path)),
