@@ -224,7 +224,7 @@ test("listGoals returns every goal of the store whatever its branch, and skips f
 	saveGoal(store, a);
 	saveGoal(store, b);
 	writeFileSync(join(store, "goals", "notes.md"), "# not a goal\n");
-	expect(listGoals(store).map((g) => g.id).sort()).toEqual(["g-feat-a", "g-feat-b"]);
+	expect(listGoals(store).map((g) => g.id).sort()).toEqual(["g-a", "g-b"]);
 });
 
 // ---- Tamper evidence (ADR-010) ----

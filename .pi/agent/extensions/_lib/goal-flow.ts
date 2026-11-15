@@ -7,11 +7,11 @@ import {
 	applyUnlock, lastLockedSpec, applyClose, applyLock, canLock, goalCheckHash, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft,
 	reminderLine, stamp, staleGoal,
 } from "./goal.ts";
-import { branchSlug } from "./goal.ts";
+import { branchSlug, goalIdFor } from "./goal.ts";
 import { GOAL_HELP } from "./goal-help.ts";
 import { type Dirent, existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { type Exec, type GoalEvent, appendGoalEvent, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, recordTombstone, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
+import { type Exec, type GoalEvent, appendGoalEvent, archiveGoal, findGoalById, uniqueGoalId, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, recordTombstone, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
 
 export interface Deps {
 	exec: Exec;
@@ -44,6 +44,7 @@ export type GoalArgs =
 	| { kind: "show" | "lock" | "unlock" | "done" | "drop" | "help" }
 	| { kind: "retired"; word: string }
 	| { kind: "drive"; rest: string }
+	| { kind: "show-id"; id: string }
 	| { kind: "start"; outcome: string };
 
 export const SUBCOMMANDS = ["lock", "unlock", "done", "drop", "drive", "help"] as const;
@@ -57,10 +58,20 @@ export function parseGoalArgs(raw: string): GoalArgs {
 	if ((RETIRED as readonly string[]).includes(a)) return { kind: "retired", word: a };
 	if (a === "close") return { kind: "done" };
 	// drive is the one subcommand that takes arguments: /goal drive [scenic|motorway] [extra instructions].
+	const show = a.match(/^show\s+(\S+)$/);
+	if (show) return { kind: "show-id", id: show[1] };
 	const drive = raw.match(/^\s*drive(?:\s+([\s\S]*))?$/);
 	if (drive) return { kind: "drive", rest: (drive[1] ?? "").trim() };
 	return (SUBCOMMANDS as readonly string[]).includes(a) ? ({ kind: a } as GoalArgs) : { kind: "start", outcome: a };
 }
+
+/** Branches that never hold a goal: work on them is shared, so a goal belongs on its own worktree branch. */
+const DEFAULT_BRANCHES = ["main", "master", "develop"];
+const isDefaultBranch = (b: string | undefined) => !!b && DEFAULT_BRANCHES.includes(b);
+const worktreeHint = (branch: string, outcome?: string) => {
+	const slug = outcome ? goalIdFor(outcome).slice(2) : "<topic>";
+	return `No goal on ${branch}: it is a default branch, shared work. Start the goal on its own branch:\n  git worktree add .worktrees/${slug} -b feat/${slug}\nthen run /goal${outcome ? ` ${outcome}` : ""} there.`;
+};
 
 const NEEDS_BRANCH = "No goal on a detached HEAD. Switch to a branch first.";
 const NO_GOAL = "No goal for this branch. Start one with /goal <outcome>.";
@@ -114,6 +125,7 @@ function commit(d: Deps, r: Result, done: string, event?: (g: Goal) => Pick<Goal
 		d.ui.notify(r.reason, "error");
 		return undefined;
 	}
+	if (r.goal.status === "draft") r.goal.id = uniqueGoalId(d.store, r.goal.id, r.goal.branch);
 	saveGoal(d.store, r.goal);
 	d.ui.notify(done, "info");
 	if (event) {
@@ -148,7 +160,11 @@ async function commitTombstoned(d: Deps, r: Result, status: "closed" | "dropped"
 		d.ui.notify(`Not saved: the ${status} tombstone could not be recorded on ${goalRefName(r.goal.branch)}: ${rec.error}`, "error");
 		return undefined;
 	}
-	return commit(d, r, done, event);
+	const saved = commit(d, r, done, event);
+	if (saved) {
+		try { archiveGoal(d.store, saved); } catch (e) { d.ui.notify(`The goal could not be archived: ${errorText(e)}`, "warning"); }
+	}
+	return saved;
 }
 
 /**
@@ -184,6 +200,7 @@ export function summary(g: Goal): string {
 export async function showGoal(d: Deps): Promise<void> {
 	const { goal, error } = load(d);
 	if (!goal) {
+		if (error === NO_GOAL && isDefaultBranch(d.branch)) return d.ui.notify(worktreeHint(d.branch!), "info");
 		if (error === NO_GOAL) return await draftFromContext(d);
 		return d.ui.notify(error!, "error");
 	}
@@ -207,6 +224,12 @@ export async function showGoal(d: Deps): Promise<void> {
 		return d.ui.notify("Still active. /goal done closes it when you are ready.", "info");
 	}
 	d.ui.notify(`${summary(goal)}\n${status}\nNext: /goal done`, "info");
+}
+
+/** `/goal show <id>`: any goal by id, live or archived. */
+export function showGoalById(d: Deps, id: string): void {
+	const g = findGoalById(d.store, id);
+	d.ui.notify(g ? summary(g) : `No goal ${id} in the store or its archive.`, g ? "info" : "error");
 }
 
 /** The repo's end-state doc (docs/explanation/end-state-evolution.md, else the first docs/**\/end-state*.md within 3 levels), repo-relative; undefined when absent. */
@@ -238,7 +261,8 @@ async function draftFromContext(d: Deps, previous?: Goal): Promise<void> {
 	if (previous) {
 		const endState = findEndStateDoc(d.root);
 		d.tellAgent(
-			`/goal: goal ${previous.id} (${previous.outcome}) is ${previous.status}. Draft the next goal for branch ${g.branch} now, without stopping to ask. ` +
+			`/goal: goal ${previous.id} (${previous.outcome}) is ${previous.status}. Draft the next goal for branch ${g.branch} now. ` +
+			"First run Discovery: what is already true, partly true, or not there, each citing a path and a command. Ask at most 2 questions, and only on a real gap. " +
 			"Pick it from these sources, strongest first: " +
 			(endState
 				? `1) the end-state doc ${endState}: the next gap it names that ${previous.id} did not close (its headings are the milestones); `
@@ -246,20 +270,21 @@ async function draftFromContext(d: Deps, previous?: Goal): Promise<void> {
 			"2) the backlog: `todo next --all` and tasks left open or linked to the previous goal; " +
 			"3) the discussion so far: what was proposed or left open after that goal. Reuse its scope, anti-goals and specs where they still apply. " +
 			`Call goal_propose with outcome, done_check (shell commands that exit non-zero on the base commit ${g.doneCheck.baseCommit} and pass only when the work is done), anti_goals, scope_anchors and spec_links ` +
-			"(put the end-state milestone it serves first in spec_links, as `serves: <doc>#<heading>`). If the sources conflict, pick the one that best serves the end-state and state the assumption in one line. " +
+			"(set serves to the end-state key result it advances, e.g. KR-2.1, when the doc names one). If the sources conflict, pick the one that best serves the end-state and state the assumption in one line. " +
 			"You cannot lock it: the user reviews it and runs /goal lock. Reply with the new goal statement and the milestone it serves.");
 		return;
 	}
 	d.tellAgent(
 		`/goal: the user wants a goal for branch ${g.branch}, drafted from the conversation so far. First run Discovery (what is already true, partly true, or not there, citing a path and a command). ` +
 		"Then call goal_propose with outcome (one sentence), done_check (shell commands that exit non-zero on the base commit " +
-		`${g.doneCheck.baseCommit} and pass only when the work is done), anti_goals, scope_anchors (paths) and spec_links. Ask at most 2 questions, and only on a real gap. ` +
+		`${g.doneCheck.baseCommit} and pass only when the work is done), anti_goals, scope_anchors (paths), spec_links and serves (the end-state key result, e.g. KR-2.1, if one applies). Ask at most 2 questions, and only on a real gap. ` +
 		"You cannot lock the contract: the user reviews it and runs /goal lock. Reply with a short Review Card.");
 }
 
 /** `/goal <outcome>`: save a draft at the current HEAD and ask the agent to fill in the contract. */
 export async function startGoal(d: Deps, outcome: string): Promise<void> {
 	if (!d.branch) return d.ui.notify(NEEDS_BRANCH, "error");
+	if (isDefaultBranch(d.branch)) return d.ui.notify(worktreeHint(d.branch, outcome), "info");
 	const { goal: existing, error } = load(d);
 	if (error && error !== NO_GOAL) return d.ui.notify(error, "error");
 	const sharing = loadGoalFile(d.store, d.branch);
@@ -272,13 +297,14 @@ export async function startGoal(d: Deps, outcome: string): Promise<void> {
 	if (!saved) return;
 	logSuccessor(d, g, existing);
 	d.tellAgent(
-		`/goal: the user set this goal for branch ${g.branch}: "${g.outcome}". Draft the contract now with the goal_propose tool: ` +
+		`/goal: the user set this goal for branch ${g.branch}: "${g.outcome}". ` +
+		"First run Discovery: what is already true, partly true, or not there, each citing a path and a command. Ask at most 2 questions, and only on a real gap. Then draft the contract with the goal_propose tool: " +
 		"done_check (one or more shell commands that test the outcome and exit non-zero until the work is done; they must fail on the base commit " +
-		`${g.doneCheck.baseCommit}), anti_goals, scope_anchors (paths) and spec_links. Use kind "human" only when no command can test the outcome. ` +
+		`${g.doneCheck.baseCommit}), anti_goals, scope_anchors (paths), spec_links and serves (the end-state key result, e.g. KR-2.1, if one applies). Use kind "human" only when no command can test the outcome. ` +
 		"You cannot lock the contract: the user reviews it and runs /goal lock. Reply with a 3-line summary of what you drafted.");
 }
 
-export interface Proposal { outcome?: string; doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
+export interface Proposal { serves?: string; outcome?: string; doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
 
 /** The goal_propose tool. Fills a draft; never locks, and never touches a locked goal (the human unlocks it first). */
 export async function proposeFromAgent(d: Deps, p: Proposal): Promise<{ ok: boolean; message: string }> {
@@ -291,9 +317,10 @@ export async function proposeFromAgent(d: Deps, p: Proposal): Promise<{ ok: bool
 	if (finished) g = newDraft({ branch: g.branch, outcome: p.outcome ?? "(to be drafted)", baseCommit: d.head }, d.now());
 	if (g.status === "active") return out(false, "The goal is locked, so you cannot change it. Ask the user to run /goal unlock, correct the draft, then /goal lock.");
 	if (g.status !== "draft") return out(false, `The goal is ${g.status}; nothing to propose.`);
-	const f: DraftFields = { outcome: p.outcome, doneCheck: p.doneCheck, outcomeChecks: p.outcomeChecks, antiGoals: p.antiGoals, scopeAnchors: p.scopeAnchors, specLinks: p.specLinks };
+	const f: DraftFields = { serves: p.serves, outcome: p.outcome, doneCheck: p.doneCheck, outcomeChecks: p.outcomeChecks, antiGoals: p.antiGoals, scopeAnchors: p.scopeAnchors, specLinks: p.specLinks };
 	const r = fillDraft(g, f);
 	if (!r.ok) return out(false, r.reason);
+	r.goal.id = uniqueGoalId(d.store, r.goal.id, r.goal.branch);
 	saveGoal(d.store, r.goal);
 	logSuccessor(d, r.goal, finished);
 	d.ui.notify(`Goal ${g.id} draft updated by the agent. Review it with /goal; /goal lock when it is right.`, "info");
@@ -437,6 +464,10 @@ export async function driveGoal(d: Deps, raw: string): Promise<void> {
 	const { goal: g, error } = load(d);
 	if (!g) return d.ui.notify(error === NO_GOAL ? `${NO_GOAL} /drive needs a locked goal.` : error!, "error");
 	if (g.status !== "active") return d.ui.notify(refusal(g, "/drive needs a locked goal"), "error");
+	if (isDefaultBranch(g.branch)) return d.ui.notify(`Not driving ${g.id}: ${g.branch} is a default branch, which never holds a goal. /goal drop it, then ${worktreeHint(g.branch, g.outcome).split("\n").slice(1).join(" ")}`, "error");
+	const lockLine = [...g.history].reverse().find((h) => h.reason.startsWith("locked"));
+	if (lockLine && /exit 12[67]\)/.test(lockLine.reason))
+		d.ui.notify(`Warning: ${g.id} was locked over an environment failure (${lockLine.reason}), so its check may prove nothing. Consider /goal unlock, fix the check, /goal lock.`, "warning");
 	const problem = await integrityProblem(d, g);
 	if (problem) return d.ui.notify(problem, "error");
 
@@ -482,6 +513,7 @@ export async function runGoalCommand(d: Deps, raw: string): Promise<void> {
 			case "done": return await doneGoal(d);
 			case "drop": return await dropCurrentGoal(d, "dropped by the user");
 			case "drive": return await driveGoal(d, a.rest);
+			case "show-id": return showGoalById(d, a.id);
 		}
 	} catch (e) {
 		d.ui.notify(`/goal ${a.kind === "start" ? "<outcome>" : a.kind} failed: ${errorText(e)}`, "error");

@@ -42,6 +42,7 @@ const Params = Type.Object({
 	anti_goals: Type.Optional(Type.Array(Type.String(), { description: "What this work must not do" })),
 	scope_anchors: Type.Optional(Type.Array(Type.String(), { description: "Repo paths the work belongs to" })),
 	spec_links: Type.Optional(Type.Array(Type.String(), { description: "Specs, ADRs or issues that define the outcome" })),
+	serves: Type.Optional(Type.String({ description: "The end-state key result this goal serves, e.g. KR-2.1. Becomes part of the goal id." })),
 });
 
 export default function (pi: ExtensionAPI) {
@@ -102,7 +103,7 @@ export default function (pi: ExtensionAPI) {
 		name: TOOL,
 		label: "Goal propose",
 		description:
-			"Draft the Goal Contract of the current branch (outcome, done_check, anti_goals, scope_anchors, spec_links). " +
+			"Draft the Goal Contract of the current branch (outcome, done_check, anti_goals, scope_anchors, spec_links, serves). The goal id follows the outcome and serves. " +
 			"Writes a draft only; a locked goal is changed by the user with /goal unlock. You cannot lock, approve or close a goal: the user does that with /goal.",
 		promptSnippet: "Draft the branch's Goal Contract (draft only; a locked goal needs /goal unlock first)",
 		promptGuidelines: [
@@ -120,6 +121,7 @@ export default function (pi: ExtensionAPI) {
 				antiGoals: params.anti_goals,
 				scopeAnchors: params.scope_anchors,
 				specLinks: params.spec_links,
+				serves: params.serves,
 			}) : { ok: false, message: "Not in a git repository." };
 			return { content: [{ type: "text" as const, text: r.ok ? r.message : `Error: ${r.message}` }], details: { ok: r.ok } };
 		},

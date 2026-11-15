@@ -3,7 +3,7 @@
 import { expect, test } from "bun:test";
 import {
 	applyApprovedChange, applyClose, checkHash, applyLock, applyReject, branchSlug, goalCheckHash, canLock, closeDecision, dropGoal, fillDraft, goalPath, goalsDir,
-	isEnvironmentFailure, newDraft, parseGoal, proposeChange, reminderLine, renderGoal, staleGoal, storeDir, validateGoal,
+	goalIdFor, isEnvironmentFailure, newDraft, parseGoal, proposeChange, reminderLine, renderGoal, staleGoal, storeDir, validateGoal,
 } from "./goal.ts";
 
 const NOW = new Date("2026-11-01T10:00:00Z");
@@ -28,9 +28,9 @@ test("goal file is <store>/goals/<branch-slug>.md with slashes turned into dashe
 	expect(goalPath(store, "feat/export")).toBe("/s/todos/r/goals/feat-export.md");
 });
 
-test("a new draft carries the outcome, the branch id and the base commit, and is not locked", () => {
+test("a new draft carries the outcome, an id from the outcome and the base commit, and is not locked", () => {
 	const g = newDraft({ branch: "feat/export", outcome: "Users can export a backlog as CSV", baseCommit: "a1b2c3d" }, NOW);
-	expect(g.id).toBe("g-feat-export");
+	expect(g.id).toBe("g-users-can-export-a-backlog-as-csv");
 	expect(g.status).toBe("draft");
 	expect(g.createdAt).toBe("2026-11-01T10:00:00Z");
 	expect(g.doneCheck.baseCommit).toBe("a1b2c3d");
@@ -50,7 +50,7 @@ const full = () => {
 
 test("rendered goal is the contract format: YAML front matter then sections", () => {
 	const text = renderGoal(full());
-	expect(text.startsWith("---\nid: g-feat-export\nbranch: feat/export\nstatus: draft\noutcome: Users can export a backlog as CSV\ndone_check:\n  kind: command\n  commands:\n    - make -C skills/todo-navigator test-unit\n")).toBe(true);
+	expect(text.startsWith("---\nid: g-users-can-export-a-backlog-as-csv\nbranch: feat/export\nstatus: draft\noutcome: Users can export a backlog as CSV\ndone_check:\n  kind: command\n  commands:\n    - make -C skills/todo-navigator test-unit\n")).toBe(true);
 	expect(text).toContain('  locked_at: ""\n');
 	expect(text).toContain("created_at: 2026-11-01T10:00:00Z\n");
 	expect(text).toContain("## Anti-goals\n- No new runtime dependency\n");
@@ -274,7 +274,7 @@ test("drop marks the goal dropped with a history line; a closed goal cannot be d
 
 // Contract: one-line reminder in the prompt, only for an active goal
 test("the reminder is one line with id and outcome, and only for an active goal", () => {
-	expect(reminderLine(locked())).toBe("Goal: g-feat-export Users can export a backlog as CSV; run /goal to refresh");
+	expect(reminderLine(locked())).toBe("Goal: g-users-can-export-a-backlog-as-csv Users can export a backlog as CSV; run /goal to refresh");
 	expect(reminderLine(draftWithCheck())).toBeUndefined();
 	const closed = applyClose(locked(), { now: LATER, closedBy: "check" });
 	expect(closed.ok && reminderLine(closed.goal)).toBeUndefined();
@@ -405,4 +405,34 @@ test("goalCheckHash: the hash of a goal equals the hash of its rendered-then-par
 	expect(checkHash(g.doneCheck)).not.toBe(checkHash(parsed.doneCheck)); // the in-memory hash alone would mismatch
 	expect(goalCheckHash(g)).toBe(checkHash(parsed.doneCheck));
 	expect(goalCheckHash(g)).toBe(goalCheckHash(parsed));
+});
+
+// ---- Goal ids name the goal, not the branch ----
+test("goalIdFor: from the KR it serves and the outcome, lower-case kebab", () => {
+	expect(goalIdFor("Users can export CSV!", "KR-2.1")).toBe("g-kr-2.1-users-can-export-csv");
+	expect(goalIdFor("Fix the stale warning")).toBe("g-fix-the-stale-warning");
+});
+
+test("goalIdFor caps the slug at a word boundary", () => {
+	const id = goalIdFor("one two three four five six seven eight nine ten eleven twelve thirteen");
+	expect(id.length).toBeLessThanOrEqual(50);
+	expect(id).not.toMatch(/-$/);
+});
+
+test("a draft takes its id from its outcome, not its branch", () => {
+	expect(newDraft({ branch: "feat/x", outcome: "Users can export CSV", baseCommit: "abc" }, NOW).id).toBe("g-users-can-export-csv");
+});
+
+test("a placeholder outcome keeps a provisional branch id until the real one is proposed", () => {
+	const g = newDraft({ branch: "feat/x", outcome: "(to be drafted from the conversation)", baseCommit: "abc" }, NOW);
+	expect(g.id).toBe("g-feat-x");
+	const r = fillDraft(g, { outcome: "Export CSV", serves: "KR-2.1" });
+	expect(r.ok && r.goal.id).toBe("g-kr-2.1-export-csv");
+	expect(r.ok && r.goal.serves).toBe("KR-2.1");
+});
+
+test("serves survives being written and read back; absent stays absent", () => {
+	const g = { ...newDraft({ branch: "feat/x", outcome: "Export CSV", baseCommit: "abc" }, NOW), serves: "KR-2.1" };
+	expect(parseGoal(renderGoal(g))?.serves).toBe("KR-2.1");
+	expect(parseGoal(renderGoal({ ...g, serves: undefined }))?.serves).toBeUndefined();
 });

@@ -50,6 +50,31 @@ export function listGoals(store: string): Goal[] {
 		});
 }
 
+/** Where finished goals are kept, one file per goal id, so a branch's goals form a history. */
+export const archivePath = (store: string, id: string): string => join(goalsDir(store), "archive", `${id}.md`);
+
+/** Keep a finished goal under its own id. */
+export function archiveGoal(store: string, g: Goal): void {
+	mkdirSync(join(goalsDir(store), "archive"), { recursive: true });
+	writeFileSync(archivePath(store, g.id), renderGoal(g));
+}
+
+/** A goal by id: the current goal of any branch, else the archive; undefined when there is none. */
+export function findGoalById(store: string, id: string): Goal | undefined {
+	const live = listGoals(store).find((g) => g.id === id);
+	if (live) return live;
+	try { return parseGoal(readFileSync(archivePath(store, id), "utf8")); } catch { return undefined; }
+}
+
+/** `id`, or `id-2`, `id-3`... when another goal (archived, or live on another branch) already has it. */
+export function uniqueGoalId(store: string, id: string, branch: string): string {
+	const taken = (c: string) => existsSync(archivePath(store, c)) || listGoals(store).some((g) => g.id === c && g.branch !== branch);
+	if (!taken(id)) return id;
+	let n = 2;
+	while (taken(`${id}-${n}`)) n++;
+	return `${id}-${n}`;
+}
+
 /** Write the goal atomically. Throws, writing nothing, if it has no outcome or (once not a draft) no done-check. */
 export function saveGoal(store: string, g: Goal): void {
 	const why = validateGoal(g);

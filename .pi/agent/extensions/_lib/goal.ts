@@ -33,6 +33,8 @@ export interface Goal {
 	antiGoals: string[];
 	scopeAnchors: string[];
 	specLinks: string[];
+	/** The end-state key result this goal serves (e.g. KR-2.1); part of its id. */
+	serves?: string;
 	history: HistoryEntry[];
 	/** An agent proposal for the locked done-check; waits for the human. Kept in a "## Pending change" section. */
 	pending?: HistoryEntry;
@@ -53,9 +55,25 @@ export const goalPath = (store: string, branch: string): string => join(goalsDir
 /** ISO-8601 UTC without milliseconds, as in the contract. */
 export const stamp = (now: Date): string => now.toISOString().replace(/\.\d{3}Z$/, "Z");
 
+/** A placeholder outcome, written before the agent proposes the real one. */
+const isPlaceholder = (outcome: string) => /^\(to be drafted/.test(outcome.trim());
+
+const kebab = (s: string) => s.toLowerCase().replace(/[^a-z0-9.]+/g, "-").replace(/^[-.]+|[-.]+$/g, "");
+
+/** A goal's id names the goal: `g-<kr>-<outcome>`, or `g-<outcome>` with no KR; at most 50 characters, cut at a word. */
+export function goalIdFor(outcome: string, serves?: string): string {
+	let id = `g-${serves ? `${kebab(serves)}-` : ""}${kebab(outcome.replace(/\./g, " "))}`;
+	if (id.length > 50) id = id.slice(0, 51).replace(/-[^-]*$/, "");
+	return id.replace(/-+$/, "");
+}
+
+/** The id of a draft: from its outcome and KR, or provisionally from its branch while the outcome is a placeholder. */
+const draftId = (branch: string, outcome: string, serves?: string) =>
+	isPlaceholder(outcome) || !kebab(outcome) ? `g-${branchSlug(branch)}` : goalIdFor(outcome, serves);
+
 export function newDraft(input: { branch: string; outcome: string; baseCommit: string }, now: Date): Goal {
 	return {
-		id: `g-${branchSlug(input.branch)}`,
+		id: draftId(input.branch, input.outcome),
 		branch: input.branch,
 		status: "draft",
 		outcome: oneLine(input.outcome),
@@ -168,6 +186,7 @@ export function renderGoal(g: Goal): string {
 		`created_at: ${quoteIfNeeded(g.createdAt)}`,
 		`closed_at: ${quoteIfNeeded(g.closedAt)}`,
 		`closed_by: ${quoteIfNeeded(g.closedBy)}`,
+		...(g.serves ? [`serves: ${quoteIfNeeded(g.serves)}`] : []),
 		"---",
 		"",
 	].join("\n");
@@ -229,6 +248,7 @@ export function parseGoal(text: string): Goal | undefined {
 		antiGoals: bullets("Anti-goals"),
 		scopeAnchors: bullets("Scope anchors"),
 		specLinks: bullets("Spec links"),
+		...(top.serves ? { serves: top.serves } : {}),
 		history: entries("History"),
 		...(entries("Pending change")[0] ? { pending: entries("Pending change")[0] } : {}),
 	};
@@ -277,7 +297,7 @@ const badCommand = (commands: string[]): string | undefined => {
 	return bad === undefined ? undefined : `A check command may not contain a newline or control character (write one command per entry): ${JSON.stringify(bad)}`;
 };
 
-export interface DraftFields { outcome?: string; doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
+export interface DraftFields { outcome?: string; doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[]; serves?: string }
 
 /** Agent-reachable: set draft fields (an Outcome Check is only a suggestion). Never locks; refuses once the goal is no longer a draft. */
 export function fillDraft(g: Goal, f: DraftFields): Result {
@@ -288,10 +308,14 @@ export function fillDraft(g: Goal, f: DraftFields): Result {
 	const commands = f.doneCheck ? f.doneCheck.commands.map(oneLine).filter(Boolean) : g.doneCheck.commands;
 	const suggested = (f.outcomeChecks ?? g.doneCheck.outcomeChecks).map(oneLine);
 	if (f.outcomeChecks && suggested.some((c) => !commands.includes(c))) return refuse("An Outcome Check must be one of the done-check commands.");
+	const serves = f.serves ? oneLine(f.serves) : g.serves;
 	return {
 		ok: true,
 		goal: {
 			...g,
+			// A draft is renamed as its outcome and KR firm up; once locked, the id never changes.
+			id: draftId(g.branch, outcome, serves),
+			...(serves ? { serves } : {}),
 			outcome,
 			doneCheck: { ...g.doneCheck, kind: f.doneCheck?.kind ?? g.doneCheck.kind, commands, outcomeChecks: suggested.filter((c) => commands.includes(c)) },
 			antiGoals: f.antiGoals?.map(oneLine).filter(Boolean) ?? g.antiGoals,

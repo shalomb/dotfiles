@@ -26,10 +26,12 @@ goal - one checkable goal per branch, locked before work starts
 - **/goal done** - Run the check; close if green, then suggest /persist, lessons and the next goal (alias: /goal close)
 - **/goal drop** - Abandon the goal (removes its drive checkpoint)
 - **\`/goal drive [scenic|motorway] [extra]\`** - Hand the locked goal to the drive skill (alias: /drive). Refuses unless locked and intact; resumes from a checkpoint only if it names this goal and lock
+- **\`/goal show <id>\`** - Show any goal by id, current or archived
 - **/goal help** - This page
 ## DESCRIPTION
 - **States** - none -> draft -> locked -> closed (or dropped); see the diagram above
 - **Draft** - Agent fills outcome, done-check, anti-goals, scope anchors, spec links via goal_propose. Only here
+- **Id** - Names the goal: \`g-<kr>-<outcome>\` (e.g. g-kr-2.1-export-csv), fixed at lock. Each goal on a branch gets its own; finished ones are archived. Not on main/develop: use a worktree branch
 - **Locked** - Check is fixed. Only you can unlock; the agent cannot touch it
 - **Done-check** - Shell command that fails now and passes when the outcome is met
 - **Outcome Check** - The command you mark at lock as testing the outcome from outside
