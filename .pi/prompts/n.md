@@ -14,14 +14,29 @@ presses `/n` again to resume. Never change the key results: they are the human's
 1. Run every key-result check in file order, with a timeout. Exit 126/127 or a missing tool → STOP (blocked
    road). All green → STOP (arrived).
 2. Take the first red key result. Read the last glovebox and `trajectories.jsonl` lines for lessons.
-3. Build it test-first in this worktree; commit each green step (Conventional Commits, signed). For any change
-   bigger than one test and one function, use the `drive` skill's wave (Steward → Builder → `drive_gate` →
-   Verifier) and obey its verdicts.
-4. Re-run the key-result check. Green → append one lesson line to the glovebox and continue with the next hop.
+3. Classify the road by rule, not by feel. Motorway: diff about 150 lines or less, no one-way door, and no change
+   to a check, a test that a check runs, or the end-state file. Anything else inside the destination is City: use
+   the `drive` skill's wave (Steward → Builder → `drive_gate` → Verifier) and obey its verdicts.
+   Build test-first in this worktree; commit each green step (Conventional Commits, signed).
+4. Re-run the key-result check. Green → the hop commit carries these trailers, then continue with the next hop:
+
+   ```
+   Serves: KR-n.m
+   Road: motorway|city
+   Check: <the key-result check, verbatim>
+   Check-Base: red (exit N) @ <base sha>
+   Check-Head: green (exit 0)
+   Gate: drive_gate pass|n/a
+   Lesson: <one line>
+   ```
+
    Still red after two attempts → STOP (unclear road).
 
 **Stop conditions (always):** destination not approved or changed; blocked road; a one-way door (push, deploy,
 publish, deletes outside the worktree, weakening or skipping a check, editing the end-state file); a lesson that
 says the destination is wrong; two rejects on one task; context near 60% (checkpoint first); all key results green.
 
-At a stop, say in two lines: where the car is (key results green/red), and what it needs from the human.
+**Arrival:** before claiming it, replay every `Serves:` commit: its check red at `Check-Base`, green at the head,
+and its `Road:` recomputed from the diff. Show one table: key result, commits, replay verdict.
+
+At a stop, print one card: `⛔ STOP <kind> · where: <n>/<m> green, on <KR> · needs: <one decision>`.
