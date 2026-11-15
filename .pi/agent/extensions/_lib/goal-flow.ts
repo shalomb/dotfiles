@@ -7,8 +7,9 @@ import {
 	applyUnlock, lastLockedSpec, applyClose, applyLock, canLock, goalCheckHash, closeDecision, dropGoal, fillDraft, isEnvironmentFailure, newDraft,
 	reminderLine, stamp, staleGoal,
 } from "./goal.ts";
+import { branchSlug } from "./goal.ts";
 import { GOAL_HELP } from "./goal-help.ts";
-import { type Dirent, existsSync, readdirSync } from "node:fs";
+import { type Dirent, existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { type Exec, type GoalEvent, appendGoalEvent, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, recordTombstone, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
 
@@ -396,6 +397,7 @@ export async function doneGoal(d: Deps): Promise<void> {
 	if (!decision.close) return d.ui.notify(decision.reason, "error");
 	const closed = await commitTombstoned(d, applyClose(g, { now: d.now(), closedBy: decision.closedBy }), "closed", `Goal ${g.id} closed (${decision.closedBy}).`, () => ({ event: "goal_closed", closedBy: decision.closedBy }));
 	if (!closed) return;
+	clearCheckpoint(d.store, g.branch);
 	d.ui.notify(
 		`Goal ${g.id} is closed. Nothing else runs on its own. Next, when you want them: /persist to write a hand-off, ask the agent for lessons learned, ` +
 		"or /goal to draft the next goal from the discussion.", "info");
@@ -406,6 +408,43 @@ export async function dropCurrentGoal(d: Deps, reason: string): Promise<void> {
 	if (!g) return;
 	if (g.status === "closed" || g.status === "dropped") return d.ui.notify(refusal(g, "Nothing to drop"), "error");
 	await commitTombstoned(d, dropGoal(g, { now: d.now(), reason }), "dropped", `Goal ${g.id} dropped.`, () => ({ event: "goal_dropped", reason }));
+}
+
+/** Where /drive keeps its Knowledge Checkpoint for a branch. Outside goals/, so the agent may write it (the goal guard only blocks goals/). */
+export const checkpointPath = (store: string, branch: string): string => join(store, "checkpoints", `${branchSlug(branch)}.md`);
+
+const clearCheckpoint = (store: string, branch: string) => rmSync(checkpointPath(store, branch), { force: true });
+
+/** The mode named by the first word of `args`, or undefined when it names none. */
+const modeOf = (word: string | undefined): "scenic" | "motorway" | undefined => (word === "scenic" || word === "motorway" ? word : undefined);
+
+/**
+ * `/drive [scenic|motorway] [extra instructions]`: hand a locked goal to the Main Copilot (the `drive` skill).
+ * Refuses unless the goal is locked and its check record is intact. Resumes from the branch's checkpoint when one exists;
+ * an explicit mode beats the mode saved in the checkpoint.
+ */
+export async function driveGoal(d: Deps, raw: string): Promise<void> {
+	const { goal: g, error } = load(d);
+	if (!g) return d.ui.notify(error === NO_GOAL ? `${NO_GOAL} /drive needs a locked goal.` : error!, "error");
+	if (g.status !== "active") return d.ui.notify(refusal(g, "/drive needs a locked goal"), "error");
+	const problem = await integrityProblem(d, g);
+	if (problem) return d.ui.notify(problem, "error");
+
+	const words = raw.trim().split(/\s+/).filter(Boolean);
+	const explicit = modeOf(words[0]);
+	const extra = (explicit ? words.slice(1) : words).join(" ");
+	const cp = checkpointPath(d.store, g.branch);
+	const saved = existsSync(cp) ? readFileSync(cp, "utf8") : undefined;
+	const mode = explicit ?? (saved?.match(/^mode:\s*(scenic|motorway)\s*$/m)?.[1] as "scenic" | "motorway" | undefined) ?? "motorway";
+
+	const lines = [
+		"First load the `drive` skill and follow it.",
+		`Driving mode: ${mode}. Between stops, never ask the user; log decisions instead. You are the orchestrator: protect your context, delegate every code change to a Builder sub-agent, and edit scope files yourself only if the skill's Solo budget holds. Get the locked goal's done_check passing (goal ${g.id}).`,
+		`Write each Knowledge Checkpoint to ${cp} (create the directory; first line \`mode: ${mode}\`), so a fresh session can resume.`,
+	];
+	if (saved) lines.push("Resume: a checkpoint from an earlier drive exists. Continue from it; do not redo finished waves. Its contents:", saved.trim());
+	if (extra) lines.push(`Extra instructions: ${extra}`);
+	d.tellAgent(lines.join("\n"));
 }
 
 /** Run one /goal command. A handler that throws (a goal file that cannot be written, say) is reported to the human, never thrown. */

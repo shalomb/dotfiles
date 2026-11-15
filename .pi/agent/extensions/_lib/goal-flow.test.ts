@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { branchState, loadGoal, readRecordedHash, saveGoal, type Exec } from "./goal-io.ts";
 import { checkHash } from "./goal.ts";
-import { unlockGoal, parseGoalArgs, runGoalCommand, dropCurrentGoal, doneGoal, lockGoal, promptReminder, proposeFromAgent, showGoal, staleWarning, startGoal, type Deps } from "./goal-flow.ts";
+import { driveGoal, checkpointPath, unlockGoal, parseGoalArgs, runGoalCommand, dropCurrentGoal, doneGoal, lockGoal, promptReminder, proposeFromAgent, showGoal, staleWarning, startGoal, type Deps } from "./goal-flow.ts";
 
 const exec: Exec = (cmd, args, o) =>
 	new Promise((res) => execFile(cmd, args, { cwd: o?.cwd, timeout: o?.timeout }, (e: any, stdout, stderr) => res({ code: e ? (typeof e.code === "number" ? e.code : 1) : 0, stdout, stderr })));
@@ -852,4 +852,76 @@ test("lock, unlock, relock and close each append exactly one event", async () =>
 	commitFile("export.csv");
 	await doneGoal(d);
 	expect(events().map((e) => e.event)).toEqual(["goal_locked", "goal_unlocked", "goal_locked", "goal_closed"]);
+});
+
+// ---- /drive: gate on a locked goal, mode, checkpoint resume ----
+const lockedGoal = async () => {
+	await startGoal(deps(), "Users can export CSV");
+	await proposeFromAgent(deps(), { doneCheck: { kind: "command", commands: ["test -f export.csv"] }, scopeAnchors: ["src/"] });
+	answers = [true];
+	await lockGoal(deps());
+	toAgent = []; notes = [];
+};
+
+test("/drive refuses with the next step when there is no goal, and tells the agent nothing", async () => {
+	await driveGoal(deps(), "");
+	expect(toAgent).toEqual([]);
+	expect(lastNote()).toMatch(/\/goal/);
+});
+
+test("/drive refuses a draft and points at /goal lock", async () => {
+	await startGoal(deps(), "x");
+	toAgent = [];
+	await driveGoal(deps(), "");
+	expect(toAgent).toEqual([]);
+	expect(lastNote()).toMatch(/\/goal lock/);
+});
+
+test("/drive on a locked goal loads the drive skill in motorway mode by default", async () => {
+	await lockedGoal();
+	await driveGoal(deps(), "");
+	expect(toAgent).toHaveLength(1);
+	expect(toAgent[0]).toMatch(/`drive` skill/);
+	expect(toAgent[0]).toMatch(/motorway/);
+	expect(toAgent[0]).toContain(checkpointPath(store, "feat/export"));
+});
+
+test("/drive scenic passes the mode and the extra instructions", async () => {
+	await lockedGoal();
+	await driveGoal(deps(), "scenic keep commits small");
+	expect(toAgent[0]).toMatch(/scenic/);
+	expect(toAgent[0]).toContain("keep commits small");
+});
+
+test("/drive resumes from the checkpoint, including its mode, when one exists", async () => {
+	await lockedGoal();
+	mkdirSync(join(store, "checkpoints"), { recursive: true });
+	writeFileSync(checkpointPath(store, "feat/export"), "mode: scenic\nwave 2 of 3 done\n");
+	await driveGoal(deps(), "");
+	expect(toAgent[0]).toMatch(/Resume/i);
+	expect(toAgent[0]).toContain("wave 2 of 3 done");
+	expect(toAgent[0]).toMatch(/scenic/);
+});
+
+test("an explicit mode on /drive overrides the checkpoint's mode", async () => {
+	await lockedGoal();
+	mkdirSync(join(store, "checkpoints"), { recursive: true });
+	writeFileSync(checkpointPath(store, "feat/export"), "mode: scenic\nwave 1\n");
+	await driveGoal(deps(), "motorway");
+	expect(toAgent[0]).toMatch(/motorway/);
+	expect(toAgent[0]).not.toMatch(/Driving mode: scenic/);
+});
+
+test("the checkpoint lives outside the goals dir, so the agent may write it", async () => {
+	const { agentWouldWriteGoalStore } = await import("./goal-io.ts");
+	expect(agentWouldWriteGoalStore("write", { path: checkpointPath(store, "feat/export") })).toBe(false);
+});
+
+test("closing a goal removes its checkpoint", async () => {
+	await lockedGoal();
+	writeFileSync(join(root, "export.csv"), "x\n");
+	mkdirSync(join(store, "checkpoints"), { recursive: true });
+	writeFileSync(checkpointPath(store, "feat/export"), "wave 3\n");
+	await doneGoal(deps());
+	expect(() => readFileSync(checkpointPath(store, "feat/export"))).toThrow();
 });
