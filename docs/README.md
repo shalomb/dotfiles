@@ -48,6 +48,7 @@ This documentation follows the **Diataxis framework** for technical documentatio
 - [Goal workflow](./plans/goal-workflow/decision-tree.md) - grill -> plan -> goal -> drive: intent, anchors, BDD/DDD, decisions
   - [Drive roles](./plans/goal-workflow/drive-roles.md) - Spec Steward, Builder, gate, Verifier
   - [Component map](./plans/goal-workflow/component-map.md) - Diagrams of components and relationships
+  - [Blue-sky thinking](./blue-sky-thinking.md) - Open ideas, no decisions: terrain, topologies, token economics, intent
   - [Goal system](./explanation/goal-system.md) - What goals mean, the ladder, the loop and its control system
   - [Review brief](./plans/goal-workflow/review-brief.md) - How to peer review this branch
   - [Review response](./plans/goal-workflow/review-response.md) - Findings, dispositions, thesis
