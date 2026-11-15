@@ -46,6 +46,8 @@ td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
 .b-measured{color:var(--G);border-color:var(--G)}.b-derived{color:#355c9a;border-color:#355c9a}.b-judged{color:var(--A);border-color:var(--A)}
 .refs li{margin:4px 0}.cite{font-size:.8em;vertical-align:super;text-decoration:none}
 details.made{margin-top:26px;font-size:13px;color:var(--mut);max-width:860px}details.made summary{cursor:pointer}details.made code{font:12px ui-monospace,monospace;word-break:break-all}
+@media (max-width:768px){main{padding:20px 16px 40px}h1{font-size:28px}h2{font-size:22px}.kpis,.opts{grid-template-columns:1fr}.two{grid-template-columns:1fr}.axis .opts{grid-template-columns:1fr} table{display:block;overflow-x:auto;max-width:100%}}
+@media print{:root{--bg:#fff}body{background:#fff;color:#000;font-size:11pt}main{max-width:none;padding:0}*{position:static !important;color:#000 !important;box-shadow:none !important}.sum,.chip,.opt{cursor:auto}.panel{break-inside:avoid}.card,.opt,.rec2,.kpi,.gate,tr{break-inside:avoid}h2{break-after:avoid}a{text-decoration:underline}details.made{display:block}.gate{border:1.5px dashed #000;background:#fff}}
 </style></head><body><main>
 <div class="eyebrow" id="eyebrow"></div>
 <h1 id="title"></h1>
@@ -180,4 +182,5 @@ const RECIPE=JSON.parse(byId("recipe").textContent),made=byId("madebody");
 [["Template",RECIPE.template],["Renderer",RECIPE.renderer_file+" (sha256 "+RECIPE.renderer_sha256.slice(0,12)+")"],["Rebuild",RECIPE.rebuild]]
   .forEach(x=>made.appendChild(el("div",{},[el("b",{text:x[0]+": "}),el("code",{text:x[1]})])));
 made.appendChild(el("div",{text:RECIPE.note+" The input is embedded in this page as JSON."}));
+(function(){var d=document.getElementById("made"),was=false;addEventListener("beforeprint",function(){if(d){was=d.open;d.open=true;}});addEventListener("afterprint",function(){if(d)d.open=was;});})();
 </script></body></html>

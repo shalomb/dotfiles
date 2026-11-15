@@ -20,6 +20,52 @@ ASSETS = HERE / "assets"
 
 FLAG_WORDS = "GAP|CHECK|TODO|NOTE|RISK|OPEN"
 
+# Mirrors ../doc-nav.ts (MOBILE_MAX, SCROLL_FLOAT_PX, navCss, resolveNav).
+# tests/doc/test_doc_ux.py fails if these numbers drift from the TS.
+MOBILE_MAX = 768
+SCROLL_FLOAT_PX = 80
+
+NAV_CSS = """
+/* adaptive nav: rules copied from doc-nav.ts navCss(); sidebar keeps the page grid */
+nav.doc-nav[data-nav-layout="sidebar"] { display: block; }
+nav.doc-nav[data-nav-layout="floating"] { display: block; position: sticky; top: 0; z-index: 100; width: 100%; max-height: 3rem; overflow: auto; grid-column: 1 / -1; background: var(--paper, #fff); }
+nav.doc-nav[data-nav-layout="floating"]:focus-within, nav.doc-nav[data-nav-layout="floating"]:hover { max-height: 70vh; }
+nav.doc-nav[data-nav-layout="hidden"] { display: none; }
+@media print { nav.doc-nav { display: none; } }
+.nav-toggle { font: inherit; font-size: 12px; cursor: pointer; }
+"""
+
+NAV_JS = """/* doc-nav */
+(function(){
+var MOBILE_MAX=%(mobile)d, SCROLL_FLOAT_PX=%(scroll)d;
+var nav=document.querySelector("nav.doc-nav"), btn=document.querySelector("[data-nav-toggle]");
+if(!nav) return;
+var toggled=false;
+function presenting(){return /(^|[?&])present($|[=&])/.test(location.search)||document.documentElement.classList.contains("present");}
+function layout(){
+  if(presenting()) return "hidden";
+  if(window.innerWidth<=MOBILE_MAX) return "floating";
+  var scrolled=(window.pageYOffset||0)>=SCROLL_FLOAT_PX;
+  return (toggled?!scrolled:scrolled)?"floating":"sidebar";
+}
+function apply(){var l=layout();nav.setAttribute("data-nav-layout",l);if(btn)btn.setAttribute("aria-pressed",String(l==="floating"));}
+if(btn)btn.addEventListener("click",function(){toggled=!toggled;apply();});
+addEventListener("scroll",apply,{passive:true});
+addEventListener("resize",apply);
+new MutationObserver(apply).observe(document.documentElement,{attributes:true,attributeFilter:["class"]});
+apply();
+})();
+""" % {"mobile": MOBILE_MAX, "scroll": SCROLL_FLOAT_PX}
+
+
+def with_adaptive_nav(page):
+    """Add adaptive-nav attributes, toggle, CSS and script to a rendered page; content is untouched."""
+    page = page.replace('<nav class="toc" aria-label="Contents">',
+                        '<nav class="toc doc-nav" data-nav-layout="sidebar" aria-label="Contents">\n'
+                        '  <button type="button" class="nav-toggle" data-nav-toggle aria-pressed="false">Toggle navigation</button>', 1)
+    page = page.replace("</style>", NAV_CSS + "</style>", 1)
+    return page.replace("</body>", f"<script>{NAV_JS}</script>\n</body>", 1)
+
 
 def die(msg) -> typing.NoReturn:
     sys.exit(f"error: {msg}")
@@ -270,6 +316,8 @@ def main():
                     help="stylesheet to inline instead of the bundled theme")
     ap.add_argument("--brand-css", type=pathlib.Path,
                     help="brand stylesheet layered after the theme (tokens override)")
+    ap.add_argument("--no-adaptive-nav", action="store_true",
+                    help="omit the adaptive navigation (floating bar, toggle, script)")
     args = ap.parse_args()
 
     if not args.source.is_file():
@@ -291,6 +339,8 @@ def main():
                            start_present=args.mode == "deck")
         if args.theme != ASSETS / "theme.css":
             out = out.replace("<style>\n", "<style>\n" + css + "\n", 1)
+        if not args.no_adaptive_nav:
+            out = with_adaptive_nav(out)
         dest = args.out or (pathlib.Path.home() / "Downloads" / f"{args.source.stem.lower()}.html")
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(out, encoding="utf-8")
