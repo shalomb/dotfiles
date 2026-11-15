@@ -48,6 +48,7 @@ This documentation follows the **Diataxis framework** for technical documentatio
 - [Goal workflow](./plans/goal-workflow/decision-tree.md) - grill -> plan -> goal -> drive: intent, anchors, BDD/DDD, decisions
   - [Drive roles](./plans/goal-workflow/drive-roles.md) - Spec Steward, Builder, gate, Verifier
   - [Component map](./plans/goal-workflow/component-map.md) - Diagrams of components and relationships
+  - [Review brief](./plans/goal-workflow/review-brief.md) - How to peer review this branch
 - [pi-find UX](./plans/pi-find-ux/decision-tree.md) - Session recall and resume
 
 ## Key Documentation Areas
