@@ -6,7 +6,6 @@ sudo apt-get -yyq --no-install-recommends --no-install-suggests install nodejs n
 
 sudo npm install \
   @devcontainers/cli \
-  @github/copilot-language-server \
   bash-language-server \
   markdownlint-cli2 \
   mcp-hub \
@@ -14,3 +13,6 @@ sudo npm install \
   neovim \
   tree-sitter \
   write-good
+
+# User-prefix install (no sudo): nvim's copilot.lua resolves it via ~/.local/bin
+npm install -g --prefix "$HOME/.local" @github/copilot-language-server@latest
