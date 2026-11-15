@@ -50,8 +50,35 @@ THEME_JS = ('try{const k="lead-doc-theme",v=localStorage.getItem(k),r=v&&documen
             'localStorage.setItem(k,e.target.value)})}catch(e){}')
 
 
+PRESENT_JS = r"""(function(){
+var root=document.documentElement, big=matchMedia("(min-width:760px)"), btn=document.querySelector(".present-toggle"),
+    cnt=document.querySelector(".present-count");
+function slides(){return [].slice.call(document.querySelectorAll(".masthead, main > section"));}
+function current(){var s=slides(),y=scrollY+innerHeight/3,b=0;s.forEach(function(e,i){if(e.offsetTop<=y)b=i;});return b;}
+function show(){if(cnt){cnt.textContent=(current()+1)+" / "+slides().length;}}
+function go(i){var s=slides();i=Math.max(0,Math.min(s.length-1,i));s[i].scrollIntoView({behavior:"smooth"});}
+function set(on){on=on&&big.matches;root.classList.toggle("present",on);if(btn){btn.setAttribute("aria-pressed",on);
+  btn.textContent=on?"Read":"Present";}if(on){document.querySelectorAll("details.fold[open]").forEach(function(d){d.open=false;});show();}
+  try{history.replaceState(null,"",on?"#present":location.pathname+location.search);}catch(e){}}
+if(btn)btn.addEventListener("click",function(){set(!root.classList.contains("present"));});
+addEventListener("scroll",function(){if(root.classList.contains("present"))show();},{passive:true});
+addEventListener("keydown",function(e){if(e.target.closest&&e.target.closest("input,textarea,summary,[contenteditable]"))return;
+  var on=root.classList.contains("present");
+  if(e.key==="p"||e.key==="P"){if(!e.metaKey&&!e.ctrlKey){e.preventDefault();set(!on);}return;}
+  if(!on)return;
+  if(e.key==="Escape"){set(false);}
+  else if(["ArrowRight","ArrowDown","PageDown"," "].indexOf(e.key)>=0){e.preventDefault();go(current()+1);}
+  else if(["ArrowLeft","ArrowUp","PageUp"].indexOf(e.key)>=0){e.preventDefault();go(current()-1);}
+  else if(e.key==="Home"){e.preventDefault();go(0);}
+  else if(e.key==="End"){e.preventDefault();go(slides().length-1);}});
+big.addEventListener("change",function(){if(!big.matches)set(false);});
+addEventListener("beforeprint",function(){set(false);});
+if(location.hash==="#present"||root.dataset.start==="present")set(true);
+})();"""
+
+
 def css(brand_css=None):
-    parts = [(ASSETS / n).read_text(encoding="utf-8") for n in ("tokens.css", "page.css", "widgets.css")]
+    parts = [(ASSETS / n).read_text(encoding="utf-8") for n in ("tokens.css", "page.css", "widgets.css", "present.css")]
     if brand_css:
         parts.append("/* brand */\n" + pathlib.Path(brand_css).read_text(encoding="utf-8"))
     return "\n".join(parts)
@@ -170,7 +197,7 @@ def wrap_tables(body):
         "</table>", "</table></div>").replace("</table></div></div>", "</table></div>")
 
 
-def render(body_html, title, kind, source_label, brand_css=None, mermaid=render_mermaid):
+def render(body_html, title, kind, source_label, brand_css=None, mermaid=render_mermaid, start_present=False):
     """pandoc HTML (title still inside) → full story page."""
     m = re.search(r"<h1[^>]*>(.*?)</h1>", body_html, flags=re.S)
     if m:
@@ -187,7 +214,7 @@ def render(body_html, title, kind, source_label, brand_css=None, mermaid=render_
     built = datetime.date.today()
     lede = f'<p class="lede">{ask}</p>' if ask else ""
     return f"""<!doctype html>
-<html lang="en">
+<html lang="en"{' data-start="present"' if start_present else ''}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -224,7 +251,10 @@ def render(body_html, title, kind, source_label, brand_css=None, mermaid=render_
   <span>Previous versions in <code>versions/</code></span>
 </footer>
 </div>
+<button type="button" class="present-toggle" aria-pressed="false" aria-keyshortcuts="P" title="Present (P). Arrows move, Esc leaves.">Present</button>
+<div class="present-count" aria-live="polite"></div>
 <script>{THEME_JS}</script>
+<script>{PRESENT_JS}</script>
 </body>
 </html>
 """

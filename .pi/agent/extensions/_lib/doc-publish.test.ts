@@ -32,10 +32,12 @@ describe("publishDoc", () => {
 		expect(r.findings.map((f) => f.code)).toEqual(["broken-anchor"]);
 		expect(existsSync(r.filed[0])).toBe(true);
 	});
-	it("a deck purpose renders both the page and the deck", () => {
+	it("a deck purpose renders one page that opens in present mode, filed once", () => {
 		const r = publishDoc({ source: src, purpose: "deck", downloads: tmp }, env());
-		expect(r.rendered.map((p) => p.replace(/^.*\//, ""))).toEqual(["pin-or-vendor.html", "pin-or-vendor-deck.html"]);
-		expect(r.filed).toHaveLength(2);
+		expect(r.rendered.map((p) => p.replace(/^.*\//, ""))).toEqual(["pin-or-vendor.html"]);
+		expect(r.filed).toHaveLength(1);
+		expect(r.filed[0]).toContain("/deck/");
+		expect(readFileSync(r.rendered[0], "utf8")).toContain('data-start="present"');
 	});
 	it("refuses a missing source", () => {
 		expect(() => publishDoc({ source: join(tmp, "nope.md"), purpose: "report", downloads: tmp }, env())).toThrow(/no such source/);

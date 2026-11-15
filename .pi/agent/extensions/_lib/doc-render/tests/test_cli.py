@@ -33,6 +33,13 @@ class BuildTest(unittest.TestCase):
         self.assertIn('id="evidence"', page)
         self.assertNotIn("{#evidence}", page)
 
+    def test_deck_mode_is_the_story_page_opening_in_present_mode(self):
+        self.src.write_text("# T\n\n## 1. A\n\n::: kpis\n- **9%** x\n:::\n")
+        page = self.build("-m", "deck")
+        self.assertIn('data-start="present"', page)
+        self.assertIn('<dl class="kpis">', page)
+        self.assertIn('class="masthead"', page)
+
     def test_auto_ids_match_github_slugs(self):
         self.src.write_text("# T\n\n## 3. Most requests are not Mode 1\n\nx\n")
         self.assertIn('id="3-most-requests-are-not-mode-1"', self.build())

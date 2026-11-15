@@ -79,6 +79,26 @@ class StoryFrameTest(unittest.TestCase):
         self.assertIn("--accent:light-dark(", self.page)
 
 
+class PresentModeTest(unittest.TestCase):
+    """One page serves reading and presenting: no separate deck pipeline."""
+
+    def test_page_offers_a_present_toggle_with_keyboard_script(self):
+        page = story.render(pandoc(STORY), None, "Report", "s.md", mermaid=FAKE_SVG)
+        self.assertIn('class="present-toggle"', page)
+        self.assertIn('aria-keyshortcuts="P"', page)
+        self.assertIn("html.present main > section", page)
+        self.assertIn("ArrowRight", page)
+        self.assertNotIn('data-start="present"', page)
+
+    def test_start_present_opens_in_present_mode(self):
+        page = story.render(pandoc(STORY), None, "Deck", "s.md", mermaid=FAKE_SVG, start_present=True)
+        self.assertIn('<html lang="en" data-start="present">', page)
+
+    def test_print_and_small_screens_never_present(self):
+        page = story.render(pandoc(STORY), None, "Report", "s.md", mermaid=FAKE_SVG)
+        self.assertIn("matchMedia(\"(min-width:760px)\")", page)
+
+
 class StatusToneTest(unittest.TestCase):
     def test_tone_comes_from_any_status_word(self):
         eb = story.eyebrow("Brief", [("Status", "Design approved 2026-11-14 · hypotheses not yet tested on live tickets")])

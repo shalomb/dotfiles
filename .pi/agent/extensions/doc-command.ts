@@ -27,7 +27,7 @@ function brandLine(css: string | undefined, style?: string): string {
 
 const Params = Type.Object({
 	source: Type.String({ description: "Path to the Markdown source to publish" }),
-	purpose: Type.Optional(Type.Union(PURPOSES.map((p) => Type.Literal(p)), { description: "decision | report | status | workshop | deck (deck also renders slides)" })),
+	purpose: Type.Optional(Type.Union(PURPOSES.map((p) => Type.Literal(p)), { description: "decision | report | status | workshop | deck (deck = same page, opens in present mode)" })),
 	style: Type.Optional(Type.Union([Type.Literal("house"), Type.Literal("formal")], { description: "formal applies the brand stylesheet" })),
 	tags: Type.Optional(Type.Array(Type.String())),
 	eyebrow: Type.Optional(Type.String({ description: "small caps line above the title, e.g. '<team> · Draft'" })),
@@ -41,7 +41,7 @@ export default function (pi: ExtensionAPI) {
 		name: "doc_publish",
 		label: "Publish document",
 		description:
-			"Render a Markdown document to self-contained HTML (and a slide deck for purpose=deck), check it against the docs-authoring rules, copy it to ~/Downloads, file it in the document library and return its URLs. Findings are warnings; fix what you can and publish again (old renders are kept).",
+			"Render a Markdown document to self-contained HTML (purpose=deck: the same page, opening in present mode; every page can present with P), check it against the docs-authoring rules, copy it to ~/Downloads, file it in the document library and return its URLs. Findings are warnings; fix what you can and publish again (old renders are kept).",
 		promptSnippet: "Render, check, file and link a /doc Markdown document in one call",
 		parameters: Params,
 		async execute(_id, params: any) {

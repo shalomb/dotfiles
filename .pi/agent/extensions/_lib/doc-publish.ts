@@ -96,11 +96,12 @@ export function publishDoc(o: PublishOptions, env: Env = process.env): PublishRe
 			}
 		: undefined;
 
-	const modes: ("doc" | "deck")[] = purpose === "deck" ? ["doc", "deck"] : ["doc"];
+	// One page for reading and presenting: a deck is the same page opening in present mode.
+	const modes: ("doc" | "deck")[] = [purpose === "deck" ? "deck" : "doc"];
 	const rendered: string[] = [];
 	const filed: string[] = [];
 	for (const mode of modes) {
-		const out = join(downloads, `${stem}${mode === "deck" ? "-deck" : ""}.html`);
+		const out = join(downloads, `${stem}.html`);
 		const args = [BUILD, o.source, "-m", mode, "-o", out];
 		if (o.eyebrow) args.push("-e", o.eyebrow);
 		if (brandCss) args.push("--brand-css", brandCss);
@@ -117,7 +118,7 @@ export function publishDoc(o: PublishOptions, env: Env = process.env): PublishRe
 			writeFileSync(out, page);
 		}
 		rendered.push(out);
-		const fileKind = mode === "deck" ? "deck" : kind === "deck" ? "report" : kind;
+		const fileKind = kind;
 		filed.push(fileDoc({ html: out, kind: fileKind, source: o.source, summary: o.summary, tags: o.tags }, env));
 	}
 	const urls = filed.flatMap((f) => urlsFor(f).map((u) => u.url));

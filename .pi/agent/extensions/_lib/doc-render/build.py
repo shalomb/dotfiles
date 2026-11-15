@@ -260,7 +260,7 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("source", type=pathlib.Path, help="Markdown file to render")
     ap.add_argument("-m", "--mode", choices=("doc", "deck"), default="doc",
-                    help="doc: long-form page with sidebar TOC. deck: one slide per H2")
+                    help="doc: the story page. deck: the same page, opening in present mode (one section per screen)")
     ap.add_argument("-o", "--out", type=pathlib.Path,
                     help="output path (default: ~/Downloads/<slug>[-deck].html)")
     ap.add_argument("-t", "--title", help="override the H1")
@@ -282,12 +282,13 @@ def main():
 
     body = run_pandoc(strip_frontmatter(args.source.read_text(encoding="utf-8")))
 
-    if args.mode == "doc":
+    if args.mode in ("doc", "deck"):
         brand = args.brand_css
         if brand and not brand.is_file():
             die(f"no such brand stylesheet: {brand}")
         out = story.render(body, args.title, args.eyebrow, args.source.name,
-                           brand_css=brand if args.theme == ASSETS / "theme.css" else None)
+                           brand_css=brand if args.theme == ASSETS / "theme.css" else None,
+                           start_present=args.mode == "deck")
         if args.theme != ASSETS / "theme.css":
             out = out.replace("<style>\n", "<style>\n" + css + "\n", 1)
         dest = args.out or (pathlib.Path.home() / "Downloads" / f"{args.source.stem.lower()}.html")

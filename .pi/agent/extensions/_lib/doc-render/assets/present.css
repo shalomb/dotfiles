@@ -1,0 +1,23 @@
+/* Present mode: the same page, one section per screen. Toggle with P or the button; Esc leaves. */
+.present-toggle{position:fixed; right:16px; bottom:16px; z-index:20; font:600 12px/1 var(--sans);
+  letter-spacing:.06em; text-transform:uppercase; padding:9px 12px; border-radius:999px;
+  border:1px solid var(--rule); background:var(--card); color:var(--slate); cursor:pointer;
+  box-shadow:0 2px 8px var(--shadow, rgba(0,0,0,.08))}
+.present-toggle:hover{color:var(--accent); border-color:var(--accent)}
+@media (max-width:759px){.present-toggle{display:none}}
+@media print{.present-toggle,.present-count{display:none !important}}
+.present-count{display:none}
+
+html.present{scroll-snap-type:y mandatory; scroll-padding-top:0}
+html.present body{font-size:clamp(17px,1.35vw,22px)}
+html.present .toc,html.present .colophon,html.present .skip,html.present .footnotes{display:none}
+html.present .body{display:block}
+html.present .page{max-width:min(1280px,94vw)}
+html.present .masthead,html.present main > section{min-height:100vh; scroll-snap-align:start;
+  content-visibility:visible; display:flex; flex-direction:column; justify-content:center;
+  padding:6vh 0; border-bottom:0}
+html.present main > section > h2{font-size:clamp(1.8rem,3.2vw,2.8rem); border-top:0; max-width:none}
+html.present main > section > :where(p,ul,ol:not(.spine),h3){max-width:70ch}
+html.present main{padding-bottom:0}
+html.present .present-count{display:block; position:fixed; left:16px; bottom:16px; z-index:20;
+  font:600 12px/1 var(--sans); color:var(--mute); font-variant-numeric:tabular-nums}
