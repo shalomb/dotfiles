@@ -84,7 +84,7 @@ Evidence: `~/shalomb/agentic-falsify/runs/FINDINGS.md`.
 C4Container
   title Container Diagram - Agentic Coding System (v1.1)
 
-  Person(human, "Human Partner", "Sets and locks the Goal Contract; approves Done-check changes")
+  Person(human, "Human Partner", "Sets, locks, unlocks and closes the Goal Contract")
 
   System_Boundary(system, "Agentic Coding System") {
     Container(copilot, "Main Copilot", "pi Interactive Session", "Steers design; one-line goal reminder per turn; verifies receipts in one call")
@@ -124,15 +124,15 @@ flowchart TD
     Lock --> Work["Waves run; tasks auto-linked [goal: id]"]
     Work --> Check{"/goal done:\nDone-check green?"}
     Check -->|"No"| Work
-    Check -->|"Yes"| Close["Close + /persist + lessons"]
+    Check -->|"Yes"| Close["Close; suggest /persist, lessons, next goal"]
 ```
 
 **Contract:**
-- Each branch MUST have at most one active Goal Contract, stored at `${XDG_CACHE_HOME:-~/.cache}/agent-skills/todos/<repo_slug>/goals/<branch-slug>.md`.
+- Each branch MUST have at most one active Goal Contract, stored at `${XDG_CACHE_HOME:-~/.cache}/agent-skills/todos/<repo_slug>/goals/<branch-slug>.md`; finished goals are archived by id. A goal's id names the goal (`g-<kr>-<outcome>`), not the branch. Default branches hold no goal.
 - A Goal Contract MUST contain an outcome and a Done-check. It SHOULD contain anti-goals, Scope Anchors and spec links.
 - A Done-check MUST fail on the base commit before it can be locked. Only the Human Partner can lock it.
-- A locked Done-check MUST change only with Human Partner approval. Each change is recorded with who, when and why.
-- `/goal done` MUST refuse to close while the Done-check fails. On close it MUST write a `/persist` hand-off and a lessons capture.
+- A locked Done-check MUST change only by the Human Partner: `/goal unlock`, correct, `/goal lock`. Each relock is recorded with who, when and the old and new check.
+- `/goal done` MUST refuse to close while the Done-check fails. On close it runs nothing else; it suggests `/persist`, lessons and the next goal.
 - A goal with no command check MAY use a human-confirm check. Its closure MUST be recorded as `closed_by: assertion`.
 - Tasks created on a branch with an active goal MUST carry `[goal: <id>]`.
 - Each turn, the Copilot's prompt MUST carry a one-line reminder (`Goal: <id> <outcome>; run /goal to refresh`), not the full contract.
@@ -140,9 +140,9 @@ flowchart TD
 - **Lock integrity (ADR-009 Amendment 1, ADR-010):**
   - A command goal MUST have at least one Outcome Check; the human marks it at lock.
   - `/goal lock` MUST refuse when the base failure looks environmental (exit 126/127, `command not found`, `ModuleNotFoundError`, `ImportError`), unless the human types the goal id.
-  - A Weakening Change MUST be approved only by typing the goal id; strengthening changes, lock and close stay yes/no.
-  - Every lock and approved change MUST commit a hash of the done-check to the private ref `refs/goals/<branch-slug>` (never pushed). `/goal done` MUST refuse when the current check's hash differs from the ref tip.
-  - Lock, change, close and drop MUST each append one event to `trajectories.jsonl`.
+  - A relock that weakens the check MUST need the goal id typed; other locks and closes stay one choice.
+  - Every lock and relock MUST commit a hash of the done-check to the private ref `refs/goals/<branch-slug>` (never pushed). `/goal done` MUST refuse when the current check's hash differs from the ref tip.
+  - Lock, unlock, close and drop MUST each append one event to `trajectories.jsonl`.
 - `/goal` is opt-in. The agent MAY suggest it only when the work spans more than one task.
 - **Drafting (ADR-011):**
   - Before drafting, the agent MUST run Discovery and report *already true*, *partly true* or *not there*. Each claim cites a path and a command.
@@ -173,8 +173,8 @@ invariants:
   outcome_check_required: true          # human marks it at lock
   env_failure_lock: refuse_unless_typed_id
   weakening_change_confirm: typed_goal_id
-  tamper_ref: "refs/goals/${branch_slug}"  # hash of done-check per lock/approve; compared at close
-  events: [goal_locked, goal_changed, goal_closed, goal_dropped]
+  tamper_ref: "refs/goals/${branch_slug}"  # hash of done-check per lock/relock; compared at close
+  events: [goal_started, goal_locked, goal_unlocked, goal_closed, goal_dropped]
   suggest_when: "work spans > 1 task"
 artifacts:
   goal_card: "goals/${branch_slug}.md"

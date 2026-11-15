@@ -94,3 +94,8 @@ On every lock and every approved change, `/goal` records a hash of the canonical
 
 - A real tamper case is found, meaning an agent rewrote both the file and the ref: move to Option D.
 - The goal store must be portable across machines: reconsider where the record lives.
+
+## Amendment 1 (2026-11-15): lock and relock, not approve
+
+The hash is recorded on every lock and relock (after `/goal unlock`); there is no `approve` commit any more. The ref stays keyed
+by branch, while goal ids now name the goal, so one ref holds the lock and tombstone history of each goal on that branch in turn.

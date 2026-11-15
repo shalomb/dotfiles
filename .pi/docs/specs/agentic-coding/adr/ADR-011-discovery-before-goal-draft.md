@@ -81,3 +81,10 @@ Replay `g-develop` and a `todo --version` goal, before and after TB-7c. Pass rul
 4. The output ends with one next-step line.
 
 **Kill rule:** if both replays fail 2 or more pass rules, remove Discovery and keep only the Review Card and Draft Lint. Record the result in `trajectories.jsonl` and in this ADR.
+
+## Amendment 1 (2026-11-15): Discovery in every draft prompt; ids and default branches
+
+Every draft prompt (`/goal`, `/goal <outcome>`, the next goal after close) asks for Discovery and at most 2 gap questions, and for
+`serves` (the end-state key result). `goal_propose` takes `serves`, which with the outcome names the goal (`g-<kr>-<outcome>`).
+`main`, `master` and `develop` never hold a goal: `/goal` there suggests a worktree branch instead, and `/drive` refuses such a goal.
+The `discovery` field on `goal_propose` and the four Draft Lint rules are deferred.

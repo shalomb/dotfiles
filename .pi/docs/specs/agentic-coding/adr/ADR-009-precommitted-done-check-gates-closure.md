@@ -117,3 +117,10 @@ The agent drafts the done-check; the human confirms it before work starts; it is
 **Trade-offs.** These rules add friction at the points that matter. They still depend on the human reading the prompt. Classifying failures from their output is a heuristic, so it will miss some cases and wrongly flag others.
 
 **Revisit.** After 10 goals, review drop and assertion-closure rates. If the friction drives the human away from `/goal`, relax the typed-id rule.
+
+## Amendment 2 (2026-11-15): unlock and relock replace approve and reject
+
+A locked check is no longer changed through an agent proposal and `/goal approve` or `/goal reject`. The human runs `/goal unlock`
+(the goal becomes a draft), the draft is corrected, and `/goal lock` re-runs every lock rule; a weaker check needs the goal id typed.
+`/goal check` is folded into bare `/goal`, which offers to close when green. `/goal done` runs nothing else on close. Events are
+`goal_started`, `goal_locked`, `goal_unlocked`, `goal_closed`, `goal_dropped`. The drivers and consequences above stand.
