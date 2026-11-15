@@ -24,7 +24,8 @@ goal - one checkable goal per branch, locked before work starts
 - **/goal lock** - One dialog: pick the Outcome Check (agent's suggestion first) to lock. Refuses if the check already passes on the base commit
 - **/goal unlock** - Locked -> draft, to correct it. Logged; relock re-validates
 - **/goal done** - Run the check; close if green, then suggest /persist, lessons and the next goal (alias: /goal close)
-- **/goal drop** - Abandon the goal
+- **/goal drop** - Abandon the goal (removes its drive checkpoint)
+- **\`/goal drive [scenic|motorway] [extra]\`** - Hand the locked goal to the drive skill (alias: /drive). Refuses unless locked and intact; resumes from a checkpoint only if it names this goal and lock
 - **/goal help** - This page
 ## DESCRIPTION
 - **States** - none -> draft -> locked -> closed (or dropped); see the diagram above

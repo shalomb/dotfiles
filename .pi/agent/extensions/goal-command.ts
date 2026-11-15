@@ -126,7 +126,7 @@ export default function (pi: ExtensionAPI) {
 	} as any);
 
 	pi.registerCommand("goal", {
-		description: "/goal [<outcome>] | lock | unlock | done | drop | help — branch goal with a human-locked done-check",
+		description: "/goal [<outcome>] | lock | unlock | done | drop | drive | help — branch goal with a human-locked done-check",
 		getArgumentCompletions: (prefix: string) => {
 			const hits = SUBCOMMANDS.filter((o) => o.startsWith(prefix));
 			return hits.length ? hits.map((value) => ({ value, label: value })) : null;
@@ -135,6 +135,19 @@ export default function (pi: ExtensionAPI) {
 			const d = await depsFor(ctx);
 			if (!d) return ctx.ui.notify("/goal needs a git repository.", "error");
 			await runGoalCommand(d, args);
+		},
+	});
+
+	pi.registerCommand("drive", {
+		description: "/drive [scenic|motorway] [extra instructions] — alias of /goal drive: drive the locked goal",
+		getArgumentCompletions: (prefix: string) => {
+			const hits = ["scenic", "motorway"].filter((o) => o.startsWith(prefix));
+			return hits.length ? hits.map((value) => ({ value, label: value })) : null;
+		},
+		handler: async (args: string, ctx: any) => {
+			const d = await depsFor(ctx);
+			if (!d) return ctx.ui.notify("/drive needs a git repository.", "error");
+			await runGoalCommand(d, `drive ${args ?? ""}`);
 		},
 	});
 }
