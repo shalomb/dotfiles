@@ -45,6 +45,7 @@ export type GoalArgs =
 	| { kind: "retired"; word: string }
 	| { kind: "drive"; rest: string }
 	| { kind: "show-id"; id: string }
+	| { kind: "drop-id"; id: string }
 	| { kind: "start"; outcome: string };
 
 export const SUBCOMMANDS = ["lock", "unlock", "done", "drop", "drive", "help"] as const;
@@ -60,6 +61,8 @@ export function parseGoalArgs(raw: string): GoalArgs {
 	// drive is the one subcommand that takes arguments: /goal drive [scenic|motorway] [extra instructions].
 	const show = a.match(/^show\s+(\S+)$/);
 	if (show) return { kind: "show-id", id: show[1] };
+	const drop = a.match(/^drop\s+(g-\S+)$/);
+	if (drop) return { kind: "drop-id", id: drop[1] };
 	const drive = raw.match(/^\s*drive(?:\s+([\s\S]*))?$/);
 	if (drive) return { kind: "drive", rest: (drive[1] ?? "").trim() };
 	return (SUBCOMMANDS as readonly string[]).includes(a) ? ({ kind: a } as GoalArgs) : { kind: "start", outcome: a };
@@ -437,7 +440,19 @@ export async function doneGoal(d: Deps): Promise<void> {
 }
 
 export async function dropCurrentGoal(d: Deps, reason: string): Promise<void> {
-	const g = current(d);
+	await dropGoalNamed(d, current(d), reason);
+}
+
+/** `/goal drop <id>`: drop a live goal of any branch, e.g. one whose branch was deleted. Confirms first, since it is not this branch's. */
+export async function dropGoalById(d: Deps, id: string): Promise<void> {
+	const g = listGoals(d.store).find((x) => x.id === id && (x.status === "draft" || x.status === "active"));
+	if (!g) return d.ui.notify(`No live goal ${id} (draft or locked) in the store. /goal show ${id} looks in the archive.`, "error");
+	if (g.branch !== d.branch && !(await d.ui.confirm(`Drop ${g.id} of branch ${g.branch}?`, `${g.outcome}\nIt is archived and its ref gets a dropped tombstone.`)))
+		return d.ui.notify("Not dropped.", "info");
+	await dropGoalNamed(d, g, "dropped by the user");
+}
+
+async function dropGoalNamed(d: Deps, g: Goal | undefined, reason: string): Promise<void> {
 	if (!g) return;
 	if (g.status === "closed" || g.status === "dropped") return d.ui.notify(refusal(g, "Nothing to drop"), "error");
 	const dropped = await commitTombstoned(d, dropGoal(g, { now: d.now(), reason }), "dropped", `Goal ${g.id} dropped.`, () => ({ event: "goal_dropped", reason }));
@@ -514,6 +529,7 @@ export async function runGoalCommand(d: Deps, raw: string): Promise<void> {
 			case "drop": return await dropCurrentGoal(d, "dropped by the user");
 			case "drive": return await driveGoal(d, a.rest);
 			case "show-id": return showGoalById(d, a.id);
+			case "drop-id": return await dropGoalById(d, a.id);
 		}
 	} catch (e) {
 		d.ui.notify(`/goal ${a.kind === "start" ? "<outcome>" : a.kind} failed: ${errorText(e)}`, "error");
@@ -534,7 +550,7 @@ export async function staleWarning(d: Deps): Promise<string | undefined> {
 		if (g.status !== "draft" && g.status !== "active") continue;
 		const state = await branchState(d.exec, d.root, g.branch, g.doneCheck.baseCommit);
 		const why = staleGoal(state.exists, state.merged);
-		if (why) lines.push(`Goal ${g.id} (${g.outcome}): ${why}. Switch to ${g.branch} and run /goal to close or drop it.`);
+		if (why) lines.push(`Goal ${g.id} (${g.outcome}): ${why}. ${state.exists ? `Switch to ${g.branch} and run /goal to close or drop it, or` : "Run"} /goal drop ${g.id} to drop it from here.`);
 	}
 	return lines.length ? lines.join("\n") : undefined;
 }

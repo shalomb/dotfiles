@@ -1081,3 +1081,23 @@ test("every draft prompt asks for Discovery, at most 2 gap questions, and serves
 		expect(prompt).toMatch(/serves/);
 	}
 });
+
+test("/goal drop <id> drops another branch's goal from here", async () => {
+	await lockedGoal();
+	expect(parseGoalArgs("drop g-users-can-export-csv")).toEqual({ kind: "drop-id", id: "g-users-can-export-csv" });
+	answers = [true];
+	await runGoalCommand(deps("feat/other"), "drop g-users-can-export-csv");
+	expect(loadGoal(store, "feat/export")!.status).toBe("dropped");
+	expect(git("show", "refs/goals/feat-export:status")).toBe("dropped");
+	await runGoalCommand(deps("feat/other"), "drop g-nope");
+	expect(lastNote()).toMatch(/No live goal g-nope/);
+});
+
+test("the stale warning for a deleted branch points at /goal drop <id>", async () => {
+	git("branch", "-q", "feat/gone");
+	await startGoal(deps("feat/gone"), "Gone work");
+	git("branch", "-q", "-D", "feat/gone");
+	const w = await staleWarning(deps());
+	expect(w).toContain("/goal drop g-gone-work");
+	expect(w).not.toMatch(/Switch to feat\/gone/);
+});

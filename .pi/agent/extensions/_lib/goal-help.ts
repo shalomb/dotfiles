@@ -25,6 +25,7 @@ goal - one checkable goal per branch, locked before work starts
 - **/goal unlock** - Locked -> draft, to correct it. Logged; relock re-validates
 - **/goal done** - Run the check; close if green, then suggest /persist, lessons and the next goal (alias: /goal close)
 - **/goal drop** - Abandon the goal (removes its drive checkpoint)
+- **\`/goal drop <id>\`** - Drop a live goal of any branch, e.g. one whose branch was deleted (asks first)
 - **\`/goal drive [scenic|motorway] [extra]\`** - Hand the locked goal to the drive skill (alias: /drive). Refuses unless locked and intact; resumes from a checkpoint only if it names this goal and lock
 - **\`/goal show <id>\`** - Show any goal by id, current or archived
 - **/goal help** - This page
