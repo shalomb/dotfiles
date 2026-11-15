@@ -183,6 +183,15 @@ test("agentWouldWriteGoalStore blocks write/edit into the goals store and shell 
 	expect(agentWouldWriteGoalStore("read", { path: dir })).toBe(false);
 });
 
+test("agentWouldWriteGoalStore lets reads with stderr redirects or fd dups through", () => {
+	const dir = "~/.cache/agent-skills/todos/r-app/goals/";
+	expect(agentWouldWriteGoalStore("bash", { command: `ls ${dir} 2>/dev/null` })).toBe(false);
+	expect(agentWouldWriteGoalStore("bash", { command: `cat ${dir}feat-x.md 2>&1 | head` })).toBe(false);
+	expect(agentWouldWriteGoalStore("bash", { command: `ls ${dir} >/dev/null && echo ok >&2` })).toBe(false);
+	expect(agentWouldWriteGoalStore("bash", { command: `ls ${dir} 2>/dev/null; echo x > ${dir}feat-x.md` })).toBe(true);
+	expect(agentWouldWriteGoalStore("bash", { command: `cat a >> ${dir}feat-x.md` })).toBe(true);
+});
+
 // Contract section 1: all linked worktrees of one repo share one store.
 test("resolveRepo gives the same store from the main checkout and a linked worktree, and reports branch and head", async () => {
 	git("switch", "-q", "-c", "feat/export");

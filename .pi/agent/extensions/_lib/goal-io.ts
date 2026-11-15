@@ -212,6 +212,8 @@ const GOAL_STORE_IN_COMMAND = /agent-skills\/todos\/[^\s'"]*\/goals\b/;
 /** The private ref of ADR-010: any command or path naming it is blocked for the agent, reads included. */
 const GOAL_REF = /refs\/goals\//;
 const SHELL_WRITE = /(?:^|[\s;&|])(?:tee|sed\s+-\S*i|mv|cp|rm|truncate|install|dd|perl\s+-\S*i|python3?|node|bun)\b|>/;
+/** Redirects that cannot write a file: to /dev/null, or an fd dup like 2>&1 or >&2. */
+const HARMLESS_REDIRECT = /\d*>>?\s*(?:\/dev\/null\b|&\d+)/g;
 
 /**
  * True when an agent tool call would write the goal store behind /goal's back. Best effort for bash:
@@ -222,7 +224,7 @@ export function agentWouldWriteGoalStore(toolName: string, input: { path?: strin
 	if (toolName === "write" || toolName === "edit") return isGoalStorePath(String(input.path ?? "")) || GOAL_REF.test(String(input.path ?? ""));
 	if (toolName === "bash") {
 		const command = String(input.command ?? "");
-		return GOAL_REF.test(command) || (GOAL_STORE_IN_COMMAND.test(command) && SHELL_WRITE.test(command));
+		return GOAL_REF.test(command) || (GOAL_STORE_IN_COMMAND.test(command) && SHELL_WRITE.test(command.replace(HARMLESS_REDIRECT, " ")));
 	}
 	return false;
 }
