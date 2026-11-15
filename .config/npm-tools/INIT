@@ -6,6 +6,7 @@ sudo apt-get -yyq --no-install-recommends --no-install-suggests install nodejs n
 
 sudo npm install \
   @devcontainers/cli \
+  @github/copilot-language-server \
   bash-language-server \
   markdownlint-cli2 \
   mcp-hub \
