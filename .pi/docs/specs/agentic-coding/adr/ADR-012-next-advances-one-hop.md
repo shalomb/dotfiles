@@ -38,3 +38,13 @@ check, a goal contradicting anti-goals, a KR that does not move when its goal cl
 - Tamper evidence (ADR-010) is unchanged: every lock and close still writes the ref.
 - `/goal ...` subcommands stay for steering by hand.
 - Revisit if trajectories show auto-locked goals closing without their KR moving.
+
+## Amendment 1 (2026-11-15): the loop runs by itself; /next only resumes
+
+Between stops the loop advances hop after hop without `/next`; `/next` (`/n`) starts it in a fresh session or
+continues after a stop. To prevent a runaway, the loop carries a control system: one goal per key result,
+`drive_gate` on every commit, tripwires (key result not moved, two rejects on a task, glovebox outgrowing
+progress, a learning contradicting a key result or ADR, budget overrun), a budget (context near 60%, goal count
+per run), a retro line per hop, a review at each objective boundary, and steering notes read at hop boundaries.
+Any change of intent (a key result added, changed or dropped) is a one-way door. Rationale and evidence:
+docs/explanation/goal-system.md.
