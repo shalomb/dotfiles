@@ -5,7 +5,7 @@
  * skill holds only the writing rules and skeletons.
  *
  *   /doc                         infer purpose + topic from the session
- *   /doc decision|report|status|workshop|deck [topic] [for <who>] [1-pager|6-pager|20-pager] [formal]
+ *   /doc decision|report|status|workshop|deck|brief [topic] [for <who>] [1-pager|6-pager|20-pager] [formal]
  *   /doc deeper | shorter | for <who> | formal     revise the last document
  *   /doc find <words> | list [purpose] | file <html> | open | index
  */
@@ -27,7 +27,7 @@ function brandLine(css: string | undefined, style?: string): string {
 
 const Params = Type.Object({
 	source: Type.String({ description: "Path to the Markdown source to publish" }),
-	purpose: Type.Optional(Type.Union(PURPOSES.map((p) => Type.Literal(p)), { description: "decision | report | status | workshop | deck (deck = same page, opens in present mode)" })),
+	purpose: Type.Optional(Type.Union(PURPOSES.map((p) => Type.Literal(p)), { description: "decision | report | status | workshop | deck | brief (deck = same page, opens in present mode; brief = concept brief)" })),
 	style: Type.Optional(Type.Union([Type.Literal("house"), Type.Literal("formal")], { description: "formal applies the brand stylesheet" })),
 	tags: Type.Optional(Type.Array(Type.String())),
 	eyebrow: Type.Optional(Type.String({ description: "small caps line above the title, e.g. '<team> · Draft'" })),
@@ -65,7 +65,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("doc", {
-		description: "Write a decision, report, status, workshop pack or deck from this session; or find/list/file/open documents",
+		description: "Write a decision, report, status, workshop pack, deck or concept brief from this session; or find/list/file/open documents",
 		handler: async (args, ctx) => {
 			const intent = parseDocArgs(args);
 			const say = (text: string) => ctx.ui.notify(text, "info");

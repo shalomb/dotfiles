@@ -76,6 +76,12 @@ export function lintDoc(md: string, purpose = "report"): Finding[] {
 	if (PURPOSES_NEEDING_METHOD.has(purpose) && !has(md, /method|limits|how far to trust/i))
 		add("no-method", "Add '## Method and limits': where the data came from and what it cannot show.");
 
+	if (purpose === "brief") {
+		if (!has(md, /bias/i)) add("no-biases", "Add '## Our biases, in the open': who wrote it, who graded the evidence, what each bias could distort.");
+		if (!has(md, /check it yourself|verify/i)) add("no-check-yourself", "Add '## Check it yourself': each claim with a link a reader can follow without asking.");
+		for (const m of md.matchAll(/\]\((?!https?:|#|mailto:)([^)\s]+)\)/g)) add("relative-link", `Relative link ${m[1]} breaks outside the repo; use an absolute URL.`);
+	}
+
 	if (purpose === "decision") {
 		if (!has(md, /options?\b/i)) add("no-options", "Add '## Options' with 2–4 options and their cost, risk and reversibility.");
 		if (!has(md, /recommend/i)) add("no-recommendation", "Add '## Recommendation': one option and the reason that decides it.");

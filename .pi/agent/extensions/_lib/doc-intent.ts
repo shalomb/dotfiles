@@ -2,7 +2,7 @@
  * /doc intent: read purpose, depth, audience and style from the arguments, and
  * leave everything else (topic, facts, sources) to be inferred from the session.
  */
-export const PURPOSES = ["decision", "report", "status", "workshop", "deck"] as const;
+export const PURPOSES = ["decision", "report", "status", "workshop", "deck", "brief"] as const;
 export type Purpose = (typeof PURPOSES)[number];
 export type Depth = 1 | 6 | 20 | "deeper" | "shorter";
 export type Action = "write" | "revise" | "find" | "list" | "file" | "open" | "index";
@@ -18,7 +18,8 @@ export interface DocIntent {
 
 const PURPOSE_WORDS: Record<string, Purpose> = {
 	decision: "decision", decide: "decision", rfc: "decision", adr: "decision", options: "decision",
-	report: "report", analysis: "report", findings: "report", brief: "report",
+	report: "report", analysis: "report", findings: "report",
+	brief: "brief", concept: "brief", pitch: "brief",
 	status: "status", update: "status",
 	workshop: "workshop", session: "workshop",
 	deck: "deck", slides: "deck", presentation: "deck",
@@ -32,7 +33,15 @@ const DEPTH_WORDS: Record<string, Depth> = {
 const STYLE_WORDS: Record<string, "formal" | "house"> = { formal: "formal", corporate: "formal", house: "house", informal: "house" };
 const LIBRARY: Action[] = ["find", "list", "file", "open", "index"];
 
-export const DEFAULT_DEPTH: Record<Purpose, 1 | 6 | 20> = { decision: 1, report: 6, status: 1, workshop: 1, deck: 6 };
+export const DEFAULT_DEPTH: Record<Purpose, 1 | 6 | 20> = { decision: 1, report: 6, status: 1, workshop: 1, deck: 6, brief: 6 };
+
+/** A concept brief: shaped work, after discovery and before the build commits, read by several audiences. */
+const BRIEF_GUIDE = [
+	"- kind: concept brief. Use it when exploration is done, the build is about to commit, and several audiences must align. One decision only: write a decision. Finished work: write a status.",
+	"- readers in order: the builders first (contract, seams, tests in ::: engineers folds), then stakeholders (each section's first paragraph), then leadership (masthead, KPIs, decisions).",
+	"- sections: Takeaways; The problem; The model; How we kept options open (options carried, seam, converge when, deciding evidence); Evidence (hypotheses with pass and kill lines); Assumptions (owner, check that retires it); Prerequisites vs satisfied during build; Plan: gates, not dates; Risks (ROAM); Decisions we need (::: decision); What we need from you (ask per role, by when, default if silent; risk owners confirm); Our biases, in the open; Check it yourself (claim, source, link); Method and limits; What changed; How to read and regenerate this document (lineage, audience preferences, regeneration prompt); Sources.",
+	"- links: absolute URLs only (the page is read outside the repo); every figure gets a footnote.",
+];
 
 const isModifier = (w: string) => w.toLowerCase() in DEPTH_WORDS || w.toLowerCase() in STYLE_WORDS;
 
@@ -95,6 +104,7 @@ export function buildDocPrompt(i: DocIntent): string {
 		const depth = typeof i.depth === "number" ? i.depth : DEFAULT_DEPTH[i.purpose];
 		lines.push(`- purpose: ${i.purpose} (use the ${i.purpose} skeleton)`);
 		lines.push(`- depth: ${pages(depth)}${i.depth ? "" : " (default for this purpose)"}`);
+		if (i.purpose === "brief") lines.push(...BRIEF_GUIDE);
 	} else {
 		lines.push(
 			"- purpose: choose the purpose from the session: open options or a choice → decision; findings from data → report; finished work → status; questions needing people together → workshop.",
@@ -106,6 +116,7 @@ export function buildDocPrompt(i: DocIntent): string {
 			? `- topic: ${i.topic}`
 			: "- topic: the most recent unresolved difficulty, open question or analysis in this conversation. If two candidates are equally likely, ask once with ask_user_question; if there is nothing to work from, ask what it is about.",
 	);
+	if (i.purpose === "brief" && !i.style) lines.push("- style: formal");
 	lines.push(`- audience: ${i.audience ?? "infer from the purpose (decision → whoever owns the call; report → readers outside the work)"}`);
 	if (i.style) lines.push(`- style: ${i.style}`);
 	lines.push(

@@ -13,7 +13,8 @@ describe("parseDocArgs", () => {
 	it("aliases map to purpose and depth", () => {
 		expect(parseDocArgs("one-pager on intake")).toMatchObject({ purpose: undefined, depth: 1, topic: "on intake" });
 		expect(parseDocArgs("six-pager about takos")).toMatchObject({ depth: 6, topic: "about takos" });
-		expect(parseDocArgs("brief")).toMatchObject({ purpose: "report", depth: 6 });
+		expect(parseDocArgs("brief")).toMatchObject({ purpose: "brief", depth: 6 });
+		expect(parseDocArgs("pitch for X")).toMatchObject({ purpose: "brief" });
 		expect(parseDocArgs("rfc for X")).toMatchObject({ purpose: "decision" });
 		expect(parseDocArgs("adr")).toMatchObject({ purpose: "decision" });
 	});
@@ -43,6 +44,11 @@ describe("buildDocPrompt", () => {
 		expect(p).toMatch(/most recent unresolved/i);
 		expect(p).toMatch(/Assumed:/);
 		expect(p).toContain("doc_publish");
+	});
+	it("a brief prompt names the concept-brief sections and readers in order", () => {
+		const p = buildDocPrompt(parseDocArgs("brief"));
+		for (const s of ["What we need from you", "How we kept options open", "Our biases", "Check it yourself", "regenerate"]) expect(p).toContain(s);
+		expect(p).toMatch(/style: formal/);
 	});
 	it("defaults depth from purpose", () => {
 		expect(buildDocPrompt(parseDocArgs("report"))).toMatch(/6 pages/);

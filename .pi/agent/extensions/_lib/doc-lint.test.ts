@@ -58,6 +58,12 @@ describe("lintDoc", () => {
 	it("flags figures in takeaways that carry no source", () => {
 		expect(codes(good.replace("[^1]", ""))).toContain("uncited-figure");
 	});
+	it("wants a brief to name its biases, offer checks, and link outside the repo", () => {
+		expect(codes(good, "brief")).toEqual(["no-biases", "no-check-yourself"]);
+		const brief = good.replace("## Method and limits", "## Our biases, in the open\n\n## Check it yourself\n\n## Method and limits");
+		expect(codes(brief, "brief")).toEqual([]);
+		expect(codes(brief + "\nSee [notes](notes.md).\n", "brief")).toEqual(["relative-link"]);
+	});
 	it("wants a dated snapshot when figures are used", () => {
 		expect(codes(good.replace(" · **Data to:** 30 Oct 2026", ""))).toContain("no-data-date");
 	});
