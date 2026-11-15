@@ -265,10 +265,18 @@ export async function proposeFromAgent(d: Deps, p: Proposal): Promise<{ ok: bool
 	return out(true, "Draft saved. It is not locked: the user reviews it and runs /goal lock.");
 }
 
-/** The human picks which of `commands` is the Outcome Check (the one that tests the outcome from outside); undefined when they cancel. */
-async function askOutcomeCheck(d: Deps, g: Goal, commands: string[]): Promise<string[] | undefined> {
-	const picked = await d.ui.select(`${g.id}: which command is the Outcome Check (tests the outcome from outside)?`, commands);
-	return picked === undefined ? undefined : [picked];
+const LOCK_PREFIX = "Lock · Outcome Check: ";
+
+/**
+ * The single lock dialog for a command check: the card and the base evidence as the title, one "Lock · Outcome Check: <cmd>"
+ * option per command (the agent's suggestion first) and Cancel. The human's pick both marks the Outcome Check and locks.
+ * Undefined when they cancel.
+ */
+async function askLockWithOutcomeCheck(d: Deps, g: Goal, body: string): Promise<string[] | undefined> {
+	const suggested = (g.doneCheck.outcomeChecks ?? []).filter((c) => g.doneCheck.commands.includes(c));
+	const ordered = [...suggested, ...g.doneCheck.commands.filter((c) => !suggested.includes(c))];
+	const picked = await d.ui.select(`Lock ${g.id}? Pick the Outcome Check (tests the outcome from outside).\n${body}`, [...ordered.map((c) => LOCK_PREFIX + c), "Cancel"]);
+	return picked?.startsWith(LOCK_PREFIX) ? [picked.slice(LOCK_PREFIX.length)] : undefined;
 }
 
 /**
@@ -285,13 +293,12 @@ async function environmentFailureOverridden(d: Deps, g: Goal, run: { exit: numbe
 	return false;
 }
 
-/** `/goal lock`: run the check at the base commit; refuse when it passes; else ask the human which command is the Outcome Check, ask to confirm, and lock. */
+/** `/goal lock`: run the check at the base commit; refuse when it passes; else one dialog where the human's Outcome Check pick locks it. */
 export async function lockGoal(d: Deps): Promise<void> {
 	const g = current(d);
 	if (!g) return;
 	if (g.status !== "draft") return d.ui.notify(refusal(g, "Only a draft can be locked"), "error");
 	let baseExit: number | undefined;
-	let outcomeChecks: string[] | undefined;
 	let evidence = "(human-confirm check; no command runs)";
 	if (g.doneCheck.kind === "command") {
 		if (!g.doneCheck.commands.length) return d.ui.notify("Not locked: the draft has no done-check yet (ask the agent, or use goal_propose).", "error");
@@ -301,17 +308,19 @@ export async function lockGoal(d: Deps): Promise<void> {
 		if (!refused.ok) return d.ui.notify(`${refused.reason}\n${run.output}`, "error");
 		if (!(await environmentFailureOverridden(d, g, run))) return;
 		evidence = `On base ${g.doneCheck.baseCommit} it fails (exit ${baseExit}):\n${run.output}`;
-		outcomeChecks = await askOutcomeCheck(d, g, g.doneCheck.commands);
-		if (!outcomeChecks) return d.ui.notify("Not locked: mark one command as the Outcome Check. The goal stays a draft.", "error");
-		evidence += `\nOutcome Check: ${outcomeChecks.join(", ")}`;
 	}
 	// A relock of a check weaker than the one that was unlocked needs the goal id typed, so a reflex "yes" cannot loosen it.
 	const before = lastLockedSpec(g);
 	const weakening = !!before && weakens(before, { kind: g.doneCheck.kind, commands: g.doneCheck.commands });
 	const body = `${g.outcome}\n${checkLines(g).join("\n")}\n${evidence}\nOnce locked, only you can change it (/goal unlock).`;
+	let outcomeChecks: string[] | undefined;
+	if (g.doneCheck.kind === "command") {
+		outcomeChecks = await askLockWithOutcomeCheck(d, g, weakening ? `WEAKENING (you will type the goal id next). Was:\n${before!.commands.map((c) => `  $ ${c}`).join("\n")}\n${body}` : body);
+		if (!outcomeChecks) return d.ui.notify("Not locked. The goal stays a draft.", "info");
+	}
 	const ok = weakening
 		? (await d.ui.input(`WEAKENING: relock a weaker done-check for ${g.id}? Type ${g.id} to lock.`, `Was:\n${before!.commands.map((c) => `  $ ${c}`).join("\n")}\n${body}`))?.trim() === g.id
-		: await d.ui.confirm(`Lock the done-check of ${g.id}?`, body);
+		: g.doneCheck.kind === "command" || (await d.ui.confirm(`Lock the done-check of ${g.id}?`, body));
 	if (!ok) return d.ui.notify(weakening ? "Not locked: the goal id was not typed. The goal stays a draft." : "Not locked. The goal stays a draft.", "info");
 	await commitRecorded(d, applyLock(g, { now: d.now(), baseCommit: g.doneCheck.baseCommit, baseExit, outcomeChecks }), `Goal ${g.id} locked.`, () => `lock ${g.id}`,
 		(locked) => ({ event: "goal_locked", kind: locked.doneCheck.kind, weakening, checkHash: goalCheckHash(locked) }));

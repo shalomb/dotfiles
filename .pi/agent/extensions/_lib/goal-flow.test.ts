@@ -133,11 +133,10 @@ test("lock refuses when the check passes on the base commit: nothing locked, the
 // Scenario: A Done-check that fails on the base commit is locked
 test("lock on a failing check asks the human, then locks with the base commit it failed on", async () => {
 	const d = await draftWithCheck();
-	answers.push(true);
 	await lockGoal(d);
 	const g = loadGoal(store, "feat/export")!;
-	expect(confirms).toHaveLength(1);
-	expect(confirms[0]).toContain("test -f export.csv");
+	expect(selects).toHaveLength(1);
+	expect(selects[0].title).toContain("test -f export.csv");
 	expect(g.status).toBe("active");
 	expect(g.doneCheck).toMatchObject({ lockedBy: "human", lockedAt: "2026-11-01T10:00:00Z", baseCommit: d.head });
 	expect(g.history[0].reason).toMatch(new RegExp(`base ${d.head} failed: exit 1`));
@@ -146,7 +145,7 @@ test("lock on a failing check asks the human, then locks with the base commit it
 
 test("lock stays a draft when the human declines", async () => {
 	const d = await draftWithCheck();
-	answers.push(false);
+	pick = undefined;
 	await lockGoal(d);
 	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
 });
@@ -367,39 +366,47 @@ test("a branch whose name collides with another branch's goal slug sees no goal 
 
 // P1: approving a change is held to the same fail-on-base rule as lock.
 // Scenario: Locking needs an Outcome Check
-test("lock asks the human which command is the Outcome Check and records the pick", async () => {
+test("lock is one dialog: the human picks the Outcome Check and that pick locks, with no second confirm", async () => {
 	const d = await draftWithCheck(["test -f never.csv", "test -f export.csv"]);
 	pick = 1;
-	answers.push(true);
 	await lockGoal(d);
 	expect(selects).toHaveLength(1);
-	expect(selects[0].options).toEqual(["test -f never.csv", "test -f export.csv"]);
+	expect(selects[0].options).toEqual(["Lock · Outcome Check: test -f never.csv", "Lock · Outcome Check: test -f export.csv", "Cancel"]);
+	expect(selects[0].title).toContain("Users can export a backlog as CSV");
+	expect(selects[0].title).toMatch(/fails \(exit/);
+	expect(confirms).toEqual([]);
 	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "active", doneCheck: { outcomeChecks: ["test -f export.csv"] } });
 });
 
-test("lock without a human-marked Outcome Check leaves the draft unlocked and asks no confirm", async () => {
+test("a single-command check offers one Lock option and Cancel", async () => {
+	const d = await draftWithCheck(["test -f export.csv"]);
+	pick = 0;
+	await lockGoal(d);
+	expect(selects[0].options).toEqual(["Lock · Outcome Check: test -f export.csv", "Cancel"]);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+});
+
+test("cancelling the lock dialog, or picking Cancel, leaves the draft unlocked and asks no confirm", async () => {
 	const d = await draftWithCheck();
 	pick = undefined;
-	answers.push(true);
 	await lockGoal(d);
 	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
-	expect(lastNote()).toMatch(/Outcome Check/);
+	expect(lastNote()).toMatch(/Not locked/);
+	pick = 1;
+	await lockGoal(d);
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
 	expect(confirms).toEqual([]);
 	expect(worktrees()).toBe(1);
 });
 
-test("an agent-suggested Outcome Check does not stand in for the human's mark", async () => {
+test("the agent's suggested Outcome Check is listed first, but the human's pick decides", async () => {
 	const d = await draftWithCheck(["test -f export.csv", "test -f never.csv"]);
 	const r = await proposeFromAgent(d, { outcomeChecks: ["test -f never.csv"] });
 	expect(r.ok).toBe(true);
 	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft", doneCheck: { outcomeChecks: ["test -f never.csv"] } });
-	pick = undefined;
-	answers.push(true);
+	pick = 1;
 	await lockGoal(d);
-	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
-	pick = 0;
-	answers.push(true);
-	await lockGoal(d);
+	expect(selects[0].options[0]).toBe("Lock · Outcome Check: test -f never.csv");
 	expect(loadGoal(store, "feat/export")!.doneCheck.outcomeChecks).toEqual(["test -f export.csv"]);
 });
 
@@ -460,7 +467,7 @@ test("lock commits the hash of the approved check to refs/goals/<branch-slug>, l
 
 test("a declined lock records nothing; a draft has no ref", async () => {
 	const d = await draftWithCheck();
-	answers.push(false);
+	pick = undefined;
 	await lockGoal(d);
 	expect(refTip()).toBe("");
 });
@@ -785,10 +792,10 @@ test("unlock and relock move the ref: the relocked check is the one that closes"
 
 test("lock records the check hash on the ref; a declined lock records nothing", async () => {
 	const d = await draftWithCheck();
-	answers.push(false);
+	pick = undefined;
 	await lockGoal(d);
 	expect(refTip()).toBe("");
-	answers.push(true);
+	pick = 0;
 	await lockGoal(d);
 	expect(await readRecordedHash(exec, root, "feat/export")).toEqual({ kind: "hash", hash: checkHash(loadGoal(store, "feat/export")!.doneCheck) });
 	expect(git("status", "--porcelain")).toBe("");
