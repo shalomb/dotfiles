@@ -37,3 +37,9 @@ test("appends the required-step instruction only when the skill body is not inli
 	expect(blockReason(base)).not.toContain("REQUIRED NEXT STEP");
 	expect(blockReason({ ...base, hasBody: false })).toContain("REQUIRED NEXT STEP: read the skill");
 });
+
+test("with a computed fix, says to run exactly it instead of the generic hint", () => {
+	const r = blockReason({ ...base, fix: "the `read` tool: path=file.go offset=265 limit=21" });
+	expect(r).toContain("Run exactly this instead: the `read` tool: path=file.go offset=265 limit=21");
+	expect(r).not.toContain("use the `read` tool (offset/limit)");
+});
