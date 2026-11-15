@@ -46,7 +46,7 @@ no longer matches. Compute it with:
 rg '^- \*\*KR-' docs/explanation/end-state-evolution.md | sha256sum | cut -c1-16
 ```
 
-Approved: (pending)
+Approved: 2026-11-15 a51260fe4c3dbe98
 
 ## Later, not now
 
