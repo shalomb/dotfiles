@@ -8,6 +8,8 @@ import {
 	reminderLine, stamp, staleGoal,
 } from "./goal.ts";
 import { GOAL_HELP } from "./goal-help.ts";
+import { type Dirent, existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { type Exec, type GoalEvent, appendGoalEvent, branchState, goalRefName, listGoals, loadGoal, loadGoalFile, readRecordedHash, recordCheckHash, recordTombstone, runChecks, runChecksAtCommit, saveGoal } from "./goal-io.ts";
 
 export interface Deps {
@@ -202,6 +204,23 @@ export async function showGoal(d: Deps): Promise<void> {
 	d.ui.notify(`${summary(goal)}\n${status}\nNext: /goal done`, "info");
 }
 
+/** The repo's end-state doc (docs/explanation/end-state-evolution.md, else the first docs/**\/end-state*.md within 3 levels), repo-relative; undefined when absent. */
+export function findEndStateDoc(root: string): string | undefined {
+	const preferred = join("docs", "explanation", "end-state-evolution.md");
+	if (existsSync(join(root, preferred))) return preferred;
+	const walk = (rel: string, depth: number): string | undefined => {
+		let entries: Dirent[];
+		try { entries = readdirSync(join(root, rel), { withFileTypes: true }); } catch { return undefined; }
+		for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+			const p = join(rel, e.name);
+			if (e.isFile() && /^end-state.*\.md$/i.test(e.name)) return p;
+			if (e.isDirectory() && depth < 3) { const hit = walk(p, depth + 1); if (hit) return hit; }
+		}
+		return undefined;
+	};
+	return walk("docs", 1);
+}
+
 /** Bare `/goal` with no goal: save an empty draft and ask the agent to discover and fill it in from the conversation. */
 async function draftFromContext(d: Deps, previous?: Goal): Promise<void> {
 	if (!d.branch) return d.ui.notify(NEEDS_BRANCH, "error");
@@ -212,11 +231,18 @@ async function draftFromContext(d: Deps, previous?: Goal): Promise<void> {
 	if (!commit(d, { ok: true, goal: g }, `Draft goal saved: ${g.id}`)) return;
 	logSuccessor(d, g, previous);
 	if (previous) {
+		const endState = findEndStateDoc(d.root);
 		d.tellAgent(
-			`/goal: goal ${previous.id} (${previous.outcome}) is ${previous.status}. The user wants the next goal for branch ${g.branch}. Infer it from the discussion so far ` +
-			"(what was proposed or left open after that goal), reusing context already present (scope, anti-goals, specs). " +
-			`Call goal_propose with outcome, done_check (shell commands that exit non-zero on the base commit ${g.doneCheck.baseCommit} and pass only when the work is done), anti_goals, scope_anchors and spec_links. ` +
-			"If the discussion does not make the next goal clear, ask one question. You cannot lock it: the user reviews it and runs /goal lock. Reply with the new goal statement.");
+			`/goal: goal ${previous.id} (${previous.outcome}) is ${previous.status}. Draft the next goal for branch ${g.branch} now, without stopping to ask. ` +
+			"Pick it from these sources, strongest first: " +
+			(endState
+				? `1) the end-state doc ${endState}: the next gap it names that ${previous.id} did not close (its headings are the milestones); `
+				: "1) no end-state doc was found (docs/**/end-state*.md), so skip this source; ") +
+			"2) the backlog: `todo next --all` and tasks left open or linked to the previous goal; " +
+			"3) the discussion so far: what was proposed or left open after that goal. Reuse its scope, anti-goals and specs where they still apply. " +
+			`Call goal_propose with outcome, done_check (shell commands that exit non-zero on the base commit ${g.doneCheck.baseCommit} and pass only when the work is done), anti_goals, scope_anchors and spec_links ` +
+			"(put the end-state milestone it serves first in spec_links, as `serves: <doc>#<heading>`). If the sources conflict, pick the one that best serves the end-state and state the assumption in one line. " +
+			"You cannot lock it: the user reviews it and runs /goal lock. Reply with the new goal statement and the milestone it serves.");
 		return;
 	}
 	d.tellAgent(

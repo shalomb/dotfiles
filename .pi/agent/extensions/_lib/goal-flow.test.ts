@@ -600,6 +600,27 @@ test("bare /goal on a closed goal shows it, saves a fresh draft and asks the age
 	expect(toAgent.join("\n")).toContain("Users can export");
 });
 
+test("the next goal is drafted from the end-state doc and the backlog first, the chat last, without stopping to ask", async () => {
+	mkdirSync(join(root, "docs", "explanation"), { recursive: true });
+	writeFileSync(join(root, "docs", "explanation", "end-state-evolution.md"), "# End state\n");
+	await draftWithCheck();
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
+	await runGoalCommand(deps(), "");
+	const msg = toAgent.join("\n");
+	expect(msg).toContain("docs/explanation/end-state-evolution.md");
+	expect(msg).toMatch(/todo next --all/);
+	expect(msg.indexOf("end-state-evolution.md")).toBeLessThan(msg.indexOf("discussion"));
+	expect(msg).not.toMatch(/ask one question/);
+	expect(msg).toMatch(/serves/);
+});
+
+test("without an end-state doc the next-goal prompt says so instead of naming a path", async () => {
+	await draftWithCheck();
+	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
+	await runGoalCommand(deps(), "");
+	expect(toAgent.join("\n")).toMatch(/no end-state doc/i);
+});
+
 test("a draft that follows a finished goal logs goal_started with the id it came from; a first draft logs nothing", async () => {
 	await draftWithCheck();
 	expect(events()).toEqual([]);
