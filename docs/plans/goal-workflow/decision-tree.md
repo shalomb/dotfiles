@@ -33,6 +33,8 @@ close retro did KR move?      feeds /plan (replan), prunes scenarios
 | review.store | Goal round replies kept next to the goal in the cache store. |
 | roadmap.home | Structured end-state doc: headings = objectives, KRs with ids. |
 | plan.grill | Both: /grill-me stands alone; /plan uses the same grill_round engine. |
+| drive.spec-author | Separate Spec Steward per wave writes scenarios + red acceptance tests; Builders cannot touch them. |
+| drive.gate-home | Gate as tested code the drive skill calls, not skill text. |
 
 ## Open: round 1 (where artefacts live, how they link)
 
@@ -55,7 +57,7 @@ close retro did KR move?      feeds /plan (replan), prunes scenarios
 
 ## Open: round 3 (/drive division of labour, BDD guardrails)
 
-See `drive-roles.md`.
+See `drive-roles.md`. Open: drive.gate-strictness, drive.verifier-trigger (user asked for context first).
 
 ## Notes
 
