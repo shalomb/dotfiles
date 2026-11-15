@@ -30,6 +30,8 @@ the repo root. The first red key result, in file order, is the next hop.
 - **KR-3.1** The gate and the `drive_gate` tool are tested code — check: `bun test ./.pi/agent/extensions/_lib/drive-gate.test.ts ./.pi/agent/extensions/_lib/drive-gate-io.test.ts`
 - **KR-3.2** The `drive_gate` tool is deployed where pi loads it — check: `test -f ~/.pi/agent/extensions/drive-gate-tool.ts`
 
+- **KR-3.3** Arrival is proven by replay: every `Serves:` commit's check is red at its base and green at its head — check: `bun test ./.pi/agent/extensions/_lib/replay.test.ts`
+
 ### O4. The sensors are honest
 
 - **KR-4.1** The fast test target is green and fails on any failure — check: `make test-fast`

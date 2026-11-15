@@ -38,6 +38,26 @@ wrong plan confidently. The human wants to press one pedal to move to the next g
 - Tripwires: key result not moved after its goal closed; two rejects or retries on one task; glovebox growing
   faster than key results turn green; a lesson contradicting a key result or ADR; a hop over budget.
 
+## Road classes, the ledger and review
+
+The agent is authorized to drive trivial hops alone, with receipts. Rules decide what is trivial, never the agent.
+
+| Road | Rule (all must hold) | Review |
+| :-- | :-- | :-- |
+| Motorway | approved, unchanged key result; diff about 150 lines or less; no one-way door; the diff does not touch a check, a test that a check runs, or the end-state file | the main agent replays the evidence |
+| City | any other hop inside the destination | the wave: `drive_gate`, then the Verifier (fresh context) |
+| Unknown road | a lesson contradicts the destination, or the check is unclear | stop |
+
+- **The ledger is git.** Each hop commit carries trailers: `Serves: KR-n.m`, `Road:`, `Check:`, `Check-Base:` (red,
+  exit code, base sha), `Check-Head:` (green), `Gate:`, `Lesson:`. Signed commits are hard to forge; query with
+  `git log --format='%(trailers:key=Serves)'`. `trajectories.jsonl` stays a cache for lessons and cost.
+- **Review is replay, not narration.** For each `Serves:` commit, re-run `Check` at the base (expect red) and at the
+  head (expect green), and recompute `Road:` from the diff. A false claim fails the replay; a hop without trailers
+  does not count.
+- **Arrival.** When the car claims arrival, it shows one table: key results, the commits serving each, and the
+  replay verdict. This is the human's rest stop.
+- The 150-line threshold is a guess; log diff sizes and tune it.
+
 ## Honesty rules for the satnav
 
 1. "A better, shorter road" needs a sensor: key-result movement per hop. A hop that does not move its key result
