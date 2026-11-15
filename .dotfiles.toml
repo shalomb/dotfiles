@@ -102,9 +102,11 @@ patterns = [
     "*.h",
 ]
 
-# Paths re-included although a pattern above excludes them (pi extensions are .ts, not "source code" to keep out of home)
+# Paths re-included although a pattern above excludes them (pi extensions are .ts, not "source code" to keep out of home;
+# pi agent definitions are .md, which "*.md" would otherwise keep out of home, so lean-worker never reached ~/.pi/agent/agents)
 include = [
     ".pi/agent/extensions/*",
+    ".pi/agent/agents/*",
 ]
 
 # Directories to exclude completely
