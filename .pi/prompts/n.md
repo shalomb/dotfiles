@@ -18,9 +18,10 @@ presses `/n` again to resume. Never change the key results: they are the human's
    budget, arrived). Obey it.
 2. Take the first red key result. Read the last glovebox and `trajectories.jsonl` lines for lessons.
 3. Classify the road by rule, not by feel. Motorway: diff about 150 lines or less, no one-way door, and no change
-   to a check, a test that a check runs, or the end-state file. Anything else inside the destination is City: use
-   the `drive` skill's wave (Steward → Builder → `drive_gate` → Verifier) and obey its verdicts.
-   Build test-first in this worktree; commit each green step (Conventional Commits, signed).
+   to a check, a test that a check runs, or the end-state file. Anything else inside the destination is City.
+   Load the `drive` skill and drive the key result on its key-result road (Steward → Builder → `drive_gate` →
+   Verifier on warnings); obey its verdicts. A motorway hop may skip the wave: build test-first yourself.
+   Commit each green step (Conventional Commits, signed).
 4. Re-run the key-result check. Green → the hop commit carries these trailers, then continue with the next hop:
 
    ```
