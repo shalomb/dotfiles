@@ -2,8 +2,8 @@
 // Scenario names refer to docs/specs/agentic-coding/features/goal-contract.feature.
 import { expect, test } from "bun:test";
 import {
-	applyApprovedChange, applyClose, checkHash, applyLock, applyReject, branchSlug, goalCheckHash, canLock, closeDecision, dropGoal, fillDraft, goalPath, goalsDir,
-	goalIdFor, isEnvironmentFailure, newDraft, parseGoal, proposeChange, reminderLine, renderGoal, staleGoal, storeDir, validateGoal,
+	applyClose, checkHash, applyLock, branchSlug, goalCheckHash, canLock, closeDecision, dropGoal, fillDraft, goalPath, goalsDir,
+	goalIdFor, isEnvironmentFailure, newDraft, parseGoal, reminderLine, renderGoal, staleGoal, storeDir, validateGoal,
 } from "./goal.ts";
 
 const NOW = new Date("2026-11-01T10:00:00Z");
@@ -66,13 +66,12 @@ test("parse(render(goal)) returns the same goal, including awkward characters", 
 	expect(parseGoal(renderGoal(g))).toEqual(g);
 });
 
-test("a hostile reason cannot break the History or Pending line parse", () => {
+test("a hostile reason cannot break the History line parse", () => {
 	const reason = 'x | old: null | new: {"a":1}';
 	const check = { kind: "command" as const, commands: ["a"] };
 	const g = full();
 	g.history.push({ at: "2026-11-01T11:00:00Z", by: "human", reason, old: check, new: { kind: "command", commands: ["b"] } });
 	g.history.push({ at: "2026-11-01T11:01:00Z", by: "human", reason });
-	g.pending = { at: "2026-11-01T12:00:00Z", by: "agent", reason, old: check, new: { kind: "command", commands: ["c"] } };
 	expect(parseGoal(renderGoal(g))).toEqual(g);
 });
 
@@ -171,66 +170,12 @@ test("a check command with a newline or control character is refused, not rewrit
 		const f = fillDraft(draftWithCheck(), { doneCheck: { kind: "command", commands: ["ok", bad] } });
 		expect(f.ok).toBe(false);
 		if (!f.ok) expect(f.reason).toMatch(/newline|control/i);
-		expect(proposeChange(locked(), { now: LATER, by: "agent", reason: "r", check: { kind: "command", commands: [bad] } }).ok).toBe(false);
 	}
 	expect(fillDraft(draftWithCheck(), { doneCheck: { kind: "command", commands: ["make  t", " ok "] } }).ok).toBe(true);
 });
 
-test("filling an active goal is refused: a locked contract is changed through proposeChange", () => {
+test("filling an active goal is refused: a locked contract is changed through /goal unlock", () => {
 	expect(fillDraft(locked(), { antiGoals: ["x"] }).ok).toBe(false);
-});
-
-// Scenario: The Main Copilot proposes a change to a locked Done-check
-test("a proposed change leaves the locked check unchanged and waits as pending", () => {
-	const before = locked();
-	const r = proposeChange(before, { now: LATER, by: "agent", reason: "csv check is flaky", check: { kind: "command", commands: ["make test-unit"] } });
-	expect(r.ok).toBe(true);
-	const g = r.ok ? r.goal : before;
-	expect(g.doneCheck).toEqual(before.doneCheck);
-	expect(g.pending).toEqual({ at: "2026-11-01T10:05:00Z", by: "agent", reason: "csv check is flaky", old: { kind: "command", commands: ["make test-unit", "make test-csv"] }, new: { kind: "command", commands: ["make test-unit"] } });
-	expect(parseGoal(renderGoal(g))).toEqual(g);
-});
-
-test("a change can be proposed only for an active goal", () => {
-	expect(proposeChange(draftWithCheck(), { now: LATER, by: "agent", reason: "r", check: { kind: "command", commands: ["x"] } }).ok).toBe(false);
-});
-
-test("an empty proposed command check is refused", () => {
-	expect(proposeChange(locked(), { now: LATER, by: "agent", reason: "r", check: { kind: "command", commands: [] } }).ok).toBe(false);
-});
-
-test("a change without a reason is refused", () => {
-	expect(proposeChange(locked(), { now: LATER, by: "agent", reason: "  ", check: { kind: "command", commands: ["x"] } }).ok).toBe(false);
-});
-
-// Scenario: ... And an approved change is recorded with who approved it and why
-test("approving applies the new check and records who approved it, when, why, old and new", () => {
-	const proposed = proposeChange(locked(), { now: LATER, by: "agent", reason: "csv check is flaky", check: { kind: "command", commands: ["make test-unit"] } });
-	const g0 = proposed.ok ? proposed.goal : locked();
-	const approved = applyApprovedChange(g0, { now: new Date("2026-11-01T11:00:00Z"), outcomeChecks: ["make test-unit"] });
-	expect(approved.ok).toBe(true);
-	const g = approved.ok ? approved.goal : g0;
-	expect(g.doneCheck.commands).toEqual(["make test-unit"]);
-	expect(g.doneCheck.lockedAt).toBe("2026-11-01T10:05:00Z");
-	expect(g.pending).toBeUndefined();
-	expect(g.history.at(-1)).toEqual({
-		at: "2026-11-01T11:00:00Z", by: "human", reason: "csv check is flaky",
-		old: { kind: "command", commands: ["make test-unit", "make test-csv"] }, new: { kind: "command", commands: ["make test-unit"] },
-	});
-	expect(parseGoal(renderGoal(g))).toEqual(g);
-});
-
-test("approving with nothing pending is refused", () => {
-	expect(applyApprovedChange(locked(), { now: LATER }).ok).toBe(false);
-});
-
-test("rejecting drops the pending change, keeps the check, and logs the rejection", () => {
-	const proposed = proposeChange(locked(), { now: LATER, by: "agent", reason: "weaker", check: { kind: "command", commands: ["true"] } });
-	const g0 = proposed.ok ? proposed.goal : locked();
-	const r = applyReject(g0, { now: new Date("2026-11-01T11:00:00Z") });
-	expect(r.ok && r.goal.pending).toBeUndefined();
-	expect(r.ok && r.goal.doneCheck).toEqual(g0.doneCheck);
-	expect(r.ok && r.goal.history.at(-1)?.reason).toBe("change rejected: weaker");
 });
 
 // Scenario: Closing a goal while its Done-check fails is refused
@@ -338,24 +283,6 @@ test("an agent may suggest an Outcome Check on a draft, only among its commands;
 	const withMark = fillDraft(d, { outcomeChecks: ["make test-csv"] });
 	const replaced = fillDraft(withMark.ok ? withMark.goal : d, { doneCheck: { kind: "command", commands: ["make other"] } });
 	expect(replaced.ok && replaced.goal.doneCheck.outcomeChecks).toEqual([]);
-});
-
-test("a proposed change never carries or alters the Outcome Check marks; approving keeps the marks that still exist", () => {
-	const before = locked();
-	const proposed = proposeChange(before, { now: LATER, by: "agent", reason: "add", check: { kind: "command", commands: ["make test-csv", "make lint"] } });
-	const g0 = proposed.ok ? proposed.goal : before;
-	expect(g0.doneCheck.outcomeChecks).toEqual(["make test-csv"]);
-	const approved = applyApprovedChange(g0, { now: LATER });
-	expect(approved.ok && approved.goal.doneCheck.outcomeChecks).toEqual(["make test-csv"]);
-});
-
-test("approving a change that drops every marked command is refused until the human marks one of the new commands", () => {
-	const proposed = proposeChange(locked(), { now: LATER, by: "agent", reason: "swap", check: { kind: "command", commands: ["make lint"] } });
-	const g0 = proposed.ok ? proposed.goal : locked();
-	expect(applyApprovedChange(g0, { now: LATER }).ok).toBe(false);
-	expect(applyApprovedChange(g0, { now: LATER, outcomeChecks: ["nope"] }).ok).toBe(false);
-	const r = applyApprovedChange(g0, { now: LATER, outcomeChecks: ["make lint"] });
-	expect(r.ok && r.goal.doneCheck.outcomeChecks).toEqual(["make lint"]);
 });
 
 // ---- Environment failures (ADR-009 Amendment 1) ----

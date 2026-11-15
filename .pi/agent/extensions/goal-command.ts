@@ -1,18 +1,16 @@
 /**
- * /goal — one Goal Contract per branch, with a done-check that the human locks and a command gates closing.
- *   /goal <outcome>   draft a goal at HEAD; the agent fills done-check, anti-goals, scope anchors, spec links via goal_propose
- *   /goal             show the contract
- *   /goal lock        run the check at the base commit (temp detached worktree); refuse if it passes; ask; lock
- *   /goal check       run the done-check now: green or red
- *   /goal approve     apply the agent's pending change to the locked done-check (asks first)
- *   /goal reject      discard the pending change
- *   /goal done        close on a green check (or on your confirmation for a human-confirm check), then suggest /persist and lessons
- *   /goal drop        abandon the goal
- * The agent can reach the store only through goal_propose (a draft, or a pending change; never lock, approve or close),
- * and a tool_call guard blocks direct writes to the goals directory. Only these command handlers, driven by the human,
- * lock, approve, reject, close or drop. Each prompt gets a one-line reminder while the goal is active; session start
- * warns about goals whose branch is merged or deleted.
- * Store: ${XDG_CACHE_HOME:-~/.cache}/agent-skills/todos/<repo_slug>/goals/<branch-slug>.md (contract: docs/specs/agentic-coding/contracts/goal-todo-contract.md).
+ * /goal: one Goal Contract per goal, with a done-check that the human locks and a command gates closing.
+ *   /goal [<outcome>]   no goal: the agent drafts one (Discovery first) via goal_propose; draft: card; locked: card + check, offers close when green
+ *   /goal lock          run the check at the base commit (temp detached worktree); refuse if it passes; one dialog picks the Outcome Check and locks
+ *   /goal unlock        locked -> draft, to correct it; relock re-validates (typing the id if weaker)
+ *   /goal done          close on a green check (or your confirmation for a human-confirm check); runs nothing else
+ *   /goal drop [<id>]   abandon this branch's goal, or any live goal by id
+ *   /goal show <id>     any goal by id, current or archived
+ *   /goal drive, /drive hand the locked goal to the drive skill
+ * The agent reaches the store only through goal_propose (drafts only; never lock, unlock, close or drop), and a
+ * tool_call guard blocks direct writes to the store. Ids name the goal (g-<kr>-<outcome>); never on main/develop.
+ * Each prompt gets a one-line reminder while the goal is active; session start warns about goals whose branch is merged or deleted.
+ * Store: one file per branch, finished goals archived by id (contract: .pi/docs/specs/agentic-coding/contracts/goal-todo-contract.md).
  * Logic + tests: _lib/goal.ts, goal-io.ts, goal-flow.ts and their *.test.ts. This file is glue only.
  *
  * Load location: ~/.pi/agent/extensions/goal-command.ts (global)
@@ -77,7 +75,6 @@ export default function (pi: ExtensionAPI) {
 				});
 			},
 			tellAgent: (m) => void send(m, false),
-			runCommand: (c) => send(c, true),
 		};
 	};
 

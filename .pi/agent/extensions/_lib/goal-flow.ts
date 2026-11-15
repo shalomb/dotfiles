@@ -1,6 +1,6 @@
 // The /goal command flows (goal-command.ts is the thin pi wiring around these). Tested in goal-flow.test.ts.
-// Rule: only the handlers below that the human drives (lock, approve, reject, done, drop, start) change a goal's
-// state; the agent reaches proposeFromAgent only, which writes a draft or a pending change and never locks.
+// Rule: only the handlers below that the human drives (start, lock, unlock, done, drop) change a goal's
+// state; the agent reaches proposeFromAgent only, which writes a draft and never locks.
 
 import {
 	type CheckSpec, type DraftFields, type Goal, type Result,
@@ -37,7 +37,6 @@ export interface Deps {
 	/** Show the man page (a popup when the pane is focused). Falls back to a notification. */
 	showHelp?(text: string): void;
 	/** Run a slash command (such as /persist) as if the human typed it. */
-	runCommand(command: string): Promise<void> | void;
 }
 
 export type GoalArgs =

@@ -18,7 +18,7 @@ export interface CheckSpec { kind: CheckKind; commands: string[] }
  */
 export interface DoneCheck extends CheckSpec { lockedAt: string; lockedBy: string; baseCommit: string; outcomeChecks: string[] }
 
-/** `old` and `new` are set on a done-check change; a pending proposal has `new` only. */
+/** `old` and `new` are set when a relock changes the done-check. */
 export interface HistoryEntry { at: string; by: string; reason: string; old?: CheckSpec; new?: CheckSpec }
 
 export interface Goal {
@@ -36,8 +36,6 @@ export interface Goal {
 	/** The end-state key result this goal serves (e.g. KR-2.1); part of its id. */
 	serves?: string;
 	history: HistoryEntry[];
-	/** An agent proposal for the locked done-check; waits for the human. Kept in a "## Pending change" section. */
-	pending?: HistoryEntry;
 }
 
 /** `${XDG_CACHE_HOME:-~/.cache}/agent-skills/todos/<repo_slug>/`, slug from the MAIN worktree root. */
@@ -195,7 +193,6 @@ export function renderGoal(g: Goal): string {
 		section("Anti-goals", list(g.antiGoals)) +
 		section("Scope anchors", list(g.scopeAnchors)) +
 		section("Spec links", list(g.specLinks)) +
-		(g.pending ? section("Pending change", renderEntry(g.pending)) : "") +
 		section("History", g.history.map(renderEntry).join("\n"))
 	).replace(/\n+$/, "\n");
 }
@@ -250,7 +247,6 @@ export function parseGoal(text: string): Goal | undefined {
 		specLinks: bullets("Spec links"),
 		...(top.serves ? { serves: top.serves } : {}),
 		history: entries("History"),
-		...(entries("Pending change")[0] ? { pending: entries("Pending change")[0] } : {}),
 	};
 }
 
@@ -267,8 +263,7 @@ function splitSections(body: string): Record<string, string[]> {
 
 // ---- transitions ----
 // Each returns a new Goal or the reason it was refused. Only command handlers driven by the human
-// may call applyLock, applyApprovedChange, applyReject, applyClose and dropGoal; the agent's tool
-// reaches only fillDraft and proposeChange.
+// may call applyLock, applyUnlock, applyClose and dropGoal; the agent's tool reaches only fillDraft.
 
 export type Result = { ok: true; goal: Goal } | { ok: false; reason: string };
 const refuse = (reason: string): Result => ({ ok: false, reason });
@@ -360,20 +355,6 @@ export function applyLock(g: Goal, input: { now: Date; baseCommit: string; baseE
 	};
 }
 
-/** Agent-reachable: park a proposed replacement for the locked done-check. It changes nothing until the human approves. */
-export function proposeChange(g: Goal, input: { now: Date; by: string; reason: string; check: CheckSpec }): Result {
-	if (g.status !== "active") return refuse(`Changes to a done-check are proposed only for an active goal (the goal is ${g.status}).`);
-	if (!oneLine(input.reason)) return refuse("A proposed change needs a reason.");
-	const bad = badCommand(input.check.commands);
-	if (bad) return refuse(bad);
-	const commands = input.check.commands.map(oneLine).filter(Boolean);
-	if (input.check.kind === "command" && !commands.length) return refuse("A command check needs at least one command.");
-	return {
-		ok: true,
-		goal: { ...g, pending: { at: stamp(input.now), by: input.by, reason: oneLine(input.reason), old: specOf(g.doneCheck), new: { kind: input.check.kind, commands } } },
-	};
-}
-
 /** Human only: take a locked goal back to a draft for correction. The locked check is kept in the history so a relock can tell a weakening. */
 export function applyUnlock(g: Goal, input: { now: Date }): Result {
 	if (g.status !== "active") return refuse(`Only a locked goal can be unlocked (the goal is ${g.status}).`);
@@ -383,7 +364,6 @@ export function applyUnlock(g: Goal, input: { now: Date }): Result {
 		goal: {
 			...g,
 			status: "draft",
-			pending: undefined,
 			doneCheck: { ...g.doneCheck, lockedAt: "", lockedBy: "" },
 			history: [...g.history, { at, by: "human", reason: "unlocked", old: specOf(g.doneCheck) }],
 		},
@@ -400,36 +380,6 @@ export function lastLockedSpec(g: Goal): CheckSpec | undefined {
 	return undefined;
 }
 
-/** Human only: apply the pending change and record it. */
-export function applyApprovedChange(g: Goal, input: { now: Date; outcomeChecks?: string[] }): Result {
-	const p = g.pending;
-	if (!p?.new) return refuse("No change is pending.");
-	let outcomeChecks: string[] = [];
-	if (p.new.kind === "command") {
-		outcomeChecks = input.outcomeChecks ?? g.doneCheck.outcomeChecks.filter((c) => p.new!.commands.includes(c));
-		const bad = outcomeCheckProblem(outcomeChecks, p.new.commands);
-		if (bad) return refuse(`Not approved: ${bad}`);
-	}
-	return {
-		ok: true,
-		goal: {
-			...g,
-			doneCheck: { ...g.doneCheck, kind: p.new.kind, commands: [...p.new.commands], outcomeChecks },
-			pending: undefined,
-			history: [...g.history, { at: stamp(input.now), by: "human", reason: p.reason, old: p.old, new: p.new }],
-		},
-	};
-}
-
-/** Human only: discard the pending change and log that it was rejected. */
-export function applyReject(g: Goal, input: { now: Date }): Result {
-	if (!g.pending) return refuse("No change is pending.");
-	return {
-		ok: true,
-		goal: { ...g, pending: undefined, history: [...g.history, { at: stamp(input.now), by: "human", reason: `change rejected: ${g.pending.reason}` }] },
-	};
-}
-
 /** `exit` is the done-check exit code (undefined: it could not run). For kind human the caller has the human's confirmation. */
 export function closeDecision(checkExit: number | undefined, kind: CheckKind): { close: true; closedBy: "check" | "assertion" } | { close: false; reason: string } {
 	if (kind === "human") return { close: true, closedBy: "assertion" };
@@ -442,7 +392,7 @@ export function closeDecision(checkExit: number | undefined, kind: CheckKind): {
 export function applyClose(g: Goal, input: { now: Date; closedBy: "check" | "assertion" }): Result {
 	if (g.status !== "active") return refuse(`Only an active goal can be closed (the goal is ${g.status}).`);
 	const at = stamp(input.now);
-	return { ok: true, goal: { ...g, status: "closed", closedAt: at, closedBy: input.closedBy, pending: undefined, history: [...g.history, { at, by: "human", reason: `closed (${input.closedBy})` }] } };
+	return { ok: true, goal: { ...g, status: "closed", closedAt: at, closedBy: input.closedBy, history: [...g.history, { at, by: "human", reason: `closed (${input.closedBy})` }] } };
 }
 
 /** Human only: abandon a draft or active goal. */
@@ -450,7 +400,7 @@ export function dropGoal(g: Goal, input: { now: Date; reason: string }): Result 
 	if (g.status !== "draft" && g.status !== "active") return refuse(`The goal is already ${g.status}.`);
 	const at = stamp(input.now);
 	const why = oneLine(input.reason) || "no reason given";
-	return { ok: true, goal: { ...g, status: "dropped", pending: undefined, history: [...g.history, { at, by: "human", reason: `dropped: ${why}` }] } };
+	return { ok: true, goal: { ...g, status: "dropped", history: [...g.history, { at, by: "human", reason: `dropped: ${why}` }] } };
 }
 
 /** The one line added to each prompt; none unless the goal is active. */

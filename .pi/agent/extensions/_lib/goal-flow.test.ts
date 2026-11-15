@@ -18,7 +18,6 @@ let store: string;
 let tmp: string;
 let notes: string[];
 let toAgent: string[];
-let commands: string[];
 let answers: boolean[];
 let confirms: string[];
 let selects: { title: string; options: string[] }[];
@@ -43,7 +42,6 @@ const deps = (branch = "feat/export"): Deps => ({
 		input: async (title, message) => { inputs.push(`${title}\n${message}`); return typed.shift(); },
 	},
 	tellAgent: (m) => toAgent.push(m),
-	runCommand: (c) => commands.push(c),
 });
 // A killed or timed-out check reports code 0 in pi's exec; it must never read as green.
 const killedBash: Exec = async (cmd, args, o) => (cmd === "bash" ? { code: 0, stdout: "", stderr: "", killed: true } : exec(cmd, args, o));
@@ -80,7 +78,7 @@ beforeEach(() => {
 	execFileSync("git", ["init", "-q", "-b", "main", root]);
 	commitFile("a.txt");
 	git("switch", "-q", "-c", "feat/export");
-	notes = []; toAgent = []; commands = []; answers = []; confirms = []; selects = []; typed = []; inputs = []; pick = 0;
+	notes = []; toAgent = []; answers = []; confirms = []; selects = []; typed = []; inputs = []; pick = 0;
 });
 afterEach(() => {
 	for (const d of [root, store, tmp]) rmSync(d, { recursive: true, force: true });
@@ -198,7 +196,6 @@ test("done refuses on a red check: the goal stays active and the output is offer
 	expect(loadGoal(store, "feat/export")!.status).toBe("active");
 	expect(lastNote()).toMatch(/stays active/);
 	expect(lastNote()).toMatch(/test -f export\.csv/);
-	expect(commands).toEqual([]);
 });
 
 // Scenario: Closing a goal with a green Done-check records the hand-off
@@ -206,11 +203,9 @@ test("done on a green check closes as check and only closes: no /persist, no age
 	const d = await activeGoal();
 	commitFile("export.csv");
 	toAgent.length = 0;
-	commands.length = 0;
 	await doneGoal(d);
 	const g = loadGoal(store, "feat/export")!;
 	expect(g).toMatchObject({ status: "closed", closedBy: "check", closedAt: "2026-11-01T10:00:00Z" });
-	expect(commands).toEqual([]);
 	expect(toAgent).toEqual([]);
 	expect(lastNote()).toMatch(/\/persist/);
 	expect(lastNote()).toMatch(/lessons/i);
@@ -227,7 +222,6 @@ test("done on a human-confirm check closes as assertion after the human confirms
 	answers.push(true); // outcome met
 	await doneGoal(d);
 	expect(loadGoal(store, "design/sync")).toMatchObject({ status: "closed", closedBy: "assertion" });
-	expect(commands).toEqual([]);
 });
 
 test("done on a human-confirm check stays active when the human does not confirm", async () => {
@@ -239,7 +233,6 @@ test("done on a human-confirm check stays active when the human does not confirm
 	answers.push(false);
 	await doneGoal(d);
 	expect(loadGoal(store, "design/sync")!.status).toBe("active");
-	expect(commands).toEqual([]);
 });
 
 test("/goal x then /goal drop on an empty draft succeeds: a draft with no done-check can be dropped", async () => {
@@ -315,7 +308,6 @@ test("done does not close on a killed check even though its exit code is 0", asy
 	await doneGoal({ ...d, exec: killedBash });
 	expect(loadGoal(store, "feat/export")!.status).toBe("active");
 	expect(lastNote()).toMatch(/killed|timed out/i);
-	expect(commands).toEqual([]);
 });
 
 test("lock does not treat a killed check as 'failed on base'", async () => {
@@ -685,7 +677,7 @@ test("goal_propose on a locked goal is refused and points at /goal unlock", asyn
 	const r = await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["true"] }, reason: "flaky" });
 	expect(r.ok).toBe(false);
 	expect(r.message).toMatch(/\/goal unlock/);
-	expect(loadGoal(store, "feat/export")!.pending).toBeUndefined();
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual(["test -f export.csv"]);
 });
 
 test("unlock turns a locked goal back into a draft, logs it, and lets the agent edit again", async () => {
@@ -776,7 +768,6 @@ test("done refuses when the goal file's check differs from the ref tip; the goal
 	expect(loadGoal(store, "feat/export")!.status).toBe("active");
 	expect(lastNote()).toMatch(/differs from the approved one/);
 	expect(lastNote()).toContain("git log refs/goals/feat-export");
-	expect(commands).toEqual([]);
 	notes.length = 0;
 	await showGoal(d);
 	expect(lastNote()).toMatch(/differs from the approved one/);
@@ -799,11 +790,10 @@ test("a hand-made active file cannot match an old hash once the ref tip is a tom
 	await doneGoal(d);
 	expect(loadGoal(store, "feat/export")!.status).toBe("closed");
 	saveGoal(store, { ...closedFile, status: "active" });
-	notes.length = 0; commands.length = 0;
+	notes.length = 0;
 	await doneGoal(d);
 	expect(loadGoal(store, "feat/export")!.status).toBe("active");
 	expect(lastNote()).toMatch(/closed|tombstone/i);
-	expect(commands).toEqual([]);
 	await dropCurrentGoal(d, "forged");
 	await startGoal(d, "again");
 	await proposeFromAgent(d, { doneCheck: { kind: "command", commands: ["test -f later.csv"] } });
