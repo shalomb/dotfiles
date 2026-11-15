@@ -1,4 +1,6 @@
-"""Adaptive nav in rendered docs, and mobile/print styles in the readout and decision pages."""
+"""Adaptive nav in rendered docs, and the template media query matching the doc-nav constant.
+
+The mobile and print blocks themselves are checked per template in test_doc_templates.py."""
 import re
 import shutil
 import subprocess
@@ -7,13 +9,12 @@ from pathlib import Path
 
 import pytest
 
+from doc_helpers import fixture_doc, render_ok
+
 REPO = Path(__file__).resolve().parents[2]
 LIB = REPO / ".pi" / "agent" / "extensions" / "_lib"
 BUILD = LIB / "doc-render" / "build.py"
 NAV_TS = (LIB / "doc-nav.ts").read_text()
-PROTO = REPO / "docs" / "prototypes"
-FIX = Path(__file__).parent / "fixtures"
-GATE = "Nothing here is approved."
 MD = "# Title\n\n**The ask in one sentence:** do it.\n\n## 1. First\n\nHello world.\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n## 2. Second\n\nBye.\n"
 
 
@@ -28,14 +29,6 @@ def build(tmp_path, *extra):
     src, out = tmp_path / "doc.md", tmp_path / "out.html"
     src.write_text(MD)
     r = subprocess.run([sys.executable, str(BUILD), str(src), "-o", str(out), *extra],
-                       capture_output=True, text=True)
-    assert r.returncode == 0, r.stderr
-    return out.read_text()
-
-
-def render_proto(script, fixture, tmp_path):
-    out = tmp_path / "p.html"
-    r = subprocess.run([sys.executable, str(PROTO / script), str(FIX / fixture / "sample.json"), str(out)],
                        capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
     return out.read_text()
@@ -88,17 +81,7 @@ class TestAdaptiveNav:
         assert subprocess.run([node, "--check", str(f)], capture_output=True).returncode == 0
 
 
-@pytest.mark.parametrize("script,fixture", [("readout_render.py", "readout"), ("decision_render.py", "decision")])
-class TestTemplates:
-    def test_mobile_and_print_blocks(self, script, fixture, tmp_path):
-        page = render_proto(script, fixture, tmp_path)
-        assert f"@media (max-width:{MOBILE_MAX}px)" in page
-        assert "@media print" in page
-        assert GATE in page
-
-    def test_print_keeps_gate_and_references(self, script, fixture, tmp_path):
-        page = render_proto(script, fixture, tmp_path)
-        block = page.split("@media print", 1)[1].split("</style>", 1)[0]
-        for hidden in re.findall(r"([^{}]+)\{[^}]*display:\s*none", block):
-            assert ".gate" not in hidden and "refs" not in hidden
-        assert "details.made" in block and "position:static" in block
+@pytest.mark.parametrize("template", ["readout", "decision"])
+def test_template_media_query_uses_the_doc_nav_constant(template, tmp_path):
+    page = render_ok(template, fixture_doc(template), tmp_path)
+    assert f"@media (max-width:{MOBILE_MAX}px)" in page

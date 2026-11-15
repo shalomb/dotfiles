@@ -1,11 +1,11 @@
 # `decision` template
 
-Status: prototype. A structured decision record becomes one self-contained HTML page.
+Status: template type in `.pi/agent/extensions/_lib/doc-render/templates/` (`decision.py`, `decision.html`, shared `kernel.*`). A structured decision record becomes one self-contained HTML page.
 Design source: `docs/prototypes/decision-mock.html`. Sibling of `readout.md`; it shares the tone rules and the fixed gate.
 
 ## Run
 
-    python3 docs/prototypes/decision_render.py in.json out.html
+    python3 .pi/agent/extensions/_lib/doc-render/templates/template.py decision in.json out.html
 
 ## Input (JSON)
 
@@ -23,12 +23,13 @@ Design source: `docs/prototypes/decision-mock.html`. Sibling of `readout.md`; it
 ## Rules the renderer enforces
 
 - The author picks the recommendation. The renderer only checks that exactly one option has it, with a `why`.
-- Tone: hype words are rejected, and jargon (ALB, ACM, PITR, GSI, TFC, APMS, SG, EBS, ROAM) needs a glossary entry. Same lists as `readout_render.py`.
+- Tone: hype words are rejected, and jargon (ALB, ACM, PITR, GSI, TFC, APMS, SG, EBS, ROAM) needs a glossary entry. Same lists as the readout, both in `kernel.py`.
+- Brand, theme and style keys anywhere in the input are rejected (see `kernel.md`).
 - Every error reads `error: <field path>: <reason>`.
 
-## Fixed by the template
+## Fixed by the renderer
 
-- The banner "Nothing here is approved." Input cannot change or remove it; unknown keys such as `gate` are dropped.
+- The banner "Nothing here is approved." is built by `kernel.py` with the constant `GATE_DETAIL` from `decision.py`. Input cannot change or remove it; unknown keys such as `gate` are dropped.
 - The reply is shown as text headed "a human posts it". No links or mail actions.
 - The footer says the recommendation is untested.
 - No network calls, no `innerHTML`, no external `src` or `href`.
@@ -39,4 +40,4 @@ Design source: `docs/prototypes/decision-mock.html`. Sibling of `readout.md`; it
 
 ## Not in scope
 
-Editions, refresh, rollups, print CSS, a no-JS fallback, wiring into `doc_publish`.
+Editions, refresh, rollups, a no-JS fallback, wiring into `doc_publish`.

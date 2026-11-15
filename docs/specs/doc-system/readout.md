@@ -2,12 +2,12 @@
 
 A structured read-out (JSON) becomes one self-contained HTML page: headline finding,
 KPI strip, layer map, problem, set-based options with a live plan count, needs, ROAM
-risks, a fixed gate banner and a footer. Look and behaviour follow `docs/prototypes/onion-state.html`.
+risks, a fixed gate banner and a footer. Code lives in `.pi/agent/extensions/_lib/doc-render/templates/` (`readout.py`, `readout.html`, shared `kernel.*`). Look and behaviour follow `docs/prototypes/onion-state.html`.
 
 ## Run
 
-    uv run python docs/prototypes/readout_render.py in.json out.html
-    uv run pytest tests/doc/test_readout.py -q
+    python3 .pi/agent/extensions/_lib/doc-render/templates/template.py readout in.json out.html
+    uv run pytest tests/doc -q
 
 A worked input lives at `tests/doc/fixtures/readout/sample.json` (synthetic scenario).
 
@@ -31,15 +31,16 @@ A worked input lives at `tests/doc/fixtures/readout/sample.json` (synthetic scen
 Any failure prints `error: <field>: <reason>` and exits non-zero; no page is written.
 
 - Required fields present; indexes, ids, `rag` and `roam` values valid.
-- No hype words (whole word, any case); the list is `HYPE_WORDS` in the script.
+- No hype words (whole word, any case); the list is `HYPE_WORDS` in `kernel.py`.
+- No brand, theme or style keys anywhere in the input (see `kernel.md`).
 - Jargon needs a gloss: a term in `JARGON_TERMS` found in any text field must be a
   `glossary` key. The glossary shows as "In plain words" at the page foot.
-- `meta.title` is a finding: at least 5 words, not starting `Simulation:` or `Report:`.
+- `meta.title` is a finding: at least 5 words, not starting `Simulation:`, `Report:` or `Decision:`.
 - A `suggestion` option shows a visible tag; the footer says suggestions are untested.
 
-## Fixed in the template
+## Fixed in the renderer
 
-The gate banner ("Nothing here is approved." plus the read-only line) is template text.
+The gate banner is rendered by `kernel.py`: "Nothing here is approved." plus `GATE_DETAIL`, a constant in `readout.py`. Templates hold only a `__GATE__` placeholder.
 Input keys named `gate`, anywhere, are never copied to the page. The page makes no
 network calls, uses no `innerHTML`, and has no external `src` or `href`.
 

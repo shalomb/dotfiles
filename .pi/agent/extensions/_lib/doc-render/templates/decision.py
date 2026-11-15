@@ -1,24 +1,19 @@
-#!/usr/bin/env python3
-"""Render a structured decision record (JSON) to one self-contained HTML page.
+"""Decision template: a structured decision record (JSON) becomes one self-contained HTML page.
 
-  decision_render.py in.json out.html
-
-Schema and rules: docs/specs/doc-system/decision.md. The renderer validates the
-input, enforces the readout tone rules, derives the countdown and fills `__DATA__`
-in decision.template.html. The not-approved gate lives in the template; the input
-cannot change or omit it. Shared references, claim labels and the embedded recipe
-come from doc_kernel.py. The author picks the recommendation; the renderer only
-checks that exactly one option carries it, with a reason.
+Run through `template.py decision in.json out.html`. Schema and rules: docs/specs/doc-system/decision.md.
+This module owns validation, the countdown and the second gate sentence. The author picks the
+recommendation; this module only checks that exactly one option carries it, with a reason. The tone
+rules, references, claim labels, gate banner and recipe come from kernel.py.
 """
-import datetime, json, pathlib, re, sys
+import datetime, sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from doc_kernel import build_page, check_basis, check_refs, fail  # noqa: E402
-from readout_render import HYPE_WORDS, JARGON_TERMS, need, text_fields  # noqa: E402
+from kernel import build_page, check_basis, check_glossary, check_refs, check_tone, fail, need, text_fields
 
-TEMPLATE = pathlib.Path(__file__).with_name("decision.template.html")
+TEMPLATE = "decision.html"
+GATE_DETAIL = "Read-only: nothing is posted, deleted, renewed or changed by this page. A human decides."
 META_FIELDS = ["eyebrow", "title", "lede", "asof", "foot"]
-NOT_TEXT = {"id", "recommended", "start", "today", "date", "ask_by", "refs"}
+NOT_TEXT = {"id", "recommended", "start", "today", "date", "ask_by", "refs"}  # top-level fields that are not prose
+DEEP_SKIP = {"id", "basis"}  # keys that are ids or enums at any depth
 
 
 def day(deadline, key):
@@ -61,28 +56,13 @@ def check_structure(doc):
     if "reply" in doc:
         for key in ("to", "text"):
             need(doc["reply"], key, str, "reply")
-    glossary = doc.get("glossary", {})
-    if not isinstance(glossary, dict) or not all(isinstance(v, str) and v.strip() for v in glossary.values()):
-        fail("glossary", "must map each term to a plain meaning")
+    check_glossary(doc)
 
 
-def check_tone(doc):
-    title = doc["meta"]["title"].strip()
-    if re.match(r"(simulation|report|decision):", title, re.I) or len(title.split()) < 5:
-        fail("meta.title", "must state a finding in 5 or more words, not start 'Decision:', 'Report:' or 'Simulation:'")
-    glossary = doc.get("glossary", {})
-    for path, text in text_fields({k: v for k, v in doc.items() if k != "deadline"}, ""):
-        top = path.split("[")[0].split(".")[0]
-        if top in NOT_TEXT:
-            continue
-        for word in HYPE_WORDS:
-            if re.search(rf"(?<![\w-]){re.escape(word)}(?![\w-])", text, re.I):
-                fail(path, f"hype word {word!r}; say what it does instead")
-        if path.startswith("glossary"):
-            continue
-        for term in JARGON_TERMS:
-            if re.search(rf"\b{term}\b", text) and term not in glossary:
-                fail(path, f"{term!r} needs a plain meaning in glossary")
+def tone_texts(doc):
+    body = {k: v for k, v in doc.items() if k != "deadline"}
+    return [(path, text) for path, text in text_fields(body, "", DEEP_SKIP)
+            if path.split("[")[0].split(".")[0] not in NOT_TEXT]
 
 
 def derive(doc):
@@ -105,21 +85,8 @@ def derive(doc):
     return data
 
 
-def main(argv):
-    if len(argv) != 3:
-        sys.exit("usage: decision_render.py in.json out.html")
-    try:
-        doc = json.loads(pathlib.Path(argv[1]).read_text())
-    except (OSError, json.JSONDecodeError) as exc:
-        sys.exit(f"error: cannot read {argv[1]}: {exc}")
+def build(doc):
     check_structure(doc)
-    check_refs(doc, text_fields({k: v for k, v in doc.items() if k != "refs"}, ""))
-    check_tone(doc)
-    page = build_page(TEMPLATE, __file__, doc, derive(doc))
-    out = pathlib.Path(argv[2])
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(page)
-
-
-if __name__ == "__main__":
-    main(sys.argv)
+    check_refs(doc, text_fields({k: v for k, v in doc.items() if k != "refs"}, "", DEEP_SKIP))
+    check_tone(doc, tone_texts(doc))
+    return build_page(__file__, TEMPLATE, doc, derive(doc), GATE_DETAIL)

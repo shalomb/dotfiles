@@ -71,4 +71,4 @@ A document is an argument that a reader can check. It carries data, claims, hypo
 | P16 | gate banner present, input cannot override it |
 | P18 | hype list and jargon-needs-gloss |
 
-Already enforced: P3 (derived counts), P5 (one recommendation), P6 (suggestion tag), P9 and P16, P18 in `readout_render.py` and `decision_render.py`. Not yet enforced: P1, P2, P7, P13, P14.
+Already enforced: P3 (derived counts), P5 (one recommendation), P6 (suggestion tag), P9 and P16, P18 in the readout and decision templates under `.pi/agent/extensions/_lib/doc-render/templates/`. Not yet enforced: P1, P2, P7, P13, P14.

@@ -1,18 +1,12 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>__TITLE__</title>
+<style>/*__KERNEL_CSS__*/</style>
 <style>
-:root{--bg:#faf9f5;--ink:#1d1b16;--mut:#6b675d;--line:#e4e0d4;--acc:#d9704f;--R:#c0392b;--A:#b7791f;--G:#2f7d57;--N:#8a8f98}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif}
-main{max-width:1180px;margin:0 auto;padding:36px 28px 60px}
-.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);font-weight:700}
-h1{font:400 38px/1.15 Georgia,serif;margin:10px 0 12px;max-width:900px}
-h2{font:400 26px Georgia,serif;margin:44px 0 6px}
-.lede{font:18px/1.55 Georgia,serif;color:#4a463e;max-width:860px}
-.sub{color:var(--mut);margin:0 0 14px;max-width:820px}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0}
-.kpi{border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 16px}
-.kpi b{display:block;font:400 32px Georgia,serif}.kpi span{color:var(--mut);font-size:14px}
-.card{border:1px solid var(--line);background:#fff;border-radius:14px;padding:16px}
+main{max-width:1180px}
+h1{font-size:38px;max-width:900px}
+h2{font-size:26px;margin-top:44px}
+.lede{max-width:860px}
+.sub{max-width:820px}
 .two{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
 svg{width:100%;height:auto;display:block}
 .hd{font-size:11px;letter-spacing:.1em;text-transform:uppercase;fill:#8a8478;font-weight:700}
@@ -21,9 +15,7 @@ svg{width:100%;height:auto;display:block}
 .node .bar{stroke:none}.node text{font-size:11.5px;fill:var(--ink)}.node .k{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 .edge{stroke:#b9b4a6;stroke-width:1.4;fill:none}.edge.cf{stroke:var(--R);stroke-dasharray:5 4;stroke-width:1.8}
 .elab{font-size:10.5px;fill:var(--R);font-weight:700}
-.badge{display:inline-block;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;padding:2px 8px;border-radius:5px;text-transform:uppercase}
-.panel h3{font:400 22px/1.2 Georgia,serif;margin:8px 0}.panel .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700;margin:14px 0 4px}
-.need{background:#f8eedb;border-left:4px solid var(--A);padding:8px 12px;border-radius:4px}
+.panel h3{font:400 22px/1.2 Georgia,serif;margin:8px 0}
 .chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;margin:2px 4px 2px 0;cursor:pointer;background:#fff}
 .axis{margin:16px 0}.axis h3{font:600 16px system-ui;margin:0 0 2px}.axis p{margin:0 0 8px;color:var(--mut);font-size:14px}
 .opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -34,20 +26,9 @@ svg{width:100%;height:auto;display:block}
 .opt small{display:block;color:var(--mut);margin-top:6px}
 .sum{position:sticky;bottom:12px;margin-top:18px;background:var(--ink);color:#fff;border-radius:14px;padding:14px 18px;display:flex;gap:18px;align-items:center}
 .sum b{font:400 34px Georgia,serif;color:#ffd9a8}.sum div{font-size:14px;line-height:1.4}
-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:14px}
-th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);padding:10px 12px;background:#f3f1e9}
-td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}
 .roam{font-weight:700;font-size:12px;letter-spacing:.08em}
-.gate{border:1.5px dashed var(--acc);border-radius:12px;padding:10px 14px;margin-top:30px;color:#6b3b2a;background:#fdf3ee;font-size:14px}
-.foot{color:var(--mut);font-size:13px;margin-top:26px;max-width:860px}
 .tag{display:inline-block;border:1px dashed var(--acc);color:var(--acc);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:0 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
-.gloss{margin:10px 0 0;max-width:860px}.gloss dt{font-weight:700;display:inline}.gloss dd{display:inline;margin:0 0 0 6px}.gloss div{margin:2px 0}
-.basis,.kind{display:inline-block;font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:0 6px;border-radius:4px;margin-left:6px;vertical-align:middle;border:1px solid var(--line);color:var(--mut)}
-.b-measured{color:var(--G);border-color:var(--G)}.b-derived{color:#355c9a;border-color:#355c9a}.b-judged{color:var(--A);border-color:var(--A)}
-.refs li{margin:4px 0}.cite{font-size:.8em;vertical-align:super;text-decoration:none}
-details.made{margin-top:26px;font-size:13px;color:var(--mut);max-width:860px}details.made summary{cursor:pointer}details.made code{font:12px ui-monospace,monospace;word-break:break-all}
-@media (max-width:768px){main{padding:20px 16px 40px}h1{font-size:28px}h2{font-size:22px}.kpis,.opts{grid-template-columns:1fr}.two{grid-template-columns:1fr}.axis .opts{grid-template-columns:1fr} table{display:block;overflow-x:auto;max-width:100%}}
-@media print{:root{--bg:#fff}body{background:#fff;color:#000;font-size:11pt}main{max-width:none;padding:0}*{position:static !important;color:#000 !important;box-shadow:none !important}.sum,.chip,.opt{cursor:auto}.panel{break-inside:avoid}.card,.opt,.rec2,.kpi,.gate,tr{break-inside:avoid}h2{break-after:avoid}a{text-decoration:underline}details.made{display:block}.gate{border:1.5px dashed #000;background:#fff}}
+@media (max-width:768px){.opts,.two{grid-template-columns:1fr}}
 </style></head><body><main>
 <div class="eyebrow" id="eyebrow"></div>
 <h1 id="title"></h1>
@@ -74,7 +55,7 @@ details.made{margin-top:26px;font-size:13px;color:var(--mut);max-width:860px}det
 <table id="risks"><thead><tr><th>Risk</th><th>ROAM</th><th>What we do</th></tr></thead><tbody></tbody></table>
 
 <div id="refsbox"></div>
-<div class="gate"><b>Nothing here is approved.</b> Read-only: this page describes and changes nothing. A human approves the plan before anything is built.</div>
+__GATE__
 <p class="foot" id="foot"></p>
 <div class="foot" id="gloss"></div>
 <details class="made" id="made"><summary>How this page was made</summary><div id="madebody"></div></details>
@@ -82,20 +63,10 @@ details.made{margin-top:26px;font-size:13px;color:var(--mut);max-width:860px}det
 <script type="application/json" id="recipe">__RECIPE__</script>
 <script>
 const DATA=__DATA__;
-const NS="http://www.w3.org/2000/svg";
+/*__KERNEL_JS__*/
 const RAGC={R:"#c0392b",A:"#b7791f",G:"#2f7d57",N:"#8a8f98"},RAGN={R:"Blocked",A:"Open question",G:"Known good",N:"Not started"};
-function el(tag,attrs,kids,ns){const e=ns?document.createElementNS(NS,tag):document.createElement(tag);
-  for(const k in (attrs||{})){if(k==="text"){if(ns)e.textContent=attrs[k];else cite(e,attrs[k]);}else e.setAttribute(k,attrs[k]);}
-  (kids||[]).forEach(c=>e.appendChild(c));return e;}
 const S=(t,a,k)=>el(t,a,k,true);
-const REFN={};DATA.refs.forEach(r=>{REFN[r.id]=r.n;});
-function cite(e,text){text.split(/\[(r\d+)\]/).forEach((part,i)=>{
-  if(i%2===0){if(part)e.appendChild(document.createTextNode(part));return;}
-  const a=document.createElement("a");a.setAttribute("href","#ref-"+REFN[part]);a.setAttribute("class","cite");a.setAttribute("data-n",String(REFN[part]));a.textContent="["+REFN[part]+"]";e.appendChild(a);});}
-function backTo(n){const c=document.querySelector('a.cite[data-n="'+n+'"]');if(c)c.scrollIntoView({behavior:"smooth",block:"center"});}
-function basisTag(b){return el("em",{class:"basis b-"+b,text:b});}
-function clear(e){while(e.firstChild)e.removeChild(e.firstChild);}
-function byId(id){return document.getElementById(id);}
+const byId=$;
 
 const COLS=DATA.layers,NODES=DATA.nodes,CHOICES=DATA.choices;
 const W=180,H=78,PITCH=196,ROWH=118;
@@ -167,20 +138,8 @@ byId("title").textContent=DATA.meta.title;cite(byId("lede"),DATA.meta.lede);cite
 fill("needs",DATA.needs.map(r=>[r.need,r.from,r.settles]));
 fill("risks",DATA.risks.map(r=>[r.risk,r.roam,r.action]));
 cite(byId("foot"),DATA.meta.foot+(DATA.derived.suggestions?" Options tagged suggestion are the author's and are untested.":""));
-const terms=Object.keys(DATA.glossary);
-if(terms.length){const g=byId("gloss");g.appendChild(el("b",{text:"In plain words"}));
-  const dl=el("dl",{class:"gloss"});terms.forEach(t=>dl.appendChild(el("div",{},[el("dt",{text:t}),el("dd",{text:DATA.glossary[t]})])));g.appendChild(dl);}
+renderGlossary(byId("gloss"),el("b",{text:"In plain words"}));
 drawMap(null);if(NODES.length)show(NODES[0]);update();
-if(DATA.refs.length){const box=byId("refsbox");box.appendChild(el("h2",{text:"References"}));
-  const ol=el("ol",{class:"refs"});
-  DATA.refs.forEach(r=>{const li=el("li",{id:"ref-"+r.n},[el("a",{href:r.href,text:r.title}),el("span",{class:"kind",text:r.kind})]);
-    if(r.cited){const back=el("a",{href:"#",text:" ↩"});back.addEventListener("click",ev=>{ev.preventDefault();backTo(r.n);});li.appendChild(back);}
-    else li.appendChild(el("span",{class:"kind",text:"also relevant"}));
-    ol.appendChild(li);});
-  box.appendChild(ol);}
-const RECIPE=JSON.parse(byId("recipe").textContent),made=byId("madebody");
-[["Template",RECIPE.template],["Renderer",RECIPE.renderer_file+" (sha256 "+RECIPE.renderer_sha256.slice(0,12)+")"],["Rebuild",RECIPE.rebuild]]
-  .forEach(x=>made.appendChild(el("div",{},[el("b",{text:x[0]+": "}),el("code",{text:x[1]})])));
-made.appendChild(el("div",{text:RECIPE.note+" The input is embedded in this page as JSON."}));
-(function(){var d=document.getElementById("made"),was=false;addEventListener("beforeprint",function(){if(d){was=d.open;d.open=true;}});addEventListener("afterprint",function(){if(d)d.open=was;});})();
+renderRefs(byId("refsbox"));
+renderMade();
 </script></body></html>

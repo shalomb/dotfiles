@@ -1,37 +1,19 @@
-#!/usr/bin/env python3
-"""Render a structured read-out (JSON) to one self-contained HTML page.
+"""Readout template: a structured read-out (JSON) becomes one self-contained HTML page.
 
-  readout_render.py in.json out.html
-
-Schema and rules: docs/specs/doc-system/readout.md. The renderer validates the
-input, enforces the tone rules, adds the derived layout and counts, and fills
-`__DATA__` in readout.template.html. The not-approved gate lives in the template;
-the input cannot change or omit it. Shared references, claim labels and the embedded
-recipe come from doc_kernel.py.
+Run through `template.py readout in.json out.html`. Schema and rules: docs/specs/doc-system/readout.md.
+This module owns validation, the derived layout and counts, and the second gate sentence. The tone
+rules, references, claim labels, gate banner and recipe come from kernel.py.
 """
-import json, math, pathlib, re, sys
+import math
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from doc_kernel import build_page, check_basis, check_refs, fail  # noqa: E402
+from kernel import build_page, check_basis, check_glossary, check_refs, check_tone, fail, need, text_fields
 
-TEMPLATE = pathlib.Path(__file__).with_name("readout.template.html")
-HYPE_WORDS = ["seamless", "leverage", "synergy", "robust", "cutting-edge", "game-changing",
-              "revolutionary", "best-in-class", "powerful", "blazing", "world-class",
-              "awesome", "amazing"]
-JARGON_TERMS = ["ALB", "ACM", "PITR", "GSI", "TFC", "APMS", "SG", "EBS", "ROAM"]
+TEMPLATE = "readout.html"
+GATE_DETAIL = "Read-only: this page describes and changes nothing. A human approves the plan before anything is built."
 RAG = {"R", "A", "G", "N"}
 ROAM = {"RESOLVE", "OWN", "ACCEPT", "MITIGATE"}
 META_FIELDS = ["eyebrow", "title", "lede", "asof", "foot"]
 NOT_TEXT = {"id", "layer", "rag", "basis", "roam", "feeds", "a", "b"}
-
-
-def need(obj, key, kind, field):
-    if not isinstance(obj, dict) or key not in obj:
-        fail(f"{field}.{key}" if field else key, "required, missing")
-    value = obj[key]
-    if not isinstance(value, kind) or (kind is str and not value.strip()):
-        fail(f"{field}.{key}" if field else key, f"must be a non-empty {kind.__name__}")
-    return value
 
 
 def check_structure(doc):
@@ -86,39 +68,12 @@ def check_structure(doc):
             need(r, key, str, f"risks[{i}]")
         if need(r, "roam", str, f"risks[{i}]") not in ROAM:
             fail(f"risks[{i}].roam", f"must be one of RESOLVE, OWN, ACCEPT, MITIGATE, got {r['roam']!r}")
-    glossary = doc.get("glossary", {})
-    if not isinstance(glossary, dict) or not all(isinstance(v, str) and v.strip() for v in glossary.values()):
-        fail("glossary", "must map each term to a plain meaning")
+    check_glossary(doc)
 
 
-def text_fields(value, path):
-    """Yield (path, text) for every free-text string; ids and enums are skipped."""
-    if isinstance(value, str):
-        yield path, value
-    elif isinstance(value, list):
-        for i, v in enumerate(value):
-            yield from text_fields(v, f"{path}[{i}]")
-    elif isinstance(value, dict):
-        for k, v in value.items():
-            if k not in NOT_TEXT:
-                yield from text_fields(v, f"{path}.{k}" if path else k)
-
-
-def check_tone(doc):
-    title = doc["meta"]["title"].strip()
-    if re.match(r"(simulation|report):", title, re.I) or len(title.split()) < 5:
-        fail("meta.title", "must state a finding in 5 or more words, not start 'Simulation:' or 'Report:'")
-    glossary = doc.get("glossary", {})
+def tone_texts(doc):
     body = {k: v for k, v in doc.items() if k not in ("links", "conflicts", "refs")}
-    for path, text in text_fields(body, ""):
-        for word in HYPE_WORDS:
-            if re.search(rf"(?<![\w-]){re.escape(word)}(?![\w-])", text, re.I):
-                fail(path, f"hype word {word!r}; say what it does instead")
-        if path.startswith("glossary"):
-            continue
-        for term in JARGON_TERMS:
-            if re.search(rf"\b{term}\b", text) and term not in glossary:
-                fail(path, f"{term!r} needs a plain meaning in glossary")
+    return text_fields(body, "", NOT_TEXT)
 
 
 def derive(doc):
@@ -147,21 +102,8 @@ def derive(doc):
     }
 
 
-def main(argv):
-    if len(argv) != 3:
-        sys.exit("usage: readout_render.py in.json out.html")
-    try:
-        doc = json.loads(pathlib.Path(argv[1]).read_text())
-    except (OSError, json.JSONDecodeError) as exc:
-        sys.exit(f"error: cannot read {argv[1]}: {exc}")
+def build(doc):
     check_structure(doc)
-    check_refs(doc, text_fields({k: v for k, v in doc.items() if k != "refs"}, ""))
-    check_tone(doc)
-    page = build_page(TEMPLATE, __file__, doc, derive(doc))
-    out = pathlib.Path(argv[2])
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(page)
-
-
-if __name__ == "__main__":
-    main(sys.argv)
+    check_refs(doc, text_fields({k: v for k, v in doc.items() if k != "refs"}, "", NOT_TEXT))
+    check_tone(doc, tone_texts(doc))
+    return build_page(__file__, TEMPLATE, doc, derive(doc), GATE_DETAIL)

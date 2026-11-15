@@ -8,7 +8,7 @@
   - Scrolled `>= SCROLL_FLOAT_PX`, or after the toggle button: `floating` (sticky bar).
   - Viewport `<= MOBILE_MAX`: always `floating`.
   - `?present` or the in-page present mode: `hidden`.
-- **Readout and decision templates** (`docs/prototypes/*.template.html`): a
+- **Readout and decision templates** (`.pi/agent/extensions/_lib/doc-render/templates/kernel.css`, shared): a
   `@media (max-width:768px)` block (single-column grids, smaller h1, tables scroll
   sideways) and an `@media print` block (white, black text, nothing sticky, controls
   hidden, cards not split, gate banner and references kept, "How this page was made"
@@ -23,7 +23,7 @@
 
 `build.py` cannot import TypeScript, so it copies the numbers, the layout logic and the
 `navCss` rules (only the sidebar rule differs: it keeps the page grid instead of
-`position: fixed`). The templates hard-code 768 in their media query.
+`position: fixed`). `kernel.css` hard-codes 768 in its media query.
 `tests/doc/test_doc_ux.py` reads the numbers from `doc-nav.ts` and fails if `build.py`
 or a template differs. Change the TS first, then the mirrors.
 
