@@ -13,22 +13,24 @@ export interface UvViolation {
 	segment: string;
 }
 
+type Rule = { rule: string; use: string; why: string };
+
 const ADD = "uv add PKG (project) | uv run --with PKG python script.py (one-off)";
 
-const BARE: Record<string, { rule: string; use: string; why: string }> = {
+const BARE = {
 	pip: { rule: "pip", use: ADD, why: "uv owns the environment; pip bypasses the lockfile" },
 	pip3: { rule: "pip", use: ADD, why: "uv owns the environment; pip bypasses the lockfile" },
 	pipx: { rule: "pipx", use: "uvx TOOL (run) | uv tool install TOOL (install)", why: "uv manages tool environments" },
 	poetry: { rule: "poetry", use: "uv init | uv add PKG | uv sync | uv run CMD", why: "this repo standardises on uv, not poetry" },
 	virtualenv: { rule: "virtualenv", use: "uv venv", why: "uv creates and manages venvs" },
 	easy_install: { rule: "easy_install", use: ADD, why: "deprecated; uv owns the environment" },
-};
+} satisfies Record<string, Rule>;
 
-const MODULES: Record<string, { rule: string; use: string; why: string }> = {
+const MODULES = {
 	pip: { rule: "python -m pip", use: ADD, why: "uv owns the environment; pip bypasses the lockfile" },
 	venv: { rule: "python -m venv", use: "uv venv", why: "uv creates and manages venvs" },
 	py_compile: { rule: "python -m py_compile", use: "uv run python -m ast path/to/file.py >/dev/null", why: "py_compile writes .pyc files into __pycache__" },
-};
+} satisfies Record<string, Rule>;
 
 const PYTHON = /^python(\d+(\.\d+)?)?$/;
 
@@ -44,12 +46,13 @@ export function uvViolation(script: string): UvViolation | null {
 		const t = stripPrefixes(tokenize(seg.text));
 		if (t.length === 0) continue;
 		const cmd = basename(t[0]);
-		const bare = BARE[cmd];
+		const bare = (BARE as Record<string, Rule>)[cmd];
 		if (bare) return { ...bare, segment: t.join(" ") };
 		if (!PYTHON.test(cmd)) continue;
 		for (let i = 1; i < t.length; i++) {
 			const m = moduleArg(t, i);
-			if (m && MODULES[m]) return { ...MODULES[m], segment: t.join(" ") };
+			const mod = m ? (MODULES as Record<string, Rule>)[m] : undefined;
+			if (mod) return { ...mod, segment: t.join(" ") };
 		}
 	}
 	return null;
