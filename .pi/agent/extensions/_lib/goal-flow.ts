@@ -192,8 +192,12 @@ export async function showGoal(d: Deps): Promise<void> {
 	else {
 		const run = await runChecks(d.exec, goal.doneCheck.commands, d.root);
 		status = run.exit === 0 ? `Done-check green.\n${run.output}` : `Done-check red (exit ${run.exit}).\n${run.output}`;
-		d.ui.notify(`${summary(goal)}\n${status}\nNext: ${run.exit === 0 ? "/goal done" : "do the work, /goal to re-check; /goal unlock to correct the goal"}`, "info");
-		return;
+		if (run.exit !== 0) return d.ui.notify(`${summary(goal)}\n${status}\nNext: do the work, /goal to re-check; /goal unlock to correct the goal`, "info");
+		d.ui.notify(`${summary(goal)}\n${status}`, "info");
+		// Green is the moment to close: offer it here instead of making the human remember /goal done.
+		const choice = await d.ui.select(`${goal.id}: done-check green. Close the goal?`, ["Close the goal", "Not yet"]);
+		if (choice === "Close the goal") return await doneGoal(d);
+		return d.ui.notify("Still active. /goal done closes it when you are ready.", "info");
 	}
 	d.ui.notify(`${summary(goal)}\n${status}\nNext: /goal done`, "info");
 }

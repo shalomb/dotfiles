@@ -636,13 +636,27 @@ test("bare /goal on a draft shows the card with a next-step line", async () => {
 
 test("bare /goal on a locked goal shows the card and whether the check is green or red", async () => {
 	const d = await activeGoal();
+	const lockDialogs = selects.length;
 	await runGoalCommand(d, "");
 	expect(notes.join("\n")).toMatch(/Done-check red/);
 	expect(lastNote()).toMatch(/Next: do the work/);
+	expect(selects).toHaveLength(lockDialogs);
 	commitFile("export.csv");
+	pick = 1; // Not yet
 	await runGoalCommand(deps(), "");
 	expect(notes.join("\n")).toMatch(/Done-check green/);
-	expect(lastNote()).toMatch(/Next: \/goal done/);
+	expect(lastNote()).toMatch(/\/goal done/);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+});
+
+test("bare /goal on a green check offers to close it in one keypress", async () => {
+	const d = await activeGoal();
+	commitFile("export.csv");
+	pick = 0;
+	await runGoalCommand(d, "");
+	expect(selects.at(-1)!.options).toEqual(["Close the goal", "Not yet"]);
+	expect(selects.at(-1)!.title).toMatch(/green/);
+	expect(loadGoal(store, "feat/export")!.status).toBe("closed");
 });
 
 test("goal_propose on a locked goal is refused and points at /goal unlock", async () => {
