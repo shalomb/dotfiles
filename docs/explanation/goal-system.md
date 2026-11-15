@@ -1,6 +1,6 @@
 # The goal system: what it is and how it runs
 
-Date: 2026-11-15. Status: position under test (ADR-012 is Proposed; the loop is not built). Current intent: /plan sets the destination, /n is the gas pedal, /goal is manual control.
+Date: 2026-11-15. Status: position under test (ADR-012 is Proposed; the loop is not built). Current intent: /plan sets the destination, the car drives itself, /n resumes after a stop, /goal is manual control.
 Decisions: [ADR-012](../../.pi/docs/specs/agentic-coding/adr/ADR-012-intent-upstream-loop-runs-itself.md).
 Design history: [decision tree](../plans/goal-workflow/decision-tree.md), [drive roles](../plans/goal-workflow/drive-roles.md).
 
@@ -46,7 +46,7 @@ The agent can never invent the check it is graded on.
 
 ## The loop and its control system
 
-Each press of `/n` (the gas pedal) advances one hop: close a green goal, draft the next from the first red key result, lock it
+With an approved destination and a clear road, the car drives by itself, hop after hop: close a green goal, draft the next from the first red key result, lock it
 on that key result's check, drive it, repeat.
 
 | Control | Purpose |
@@ -64,8 +64,9 @@ contradicts its anti-goals, any change of intent (a key result added, changed or
 
 ## What `/next` (`/n`) is
 
-The gas pedal: the human's consent to advance one hop. The satnav frames the next goal from the end-state doc
-and the lessons of the last hop. `/goal` stays as manual control; its use should fall over time.
+Ignition and resume, not a pedal. The car stops at a one-way door, a blocked road, an unclear satnav or a spent
+budget; the human and agent talk it through; `/n` puts the car back on the road. `/goal` stays as manual control;
+its use should fall over time.
 
 ## What changes in the plan
 

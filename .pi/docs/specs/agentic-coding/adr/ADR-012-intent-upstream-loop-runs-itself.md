@@ -1,4 +1,4 @@
-# ADR-012: The goal loop is a car: /plan sets the destination, /n is the gas pedal, /goal is manual control
+# ADR-012: The goal loop is a self-driving car: /plan sets the destination, the car drives, /n resumes after a stop
 
 - **Status:** Proposed (2026-11-15), recorded as intent; not built.
 - **Would amend:** ADR-008 (goal as the agent's unit), ADR-009 (who locks and closes), ADR-010 (refs for agent
@@ -21,15 +21,18 @@ wrong plan confidently. The human wants to press one pedal to move to the next g
 | :-- | :-- | :-- |
 | Destination | address in the satnav | the end-state doc from `/plan`: vision, objectives, key results (OKRs, `KR-n.m` = sentence + check), reviewed by the human as an editable doc in rounds, like `/grill-me` |
 | Satnav at a junction | recompute the route from traffic | frame the next goal from the next red key result plus lessons from the hop just finished (retro line, glovebox, trajectories) |
-| Gas pedal: `/n` (`/next`) | "go on" | close the current goal if its check is green, consult the satnav, lock the new goal if it sits on an approved key-result check, drive it |
+| Driving (default) | the car drives itself | with an approved destination and a clear road, go from key result to key result without asking: pick the first red key result, build it, run its check, commit, record the lesson, next |
+| Stop | pull over | one-way door, blocked road, unclear satnav, or budget spent: explain, then discuss with the human until resolved |
+| Ignition / resume: `/n` (`/next`) | back on the road | start the car, or resume after a stop once the discussion is resolved; not pressed per hop |
 | Manual control: `/goal` | wheel and gears | tweak a goal or take over: scenic driving, or the human driving |
 | Brakes | road rules | one-way doors and tripwires stop the car |
 
-- `/n` is consent per hop. Cruise control (`/n` for N hops, or until an objective is done) is a later option.
-- `/goal` stays; its use should fall over time.
-- Self-lock rule: the goal serves an approved, unchanged key result and its Outcome Check is that key result's
-  check verbatim; the check fails on the base commit (not environmentally); not a relock; not a default branch.
-  Otherwise one dialog: Lock & drive / Edit / Not now.
+- Autonomy is the default; `/n` is needed only to start or resume. The human's approval of the destination (the
+  key-result hash) is the consent for the whole drive.
+- `/goal` stays as manual control; its use should fall over time. Hops driven by key results need no `/goal`: the
+  approved, hash-checked key-result check is the contract (it plays the role of a locked done-check).
+- A hop counts only if its key-result check was red before and green after, and `drive_gate` passed its commits.
+  A check that fails environmentally (exit 126/127, missing tool) is a blocked road, not a red key result.
 - One-way doors: push, deploy, publish, deletes outside the worktree, weakening a check, a goal contradicting its
   anti-goals, any change of intent (a key result added, changed or dropped).
 - Tripwires: key result not moved after its goal closed; two rejects or retries on one task; glovebox growing
@@ -52,7 +55,7 @@ wrong plan confidently. The human wants to press one pedal to move to the next g
 
 ## Open questions
 
-- Cruise control: how is a run bounded (hop count, context watermark, per objective)?
+- How is a run bounded (hop count, context watermark, per objective)? Bootstrap: stop near 60% context.
 - Does `/next` absorb `todo next` as its fallback, keeping `/n` as the alias?
 - How does `/plan` present the end-state doc for editing (shared review engine with `/grill-me`)?
 - Is a self-locking satnav itself a change of intent the human must opt into, per repo?
@@ -63,5 +66,5 @@ wrong plan confidently. The human wants to press one pedal to move to the next g
 | :-- | :-- |
 | Human approves every goal (status quo) | rejected: ceremony; approvals caught nothing |
 | Agent locks any goal it drafts | rejected: it could pick a check it can pass |
-| Loop runs by itself without a pedal | rejected: the human wants consent per hop; runaway risk |
-| Gas pedal + satnav on approved key results + manual override | proposed |
+| `/n` pressed per hop (gas pedal) | rejected: a press per hop is ceremony when the road is clear |
+| Self-driving on approved key results; stop at doors, blocks, unclear satnav, budget; `/n` resumes; `/goal` manual | proposed |

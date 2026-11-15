@@ -1,6 +1,6 @@
 # End-State Evolution
 
-The destination of this repository's agent workflow. `/n` (the gas pedal) reads this file to pick the next hop.
+The destination of this repository's agent workflow. The car reads this file to pick each next hop.
 Intent lives here and nowhere else: only the human changes the key results below.
 
 Scope: the local need (one person, this machine, code work in this repo). See
@@ -8,7 +8,7 @@ Scope: the local need (one person, this machine, code work in this repo). See
 
 ## Vision
 
-From any idea, the human reaches a verified, committed change in this repo by pressing the gas pedal. The human
+From any idea, the human reaches a verified, committed change in this repo without driving it by hand. The human
 makes every intent decision, the machine does the rest, and it stops by itself at one-way doors and unclear roads.
 
 ## Key results
@@ -20,10 +20,10 @@ the repo root. The first red key result, in file order, is the next hop.
 
 - **KR-1.1** The key results in this file parse into id, sentence and check — check: `bun test ./.pi/agent/extensions/_lib/kr.test.ts`
 
-### O2. The gas pedal works
+### O2. The car drives itself between stops
 
-- **KR-2.1** `/n` picks the first red key result and drafts a goal whose done-check is that key result's check — check: `bun test ./.pi/agent/extensions/_lib/next-hop.test.ts`
-- **KR-2.2** A goal on an approved, unchanged key-result check locks itself; a changed key result stops the car — check: `bun test ./.pi/agent/extensions/_lib/next-hop.test.ts -t self-lock`
+- **KR-2.1** The car picks the first red key result and drives on to the next one when its check turns green, without a human command — check: `bun test ./.pi/agent/extensions/_lib/next-hop.test.ts`
+- **KR-2.2** The car stops at a changed destination, a blocked road or a spent budget, and `/n` resumes it — check: `bun test ./.pi/agent/extensions/_lib/next-hop.test.ts -t stops`
 
 ### O3. Every Builder commit is graded mechanically, never by the agent itself
 
