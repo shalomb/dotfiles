@@ -1,6 +1,6 @@
 ---
 name: lean-worker
-description: Lean implementation agent for /drive Builders: no ambient extensions, no project context, only the tier-1 skills and the commit/CLI guards
+description: "Lean implementation agent for /drive Builders: no ambient extensions, no project context, only the tier-1 skills and the commit/CLI guards"
 aliases: lean, lean-builder
 acceptanceRole: writer
 thinking: medium
