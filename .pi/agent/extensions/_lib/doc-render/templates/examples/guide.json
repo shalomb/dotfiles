@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "eyebrow": "EX-7 · guide · as of 2 Feb 2031",
+    "title": "Setting up a local copy of the example service takes six steps and about twenty minutes",
+    "lede": "This guide gets a new teammate from an empty machine to a running local copy of the example service. Background in [r1].",
+    "asof": "2 Feb 2031",
+    "foot": "Source: an invented example. Replace every value with your own facts."
+  },
+  "for": "A new teammate with a laptop and access to the example repository. No earlier knowledge of the service is needed.",
+  "steps": [
+    {"title": "Get the code", "text": "Clone the example repository and open its top folder.", "check": "The folder holds a file named README."},
+    {"title": "Install the tools", "text": "Install the language runtime and the package manager named in the README."},
+    {"title": "Copy the sample settings", "text": "Copy the sample settings file to a new file called settings.local and leave the values as they are.", "check": "The new file exists and is not tracked by version control."},
+    {"title": "Start the service", "text": "Run the start command from the README and wait for the ready message.", "check": "The log says the service is ready on port 8080."},
+    {"title": "Open the health page", "text": "Open the local health page in a browser.", "check": "The page shows the word ok."},
+    {"title": "Run the tests", "text": "Run the test command once so you know the baseline is green before you change anything."}
+  ],
+  "checklist": [
+    {"item": "Repository cloned", "status": "done"},
+    {"item": "Tools installed", "status": "done"},
+    {"item": "Settings file created", "status": "doing"},
+    {"item": "Service answers on the health page", "status": "todo"},
+    {"item": "Baseline tests pass", "status": "todo"}
+  ],
+  "folds": [
+    {"title": "If the port is already in use", "text": "Stop whatever holds port 8080, or set a different port in settings.local and use that port in step five."},
+    {"title": "If the tests fail on a clean copy", "text": "Check the tool versions against the README first, then ask in the team channel with the first failing line."}
+  ],
+  "refs": [
+    {"id": "r1", "title": "Example service README", "href": "https://docs.example.test/service/readme", "kind": "source"}
+  ],
+  "glossary": {}
+}

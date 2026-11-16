@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "eyebrow": "EX-8 · runbook · as of 2 Feb 2031",
+    "title": "Restarting the example queue worker takes four steps and can be undone in two",
+    "lede": "Use this when the example queue stops draining and the worker needs a clean restart. Background in [r1].",
+    "asof": "2 Feb 2031",
+    "foot": "Source: an invented example. Replace every command and value with your own."
+  },
+  "purpose": "Bring the queue worker back to a healthy state without losing queued jobs.",
+  "preconditions": [
+    {"item": "You can reach the example cluster from your terminal", "check": "The cluster status command prints a version."},
+    {"item": "No deploy is running right now", "check": "The deploy dashboard shows no active run."},
+    {"item": "The on-call engineer knows you are about to restart", "check": "You posted in the on-call channel."}
+  ],
+  "steps": [
+    {"title": "Confirm the queue is stuck", "command": "queuectl depth --queue jobs", "expect": "The depth is above 500 and has not fallen in five minutes."},
+    {"title": "Pause new intake", "command": "queuectl pause --queue jobs", "expect": "The output says the queue is paused."},
+    {"title": "Restart the worker", "command": "workerctl restart --service jobs-worker", "expect": "The output says one worker restarted and is ready."},
+    {"title": "Resume intake and watch it drain", "command": "queuectl resume --queue jobs", "expect": "The depth falls for three checks in a row, one minute apart."}
+  ],
+  "rollback": [
+    {"title": "Pause intake again", "command": "queuectl pause --queue jobs", "expect": "The output says the queue is paused."},
+    {"title": "Return to the previous worker release", "command": "workerctl rollback --service jobs-worker", "expect": "The output names the earlier release and says it is ready."}
+  ],
+  "escalation": [
+    {"role": "On-call engineer", "when": "The depth keeps rising ten minutes after the restart", "how": "Page through the on-call tool"},
+    {"role": "Queue service owner", "when": "Jobs are lost or run twice", "how": "Message the owning team channel"}
+  ],
+  "refs": [
+    {"id": "r1", "title": "Example queue worker notes", "href": "https://docs.example.test/queue/worker", "kind": "source"}
+  ],
+  "glossary": {}
+}

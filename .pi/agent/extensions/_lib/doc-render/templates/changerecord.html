@@ -1,0 +1,54 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__</title><style>/*__KERNEL_CSS__*/</style>
+<style>
+main{max-width:1100px}
+h1,.lede,.sub{max-width:840px}
+.sumbox{background:#fff;border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:10px;padding:12px 16px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.two ul{margin:6px 0;padding-left:18px}
+.rg{display:grid;grid-template-columns:90px repeat(3,1fr);gap:6px;align-items:stretch}.rg .ax{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center}
+.rcell{min-height:64px;border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+.rcell.lo{background:#eef6f1}.rcell.mid{background:#f8eedb}.rcell.hi{background:#f8e3e0}
+.rid{display:inline-block;background:var(--ink);color:#fff;font-size:12px;font-weight:700;border-radius:5px;padding:1px 8px}
+.timeline{list-style:none;margin:0;padding:0 0 0 18px;border-left:2px solid var(--line)}.timeline li{margin:0 0 14px;position:relative;padding-left:14px}.timeline li:before{content:"";position:absolute;left:-25px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--acc)}.timeline time{font:700 13px ui-monospace,monospace;color:var(--acc)}
+.back{border-left-color:var(--R)}
+.pill{display:inline-block;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;padding:2px 10px;border-radius:999px;text-transform:uppercase}.pill.approved{background:var(--G)}.pill.pending{background:var(--A)}.pill.declined{background:var(--R)}
+@media (max-width:768px){.two{grid-template-columns:1fr}.rg{grid-template-columns:60px repeat(3,1fr)}}
+</style></head><body><main>__NOSCRIPT__
+<div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="lede" id="lede"></p>
+<div class="kpis" id="kpis"></div>
+<h2>Summary</h2><div class="sumbox" id="summary"></div>
+<h2>Scope</h2><div class="two"><div class="card"><div class="l">In scope</div><ul id="scin"></ul></div><div class="card"><div class="l">Out of scope</div><ul id="scout"></ul></div></div>
+<h2>Risk grid</h2><p class="sub">Likelihood across, impact up.</p><div class="rg" id="riskgrid"></div>
+<table id="risks" style="margin-top:14px"><thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>What reduces it</th></tr></thead><tbody></tbody></table>
+<h2>Implementation plan</h2><ul class="timeline" id="plan"></ul>
+<h2>Back-out plan</h2><div class="sumbox back" id="backout"></div>
+<h2>Test evidence</h2><table id="evidence"><thead><tr><th>Test</th><th>Result</th></tr></thead><tbody></tbody></table>
+<h2>Approvals</h2><table id="approvals"><thead><tr><th>Role</th><th>Status</th></tr></thead><tbody></tbody></table>
+<div id="glossbox"></div>
+<div id="refsbox"></div>
+__GATE__
+<p class="foot" id="foot"></p>
+<details class="made" id="made"><summary>How this page was made</summary><div id="madebody"></div></details>
+</main>
+<script type="application/json" id="recipe">__RECIPE__</script>
+<script>
+const DATA=__DATA__;
+/*__KERNEL_JS__*/
+const M=DATA.meta,D=DATA.derived;
+$("eyebrow").textContent=M.eyebrow;$("title").textContent=M.title;cite($("lede"),M.lede);
+const kp=(v,l,k)=>$("kpis").appendChild(el("div",{class:"card kpi"},[el("b",{text:String(v)}),el("span",{text:l}),basisTag(DATA.derived_basis[k])]));
+kp(D.risks,"risks listed","risks");kp(D.high_risks,"with a high rating","high_risks");kp(D.steps,"plan steps","steps");kp(D.approved+" of "+D.approvals,"approvals in","approved");
+cite($("summary"),DATA.summary);
+DATA.scope.in.forEach(t=>$("scin").appendChild(el("li",{text:t})));DATA.scope.out.forEach(t=>$("scout").appendChild(el("li",{text:t})));
+const rg=$("riskgrid"),sc={low:0,medium:1,high:2},tone=(lk,im)=>["lo","mid","hi"][Math.min(2,Math.floor((sc[lk]+sc[im])/2))];
+DATA.levels.slice().reverse().forEach(im=>{rg.appendChild(el("div",{class:"ax",text:im}));DATA.grid.filter(c=>c.impact===im).forEach(c=>rg.appendChild(el("div",{class:"rcell "+tone(c.likelihood,c.impact)},c.ids.map(i=>el("span",{class:"rid",plain:i})))));});
+rg.appendChild(el("div"));DATA.levels.forEach(l=>rg.appendChild(el("div",{class:"ax",text:l})));
+DATA.risks.forEach(r=>{document.querySelector("#risks tbody").appendChild(el("tr",{},[el("td",{},[el("span",{class:"rid",plain:r.id}),document.createTextNode(" "+r.title)]),el("td",{text:r.likelihood}),el("td",{text:r.impact}),el("td",{text:r.mitigation})]));});
+DATA.plan.forEach(p=>$("plan").appendChild(el("li",{},[el("time",{plain:p.time}),el("div",{},[el("b",{text:p.title})]),el("div",{class:"sub",text:p.text})])));
+DATA.backout.forEach(b=>$("backout").appendChild(el("p",{},[el("b",{text:b.title+". "}),document.createTextNode(b.text)])));
+DATA.evidence.forEach(e=>{document.querySelector("#evidence tbody").appendChild(el("tr",{},[el("td",{text:e.test}),el("td",{},[document.createTextNode(e.result),basisTag(e.basis)])]));});
+DATA.approvals.forEach(a=>{document.querySelector("#approvals tbody").appendChild(el("tr",{},[el("td",{text:a.role}),el("td",{},[el("span",{class:"pill "+a.status,text:a.status})])]));});
+renderGlossary($("glossbox"),el("h2",{text:"In plain words"}));
+cite($("foot"),M.foot);
+renderRefs($("refsbox"));
+renderMade();
+</script></body></html>

@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "eyebrow": "EX-9 · change record · as of 2 Feb 2031",
+    "title": "Moving the example reports database to a larger plan needs a ten minute pause on Saturday",
+    "lede": "The reports database is near its storage limit. This change moves it to the next plan size in one short window. Ticket [r1].",
+    "asof": "2 Feb 2031",
+    "foot": "Source: an invented example. Replace every value with your own facts."
+  },
+  "summary": "Resize the reports database from the current plan to the next one up. Reads stop for about ten minutes while the resize runs. No data model changes are part of this work.",
+  "scope": {
+    "in": ["Resize the reports database plan", "Check the nightly report job afterwards"],
+    "out": ["Schema changes", "Changes to the live orders database"]
+  },
+  "risks": [
+    {"id": "R1", "title": "Resize takes longer than the window", "likelihood": "medium", "impact": "medium", "mitigation": "Start early and agree a hard stop time"},
+    {"id": "R2", "title": "Nightly report job fails after the move", "likelihood": "low", "impact": "medium", "mitigation": "Run the job by hand before closing the window"},
+    {"id": "R3", "title": "Data is lost during the resize", "likelihood": "low", "impact": "high", "mitigation": "Take and test a fresh snapshot first"},
+    {"id": "R4", "title": "Readers see errors during the pause", "likelihood": "high", "impact": "low", "mitigation": "Post a notice on the reports page"}
+  ],
+  "plan": [
+    {"time": "09:00", "title": "Post the notice", "text": "Put the planned pause on the reports page and in the team channel."},
+    {"time": "09:30", "title": "Take a snapshot", "text": "Create a fresh snapshot and confirm it can be restored to a scratch copy."},
+    {"time": "10:00", "title": "Run the resize", "text": "Start the resize and watch the status until it says available."},
+    {"time": "10:20", "title": "Check and close", "text": "Run the nightly report job by hand, compare row counts, then remove the notice."}
+  ],
+  "backout": [
+    {"title": "Trigger", "text": "The resize is not available by 10:30 or the row counts differ."},
+    {"title": "Action", "text": "Stop the resize if it can be stopped, otherwise restore the snapshot to a new database and point readers at it."}
+  ],
+  "evidence": [
+    {"test": "Resize rehearsed on a scratch copy", "result": "Finished in 6 minutes", "basis": "measured"},
+    {"test": "Snapshot restored to a scratch copy", "result": "Row counts matched", "basis": "measured"},
+    {"test": "Report job after the resize", "result": "Expected to pass, not yet run", "basis": "judged"}
+  ],
+  "approvals": [
+    {"role": "Service owner", "status": "approved"},
+    {"role": "Change reviewer", "status": "pending"},
+    {"role": "Reports team lead", "status": "pending"}
+  ],
+  "refs": [
+    {"id": "r1", "title": "EX-9: reports database near its limit", "href": "https://jira.example.test/browse/EX-9", "kind": "ticket"}
+  ],
+  "glossary": {}
+}
