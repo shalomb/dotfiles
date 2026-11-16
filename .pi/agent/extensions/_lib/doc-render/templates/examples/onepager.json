@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "eyebrow": "EX-11 · one-pager · as of 2 Feb 2031",
+    "title": "Moving the example support inbox to one shared queue",
+    "lede": "A short brief for the support leads. Background in [r1].",
+    "asof": "2 Feb 2031",
+    "foot": "Source: an invented example. Replace every value with your own facts."
+  },
+  "ask": "We ask for approval to run a four week trial of one shared support queue.",
+  "tiles": [
+    {"label": "median first reply today", "value": "9 h", "basis": "measured"},
+    {"label": "requests per week", "value": "420", "basis": "measured"},
+    {"label": "trial length", "value": "4 weeks", "basis": "judged"}
+  ],
+  "spine": {
+    "today": "Three separate inboxes each have their own owner, and requests wait when that owner is away.",
+    "so": "Replies are slow for some customers and fast for others, depending on who is in.",
+    "instead": "One shared queue, worked in order by whoever is on shift, with the same templates for all.",
+    "we_ask": "Approve a four week trial starting on 2 March, with a review of reply times at the end."
+  },
+  "points": [
+    {"title": "Faster replies", "text": "No request waits for one person; the oldest request is always next."},
+    {"title": "Low cost", "text": "The trial uses the tools we already have and needs no new licences."},
+    {"title": "Easy to undo", "text": "The old inboxes stay open and can take back their requests at any time."}
+  ],
+  "decision": {
+    "question": "Do we run the four week trial?",
+    "options": ["Yes, start on 2 March", "Yes, but start later", "No, keep the three inboxes"],
+    "by": "20 Feb 2031"
+  },
+  "refs": [
+    {"id": "r1", "title": "EX-11: support inbox review", "href": "https://jira.example.test/browse/EX-11", "kind": "ticket"}
+  ],
+  "glossary": {}
+}

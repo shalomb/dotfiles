@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__</title><style>/*__KERNEL_CSS__*/</style>
+<style>
+main{max-width:900px}
+h1,.lede,.sub{max-width:800px}
+.ask{font-size:19px;color:var(--ink);max-width:800px}
+.spine{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;list-style:none;padding:0;margin:0}
+.spine li{background:#fff;border:1px solid var(--line);border-top:5px solid var(--acc);border-radius:10px;padding:10px 14px}
+.spine li:last-child{border-top-color:var(--G)}.spine .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.pts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.pts h3{font:600 16px system-ui;margin:0 0 4px}.pts p{margin:0}
+.askbox{background:#fff;border:1px solid var(--line);border-left:5px solid var(--G);border-radius:10px;padding:12px 16px}
+.askbox ul{margin:6px 0;padding-left:18px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+@media (max-width:768px){.spine,.pts{grid-template-columns:1fr}}
+</style></head><body><main>__NOSCRIPT__
+<div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="lede" id="lede"></p>
+<p class="ask" id="ask"></p>
+<div class="kpis" id="kpis"></div>
+<h2>The story</h2><ol class="spine" id="spine"></ol>
+<h2>Key points</h2><div class="pts" id="points"></div>
+<h2>Decision</h2><div class="askbox" id="decision"></div>
+<div id="glossbox"></div>
+<div id="refsbox"></div>
+__GATE__
+<p class="foot" id="foot"></p>
+<details class="made" id="made"><summary>How this page was made</summary><div id="madebody"></div></details>
+</main>
+<script type="application/json" id="recipe">__RECIPE__</script>
+<script>
+const DATA=__DATA__;
+/*__KERNEL_JS__*/
+const M=DATA.meta,D=DATA.derived;
+$("eyebrow").textContent=M.eyebrow;$("title").textContent=M.title;cite($("lede"),M.lede);
+cite($("ask"),DATA.ask);
+DATA.tiles.forEach(t=>$("kpis").appendChild(el("div",{class:"card kpi"},[el("b",{plain:t.value}),el("span",{text:t.label}),basisTag(t.basis)])));
+[["today","Today"],["so","So"],["instead","Instead"],["we_ask","We ask"]].forEach(([k,l])=>{const d=el("div",{});cite(d,DATA.spine[k]);$("spine").appendChild(el("li",{},[el("div",{class:"l",text:l}),d]));});
+DATA.points.forEach(p=>$("points").appendChild(el("div",{class:"card"},[el("h3",{text:p.title}),el("p",{text:p.text})])));
+const dq=DATA.decision;$("decision").appendChild(el("p",{},[el("b",{text:dq.question})]));
+const ul=el("ul",{});dq.options.forEach(o=>ul.appendChild(el("li",{text:o})));$("decision").appendChild(ul);
+$("decision").appendChild(el("p",{class:"sub",text:"Needed by: "+dq.by}));
+renderGlossary($("glossbox"),el("h2",{text:"In plain words"}));
+cite($("foot"),M.foot);
+renderRefs($("refsbox"));
+renderMade();
+</script></body></html>

@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "eyebrow": "EX-10 · postmortem · as of 2 Feb 2031",
+    "title": "The example checkout slowed for 47 minutes after a cache setting was lowered",
+    "lede": "A routine config change cut the cache lifetime and sent every request to the database. Incident ticket [r1].",
+    "asof": "2 Feb 2031",
+    "foot": "Source: an invented example. Replace every value with your own facts."
+  },
+  "summary": "On a weekday afternoon the checkout pages became slow for 47 minutes. A config change shortened the product cache lifetime from ten minutes to ten seconds. The database could not keep up, and pages timed out for some visitors until the change was reverted.",
+  "impact": [
+    {"label": "duration", "value": "47 min"},
+    {"label": "users affected", "value": "about 3,200"},
+    {"label": "failed orders", "value": "130"},
+    {"label": "peak error rate", "value": "18%"}
+  ],
+  "timeline": [
+    {"time": "14:05", "type": "detect", "text": "An alert fires for slow checkout responses and the on-call engineer acknowledges it."},
+    {"time": "14:20", "type": "mitigate", "text": "The team adds database read capacity, which lowers the error rate but does not end the slowness."},
+    {"time": "14:41", "type": "detect", "text": "A review of recent changes finds the cache lifetime edit made at 13:58."},
+    {"time": "14:52", "type": "resolve", "text": "The setting is reverted and response times return to normal within five minutes."}
+  ],
+  "root_cause": "The cache lifetime was set to ten seconds instead of ten minutes. Almost every product lookup then reached the database, which was sized for a much lower load.",
+  "contributing": [
+    "The config change was reviewed for syntax but not for its effect on load",
+    "The alert watched response time only, so the cause stayed hidden for over half an hour",
+    "No guard stops a cache lifetime below one minute"
+  ],
+  "went_well": [
+    "The alert fired within seven minutes of the change taking effect",
+    "Extra read capacity limited the failed orders while the cause was still unknown",
+    "The revert took one command and needed no new release"
+  ],
+  "actions": [
+    {"title": "Add a lower limit for the cache lifetime setting", "owner": "Platform team", "due": "16 Feb 2031", "status": "doing"},
+    {"title": "Alert on the cache hit rate as well as response time", "owner": "On-call rotation", "due": "9 Feb 2031", "status": "todo"},
+    {"title": "Add load impact to the config review checklist", "owner": "Release manager", "due": "9 Feb 2031", "status": "done"}
+  ],
+  "blameless": "The person who made the change followed the process as written. The gaps were in the checks around it, so the actions above fix the process and not the person.",
+  "refs": [
+    {"id": "r1", "title": "EX-10: slow checkout incident", "href": "https://jira.example.test/browse/EX-10", "kind": "ticket"}
+  ],
+  "glossary": {}
+}

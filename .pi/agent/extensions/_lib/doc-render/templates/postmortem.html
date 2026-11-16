@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__</title><style>/*__KERNEL_CSS__*/</style>
+<style>
+main{max-width:1000px}
+h1,.lede,.sub{max-width:840px}
+.sumbox{background:#fff;border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:10px;padding:12px 16px}
+.cause{border-left-color:var(--R)}.good{border-left-color:var(--G)}
+.timeline{list-style:none;margin:0;padding:0 0 0 18px;border-left:2px solid var(--line)}.timeline li{margin:0 0 14px;position:relative;padding-left:14px}.timeline li:before{content:"";position:absolute;left:-25px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--acc)}.timeline time{font:700 13px ui-monospace,monospace;color:var(--acc);margin-right:8px}
+.pill{display:inline-block;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;padding:2px 10px;border-radius:999px;text-transform:uppercase;min-width:64px;text-align:center}
+.pill.detect{background:var(--R)}.pill.mitigate{background:var(--A)}.pill.resolve{background:var(--G)}.pill.todo{background:var(--N)}.pill.doing{background:var(--A)}.pill.done{background:var(--G)}
+ul.plain{margin:6px 0;padding-left:18px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+</style></head><body><main>__NOSCRIPT__
+<div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="lede" id="lede"></p>
+<div class="kpis" id="kpis"></div>
+<h2>Summary</h2><div class="sumbox" id="summary"></div>
+<h2>Impact</h2><div class="kpis" id="impact"></div>
+<h2>Timeline</h2><ul class="timeline" id="timeline"></ul>
+<h2>Root cause</h2><div class="sumbox cause" id="cause"></div>
+<h2>Contributing factors</h2><ul class="plain" id="factors"></ul>
+<h2>What went well</h2><div class="sumbox good"><ul class="plain" id="well"></ul></div>
+<h2>Action items</h2><table id="actions"><thead><tr><th>Action</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody></tbody></table>
+<h2>Blameless note</h2><div class="sumbox" id="blameless"></div>
+<div id="glossbox"></div>
+<div id="refsbox"></div>
+__GATE__
+<p class="foot" id="foot"></p>
+<details class="made" id="made"><summary>How this page was made</summary><div id="madebody"></div></details>
+</main>
+<script type="application/json" id="recipe">__RECIPE__</script>
+<script>
+const DATA=__DATA__;
+/*__KERNEL_JS__*/
+const M=DATA.meta,D=DATA.derived;
+$("eyebrow").textContent=M.eyebrow;$("title").textContent=M.title;cite($("lede"),M.lede);
+const kp=(v,l,k)=>$("kpis").appendChild(el("div",{class:"card kpi"},[el("b",{text:String(v)}),el("span",{text:l}),basisTag(DATA.derived_basis[k])]));
+kp(D.events,"timeline events","events");kp(D.factors,"contributing factors","factors");kp(D.actions,"action items","actions");kp(D.open,"still open","open");
+cite($("summary"),DATA.summary);
+DATA.impact.forEach(m=>$("impact").appendChild(el("div",{class:"card kpi"},[el("b",{plain:m.value}),el("span",{text:m.label})])));
+DATA.timeline.forEach(e=>$("timeline").appendChild(el("li",{},[el("time",{plain:e.time}),el("span",{class:"pill "+e.type,text:e.type}),el("div",{text:e.text})])));
+cite($("cause"),DATA.root_cause);
+DATA.contributing.forEach(t=>$("factors").appendChild(el("li",{text:t})));DATA.went_well.forEach(t=>$("well").appendChild(el("li",{text:t})));
+DATA.actions.forEach(a=>{document.querySelector("#actions tbody").appendChild(el("tr",{},[el("td",{text:a.title}),el("td",{text:a.owner}),el("td",{plain:a.due}),el("td",{},[el("span",{class:"pill "+a.status,text:a.status})])]));});
+cite($("blameless"),DATA.blameless);
+renderGlossary($("glossbox"),el("h2",{text:"In plain words"}));
+cite($("foot"),M.foot);
+renderRefs($("refsbox"));
+renderMade();
+</script></body></html>
