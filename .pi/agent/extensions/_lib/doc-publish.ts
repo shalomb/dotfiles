@@ -7,6 +7,7 @@ import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "no
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { artCss, artFromFrontMatter } from "./doc-art.ts";
 import { type BrandConfig, type BrandContext, brandCss as resolveBrandCss } from "./doc-brand.ts";
 import { fileDoc } from "./doc-library.ts";
 import { type Finding, lintDoc } from "./doc-lint.ts";
@@ -158,6 +159,7 @@ export function publishDoc(o: PublishOptions, env: Env = process.env): PublishRe
 	const md = readFileSync(o.source, "utf8");
 	const findings = lintDoc(md, purpose);
 	const inlineBrand = o.brand ? resolveBrandCss({ style: o.style, ...o.brand.ctx }, o.brand.cfg) : "";
+	const art = artCss(artFromFrontMatter(md));
 	const provenance: ProvenanceRecipe | undefined = o.prompt
 		? {
 				prompt: o.prompt,
@@ -183,10 +185,11 @@ export function publishDoc(o: PublishOptions, env: Env = process.env): PublishRe
 		} catch (e) {
 			throw new Error(`render failed (${mode}): ${(e as { stderr?: string }).stderr?.trim() || (e as Error).message}`);
 		}
-		if (o.nav || inlineBrand || provenance) {
+		if (o.nav || inlineBrand || provenance || art) {
 			let page = readFileSync(out, "utf8");
 			if (o.nav) page = injectStyle(page, navCss(), "doc-nav-css");
 			if (inlineBrand) page = injectStyle(page, inlineBrand, "doc-brand-css");
+			if (art) page = injectStyle(page, art, "doc-art-css");
 			if (provenance) page = embedProvenance(page, provenance, { homes: [homedir()] });
 			writeFileSync(out, page);
 		}

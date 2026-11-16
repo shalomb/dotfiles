@@ -44,6 +44,14 @@ describe("publishDoc", () => {
 		expect(r.filed[0]).toContain("/deck/");
 		expect(readFileSync(r.rendered[0], "utf8")).toContain('data-start="present"');
 	});
+	it("an art front-matter key injects the motif override; no key injects none", () => {
+		const withArt = join(tmp, "art.md");
+		writeFileSync(withArt, "---\nart: circuit\n---\n# Art\n\nBody.\n");
+		const r = publishDoc({ source: withArt, purpose: "deck", downloads: tmp }, env());
+		expect(readFileSync(r.rendered[0], "utf8")).toContain('<style id="doc-art-css">\n:root{--art-right:var(--art-circuit)');
+		const plain = publishDoc({ source: src, purpose: "deck", downloads: tmp }, env());
+		expect(readFileSync(plain.rendered[0], "utf8")).not.toContain("doc-art-css");
+	});
 	it("refuses a missing source", () => {
 		expect(() => publishDoc({ source: join(tmp, "nope.md"), purpose: "report", downloads: tmp }, env())).toThrow(/no such source/);
 	});
