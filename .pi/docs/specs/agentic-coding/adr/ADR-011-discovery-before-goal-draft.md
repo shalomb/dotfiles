@@ -1,6 +1,6 @@
 # ADR-011: Discovery Runs Before a Goal Draft
 
-- **Status:** Accepted
+- **Status:** Accepted; amended 2026-11-15 (see Amendments 1-2)
 - **Date:** 2026-11-03
 - **Decider(s):** Human Partner
 - **Consulted:** Main Copilot (grill rounds [goal-ux-01](../rounds/goal-ux/round-01.md), [goal-ux-02](../rounds/goal-ux/round-02.md))
@@ -88,3 +88,10 @@ Every draft prompt (`/goal`, `/goal <outcome>`, the next goal after close) asks 
 `serves` (the end-state key result). `goal_propose` takes `serves`, which with the outcome names the goal (`g-<kr>-<outcome>`).
 `main`, `master` and `develop` never hold a goal: `/goal` there suggests a worktree branch instead, and `/drive` refuses such a goal.
 The `discovery` field on `goal_propose` and the four Draft Lint rules are deferred.
+
+## Amendment 2 (2026-11-15): in the loop, gap questions become logged assumptions
+
+When the loop drafts a goal ([ADR-012](ADR-012-intent-upstream-loop-runs-itself.md)), a tactical gap (path, approach, scope detail) is decided, stated as a one-line
+assumption in the draft and logged; it does not stop the loop. Only an intent gap stops: no key result applies,
+a key result is ambiguous, or Discovery finds it already true. Those are changes of intent and wait for the human.
+Discovery itself stays mandatory.

@@ -111,6 +111,7 @@ close retro did the KR move?    feeds /plan (replan), prunes scenarios
 | review.f11 | Keep drafting the next goal at once (thesis: drafting is frictionless, lock is the gate); archive the closed goal first; add `/goal show <id>`. | to build |
 | review.drivers | Builder owns drivers; driver/DSL diffs trigger the Verifier; Steward owns scenarios + DSL; G2 globs `features/**`, `*.acceptance.test.*`, `dsl/**`. | to build |
 | review.verifier | ADR-004 Amendment 2: Verifier on unmeasured modules, driver/DSL changes, triggers; skip only at holdout >= 0.85 with no driver/DSL change. Brief includes raw outcome and anti-goals. | to build |
+| next.one-hop | `/next` (alias `/n`) advances one hop: close green, drive red, auto-lock a goal whose Outcome Check is an approved KR's check, else one dialog; stop only at one-way doors (ADR-012). Supersedes goal.lock-dialog/close-green typing. | to build |
 | tests.layers | Adzic scenarios outside via Farley's four layers; Farley TDD inside; G5 applies to acceptance tests only. | settled |
 
 ## Known gaps

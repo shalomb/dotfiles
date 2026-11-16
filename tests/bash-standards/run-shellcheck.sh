@@ -46,9 +46,9 @@ main() {
     
     # Check each file
     for file in "${files[@]}"; do
-        ((total++))
+        total=$((total + 1))
         if ! check_file "$file"; then
-            ((failed++))
+            failed=$((failed + 1))
         fi
     done
     
