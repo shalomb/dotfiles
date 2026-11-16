@@ -16,7 +16,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { renderSearchPage } from "./doc-search.ts";
 
-export const KINDS = ["brief", "one-pager", "report", "deck", "status", "decision", "workshop", "guide", "runbook", "changerecord", "postmortem", "onepager"] as const;
+export const KINDS = ["brief", "one-pager", "report", "deck", "status", "decision", "workshop", "guide", "runbook", "changerecord", "postmortem", "onepager", "archmap"] as const;
 
 type Env = Record<string, string | undefined>;
 

@@ -80,7 +80,7 @@ describe("publishDoc", () => {
 });
 
 describe("publishDoc with a template", () => {
-	const KINDS: Record<TemplateType, string> = { decision: "decision", readout: "report", epicmap: "status", guide: "guide", runbook: "runbook", changerecord: "changerecord", postmortem: "postmortem", onepager: "onepager" };
+	const KINDS: Record<TemplateType, string> = { decision: "decision", readout: "report", epicmap: "status", guide: "guide", runbook: "runbook", changerecord: "changerecord", postmortem: "postmortem", onepager: "onepager", archmap: "archmap" };
 	/** Write a usable structured input named <type>-input.json (epicmap pointed at the Jira fixture). */
 	function input(type: TemplateType, edit?: (d: Record<string, any>) => void): string {
 		const doc = JSON.parse(templateExample(type));

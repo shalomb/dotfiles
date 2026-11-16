@@ -63,7 +63,7 @@ export function injectStyle(page: string, css: string, id: string): string {
 }
 
 /** Library kind for a purpose (the library keeps its historical kinds). */
-const KIND: Record<string, string> = { decision: "decision", report: "report", status: "status", workshop: "workshop", deck: "deck", brief: "brief", guide: "guide", runbook: "runbook", changerecord: "changerecord", postmortem: "postmortem", onepager: "onepager" };
+const KIND: Record<string, string> = { decision: "decision", report: "report", status: "status", workshop: "workshop", deck: "deck", brief: "brief", guide: "guide", runbook: "runbook", changerecord: "changerecord", postmortem: "postmortem", onepager: "onepager", archmap: "archmap" };
 
 /** The brand stylesheet for formal style: from brands.py for this path, else the only *.css in the brand folder. */
 export function formalCss(source: string, env: Env = process.env): string | undefined {

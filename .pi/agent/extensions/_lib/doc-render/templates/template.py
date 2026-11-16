@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render a structured doc (JSON) to one self-contained HTML page.
 
-  template.py <changerecord|decision|epicmap|guide|onepager|postmortem|readout|runbook> in.json out.html
+  template.py <archmap|changerecord|decision|epicmap|guide|onepager|postmortem|readout|runbook> in.json out.html
   template.py --list              the template types, as a JSON array
   template.py --example <type>    a valid example input for that type (examples/<type>.json)
   template.py --check-page FILE [--root DIR]...   exit 0 if the finished page holds no private path, else an error
@@ -18,7 +18,7 @@ sys.path.insert(0, str(HERE))
 
 from kernel import gate_page, redact, reject_private_paths, reject_style_keys, set_roots  # noqa: E402
 
-REGISTRY = {k: k for k in ("readout", "decision", "epicmap", "guide", "runbook", "changerecord", "postmortem", "onepager")}  # type -> module in this directory
+REGISTRY = {k: k for k in ("readout", "decision", "epicmap", "guide", "runbook", "changerecord", "postmortem", "onepager", "archmap")}  # type -> module in this directory
 
 
 def unknown(kind):

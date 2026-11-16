@@ -10,7 +10,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 export const TEMPLATE_SCRIPT = join(HERE, "doc-render", "templates", "template.py");
 
 /** Kept equal to the Python REGISTRY; a test compares it with `template.py --list`. */
-export const TEMPLATE_TYPES = ["epicmap", "readout", "decision", "guide", "runbook", "changerecord", "postmortem", "onepager"] as const;
+export const TEMPLATE_TYPES = ["epicmap", "readout", "decision", "guide", "runbook", "changerecord", "postmortem", "onepager", "archmap"] as const;
 export type TemplateType = (typeof TEMPLATE_TYPES)[number];
 
 /** The purpose each type files under in the library, and a short label. */
@@ -23,6 +23,7 @@ export const TEMPLATES: Record<TemplateType, { purpose: string; label: string }>
 	changerecord: { purpose: "changerecord", label: "Change record: what changes, the risk and the back-out" },
 	postmortem: { purpose: "postmortem", label: "Post-mortem: timeline, cause and action items" },
 	onepager: { purpose: "onepager", label: "One-pager: the whole case and the ask on a single page" },
+	archmap: { purpose: "archmap", label: "Archmap: architecture diagram from grid-placed nodes, boundaries and edges" },
 };
 
 type Env = Record<string, string | undefined>;

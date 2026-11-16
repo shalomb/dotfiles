@@ -33,7 +33,7 @@ class OpsTemplatesTest(unittest.TestCase):
     def test_new_types_are_listed_with_postmortem_and_onepager(self):
         r = subprocess.run([sys.executable, str(TEMPLATE), "--list"], capture_output=True, text=True)
         self.assertEqual(json.loads(r.stdout), sorted(["readout", "decision", "epicmap", "guide", "runbook",
-                                                       "changerecord", "postmortem", "onepager"]))
+                                                       "changerecord", "postmortem", "onepager", "archmap"]))
 
 
 if __name__ == "__main__":

@@ -88,3 +88,26 @@ describe("existing /doc parses survive the new routing", () => {
 		expect(parseDocArgs("how to deploy for newcomers")).toMatchObject({ template: "guide", audience: "newcomers", topic: "deploy" });
 	});
 });
+
+describe("archmap", () => {
+	it("is a template type with its own purpose, default depth 1", () => {
+		expect(TEMPLATE_TYPES as readonly string[]).toContain("archmap");
+		expect(TEMPLATES.archmap.purpose).toBe("archmap");
+		expect(PURPOSES as readonly string[]).toContain("archmap");
+	});
+	it.each(["architecture of the proxy", "archmap for billing", "infra diagram of the stack"])("routes '%s' to it", (s) => {
+		expect(parseDocArgs(s).template).toBe("archmap");
+	});
+	it("has an example that is JSON", () => {
+		expect(() => JSON.parse(templateExample("archmap"))).not.toThrow();
+	});
+	it("publishes its example to an inline-SVG page", () => {
+		const p = join(tmp, "archmap.json");
+		writeFileSync(p, templateExample("archmap"));
+		const r = publishDoc({ source: p, template: "archmap", downloads: tmp }, env());
+		expect(r.filed[0]).toContain(join("lib", "archmap"));
+		const page = readFileSync(r.rendered[0], "utf8");
+		expect(page).toContain("<main");
+		expect(page).toContain("data-node-id=");
+	});
+});

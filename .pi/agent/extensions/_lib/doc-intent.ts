@@ -5,7 +5,7 @@
 import { principleRules, templateGuide } from "./doc-principles.ts";
 import { isTemplateType, type TemplateType } from "./doc-templates.ts";
 
-export const PURPOSES = ["decision", "report", "status", "workshop", "deck", "brief", "guide", "runbook", "changerecord", "postmortem", "onepager"] as const;
+export const PURPOSES = ["decision", "report", "status", "workshop", "deck", "brief", "guide", "runbook", "changerecord", "postmortem", "onepager", "archmap"] as const;
 export type Purpose = (typeof PURPOSES)[number];
 export type Depth = 1 | 6 | 20 | "deeper" | "shorter";
 export type Action = "write" | "revise" | "find" | "list" | "file" | "open" | "index";
@@ -36,10 +36,11 @@ const TEMPLATE_WORDS: Record<string, TemplateType> = {
 	changerecord: "changerecord",
 	postmortem: "postmortem", "post-mortem": "postmortem",
 	onepager: "onepager",
+	archmap: "archmap", architecture: "archmap",
 };
 const TEMPLATE_PHRASES: [string, TemplateType][] = [
 	["how to", "guide"], ["cutover steps", "runbook"], ["change request", "changerecord"], ["change record", "changerecord"],
-	["incident review", "postmortem"], ["one pager", "onepager"], ["exec summary", "onepager"],
+	["incident review", "postmortem"], ["one pager", "onepager"], ["exec summary", "onepager"], ["infra diagram", "archmap"],
 ];
 const DEPTH_WORDS: Record<string, Depth> = {
 	"one-pager": 1, "1-pager": 1, onepager: 1, short: 1,
@@ -50,7 +51,7 @@ const DEPTH_WORDS: Record<string, Depth> = {
 const STYLE_WORDS: Record<string, "formal" | "house"> = { formal: "formal", corporate: "formal", house: "house", informal: "house" };
 const LIBRARY: Action[] = ["find", "list", "file", "open", "index"];
 
-export const DEFAULT_DEPTH: Record<Purpose, 1 | 6 | 20> = { decision: 1, report: 6, status: 1, workshop: 1, deck: 6, brief: 6, guide: 6, runbook: 6, changerecord: 1, postmortem: 6, onepager: 1 };
+export const DEFAULT_DEPTH: Record<Purpose, 1 | 6 | 20> = { decision: 1, report: 6, status: 1, workshop: 1, deck: 6, brief: 6, guide: 6, runbook: 6, changerecord: 1, postmortem: 6, onepager: 1, archmap: 1 };
 
 /** A concept brief: shaped work, after discovery and before the build commits, read by several audiences. */
 const BRIEF_GUIDE = [

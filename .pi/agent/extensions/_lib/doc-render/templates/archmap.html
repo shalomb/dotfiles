@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__</title><style>/*__KERNEL_CSS__*/</style>
+<style>
+/* colours come from the kernel tokens (--G green, --R red, --A amber, --N grey, --acc accent, --line rule); one extra violet token */
+:root{--vio:#6d4fd1;--card:#fff;--dot:rgba(29,27,22,.16);
+--kind-security:var(--R);--kind-cloud:var(--A);--kind-backend:var(--G);--kind-database:var(--vio);--kind-external:var(--N);--kind-neutral:var(--N)}
+@media (prefers-color-scheme:dark){:root{--bg:#15161a;--ink:#ecebe6;--mut:#a29f95;--line:#3a3b42;--acc:#e8896a;--R:#ef6b5f;--A:#e0a43c;--G:#4cb88a;--N:#9aa1ac;--vio:#9d86f0;--card:#1c1d22;--dot:rgba(236,235,230,.16)}.gate{color:var(--ink);background:var(--card)}}
+main{max-width:1500px}
+h1{max-width:30em;font-size:32px}
+.lede{max-width:50em}
+.card,.stage{background:var(--card)}
+.stage{border:1px solid var(--line);border-radius:16px;padding:12px 14px 14px;background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px;background-color:var(--card);overflow-x:auto}
+svg.archmap{display:block;width:100%;height:auto;min-width:900px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.node{--kc:var(--kind-backend);cursor:default;outline:none}
+.k-security{--kc:var(--kind-security)}.k-cloud{--kc:var(--kind-cloud)}.k-backend{--kc:var(--kind-backend)}.k-database{--kc:var(--kind-database)}.k-external{--kc:var(--kind-external)}
+.node .box{fill:color-mix(in srgb,var(--kc) 14%,var(--card));stroke:var(--kc);stroke-width:1.5;transition:stroke-width .12s,filter .12s}
+.node:hover .box,.node:focus-visible .box{stroke-width:3;filter:drop-shadow(0 2px 5px color-mix(in srgb,var(--kc) 45%,transparent))}
+.node .icon{fill:none;stroke:var(--kc);stroke-width:1.2;stroke-linejoin:round;stroke-linecap:round}
+.node .lbl{font-size:11px;font-weight:700;fill:var(--ink)}.node .sub{font-size:9px;fill:var(--mut)}
+.boundary{fill:color-mix(in srgb,var(--A) 7%,transparent);stroke:color-mix(in srgb,var(--A) 55%,transparent);stroke-width:1.2;stroke-dasharray:6 4}
+.tag{fill:var(--card);stroke:color-mix(in srgb,var(--A) 55%,transparent)}.tagt{font-size:9.5px;fill:var(--A)}
+.edge{fill:none;stroke:var(--N);stroke-width:1.6}
+.edge.s-emphasis{stroke:var(--G);stroke-width:2}.edge.s-security{stroke:var(--R);stroke-dasharray:6 4}.edge.s-deploy{stroke:var(--vio);stroke-dasharray:6 4}.edge.dash{stroke-dasharray:6 4}
+.mk path{fill:var(--N)}.mk.s-emphasis path{fill:var(--G)}.mk.s-security path{fill:var(--R)}.mk.s-deploy path{fill:var(--vio)}
+.pill rect{fill:var(--card);stroke:var(--N);stroke-width:.8}.pill text{font-size:9px;fill:var(--mut)}
+.pill.s-emphasis rect{stroke:var(--G)}.pill.s-emphasis text{fill:var(--G)}.pill.s-security rect{stroke:var(--R)}.pill.s-security text{fill:var(--R)}.pill.s-deploy rect{stroke:var(--vio)}.pill.s-deploy text{fill:var(--vio)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin:10px 4px 0;font-size:12px;color:var(--mut)}
+.lgh{font-weight:700;color:var(--ink)}
+.lg i{display:inline-block;width:18px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:1.5px solid var(--kc);background:color-mix(in srgb,var(--kc) 14%,var(--card))}
+.lg b{font-weight:400;font-size:10.5px;border:1px solid var(--line);border-radius:9px;padding:0 5px;margin-left:3px}
+.lg-security{--kc:var(--kind-security)}.lg-cloud{--kc:var(--kind-cloud)}.lg-backend{--kc:var(--kind-backend)}.lg-database{--kc:var(--kind-database)}.lg-external{--kc:var(--kind-external)}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:18px 0 0}
+.note{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.note h3{font:700 16px system-ui,sans-serif;margin:0 0 6px}.note ul{margin:0;padding-left:18px;font-size:14px;color:var(--mut)}.note li{margin:3px 0}
+.nd{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:var(--kind-neutral)}
+.nd-security{background:var(--kind-security)}.nd-cloud{background:var(--kind-cloud)}.nd-backend{background:var(--kind-backend)}.nd-database{background:var(--kind-database)}.nd-external{background:var(--kind-external)}
+details.made{color:var(--mut)}
+@media print{.stage{background-image:none}}
+</style></head><body><main>__NOSCRIPT__
+<!--ARCHMAP:BODY-->
+__GATE__
+<details class="made" id="made"><summary>How this page was made</summary><div id="madebody"></div></details>
+</main>
+<script type="application/json" id="recipe">__RECIPE__</script>
+<script>
+const DATA=__DATA__;
+/*__KERNEL_JS__*/
+renderMade();
+</script></body></html>
