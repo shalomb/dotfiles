@@ -31,15 +31,15 @@ const PURPOSE_WORDS: Record<string, Purpose> = {
 };
 /** Synonyms that route to a template (first word, or a leading phrase). "one-pager" alone stays a length modifier. */
 const TEMPLATE_WORDS: Record<string, TemplateType> = {
-	guide: "guide", "how-to": "guide", playbook: "guide", approach: "guide",
-	runbook: "runbook", procedure: "runbook", ops: "runbook",
-	changerecord: "changerecord", cr: "changerecord",
-	postmortem: "postmortem", "post-mortem": "postmortem", retro: "postmortem",
+	guide: "guide", "how-to": "guide", playbook: "guide",
+	runbook: "runbook", procedure: "runbook",
+	changerecord: "changerecord",
+	postmortem: "postmortem", "post-mortem": "postmortem",
 	onepager: "onepager",
 };
 const TEMPLATE_PHRASES: [string, TemplateType][] = [
 	["how to", "guide"], ["cutover steps", "runbook"], ["change request", "changerecord"], ["change record", "changerecord"],
-	["incident review", "postmortem"], ["one pager", "onepager"], ["1-pager summary", "onepager"], ["exec summary", "onepager"],
+	["incident review", "postmortem"], ["one pager", "onepager"], ["exec summary", "onepager"],
 ];
 const DEPTH_WORDS: Record<string, Depth> = {
 	"one-pager": 1, "1-pager": 1, onepager: 1, short: 1,
@@ -62,6 +62,17 @@ const BRIEF_GUIDE = [
 
 const isModifier = (w: string) => w.toLowerCase() in DEPTH_WORDS || w.toLowerCase() in STYLE_WORDS;
 
+/** Template route: keep "for <audience>" and a style word out of the topic. */
+function templateIntent(template: TemplateType, rest: string[]): DocIntent {
+	const forAt = rest.findIndex((w) => w.toLowerCase() === "for");
+	const aud: string[] = [];
+	let j = forAt < 0 ? rest.length : forAt + 1;
+	while (forAt >= 0 && j < rest.length && !isModifier(rest[j])) aud.push(rest[j++]);
+	const remaining = aud.length ? [...rest.slice(0, forAt), ...rest.slice(j)] : rest;
+	const style = remaining.map((w) => STYLE_WORDS[w.toLowerCase()]).find(Boolean);
+	return { action: "write", template, ...(aud.length ? { audience: aud.join(" ") } : {}), ...(style ? { style } : {}), topic: remaining.filter((w) => !(w.toLowerCase() in STYLE_WORDS)).join(" ") };
+}
+
 export function parseDocArgs(raw: string): DocIntent {
 	const words = raw.trim().split(/\s+/).filter(Boolean);
 	const first = words[0]?.toLowerCase();
@@ -76,8 +87,7 @@ export function parseDocArgs(raw: string): DocIntent {
 	const second = words[1]?.toLowerCase();
 	if (first && isTemplateType(first) && (first !== "decision" || second === "template" || second?.endsWith(".json"))) {
 		const rest = words.slice(second === "template" ? 2 : 1);
-		const style = rest.map((w) => STYLE_WORDS[w.toLowerCase()]).find(Boolean);
-		return { action: "write", template: first, ...(style ? { style } : {}), topic: rest.filter((w) => !(w.toLowerCase() in STYLE_WORDS)).join(" ") };
+		return templateIntent(first, rest);
 	}
 
 	const lower = words.map((w) => w.toLowerCase());
@@ -85,8 +95,7 @@ export function parseDocArgs(raw: string): DocIntent {
 	const synonym = phrase ? phrase[1] : first ? TEMPLATE_WORDS[first] : undefined;
 	if (synonym && !isTemplateType(first)) {
 		const rest = words.slice(phrase ? phrase[0].split(" ").length : 1);
-		const style = rest.map((w) => STYLE_WORDS[w.toLowerCase()]).find(Boolean);
-		return { action: "write", template: synonym, ...(style ? { style } : {}), topic: rest.filter((w) => !(w.toLowerCase() in STYLE_WORDS)).join(" ") };
+		return templateIntent(synonym, rest);
 	}
 
 	const intent: DocIntent = { action: "write", purpose: undefined, depth: undefined, audience: undefined, style: undefined, topic: "" };

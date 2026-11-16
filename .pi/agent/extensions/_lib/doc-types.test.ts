@@ -64,3 +64,27 @@ it("keeps 'one-pager on x' as a length modifier, not a template", () => {
 	expect(parseDocArgs("one-pager on intake")).toMatchObject({ depth: 1, topic: "on intake" });
 	expect(parseDocArgs("one-pager on intake").template).toBeUndefined();
 });
+
+describe("existing /doc parses survive the new routing", () => {
+	it("parses 'ops update on x' exactly as before (no template)", () => {
+		expect(parseDocArgs("ops update on X")).toEqual({ action: "write", purpose: undefined, depth: undefined, audience: undefined, style: undefined, topic: "ops update on X" });
+	});
+	it.each(["retro", "approach", "cr"])("does not route bare '%s' to a template", (w) => {
+		const i = parseDocArgs(`${w} on X`);
+		expect(i.template).toBeUndefined();
+		expect(i.topic).toBe(`${w} on X`);
+	});
+	it("keeps '1-pager summary of x' as depth 1 with the topic intact", () => {
+		const i = parseDocArgs("1-pager summary of X");
+		expect(i.template).toBeUndefined();
+		expect(i).toMatchObject({ depth: 1, topic: "summary of X" });
+	});
+	it("still routes 'onepager' and 'one pager' to the template", () => {
+		expect(parseDocArgs("onepager X").template).toBe("onepager");
+		expect(parseDocArgs("one pager X").template).toBe("onepager");
+	});
+	it("keeps the audience when routing to a template", () => {
+		expect(parseDocArgs("runbook for oncall engineers formal")).toMatchObject({ template: "runbook", audience: "oncall engineers", style: "formal", topic: "" });
+		expect(parseDocArgs("how to deploy for newcomers")).toMatchObject({ template: "guide", audience: "newcomers", topic: "deploy" });
+	});
+});
