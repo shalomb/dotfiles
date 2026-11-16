@@ -5,7 +5,7 @@
 import { principleRules, templateGuide } from "./doc-principles.ts";
 import { isTemplateType, type TemplateType } from "./doc-templates.ts";
 
-export const PURPOSES = ["decision", "report", "status", "workshop", "deck", "brief"] as const;
+export const PURPOSES = ["decision", "report", "status", "workshop", "deck", "brief", "guide", "runbook", "changerecord", "postmortem", "onepager"] as const;
 export type Purpose = (typeof PURPOSES)[number];
 export type Depth = 1 | 6 | 20 | "deeper" | "shorter";
 export type Action = "write" | "revise" | "find" | "list" | "file" | "open" | "index";
@@ -29,6 +29,18 @@ const PURPOSE_WORDS: Record<string, Purpose> = {
 	workshop: "workshop", session: "workshop",
 	deck: "deck", slides: "deck", presentation: "deck",
 };
+/** Synonyms that route to a template (first word, or a leading phrase). "one-pager" alone stays a length modifier. */
+const TEMPLATE_WORDS: Record<string, TemplateType> = {
+	guide: "guide", "how-to": "guide", playbook: "guide", approach: "guide",
+	runbook: "runbook", procedure: "runbook", ops: "runbook",
+	changerecord: "changerecord", cr: "changerecord",
+	postmortem: "postmortem", "post-mortem": "postmortem", retro: "postmortem",
+	onepager: "onepager",
+};
+const TEMPLATE_PHRASES: [string, TemplateType][] = [
+	["how to", "guide"], ["cutover steps", "runbook"], ["change request", "changerecord"], ["change record", "changerecord"],
+	["incident review", "postmortem"], ["one pager", "onepager"], ["1-pager summary", "onepager"], ["exec summary", "onepager"],
+];
 const DEPTH_WORDS: Record<string, Depth> = {
 	"one-pager": 1, "1-pager": 1, onepager: 1, short: 1,
 	"six-pager": 6, "6-pager": 6, sixpager: 6, brief: 6,
@@ -38,7 +50,7 @@ const DEPTH_WORDS: Record<string, Depth> = {
 const STYLE_WORDS: Record<string, "formal" | "house"> = { formal: "formal", corporate: "formal", house: "house", informal: "house" };
 const LIBRARY: Action[] = ["find", "list", "file", "open", "index"];
 
-export const DEFAULT_DEPTH: Record<Purpose, 1 | 6 | 20> = { decision: 1, report: 6, status: 1, workshop: 1, deck: 6, brief: 6 };
+export const DEFAULT_DEPTH: Record<Purpose, 1 | 6 | 20> = { decision: 1, report: 6, status: 1, workshop: 1, deck: 6, brief: 6, guide: 6, runbook: 6, changerecord: 1, postmortem: 6, onepager: 1 };
 
 /** A concept brief: shaped work, after discovery and before the build commits, read by several audiences. */
 const BRIEF_GUIDE = [
@@ -66,6 +78,15 @@ export function parseDocArgs(raw: string): DocIntent {
 		const rest = words.slice(second === "template" ? 2 : 1);
 		const style = rest.map((w) => STYLE_WORDS[w.toLowerCase()]).find(Boolean);
 		return { action: "write", template: first, ...(style ? { style } : {}), topic: rest.filter((w) => !(w.toLowerCase() in STYLE_WORDS)).join(" ") };
+	}
+
+	const lower = words.map((w) => w.toLowerCase());
+	const phrase = TEMPLATE_PHRASES.find(([ph]) => lower.slice(0, ph.split(" ").length).join(" ") === ph);
+	const synonym = phrase ? phrase[1] : first ? TEMPLATE_WORDS[first] : undefined;
+	if (synonym && !isTemplateType(first)) {
+		const rest = words.slice(phrase ? phrase[0].split(" ").length : 1);
+		const style = rest.map((w) => STYLE_WORDS[w.toLowerCase()]).find(Boolean);
+		return { action: "write", template: synonym, ...(style ? { style } : {}), topic: rest.filter((w) => !(w.toLowerCase() in STYLE_WORDS)).join(" ") };
 	}
 
 	const intent: DocIntent = { action: "write", purpose: undefined, depth: undefined, audience: undefined, style: undefined, topic: "" };
@@ -143,7 +164,7 @@ export function buildDocPrompt(i: DocIntent): string {
 		if (i.purpose === "brief") lines.push(...BRIEF_GUIDE);
 	} else {
 		lines.push(
-			"- purpose: choose the purpose from the session: open options or a choice → decision; findings from data → report; finished work → status; questions needing people together → workshop.",
+			"- purpose: choose the purpose from the session: open options or a choice → decision; findings from data → report; finished work → status; questions needing people together → workshop; steps to follow → guide; an operating procedure → runbook; a change to approve → changerecord; an incident review → postmortem; the whole case on one page → onepager.",
 		);
 		if (typeof i.depth === "number") lines.push(`- depth: ${pages(i.depth)}`);
 	}

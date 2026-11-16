@@ -33,7 +33,7 @@ describe("registry", () => {
 		expect([...TEMPLATE_TYPES].sort()).toEqual([...listed].sort());
 	});
 	it("says which purpose each type files as", () => {
-		expect(Object.fromEntries(TEMPLATE_TYPES.map((t) => [t, TEMPLATES[t].purpose]))).toEqual({ decision: "decision", readout: "report", epicmap: "status" });
+		expect(Object.fromEntries(TEMPLATE_TYPES.map((t) => [t, TEMPLATES[t].purpose]))).toEqual({ decision: "decision", readout: "report", epicmap: "status", guide: "guide", runbook: "runbook", changerecord: "changerecord", postmortem: "postmortem", onepager: "onepager" });
 		for (const t of TEMPLATE_TYPES) expect(TEMPLATES[t].label.length).toBeGreaterThan(0);
 	});
 	it("isTemplateType accepts only the three types", () => {

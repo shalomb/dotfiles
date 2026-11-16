@@ -6,7 +6,7 @@
  *
  *   /doc                         infer purpose + topic from the session
  *   /doc decision|report|status|workshop|deck|brief [topic] [for <who>] [1-pager|6-pager|20-pager] [formal]
- *   /doc epicmap|readout|decision <input.json> [formal]   publish a structured input directly (no model)
+ *   /doc epicmap|readout|decision|guide|runbook|changerecord|postmortem|onepager <input.json> [formal]   publish a structured input directly (no model)
  *   /doc epicmap|readout [topic] | decision template [topic]   the model writes the input, then publishes it
  *   /doc deeper | shorter | for <who> | formal     revise the last document
  *   /doc find <words> | list [purpose] | file <html> | open | index
@@ -29,7 +29,7 @@ function brandLine(css: string | undefined, style?: string): string {
 }
 
 const TemplateParams = Type.Object({
-	type: Type.Union(TEMPLATE_TYPES.map((t) => Type.Literal(t)), { description: "epicmap | readout | decision" }),
+	type: Type.Union(TEMPLATE_TYPES.map((t) => Type.Literal(t)), { description: "epicmap | readout | decision | guide | runbook | changerecord | postmortem | onepager" }),
 });
 
 /** The lines every publish reports, from the tool and from `/doc <type> <input.json>`. */
@@ -48,7 +48,7 @@ function publishLines(r: ReturnType<typeof publishDoc>, style?: string): string[
 const Params = Type.Object({
 	source: Type.String({ description: "Path to the Markdown source to publish (with template: the JSON input file)" }),
 	template: Type.Optional(Type.Union(TEMPLATE_TYPES.map((t) => Type.Literal(t)), { description: "epicmap | readout | decision: source is then a JSON input file; get a valid example with doc_template" })),
-	purpose: Type.Optional(Type.Union(PURPOSES.map((p) => Type.Literal(p)), { description: "decision | report | status | workshop | deck | brief (deck = same page, opens in present mode; brief = concept brief)" })),
+	purpose: Type.Optional(Type.Union(PURPOSES.map((p) => Type.Literal(p)), { description: "decision | report | status | workshop | deck | brief | guide | runbook | changerecord | postmortem | onepager (deck = same page, opens in present mode; brief = concept brief)" })),
 	style: Type.Optional(Type.Union([Type.Literal("house"), Type.Literal("formal")], { description: "formal applies the brand stylesheet" })),
 	tags: Type.Optional(Type.Array(Type.String())),
 	eyebrow: Type.Optional(Type.String({ description: "small caps line above the title, e.g. '<team> · Draft'" })),
@@ -62,7 +62,7 @@ export default function (pi: ExtensionAPI) {
 		name: "doc_publish",
 		label: "Publish document",
 		description:
-			"Render a Markdown document to self-contained HTML (purpose=deck: the same page, opening in present mode; every page can present with P), check it against the docs-authoring rules, copy it to ~/Downloads, file it in the document library and return its URLs. Findings are warnings; fix what you can and publish again (old renders are kept). With template (epicmap, readout or decision) source is a structured JSON input file instead of Markdown (see doc_template).",
+			"Render a Markdown document to self-contained HTML (purpose=deck: the same page, opening in present mode; every page can present with P), check it against the docs-authoring rules, copy it to ~/Downloads, file it in the document library and return its URLs. Findings are warnings; fix what you can and publish again (old renders are kept). With template (epicmap, readout, decision, guide, runbook, changerecord, postmortem or onepager) source is a structured JSON input file instead of Markdown (see doc_template).",
 		promptSnippet: "Render, check, file and link a /doc Markdown document in one call",
 		parameters: Params,
 		async execute(_id, params: any) {
@@ -80,8 +80,8 @@ export default function (pi: ExtensionAPI) {
 	pi.registerTool({
 		name: "doc_template",
 		label: "Doc template example",
-		description: "For a /doc template type (epicmap, readout, decision): the purpose it files as, a valid example input to copy and the pointer to its rules. Read-only.",
-		promptSnippet: "Get the input schema example for a /doc template (epicmap, readout, decision)",
+		description: "For a /doc template type (epicmap, readout, decision, guide, runbook, changerecord, postmortem, onepager): the purpose it files as, a valid example input to copy and the pointer to its rules. Read-only.",
+		promptSnippet: "Get the input schema example for a /doc template (epicmap, readout, decision, guide, runbook, changerecord, postmortem, onepager)",
 		parameters: TemplateParams,
 		async execute(_id, params: any) {
 			try {
@@ -102,7 +102,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("doc", {
-		description: "Write a decision, report, status, workshop pack, deck or concept brief from this session; publish an epicmap, readout or decision from a JSON input; or find/list/file/open documents",
+		description: "Write a decision, report, status, workshop pack, deck or concept brief from this session; publish an epicmap, readout, decision, guide, runbook, change record, post-mortem or one-pager from a JSON input; or find/list/file/open documents",
 		handler: async (args, ctx) => {
 			const intent = parseDocArgs(args);
 			const say = (text: string) => ctx.ui.notify(text, "info");

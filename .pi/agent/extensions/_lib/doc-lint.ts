@@ -89,6 +89,32 @@ function checkPrinciples(md: string): Finding[] {
 	return f;
 }
 
+const wordCount = (md: string) => prose(md).split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+
+/** Per-type structure rules for the document types that are not decision/report/brief. */
+function lintType(md: string, purpose: string): Finding[] {
+	const f: Finding[] = [];
+	const add = (code: string, message: string) => f.push({ code, message });
+	if (purpose === "guide" && !/^\s*1\.\s/m.test(prose(md))) add("guide-steps", "Add numbered steps ('1. ...') a reader can follow in order.");
+	if (purpose === "runbook") {
+		if (!/^(```|~~~)/m.test(md)) add("runbook-code", "Add a code block with the exact commands to run.");
+		if (!has(md, /roll ?back/i)) add("runbook-rollback", "Add a '## Rollback' section: how to undo the procedure.");
+	}
+	if (purpose === "changerecord") {
+		if (!has(md, /back-?out/i)) add("changerecord-backout", "Add a '## Back-out' section: how to undo the change.");
+		if (!has(md, /risk/i)) add("changerecord-risk", "Add a '## Risk' section: what could go wrong and how likely.");
+	}
+	if (purpose === "postmortem") {
+		if (!has(md, /timeline/i)) add("postmortem-timeline", "Add a '## Timeline' section: what happened, in order.");
+		if (!has(md, /action/i)) add("postmortem-actions", "Add a '## Action items' section: what changes, who owns it.");
+	}
+	if (purpose === "onepager") {
+		if (wordCount(md) > 400) add("onepager-length", `A one-pager is at most about 400 words; this has ${wordCount(md)}.`);
+		if (!has(md, /\bask\b/i) && !/^\*\*(?:The ask)[^*]*:\*\*\s*\S/m.test(md)) add("onepager-ask", "State the ask: a '## Ask' section or a '**The ask in one sentence:**' line.");
+	}
+	return f;
+}
+
 export function lintDoc(md: string, purpose = "report"): Finding[] {
 	const f: Finding[] = [];
 	const add = (code: string, message: string) => f.push({ code, message });
@@ -140,5 +166,6 @@ export function lintDoc(md: string, purpose = "report"): Finding[] {
 		else if (!/recommended\s*\(judged\)/i.test(md))
 			add("recommendation-basis", "Mark the recommendation as yours: 'Recommended (judged): B', then the one reason and what would change your mind.");
 	}
+	f.push(...lintType(md, purpose));
 	return f;
 }
