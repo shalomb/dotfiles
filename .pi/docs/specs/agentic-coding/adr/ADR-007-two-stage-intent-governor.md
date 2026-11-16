@@ -1,6 +1,6 @@
 # ADR-007: Two-Stage Intent Governor (Ingress Observations, Observation Heat WSJF, and Convergence Pruner)
 
-- **Status:** Accepted, with TB-4 evidence 2026-10-31 (`H4` passes; necessity unproven); see [Amendment 1](#amendment-1-2026-10-31-tb-4-evidence)
+- **Status:** Accepted, with TB-4 evidence 2026-10-31 (`H4` passes; necessity unproven); see [Amendment 1](#amendment-1-2026-10-31-tb-4-evidence); amended 2026-11-15 (Amendment 2)
 - **Date:** 2026-10-31
 - **Decider(s):** unop, Main Copilot (Design Session)
 - **Consulted:** Obsidian `Tech/AI/AgenticLoops.md` (`Backpressure Loop`), `todo-navigator` (WSJF engine)
@@ -109,3 +109,8 @@ Findings were rare (3 of 27 Builder runs), so the runaway backlog this ADR guard
 - **Verify before folding.** Admission routes findings by claimed priority and size, and never checks them. A Builder produced a *false* finding (a non-existent `.venv` shadowing) that the filter would have folded into the next task as work. Before a finding is folded or promoted, run one deterministic check where one exists (e.g. reproduce the claim with the command the Builder cites). Otherwise log it as an `Observation` only.
 
 **Re-test** with high-finding-rate work (refactors, exploratory reviews) for ≥ 5 waves. That is the regime where the control arm should diverge if the governor is necessary.
+
+## Amendment 2 (2026-11-15): the glovebox is the Observation stream of a drive
+
+Items a drive parks off-route (`todo add --goal none`) are Observations. The goal loop's tripwire "glovebox
+growing faster than key results turn green" ([ADR-012](ADR-012-intent-upstream-loop-runs-itself.md)) is a Convergence Ratio check at hop boundaries.

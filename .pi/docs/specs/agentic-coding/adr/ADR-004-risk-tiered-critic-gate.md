@@ -113,3 +113,23 @@ Evidence lives in `~/shalomb/agentic-falsify/runs/h3-tn-*.txt`, harness commit `
 **Method lesson.** A catch rate computed on mutants that were shown to whoever wrote the tests is not evidence. Only the holdout partition counts toward `H3`. Re-seeding is not a holdout when the mutant population is small: 68 of 100 seed-1 mutants overlapped seed 0.
 
 **Consequence.** For the code `TB-4` and `TB-5` extend, review cost will not drop to deterministic-only. `DRV-04`'s savings now apply only to measured-strong modules, and the `< 50%` review-token target must be re-measured once the Critic is in the loop.
+
+## Amendment 2 (2026-11-15): Spec Steward, mechanical gate and Verifier triggers
+
+**Change.** In `/drive` the Builder no longer writes its own acceptance tests. A Spec Steward writes the red scenarios and the DSL. A mechanical gate (`.pi/agent/extensions/_lib/drive-gate.ts`) runs on each Builder diff:
+- **Reject:** G1 not red-first, G2 a Steward path touched, G3 a scenario or assertion weakened.
+- **Warn:** G4 scope, G5 trace, G6 glossary.
+
+**Verifier triggers.** The Critic (`bart-verifier`: read-only, a different model family from the Builder, brief includes the goal's raw outcome and `anti_goals`) runs when any of these hold:
+1. The module is unmeasured. Amendment 1 holds: unmeasured modules default to the Critic.
+2. The gate raised any warning.
+3. The Builder changed `**/drivers/**` or `**/dsl/**`.
+4. The change touches hub, security or public-API paths.
+5. The task is a retry.
+6. The task is P0.
+
+It may be skipped only when the module's holdout score is >= 0.85, there is no driver or DSL change, and the gate passed clean.
+
+**Consequence.** The Builder cannot self-grade through drivers: driver stubs face the Verifier.
+
+**Revisit.** When gate logs in `trajectories.jsonl` show a G4 false-positive rate low enough, promote G4 to reject.

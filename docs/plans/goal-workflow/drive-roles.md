@@ -47,7 +47,8 @@ todo batch --goal --claim
 ## Builder steps (brief contract)
 
 1. Restate task id and scenario ids in one line.
-2. Run the scenario(s): confirm red. Already green -> stop, receipt `already-green`.
+2. Run the scenario(s). Behaviour tasks must be red; already green -> stop,
+   receipt `already-green`. Refactor tasks are green at base and head.
 3. Inner TDD: unit test red -> code -> green, small steps.
 4. Run scenario(s) + repo fast target: green.
 5. Spec looks wrong -> do not edit it; receipt `spec-dispute: <scenario> <why>`.
@@ -64,10 +65,17 @@ todo batch --goal --claim
 | G5 | Each new test names a scenario or rule (`// Scenario:` / `@KR`) | warn -> Verifier |
 | G6 | New identifiers and step words in glossary; no avoid-list names | warn -> Verifier |
 
+Implemented in `.pi/agent/extensions/_lib/drive-gate.ts` (`runGate`), tested in `drive-gate.test.ts`.
+
 ## Escalation
 
-- `spec-dispute` -> Steward re-reads; if the spec stands, Builder retries once;
-  else glovebox (motorway) or rest stop (scenic). Never a Builder spec edit.
+- `spec-dispute` -> Steward re-reads. If the spec is wrong, the Steward fixes
+  and recommits in-wave and the Builder retries once. If the spec stands, the
+  Builder retries once. Escalate to the human only when the locked goal
+  contract itself is wrong. Never a Builder spec edit.
+- `already-green` on a behaviour task -> orchestrator re-runs G1-G6 at head;
+  if green and clean, mark done; else ask the Steward whether the scenario is
+  vacuous.
 - Two failed gates on one task -> stop the task, report, carry on with others.
 
 ## Gate strictness (settled: G1-G3 reject, G4 measured, G5-G6 warn)
@@ -91,7 +99,7 @@ G5-G6 warn.
 
 Catches what the gate cannot: code that fits the example, not the rule;
 glossary words used in the wrong sense; side effects, security, public API.
-Runs on triggers. Agent: `bart-verifier` (Bart skill, read-only, different
+Runs on the triggers listed in ADR-004 Amendment 2. Agent: `bart-verifier` (Bart skill, read-only, different
 model family from the Builder).
 
 ## Agents: thin definitions, skills do the work
