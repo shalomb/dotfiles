@@ -373,6 +373,9 @@ local-cleanup: ## Cleanup .local/share and .local/lib cruft
 
 PI_EXT_LIB := .pi/agent/extensions/_lib
 
+# Per-topic test ladders (make test-ladders | test-<topic>[-unit|-io|-flow]); topics live beside the code as <topic>.mk
+include .pi/agent/extensions/pi-ladder.mk
+
 .PHONY: test-agentctl
 test-agentctl: ## agentctl BDD + unit tests (SSH/GPG key availability)
 	@echo "Running agentctl tests..."
