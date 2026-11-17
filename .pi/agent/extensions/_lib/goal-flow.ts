@@ -184,17 +184,30 @@ async function integrityProblem(d: Deps, g: Goal): Promise<string | undefined> {
 	return undefined;
 }
 
+const STATUS_GLYPH: Record<string, string> = { draft: "◌", active: "●", closed: "✔", dropped: "✘" };
+const STATUS_LABEL: Record<string, string> = { draft: "DRAFT", active: "LOCKED", closed: "CLOSED", dropped: "DROPPED" };
+
+/** The goal as a scannable card: header, outcome, then one titled block per section. */
 export function summary(g: Goal): string {
+	const dc = g.doneCheck;
+	const list = (items: string[], mark: string) => (items.length ? items.map((i) => `│   ${mark} ${i}`) : ["│   (none)"]);
+	const lock = dc.lockedAt ? `locked ${dc.lockedAt} · red on base ${dc.baseCommit}` : "not locked";
 	const lines = [
-		`${g.id} [${g.status}] ${g.outcome}`,
-		`Done-check (${g.doneCheck.kind}${g.doneCheck.lockedAt ? `, locked ${g.doneCheck.lockedAt}, failed on base ${g.doneCheck.baseCommit}` : ", not locked"}):`,
-		...checkLines(g),
-		...(g.doneCheck.outcomeChecks.length ? [`Outcome Check: ${g.doneCheck.outcomeChecks.join(", ")}`] : []),
-		"Anti-goals:", bullets(g.antiGoals),
-		"Scope anchors:", bullets(g.scopeAnchors),
-		"Spec links:", bullets(g.specLinks),
+		`╭─ ${STATUS_GLYPH[g.status] ?? "?"} ${STATUS_LABEL[g.status] ?? g.status} · ${g.id}`,
+		"│",
+		`│  ${g.outcome}`,
+		"│",
+		`├─ Done-check · ${dc.kind} · ${lock}`,
+		...(dc.kind === "human" ? ["│   (human-confirm check: you confirm the outcome yourself)"] : dc.commands.map((c) => `│   $ ${c}`)),
+		...(dc.outcomeChecks.length ? [`│   ★ Outcome Check: ${dc.outcomeChecks.join(", ")}`] : []),
+		"├─ Anti-goals",
+		...list(g.antiGoals, "✗"),
+		"├─ Scope",
+		...list(g.scopeAnchors, "▸"),
+		"├─ Specs",
+		...list(g.specLinks, "↗"),
 	];
-	if (g.closedBy) lines.push(`Closed ${g.closedAt} by ${g.closedBy}.`);
+	lines.push(g.closedBy ? `╰─ Closed ${g.closedAt} by ${g.closedBy}` : "╰─");
 	return lines.join("\n");
 }
 
@@ -206,7 +219,7 @@ export async function showGoal(d: Deps): Promise<void> {
 		if (error === NO_GOAL) return await draftFromContext(d);
 		return d.ui.notify(error!, "error");
 	}
-	if (goal.status === "draft") return d.ui.notify(`${summary(goal)}\nNext: /goal lock when this is right (the agent can still change it); /goal drop to abandon.`, "info");
+	if (goal.status === "draft") return d.ui.notify(`${summary(goal)}\n→ Next: /goal lock when this is right (the agent can still change it); /goal drop to abandon.`, "info");
 	if (goal.status === "closed" || goal.status === "dropped") {
 		d.ui.notify(`${summary(goal)}\nThis goal is finished. Drafting the next goal from the discussion; review it, then /goal lock. (Or /goal <outcome> to state it yourself.)`, "info");
 		return await draftFromContext(d, goal);
@@ -217,15 +230,15 @@ export async function showGoal(d: Deps): Promise<void> {
 	if (goal.doneCheck.kind === "human") status = "Human-confirm check: /goal done asks you to confirm.";
 	else {
 		const run = await runChecks(d.exec, goal.doneCheck.commands, d.root);
-		status = run.exit === 0 ? `Done-check green.\n${run.output}` : `Done-check red (exit ${run.exit}).\n${run.output}`;
-		if (run.exit !== 0) return d.ui.notify(`${summary(goal)}\n${status}\nNext: do the work, /goal to re-check; /goal unlock to correct the goal`, "info");
+		status = run.exit === 0 ? `✔ Done-check green.\n${run.output}` : `✘ Done-check red (exit ${run.exit}).\n${run.output}`;
+		if (run.exit !== 0) return d.ui.notify(`${summary(goal)}\n${status}\n→ Next: do the work, /goal to re-check; /goal unlock to correct the goal`, "info");
 		d.ui.notify(`${summary(goal)}\n${status}`, "info");
 		// Green is the moment to close: offer it here instead of making the human remember /goal done.
 		const choice = await d.ui.select(`${goal.id}: done-check green. Close the goal?`, ["Close the goal", "Not yet"]);
 		if (choice === "Close the goal") return await doneGoal(d);
 		return d.ui.notify("Still active. /goal done closes it when you are ready.", "info");
 	}
-	d.ui.notify(`${summary(goal)}\n${status}\nNext: /goal done`, "info");
+	d.ui.notify(`${summary(goal)}\n${status}\n→ Next: /goal done`, "info");
 }
 
 /** `/goal show <id>`: any goal by id, live or archived. */

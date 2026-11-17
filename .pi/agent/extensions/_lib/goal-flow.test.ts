@@ -263,7 +263,7 @@ test("show prints the contract summary of a locked goal", async () => {
 	expect(lastNote()).toContain("g-users-can-export-a-backlog-as-csv");
 	expect(lastNote()).toContain("Users can export a backlog as CSV");
 	expect(lastNote()).toContain("test -f export.csv");
-	expect(lastNote()).toMatch(/active/);
+	expect(lastNote()).toMatch(/LOCKED/);
 });
 
 // Contract: one-line reminder only for an active goal on the current branch
@@ -585,7 +585,7 @@ test("bare /goal on a closed goal shows it, saves a fresh draft and asks the age
 	await draftWithCheck();
 	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
 	await runGoalCommand(deps(), "");
-	expect(notes.join("\n")).toMatch(/closed/);
+	expect(notes.join("\n")).toMatch(/CLOSED/);
 	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft" });
 	expect(toAgent.join("\n")).toMatch(/next goal/i);
 	expect(toAgent.join("\n")).toMatch(/discussion|conversation/);
@@ -1026,7 +1026,7 @@ test("/goal show <id> shows an archived goal", async () => {
 	notes = [];
 	expect(parseGoalArgs("show g-users-can-export-csv")).toEqual({ kind: "show-id", id: "g-users-can-export-csv" });
 	await runGoalCommand(deps(), "show g-users-can-export-csv");
-	expect(lastNote()).toMatch(/g-users-can-export-csv \[dropped\] Users can export CSV/);
+	expect(lastNote()).toMatch(/DROPPED · g-users-can-export-csv[\s\S]*Users can export CSV/);
 	await runGoalCommand(deps(), "show g-nope");
 	expect(lastNote()).toMatch(/No goal g-nope/);
 });
