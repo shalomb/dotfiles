@@ -1,4 +1,5 @@
 // AGENT_CONTEXT: prove arrival by replay — parse a Serves commit's trailers into a hop record, recompute its road class from the diff, and verify its check was red at base and green at head.
+import { checkWeakening, type GateInput, isStewardPath } from "./drive-gate";
 export type Road = "motorway" | "city";
 
 export interface Hop {
@@ -17,6 +18,8 @@ export interface Run {
 	exitAtHead: number;
 	linesChanged: number;
 	touchedPaths: string[];
+	/** The base..head diff with added/removed lines; when given, G2 and G3 are audited too. */
+	changed?: GateInput["changed"];
 }
 export type Verdict = { ok: true } | { ok: false; reason: string };
 
@@ -57,6 +60,10 @@ export async function replayHop(hop: Hop, run: Run): Promise<Verdict> {
 	if (run.exitAtBase === 126 || run.exitAtBase === 127) return { ok: false, reason: "blocked-at-base" };
 	if (run.exitAtBase === 0) return { ok: false, reason: "green-at-base" };
 	if (run.exitAtHead !== 0) return { ok: false, reason: "red-at-head" };
+	if (run.changed) {
+		if (run.changed.some((c) => isStewardPath(c.path))) return { ok: false, reason: "steward-path-touched" };
+		if (checkWeakening(run.changed).level === "reject") return { ok: false, reason: "g3-weakening" };
+	}
 	const actual = classifyRoad({ linesChanged: run.linesChanged, touchedPaths: run.touchedPaths, check: hop.check });
 	if (hop.road === "motorway" && actual === "city") return { ok: false, reason: "road-mismatch" };
 	if (hop.road === "city" && hop.gate !== "drive_gate pass") return { ok: false, reason: "missing-gate" };

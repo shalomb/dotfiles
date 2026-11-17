@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { classifyRoad, parseHopCommit, replayHop } from "./replay";
+import type { GateInput } from "./drive-gate";
 
 const CHECK = "bun test ./.pi/agent/extensions/_lib/kr.test.ts";
 const trailers = (over: Record<string, string | undefined> = {}) => {
@@ -135,5 +136,30 @@ describe("KR-3.3 replaying a hop proves arrival", () => {
 	// Scenario: a city claim without a passing gate is rejected
 	test("@KR-3.3 city claim without drive_gate pass fails with missing-gate", async () => {
 		expect(await replayHop(hop({ road: "city", gate: "n/a" }), run({ linesChanged: 400 }))).toEqual({ ok: false, reason: "missing-gate" });
+	});
+});
+
+describe("road audit: base..head is checked after the commit", () => {
+	const chg = (path: string, added: string[], removed: string[]): GateInput["changed"][number] => ({ path, status: "M", added, removed });
+	const motorway = { ...hop(), road: "motorway" as const, gate: "n/a" };
+	const run = (changed: GateInput["changed"]) => ({ exitAtBase: 1, exitAtHead: 0, linesChanged: 10, touchedPaths: changed.map((c) => c.path), changed });
+
+	test("motorway with weakened assertions is rejected as g3-weakening", async () => {
+		const v = await replayHop(motorway, run([chg("a.ts", [], []), chg("b.test.ts", ["expect(1)"], ["expect(1)", "expect(2)"])]));
+		expect(v).toEqual({ ok: false, reason: "g3-weakening" });
+	});
+	test("a city hop that weakened assertions is also rejected", async () => {
+		const v = await replayHop({ ...motorway, road: "city", gate: "drive_gate pass" }, run([chg("b.test.ts", [], ["expect(1)"])]));
+		expect(v).toEqual({ ok: false, reason: "g3-weakening" });
+	});
+	test("a Builder diff touching a Steward path is rejected", async () => {
+		const v = await replayHop({ ...motorway, road: "city", gate: "drive_gate pass" }, run([chg("x/y.acceptance.test.ts", ["a"], [])]));
+		expect(v).toEqual({ ok: false, reason: "steward-path-touched" });
+	});
+	test("an honest small diff with no weakening still passes", async () => {
+		expect(await replayHop(motorway, run([chg("a.ts", ["x"], [])]))).toEqual({ ok: true });
+	});
+	test("without a changed list the audit falls back to the old rules", async () => {
+		expect(await replayHop(motorway, { exitAtBase: 1, exitAtHead: 0, linesChanged: 5, touchedPaths: ["a.ts"] })).toEqual({ ok: true });
 	});
 });

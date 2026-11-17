@@ -22,6 +22,11 @@ presses `/n` again to resume. Never change the key results: they are the human's
    Load the `drive` skill and drive the key result on its key-result road (Steward → Builder → `drive_gate` →
    Verifier on warnings); obey its verdicts. A motorway hop may skip the wave: build test-first yourself.
    Commit each green step (Conventional Commits, signed).
+   The road you pick before the hop is an estimate. After the commit, replay audits `Check-Base..HEAD`: more
+   than 150 lines, the end-state file, a touched Steward path or weakened assertions (G2/G3) each void a
+   `Road: motorway` claim, and the hop then needs City gating (`drive_gate` plus Verifier). On a City hop the
+   Spec Steward's red commit writes the test file the check runs and is `Check-Base`; the Builder commit
+   (`Check-Base..Check-Head`) must not touch Steward paths.
 4. Re-run the key-result check. Green → the hop commit carries these trailers, then continue with the next hop:
 
    ```
