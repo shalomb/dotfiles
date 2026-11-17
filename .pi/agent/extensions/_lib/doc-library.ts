@@ -44,7 +44,7 @@ export interface FileOptions {
 	render?: Record<string, string>;
 }
 export interface DocRecord {
-	origin: { repo: string; branch: string; worktree: string; path: string; sha: string };
+	origin: { repo: string; branch: string; worktree: string; main_repo: string; path: string; sha: string };
 	render: Record<string, string>;
 }
 
@@ -122,12 +122,13 @@ const git = (dir: string, ...args: string[]): string => {
 /** Where a source came from: enough to find it again (worktree, branch) and pin it (sha). */
 export function originOf(source: string | undefined, repo: string): DocRecord["origin"] {
 	const abs = source ? resolve(source) : "";
-	const none = { repo, branch: "", worktree: "", path: abs, sha: "" };
+	const none = { repo, branch: "", worktree: "", main_repo: "", path: abs, sha: "" };
 	if (!abs) return none;
 	const dir = dirname(abs);
 	const top = git(dir, "rev-parse", "--show-toplevel");
 	if (!top) return none;
-	return { repo, branch: git(dir, "rev-parse", "--abbrev-ref", "HEAD"), worktree: top, path: relative(top, abs), sha: git(dir, "rev-parse", "HEAD") };
+	const common = git(dir, "rev-parse", "--path-format=absolute", "--git-common-dir");
+	return { repo, branch: git(dir, "rev-parse", "--abbrev-ref", "HEAD"), worktree: top, main_repo: common ? dirname(common) : top, path: relative(top, abs), sha: git(dir, "rev-parse", "HEAD") };
 }
 
 /** Copy content and timestamps, but make the copy readable by the web server. */
