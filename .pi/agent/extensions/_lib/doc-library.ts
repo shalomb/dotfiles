@@ -13,7 +13,7 @@
 import { execFileSync } from "node:child_process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { renderSearchPage } from "./doc-search.ts";
 
 export const KINDS = ["brief", "one-pager", "report", "deck", "status", "decision", "workshop", "guide", "runbook", "changerecord", "postmortem", "onepager", "archmap"] as const;
@@ -40,6 +40,12 @@ export interface FileOptions {
 	summary?: string;
 	tags?: string[];
 	date?: string;
+	/** How the page was rendered; stored in record.json so `doc refresh` can replay it. */
+	render?: Record<string, string>;
+}
+export interface DocRecord {
+	origin: { repo: string; branch: string; worktree: string; path: string; sha: string };
+	render: Record<string, string>;
 }
 
 const SUMMARY_LINE = /^\*\*(?:The ask in one sentence|In one sentence|The goal in one sentence):\*\*\s*(.+)$/m;
@@ -103,6 +109,25 @@ export function findRepo(source?: string): string {
 	}
 	const m = url.match(/[:/]([^/:]+\/[^/]+?)(?:\.git)?$/);
 	return m ? m[1] : "";
+}
+
+const git = (dir: string, ...args: string[]): string => {
+	try {
+		return execFileSync("git", ["-C", dir, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+	} catch {
+		return "";
+	}
+};
+
+/** Where a source came from: enough to find it again (worktree, branch) and pin it (sha). */
+export function originOf(source: string | undefined, repo: string): DocRecord["origin"] {
+	const abs = source ? resolve(source) : "";
+	const none = { repo, branch: "", worktree: "", path: abs, sha: "" };
+	if (!abs) return none;
+	const dir = dirname(abs);
+	const top = git(dir, "rev-parse", "--show-toplevel");
+	if (!top) return none;
+	return { repo, branch: git(dir, "rev-parse", "--abbrev-ref", "HEAD"), worktree: top, path: relative(top, abs), sha: git(dir, "rev-parse", "HEAD") };
 }
 
 /** Copy content and timestamps, but make the copy readable by the web server. */
@@ -193,6 +218,10 @@ export function fileDoc(o: FileOptions, env: Env = process.env): string {
 	const metaPath = join(entry, "meta.json");
 	writeFileSync(metaPath, `${JSON.stringify(meta, null, 2)}\n`);
 	chmodSync(metaPath, 0o644);
+	const record: DocRecord = { origin: originOf(o.source, meta.repo), render: o.render ?? {} };
+	const recordPath = join(entry, "record.json");
+	writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`);
+	chmodSync(recordPath, 0o644);
 	writeIndex(env);
 	return current;
 }

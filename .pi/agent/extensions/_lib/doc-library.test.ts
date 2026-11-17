@@ -2,7 +2,7 @@
 // Port of lead-docs tests/test_library.py: the on-disk layout must stay identical.
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { docRoot, fileDoc, findDocs, listDocs, showDoc } from "./doc-library.ts";
@@ -38,6 +38,34 @@ describe("docRoot", () => {
 });
 
 describe("fileDoc", () => {
+	it("writes record.json with origin repo, branch, worktree, path, sha and render info", () => {
+		const repo = join(tmp, "repo");
+		mkdirSync(repo);
+		execFileSync("git", ["init", "-q", "-b", "main", repo]);
+		execFileSync("git", ["-C", repo, "config", "user.email", "t@t"]);
+		execFileSync("git", ["-C", repo, "config", "user.name", "t"]);
+		src = join(repo, "brief.md");
+		writeFileSync(src, "# Connecting teams\n");
+		execFileSync("git", ["-C", repo, "add", "."]);
+		execFileSync("git", ["-C", repo, "commit", "-q", "-m", "x"]);
+		const sha = execFileSync("git", ["-C", repo, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+		file({ render: { purpose: "brief", style: "house", mode: "doc" } });
+		const r = JSON.parse(readFileSync(join(entry(), "record.json"), "utf8"));
+		expect(r.origin.branch).toBe("main");
+		expect(r.origin.sha).toBe(sha);
+		expect(realpathSync(r.origin.worktree)).toBe(realpathSync(repo));
+		expect(r.origin.path).toBe("brief.md");
+		expect(r.render).toEqual({ purpose: "brief", style: "house", mode: "doc" });
+		expect(statSync(join(entry(), "record.json")).mode & 0o777).toBe(0o644);
+	});
+
+	it("writes a static record when the source is not in a git checkout", () => {
+		file();
+		const r = JSON.parse(readFileSync(join(entry(), "record.json"), "utf8"));
+		expect(r.origin.worktree).toBe("");
+		expect(r.origin.path).toBe(src);
+	});
+
 	it("keeps html, source and metadata in the shadow root", () => {
 		const out = file({ tags: ["takos"] });
 		expect(out).toBe(join(entry(), "index.html"));

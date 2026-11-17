@@ -144,7 +144,7 @@ function publishTemplate(o: PublishOptions, type: TemplateType, env: Env): Publi
 		rmSync(out, { force: true });
 		throw e;
 	}
-	const filed = fileDoc({ html: out, kind: KIND[purpose], source: o.source, summary, tags: o.tags }, env);
+	const filed = fileDoc({ html: out, kind: KIND[purpose], source: o.source, summary, tags: o.tags, render: { purpose, style: o.style ?? "house", mode: "template", template: type, ...(o.eyebrow ? { eyebrow: o.eyebrow } : {}) } }, env);
 	return { rendered: [out], filed: [filed], urls: urlsFor(filed).map((u) => u.url), findings: [], brandCss, provenance };
 }
 
@@ -195,7 +195,7 @@ export function publishDoc(o: PublishOptions, env: Env = process.env): PublishRe
 		}
 		rendered.push(out);
 		const fileKind = kind;
-		filed.push(fileDoc({ html: out, kind: fileKind, source: o.source, summary: o.summary, tags: o.tags }, env));
+		filed.push(fileDoc({ html: out, kind: fileKind, source: o.source, summary: o.summary, tags: o.tags, render: { purpose, style: o.style ?? "house", mode, ...(o.eyebrow ? { eyebrow: o.eyebrow } : {}) } }, env));
 	}
 	const urls = filed.flatMap((f) => urlsFor(f).map((u) => u.url));
 	return { rendered, filed, urls, findings, brandCss, provenance };
