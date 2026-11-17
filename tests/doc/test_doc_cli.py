@@ -218,3 +218,67 @@ def test_read_only_never_modifies_store(root):
         run(root, *args)
     after = sorted((p.relative_to(root), p.stat().st_mtime_ns) for p in root.rglob("*"))
     assert before == after
+
+
+# ---- doc refresh (ADR-017 step 2) ----
+
+def _git(*a, cwd):
+    subprocess.run(["git", "-C", str(cwd), "-c", "user.email=t@t", "-c", "user.name=t", *a], check=True, capture_output=True)
+
+
+@pytest.fixture
+def refreshable(root, tmp_path):
+    """A repo with a source on branch 'main', a stub renderer, and a record.json pointing at them."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git("init", "-q", "-b", "main", cwd=repo)
+    (repo / "six.md").write_text("# Database decision\n\nv1\n")
+    _git("add", ".", cwd=repo)
+    _git("commit", "-q", "-m", "x", cwd=repo)
+    stub = tmp_path / "build.py"
+    stub.write_text("import sys,pathlib\n"
+                    "src=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[sys.argv.index('-o')+1])\n"
+                    "out.write_text('<html>RENDER '+src.read_text().strip().splitlines()[-1]+'</html>')\n")
+    d = root / "decision" / "2026-10-01-database-decision"
+    (d / "record.json").write_text(json.dumps({
+        "origin": {"repo": "acme/db", "branch": "main", "worktree": str(repo), "path": "six.md", "sha": "abc"},
+        "render": {"purpose": "decision", "style": "house", "mode": "doc"}}))
+    return repo, d, {"DOC_BUILD": str(stub)}
+
+
+def test_refresh_rerenders_from_worktree_source_to_same_entry(root, refreshable):
+    repo, d, env = refreshable
+    (repo / "six.md").write_text("# Database decision\n\nv2\n")
+    r = run(root, "refresh", "database-decision", env=env)
+    assert r.returncode == 0, r.stderr
+    assert r.stdout.strip() == str(d / "index.html")
+    assert "RENDER v2" in (d / "index.html").read_text()
+    assert (d / "source.md").read_text().endswith("v2\n")
+    assert any(p.read_text() == "<html>Database decision</html>" for p in (d / "versions").iterdir())
+
+
+def test_refresh_accepts_a_library_url(root, refreshable):
+    _, d, env = refreshable
+    url = "http://host:8080/r/docs/decision/2026-10-01-database-decision/index.html#risks"
+    assert run(root, "refresh", url, env=env).returncode == 0
+    assert "RENDER" in (d / "index.html").read_text()
+
+
+def test_refresh_recreates_missing_worktree_from_branch(root, refreshable, tmp_path):
+    repo, d, env = refreshable
+    gone = tmp_path / "gone-wt"
+    rec = json.loads((d / "record.json").read_text())
+    rec["origin"]["worktree"] = str(gone)
+    rec["origin"]["main_repo"] = str(repo)
+    (d / "record.json").write_text(json.dumps(rec))
+    _git("branch", "side", cwd=repo)
+    rec["origin"]["branch"] = "side"
+    (d / "record.json").write_text(json.dumps(rec))
+    r = run(root, "refresh", "database-decision", env=env)
+    assert r.returncode == 0, r.stderr
+    assert "RENDER" in (d / "index.html").read_text()
+
+
+def test_refresh_without_record_fails_clearly(root):
+    r = run(root, "refresh", "database-decision")
+    assert r.returncode == 1 and "record.json" in r.stderr

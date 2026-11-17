@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """doc - headless query interface over the /doc library (index.json).
 
-Commands: find, list, origin, source, export. Read-only: never modifies the library.
+Commands: find, list, origin, source, export (read-only) and refresh (re-renders one entry, no LLM).
 Output: aligned table (default), --paths (one path per line), or --json.
 Library root: $DOC_ROOT, else $LEAD_DOCS_ROOT, else $XDG_CACHE_HOME/agent-skills/docs
 (same layout and fallbacks as docRoot() in .pi/agent/extensions/_lib/doc-library.ts).
@@ -10,8 +10,11 @@ import argparse
 import json
 import os
 import shlex
+import shutil
 import subprocess
 import sys
+import tempfile
+import time
 import zipfile
 from pathlib import Path
 
@@ -168,6 +171,75 @@ def cmd_export(args, root, cards):
         print(out)
 
 
+REPO = Path(__file__).resolve().parents[2]
+BUILD = REPO / ".pi/agent/extensions/_lib/doc-render/build.py"
+
+
+def ref_from_url(ref):
+    """A library URL (http://host/r/docs/<kind>/<id>/index.html#section) -> 'kind/id'; other refs pass through."""
+    if not ref.startswith(("http://", "https://")):
+        return ref, ""
+    path, _, frag = ref.partition("#")
+    parts = [p for p in path.split("?")[0].split("/") if p]
+    if parts and parts[-1].endswith(".html"):
+        parts = parts[:-1]
+    if len(parts) < 2:
+        raise DocError(f"cannot find a document in url '{ref}'")
+    return f"{parts[-2]}/{parts[-1]}", frag
+
+
+def cmd_refresh(args, root, cards):
+    ref, section = ref_from_url(args.ref)
+    c = resolve(root, cards, ref)
+    entry = Path(c["dir"])
+    rec_path = entry / "record.json"
+    if not rec_path.is_file():
+        raise DocError(f"no record.json for '{c['id']}' (republish it with /doc to create one)")
+    rec = json.loads(rec_path.read_text())
+    o, render = rec["origin"], rec.get("render") or {}
+    if render.get("mode") == "template":
+        raise DocError("template documents cannot be refreshed yet (Markdown sources only)", 2)
+    wt, temp = Path(o.get("worktree") or ""), None
+    if not o.get("worktree") or not wt.is_dir():
+        main = o.get("main_repo") or ""
+        if not main or not o.get("branch"):
+            raise DocError(f"worktree '{o.get('worktree')}' is gone and the record has no main_repo/branch to recreate it")
+        temp = Path(tempfile.mkdtemp(prefix="doc-refresh-"))
+        wt = temp / "wt"
+        r = subprocess.run(["git", "-C", main, "worktree", "add", "--detach", str(wt), o["branch"]], capture_output=True, text=True)
+        if r.returncode:
+            shutil.rmtree(temp, ignore_errors=True)
+            raise DocError(f"cannot recreate worktree from branch '{o['branch']}': {r.stderr.strip()}")
+    try:
+        src = wt / o["path"]
+        if not src.is_file():
+            raise DocError(f"source {src} not found")
+        build = Path(os.environ.get("DOC_BUILD") or BUILD)
+        out = (temp or entry) / "refresh.html"
+        cmd = [sys.executable, str(build), str(src), "-m", render.get("mode") or "doc", "-o", str(out)]
+        if render.get("eyebrow"):
+            cmd += ["-e", render["eyebrow"]]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if r.returncode:
+            out.unlink(missing_ok=True)
+            raise DocError(f"render failed: {r.stderr.strip()}")
+        cur = entry / "index.html"
+        if cur.is_file():
+            (entry / "versions").mkdir(exist_ok=True)
+            shutil.copy2(cur, entry / "versions" / (time.strftime("%Y%m%dT%H%M%S") + "000000.html"))
+        shutil.move(str(out), cur)
+        shutil.copyfile(src, entry / "source.md")
+        for f in (cur, entry / "source.md"):
+            f.chmod(0o644)
+    finally:
+        if temp:
+            subprocess.run(["git", "-C", o["main_repo"], "worktree", "remove", "--force", str(wt)], capture_output=True)
+            shutil.rmtree(temp, ignore_errors=True)
+    if section:
+        print(f"doc: refreshed the whole page (section '#{section}' refresh needs slots, ADR-017 step 4)", file=sys.stderr)
+    print(cur)
+
+
 def build_parser():
     p = argparse.ArgumentParser(prog="doc", description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -194,6 +266,9 @@ def build_parser():
     s.add_argument("--zip", action="store_true")
     s.add_argument("-o", "--output", help="zip path (default: <root>-exports/<id>.zip, never in a git tree)")
     s.set_defaults(fn=cmd_export)
+    s = sub.add_parser("refresh", help="re-render a document from its origin source (no LLM)")
+    s.add_argument("ref", help="id, kind/id, path, or the document's library URL (#section accepted)")
+    s.set_defaults(fn=cmd_refresh)
     return p
 
 
