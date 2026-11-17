@@ -83,6 +83,26 @@ test("the guard fails and names a test file that belongs to no topic", () => {
 	expect(r.out).toContain("orphan.test.ts");
 });
 
+test("the guard tolerates an orphan listed in the baseline file but still fails a new one", () => {
+	fixture({ extraFiles: { "old.test.ts": PASS, "ladder-orphans.txt": "old.test.ts\n" } });
+	expect(make("ladder-check").code).toBe(0);
+	writeFileSync(join(dir, "ext", "new.test.ts"), PASS);
+	const r = make("ladder-check");
+	expect(r.code).not.toBe(0);
+	expect(r.out).toContain("new.test.ts");
+	expect(r.out).not.toContain("old.test.ts");
+});
+
+test("a static rung checks every listed file, so a syntax error in any of them is red", () => {
+	fixture({
+		extraFiles: { "broken.ts": "export const = ;\n" },
+		fragment: `fake_DIR := $(dir $(lastword $(MAKEFILE_LIST)))\nfake_STATIC := src.ts broken.ts\nfake_UNIT := unit\nfake_IO := io\n$(eval $(call ladder,fake))\n`,
+	});
+	const r = make("test-fake-static");
+	expect(r.code).not.toBe(0);
+	expect(r.out).toContain("broken.ts");
+});
+
 test("the guard fails and names a manifest entry whose test file does not exist", () => {
 	fixture({
 		fragment: `fake_DIR := $(dir $(lastword $(MAKEFILE_LIST)))\nfake_STATIC := src.ts\nfake_UNIT := unit ghost\nfake_IO := io\n$(eval $(call ladder,fake))\n`,
