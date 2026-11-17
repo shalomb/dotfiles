@@ -13,3 +13,6 @@ sudo npm install \
   neovim \
   tree-sitter \
   write-good
+
+# User-prefix install (no sudo): nvim's copilot.lua resolves it via ~/.local/bin
+npm install -g --prefix "$HOME/.local" @github/copilot-language-server@latest

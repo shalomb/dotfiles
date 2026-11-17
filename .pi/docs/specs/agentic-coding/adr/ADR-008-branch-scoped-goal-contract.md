@@ -1,6 +1,6 @@
 # ADR-008: Branch-Scoped Goal Contract in the Backlog Store
 
-- **Status:** Accepted
+- **Status:** Accepted; amended 2026-11-15 (goal as agent unit, see Amendment 1)
 - **Date:** 2026-11-01
 - **Decider(s):** unop, Main Copilot (Design Session v1.1)
 - **Consulted:** `~/shalomb/agentic-falsify/runs/FINDINGS.md` (H1–H4), Obsidian `Tech/AI/AgenticLoops.md`, `Agile/Theory of Constraints.md`
@@ -97,3 +97,10 @@ Store one **Goal Contract** per branch as `goal.md` in the out-of-repo backlog s
 
 - H5 fails (see ADR-009): downgrade to a notes file per the kill rule.
 - Work regularly spans several branches for one outcome: consider goals keyed by an explicit id.
+
+## Amendment 1 (2026-11-15): the goal is the agent's unit of work
+
+Under [ADR-012](ADR-012-intent-upstream-loop-runs-itself.md) the human's commitment moves up to key results; a goal is one hop to one key result (`serves: KR-n.m`)
+and its id names the goal (ADR-011 Amendment 1). The store stays branch-scoped. DRV-04 (low ceremony) now also
+covers the goal itself: drafting, locking and closing cost the human nothing when the goal serves an approved key
+result.

@@ -2,8 +2,8 @@
 // Scenario names refer to docs/specs/agentic-coding/features/goal-contract.feature.
 import { expect, test } from "bun:test";
 import {
-	applyApprovedChange, applyClose, checkHash, applyLock, applyReject, branchSlug, goalCheckHash, canLock, closeDecision, dropGoal, fillDraft, goalPath, goalsDir,
-	isEnvironmentFailure, newDraft, parseGoal, proposeChange, reminderLine, renderGoal, staleGoal, storeDir, validateGoal,
+	applyClose, checkHash, applyLock, branchSlug, goalCheckHash, canLock, closeDecision, dropGoal, fillDraft, goalPath, goalsDir,
+	goalIdFor, isEnvironmentFailure, newDraft, parseGoal, reminderLine, renderGoal, staleGoal, storeDir, validateGoal,
 } from "./goal.ts";
 
 const NOW = new Date("2026-11-01T10:00:00Z");
@@ -28,9 +28,9 @@ test("goal file is <store>/goals/<branch-slug>.md with slashes turned into dashe
 	expect(goalPath(store, "feat/export")).toBe("/s/todos/r/goals/feat-export.md");
 });
 
-test("a new draft carries the outcome, the branch id and the base commit, and is not locked", () => {
+test("a new draft carries the outcome, an id from the outcome and the base commit, and is not locked", () => {
 	const g = newDraft({ branch: "feat/export", outcome: "Users can export a backlog as CSV", baseCommit: "a1b2c3d" }, NOW);
-	expect(g.id).toBe("g-feat-export");
+	expect(g.id).toBe("g-users-can-export-a-backlog-as-csv");
 	expect(g.status).toBe("draft");
 	expect(g.createdAt).toBe("2026-11-01T10:00:00Z");
 	expect(g.doneCheck.baseCommit).toBe("a1b2c3d");
@@ -50,7 +50,7 @@ const full = () => {
 
 test("rendered goal is the contract format: YAML front matter then sections", () => {
 	const text = renderGoal(full());
-	expect(text.startsWith("---\nid: g-feat-export\nbranch: feat/export\nstatus: draft\noutcome: Users can export a backlog as CSV\ndone_check:\n  kind: command\n  commands:\n    - make -C skills/todo-navigator test-unit\n")).toBe(true);
+	expect(text.startsWith("---\nid: g-users-can-export-a-backlog-as-csv\nbranch: feat/export\nstatus: draft\noutcome: Users can export a backlog as CSV\ndone_check:\n  kind: command\n  commands:\n    - make -C skills/todo-navigator test-unit\n")).toBe(true);
 	expect(text).toContain('  locked_at: ""\n');
 	expect(text).toContain("created_at: 2026-11-01T10:00:00Z\n");
 	expect(text).toContain("## Anti-goals\n- No new runtime dependency\n");
@@ -66,13 +66,12 @@ test("parse(render(goal)) returns the same goal, including awkward characters", 
 	expect(parseGoal(renderGoal(g))).toEqual(g);
 });
 
-test("a hostile reason cannot break the History or Pending line parse", () => {
+test("a hostile reason cannot break the History line parse", () => {
 	const reason = 'x | old: null | new: {"a":1}';
 	const check = { kind: "command" as const, commands: ["a"] };
 	const g = full();
 	g.history.push({ at: "2026-11-01T11:00:00Z", by: "human", reason, old: check, new: { kind: "command", commands: ["b"] } });
 	g.history.push({ at: "2026-11-01T11:01:00Z", by: "human", reason });
-	g.pending = { at: "2026-11-01T12:00:00Z", by: "agent", reason, old: check, new: { kind: "command", commands: ["c"] } };
 	expect(parseGoal(renderGoal(g))).toEqual(g);
 });
 
@@ -171,66 +170,12 @@ test("a check command with a newline or control character is refused, not rewrit
 		const f = fillDraft(draftWithCheck(), { doneCheck: { kind: "command", commands: ["ok", bad] } });
 		expect(f.ok).toBe(false);
 		if (!f.ok) expect(f.reason).toMatch(/newline|control/i);
-		expect(proposeChange(locked(), { now: LATER, by: "agent", reason: "r", check: { kind: "command", commands: [bad] } }).ok).toBe(false);
 	}
 	expect(fillDraft(draftWithCheck(), { doneCheck: { kind: "command", commands: ["make  t", " ok "] } }).ok).toBe(true);
 });
 
-test("filling an active goal is refused: a locked contract is changed through proposeChange", () => {
+test("filling an active goal is refused: a locked contract is changed through /goal unlock", () => {
 	expect(fillDraft(locked(), { antiGoals: ["x"] }).ok).toBe(false);
-});
-
-// Scenario: The Main Copilot proposes a change to a locked Done-check
-test("a proposed change leaves the locked check unchanged and waits as pending", () => {
-	const before = locked();
-	const r = proposeChange(before, { now: LATER, by: "agent", reason: "csv check is flaky", check: { kind: "command", commands: ["make test-unit"] } });
-	expect(r.ok).toBe(true);
-	const g = r.ok ? r.goal : before;
-	expect(g.doneCheck).toEqual(before.doneCheck);
-	expect(g.pending).toEqual({ at: "2026-11-01T10:05:00Z", by: "agent", reason: "csv check is flaky", old: { kind: "command", commands: ["make test-unit", "make test-csv"] }, new: { kind: "command", commands: ["make test-unit"] } });
-	expect(parseGoal(renderGoal(g))).toEqual(g);
-});
-
-test("a change can be proposed only for an active goal", () => {
-	expect(proposeChange(draftWithCheck(), { now: LATER, by: "agent", reason: "r", check: { kind: "command", commands: ["x"] } }).ok).toBe(false);
-});
-
-test("an empty proposed command check is refused", () => {
-	expect(proposeChange(locked(), { now: LATER, by: "agent", reason: "r", check: { kind: "command", commands: [] } }).ok).toBe(false);
-});
-
-test("a change without a reason is refused", () => {
-	expect(proposeChange(locked(), { now: LATER, by: "agent", reason: "  ", check: { kind: "command", commands: ["x"] } }).ok).toBe(false);
-});
-
-// Scenario: ... And an approved change is recorded with who approved it and why
-test("approving applies the new check and records who approved it, when, why, old and new", () => {
-	const proposed = proposeChange(locked(), { now: LATER, by: "agent", reason: "csv check is flaky", check: { kind: "command", commands: ["make test-unit"] } });
-	const g0 = proposed.ok ? proposed.goal : locked();
-	const approved = applyApprovedChange(g0, { now: new Date("2026-11-01T11:00:00Z"), outcomeChecks: ["make test-unit"] });
-	expect(approved.ok).toBe(true);
-	const g = approved.ok ? approved.goal : g0;
-	expect(g.doneCheck.commands).toEqual(["make test-unit"]);
-	expect(g.doneCheck.lockedAt).toBe("2026-11-01T10:05:00Z");
-	expect(g.pending).toBeUndefined();
-	expect(g.history.at(-1)).toEqual({
-		at: "2026-11-01T11:00:00Z", by: "human", reason: "csv check is flaky",
-		old: { kind: "command", commands: ["make test-unit", "make test-csv"] }, new: { kind: "command", commands: ["make test-unit"] },
-	});
-	expect(parseGoal(renderGoal(g))).toEqual(g);
-});
-
-test("approving with nothing pending is refused", () => {
-	expect(applyApprovedChange(locked(), { now: LATER }).ok).toBe(false);
-});
-
-test("rejecting drops the pending change, keeps the check, and logs the rejection", () => {
-	const proposed = proposeChange(locked(), { now: LATER, by: "agent", reason: "weaker", check: { kind: "command", commands: ["true"] } });
-	const g0 = proposed.ok ? proposed.goal : locked();
-	const r = applyReject(g0, { now: new Date("2026-11-01T11:00:00Z") });
-	expect(r.ok && r.goal.pending).toBeUndefined();
-	expect(r.ok && r.goal.doneCheck).toEqual(g0.doneCheck);
-	expect(r.ok && r.goal.history.at(-1)?.reason).toBe("change rejected: weaker");
 });
 
 // Scenario: Closing a goal while its Done-check fails is refused
@@ -274,7 +219,7 @@ test("drop marks the goal dropped with a history line; a closed goal cannot be d
 
 // Contract: one-line reminder in the prompt, only for an active goal
 test("the reminder is one line with id and outcome, and only for an active goal", () => {
-	expect(reminderLine(locked())).toBe("Goal: g-feat-export Users can export a backlog as CSV; run /goal to refresh");
+	expect(reminderLine(locked())).toBe("Goal: g-users-can-export-a-backlog-as-csv Users can export a backlog as CSV; run /goal to refresh");
 	expect(reminderLine(draftWithCheck())).toBeUndefined();
 	const closed = applyClose(locked(), { now: LATER, closedBy: "check" });
 	expect(closed.ok && reminderLine(closed.goal)).toBeUndefined();
@@ -340,24 +285,6 @@ test("an agent may suggest an Outcome Check on a draft, only among its commands;
 	expect(replaced.ok && replaced.goal.doneCheck.outcomeChecks).toEqual([]);
 });
 
-test("a proposed change never carries or alters the Outcome Check marks; approving keeps the marks that still exist", () => {
-	const before = locked();
-	const proposed = proposeChange(before, { now: LATER, by: "agent", reason: "add", check: { kind: "command", commands: ["make test-csv", "make lint"] } });
-	const g0 = proposed.ok ? proposed.goal : before;
-	expect(g0.doneCheck.outcomeChecks).toEqual(["make test-csv"]);
-	const approved = applyApprovedChange(g0, { now: LATER });
-	expect(approved.ok && approved.goal.doneCheck.outcomeChecks).toEqual(["make test-csv"]);
-});
-
-test("approving a change that drops every marked command is refused until the human marks one of the new commands", () => {
-	const proposed = proposeChange(locked(), { now: LATER, by: "agent", reason: "swap", check: { kind: "command", commands: ["make lint"] } });
-	const g0 = proposed.ok ? proposed.goal : locked();
-	expect(applyApprovedChange(g0, { now: LATER }).ok).toBe(false);
-	expect(applyApprovedChange(g0, { now: LATER, outcomeChecks: ["nope"] }).ok).toBe(false);
-	const r = applyApprovedChange(g0, { now: LATER, outcomeChecks: ["make lint"] });
-	expect(r.ok && r.goal.doneCheck.outcomeChecks).toEqual(["make lint"]);
-});
-
 // ---- Environment failures (ADR-009 Amendment 1) ----
 
 // Scenario: A base failure caused by the environment does not lock by default
@@ -405,4 +332,34 @@ test("goalCheckHash: the hash of a goal equals the hash of its rendered-then-par
 	expect(checkHash(g.doneCheck)).not.toBe(checkHash(parsed.doneCheck)); // the in-memory hash alone would mismatch
 	expect(goalCheckHash(g)).toBe(checkHash(parsed.doneCheck));
 	expect(goalCheckHash(g)).toBe(goalCheckHash(parsed));
+});
+
+// ---- Goal ids name the goal, not the branch ----
+test("goalIdFor: from the KR it serves and the outcome, lower-case kebab", () => {
+	expect(goalIdFor("Users can export CSV!", "KR-2.1")).toBe("g-kr-2.1-users-can-export-csv");
+	expect(goalIdFor("Fix the stale warning")).toBe("g-fix-the-stale-warning");
+});
+
+test("goalIdFor caps the slug at a word boundary", () => {
+	const id = goalIdFor("one two three four five six seven eight nine ten eleven twelve thirteen");
+	expect(id.length).toBeLessThanOrEqual(50);
+	expect(id).not.toMatch(/-$/);
+});
+
+test("a draft takes its id from its outcome, not its branch", () => {
+	expect(newDraft({ branch: "feat/x", outcome: "Users can export CSV", baseCommit: "abc" }, NOW).id).toBe("g-users-can-export-csv");
+});
+
+test("a placeholder outcome keeps a provisional branch id until the real one is proposed", () => {
+	const g = newDraft({ branch: "feat/x", outcome: "(to be drafted from the conversation)", baseCommit: "abc" }, NOW);
+	expect(g.id).toBe("g-feat-x");
+	const r = fillDraft(g, { outcome: "Export CSV", serves: "KR-2.1" });
+	expect(r.ok && r.goal.id).toBe("g-kr-2.1-export-csv");
+	expect(r.ok && r.goal.serves).toBe("KR-2.1");
+});
+
+test("serves survives being written and read back; absent stays absent", () => {
+	const g = { ...newDraft({ branch: "feat/x", outcome: "Export CSV", baseCommit: "abc" }, NOW), serves: "KR-2.1" };
+	expect(parseGoal(renderGoal(g))?.serves).toBe("KR-2.1");
+	expect(parseGoal(renderGoal({ ...g, serves: undefined }))?.serves).toBeUndefined();
 });

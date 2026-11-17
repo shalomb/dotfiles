@@ -19,11 +19,29 @@ Feature: Goal Contract with a locked Done-check
 
   Rule: Only the Human Partner can change a locked Done-check
 
-    Scenario: The Main Copilot proposes a change to a locked Done-check
+    Scenario: The Main Copilot cannot change a locked Done-check
       Given branch "feat/export" has a locked Done-check
       When the Main Copilot proposes to remove one of its checks
-      Then the Done-check stays unchanged until the Human Partner approves
-      And an approved change is recorded with who approved it and why
+      Then the proposal is refused and points at /goal unlock
+      And the Done-check stays unchanged
+
+    Scenario: The Human Partner corrects a locked goal by unlocking and relocking
+      Given branch "feat/export" has a locked Done-check
+      When the Human Partner runs /goal unlock, the draft is corrected, and /goal lock runs
+      Then the relock re-checks the base commit, records who and when, and a weaker check needs the goal id typed
+
+  Rule: A goal's id names the goal, not its branch
+
+    Scenario: Successive goals on a branch have their own ids
+      Given goal "g-kr-2.1-export-csv" closed on branch "feat/export"
+      When the next goal "Users can import CSV" is drafted on that branch
+      Then its id is "g-users-can-import-csv"
+      And the closed goal is archived under "g-kr-2.1-export-csv" and shown by /goal show g-kr-2.1-export-csv
+
+    Scenario: A default branch never holds a goal
+      Given the current branch is "develop"
+      When the Human Partner runs /goal "Users can export CSV"
+      Then no goal is drafted and a worktree branch "feat/users-can-export-csv" is suggested
 
   Rule: A goal closes only on a green Done-check
 

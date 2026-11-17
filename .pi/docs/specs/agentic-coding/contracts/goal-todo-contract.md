@@ -20,7 +20,7 @@ Detached HEAD: no goal.
 
 ```markdown
 ---
-id: g-<branch_slug>
+id: g-<kr>-<outcome-slug>   # from serves + outcome; g-<outcome-slug> with no KR; provisional g-<branch_slug> until drafted; fixed at lock
 branch: feat/export
 status: draft            # draft | active | closed | dropped
 outcome: Users can export a backlog as CSV
@@ -34,6 +34,7 @@ done_check:
 created_at: 2026-11-01T10:00:00Z
 closed_at: ""
 closed_by: ""            # check | assertion
+serves: KR-2.1           # optional: the end-state key result
 ---
 
 ## Anti-goals
@@ -49,14 +50,12 @@ closed_by: ""            # check | assertion
 - 2026-11-01T10:05:00Z human: locked (base a1b2c3d failed: exit 1)
 ```
 
-## Pending change
-- (optional; one entry, written by goal_propose on an active goal; `todo` ignores it)
-
 Rules: a draft MAY have an empty done-check; `/goal lock` refuses until it has one.
-History and pending entries are encoded so free text cannot break parsing.
+History entries are encoded so free text cannot break parsing.
 `loadGoal` treats a file whose `branch` differs from the current branch as no goal
 (slug collisions such as `feat/x` vs `feat-x`). Front matter is YAML; sections are optional except none are required by `todo`.
 `todo` only **reads** `id` and `status`. Only `/goal` writes goal files.
+Finished goals are archived at `<store>/goals/archive/<id>.md`; ids are unique across the store (a clash gets `-2`). `main`, `master` and `develop` never hold a goal.
 
 ## 3. Task metadata (todo-navigator)
 

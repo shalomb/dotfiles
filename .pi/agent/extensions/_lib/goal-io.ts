@@ -50,6 +50,31 @@ export function listGoals(store: string): Goal[] {
 		});
 }
 
+/** Where finished goals are kept, one file per goal id, so a branch's goals form a history. */
+export const archivePath = (store: string, id: string): string => join(goalsDir(store), "archive", `${id}.md`);
+
+/** Keep a finished goal under its own id. */
+export function archiveGoal(store: string, g: Goal): void {
+	mkdirSync(join(goalsDir(store), "archive"), { recursive: true });
+	writeFileSync(archivePath(store, g.id), renderGoal(g));
+}
+
+/** A goal by id: the current goal of any branch, else the archive; undefined when there is none. */
+export function findGoalById(store: string, id: string): Goal | undefined {
+	const live = listGoals(store).find((g) => g.id === id);
+	if (live) return live;
+	try { return parseGoal(readFileSync(archivePath(store, id), "utf8")); } catch { return undefined; }
+}
+
+/** `id`, or `id-2`, `id-3`... when another goal (archived, or live on another branch) already has it. */
+export function uniqueGoalId(store: string, id: string, branch: string): string {
+	const taken = (c: string) => existsSync(archivePath(store, c)) || listGoals(store).some((g) => g.id === c && g.branch !== branch);
+	if (!taken(id)) return id;
+	let n = 2;
+	while (taken(`${id}-${n}`)) n++;
+	return `${id}-${n}`;
+}
+
 /** Write the goal atomically. Throws, writing nothing, if it has no outcome or (once not a draft) no done-check. */
 export function saveGoal(store: string, g: Goal): void {
 	const why = validateGoal(g);
@@ -139,7 +164,7 @@ export async function branchState(exec: Exec, repoRoot: string, branch: string, 
 
 // ---- events (ADR-009 Amendment 1) ----
 
-export type GoalEventName = "goal_locked" | "goal_unlocked" | "goal_changed" | "goal_closed" | "goal_dropped" | "goal_started";
+export type GoalEventName = "goal_locked" | "goal_unlocked" | "goal_closed" | "goal_dropped" | "goal_started";
 export interface GoalEvent { at: string; event: GoalEventName; goal: string; branch: string; [extra: string]: unknown }
 
 /** Append one JSON line to `<store>/trajectories.jsonl` (kept for the H5 review of drop and assertion-closure rates). */
@@ -212,6 +237,8 @@ const GOAL_STORE_IN_COMMAND = /agent-skills\/todos\/[^\s'"]*\/goals\b/;
 /** The private ref of ADR-010: any command or path naming it is blocked for the agent, reads included. */
 const GOAL_REF = /refs\/goals\//;
 const SHELL_WRITE = /(?:^|[\s;&|])(?:tee|sed\s+-\S*i|mv|cp|rm|truncate|install|dd|perl\s+-\S*i|python3?|node|bun)\b|>/;
+/** Redirects that cannot write a file: to /dev/null, or an fd dup like 2>&1 or >&2. */
+const HARMLESS_REDIRECT = /\d*>>?\s*(?:\/dev\/null\b|&\d+)/g;
 
 /**
  * True when an agent tool call would write the goal store behind /goal's back. Best effort for bash:
@@ -222,7 +249,7 @@ export function agentWouldWriteGoalStore(toolName: string, input: { path?: strin
 	if (toolName === "write" || toolName === "edit") return isGoalStorePath(String(input.path ?? "")) || GOAL_REF.test(String(input.path ?? ""));
 	if (toolName === "bash") {
 		const command = String(input.command ?? "");
-		return GOAL_REF.test(command) || (GOAL_STORE_IN_COMMAND.test(command) && SHELL_WRITE.test(command));
+		return GOAL_REF.test(command) || (GOAL_STORE_IN_COMMAND.test(command) && SHELL_WRITE.test(command.replace(HARMLESS_REDIRECT, " ")));
 	}
 	return false;
 }

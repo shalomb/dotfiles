@@ -1,6 +1,6 @@
 # ADR-009: Pre-Committed, Human-Locked Done-Check Gates Goal Closure
 
-- **Status:** Accepted
+- **Status:** Accepted; amended 2026-11-01 and 2026-11-15 (see Amendments 1-3)
 - **Date:** 2026-11-01
 - **Decider(s):** unop, Main Copilot (Design Session v1.1)
 - **Consulted:** ADR-004 Amendment 1 (H3 holdout), ADR-005 Amendment 1 (H2), ADR-007 Amendment 1 (H4)
@@ -117,3 +117,18 @@ The agent drafts the done-check; the human confirms it before work starts; it is
 **Trade-offs.** These rules add friction at the points that matter. They still depend on the human reading the prompt. Classifying failures from their output is a heuristic, so it will miss some cases and wrongly flag others.
 
 **Revisit.** After 10 goals, review drop and assertion-closure rates. If the friction drives the human away from `/goal`, relax the typed-id rule.
+
+## Amendment 2 (2026-11-15): unlock and relock replace approve and reject
+
+A locked check is no longer changed through an agent proposal and `/goal approve` or `/goal reject`. The human runs `/goal unlock`
+(the goal becomes a draft), the draft is corrected, and `/goal lock` re-runs every lock rule; a weaker check needs the goal id typed.
+`/goal check` is folded into bare `/goal`, which offers to close when green. `/goal done` runs nothing else on close. Events are
+`goal_started`, `goal_locked`, `goal_unlocked`, `goal_closed`, `goal_dropped`. The drivers and consequences above stand.
+
+## Amendment 3 (2026-11-15): the agent may lock on an approved key-result check, and closes on green
+
+The human no longer has to lock or close every goal ([ADR-012](ADR-012-intent-upstream-loop-runs-itself.md)). The agent may lock a goal whose Outcome Check is the
+check of a human-approved, unchanged key result, under every lock rule here (fails on base, not environmental, one
+Outcome Check); otherwise the human locks it in one dialog. A command check that is green closes the goal without
+asking (the check is the arbiter). A human-confirm check still needs the human. Weakening a check still needs the
+goal id typed. DRV-02 (no self-grading) holds because the agent can only lock on a check the human approved.

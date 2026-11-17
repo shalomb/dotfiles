@@ -18,7 +18,7 @@ export interface CheckSpec { kind: CheckKind; commands: string[] }
  */
 export interface DoneCheck extends CheckSpec { lockedAt: string; lockedBy: string; baseCommit: string; outcomeChecks: string[] }
 
-/** `old` and `new` are set on a done-check change; a pending proposal has `new` only. */
+/** `old` and `new` are set when a relock changes the done-check. */
 export interface HistoryEntry { at: string; by: string; reason: string; old?: CheckSpec; new?: CheckSpec }
 
 export interface Goal {
@@ -33,9 +33,9 @@ export interface Goal {
 	antiGoals: string[];
 	scopeAnchors: string[];
 	specLinks: string[];
+	/** The end-state key result this goal serves (e.g. KR-2.1); part of its id. */
+	serves?: string;
 	history: HistoryEntry[];
-	/** An agent proposal for the locked done-check; waits for the human. Kept in a "## Pending change" section. */
-	pending?: HistoryEntry;
 }
 
 /** `${XDG_CACHE_HOME:-~/.cache}/agent-skills/todos/<repo_slug>/`, slug from the MAIN worktree root. */
@@ -53,9 +53,25 @@ export const goalPath = (store: string, branch: string): string => join(goalsDir
 /** ISO-8601 UTC without milliseconds, as in the contract. */
 export const stamp = (now: Date): string => now.toISOString().replace(/\.\d{3}Z$/, "Z");
 
+/** A placeholder outcome, written before the agent proposes the real one. */
+const isPlaceholder = (outcome: string) => /^\(to be drafted/.test(outcome.trim());
+
+const kebab = (s: string) => s.toLowerCase().replace(/[^a-z0-9.]+/g, "-").replace(/^[-.]+|[-.]+$/g, "");
+
+/** A goal's id names the goal: `g-<kr>-<outcome>`, or `g-<outcome>` with no KR; at most 50 characters, cut at a word. */
+export function goalIdFor(outcome: string, serves?: string): string {
+	let id = `g-${serves ? `${kebab(serves)}-` : ""}${kebab(outcome.replace(/\./g, " "))}`;
+	if (id.length > 50) id = id.slice(0, 51).replace(/-[^-]*$/, "");
+	return id.replace(/-+$/, "");
+}
+
+/** The id of a draft: from its outcome and KR, or provisionally from its branch while the outcome is a placeholder. */
+const draftId = (branch: string, outcome: string, serves?: string) =>
+	isPlaceholder(outcome) || !kebab(outcome) ? `g-${branchSlug(branch)}` : goalIdFor(outcome, serves);
+
 export function newDraft(input: { branch: string; outcome: string; baseCommit: string }, now: Date): Goal {
 	return {
-		id: `g-${branchSlug(input.branch)}`,
+		id: draftId(input.branch, input.outcome),
 		branch: input.branch,
 		status: "draft",
 		outcome: oneLine(input.outcome),
@@ -168,6 +184,7 @@ export function renderGoal(g: Goal): string {
 		`created_at: ${quoteIfNeeded(g.createdAt)}`,
 		`closed_at: ${quoteIfNeeded(g.closedAt)}`,
 		`closed_by: ${quoteIfNeeded(g.closedBy)}`,
+		...(g.serves ? [`serves: ${quoteIfNeeded(g.serves)}`] : []),
 		"---",
 		"",
 	].join("\n");
@@ -176,7 +193,6 @@ export function renderGoal(g: Goal): string {
 		section("Anti-goals", list(g.antiGoals)) +
 		section("Scope anchors", list(g.scopeAnchors)) +
 		section("Spec links", list(g.specLinks)) +
-		(g.pending ? section("Pending change", renderEntry(g.pending)) : "") +
 		section("History", g.history.map(renderEntry).join("\n"))
 	).replace(/\n+$/, "\n");
 }
@@ -229,8 +245,8 @@ export function parseGoal(text: string): Goal | undefined {
 		antiGoals: bullets("Anti-goals"),
 		scopeAnchors: bullets("Scope anchors"),
 		specLinks: bullets("Spec links"),
+		...(top.serves ? { serves: top.serves } : {}),
 		history: entries("History"),
-		...(entries("Pending change")[0] ? { pending: entries("Pending change")[0] } : {}),
 	};
 }
 
@@ -247,8 +263,7 @@ function splitSections(body: string): Record<string, string[]> {
 
 // ---- transitions ----
 // Each returns a new Goal or the reason it was refused. Only command handlers driven by the human
-// may call applyLock, applyApprovedChange, applyReject, applyClose and dropGoal; the agent's tool
-// reaches only fillDraft and proposeChange.
+// may call applyLock, applyUnlock, applyClose and dropGoal; the agent's tool reaches only fillDraft.
 
 export type Result = { ok: true; goal: Goal } | { ok: false; reason: string };
 const refuse = (reason: string): Result => ({ ok: false, reason });
@@ -277,7 +292,7 @@ const badCommand = (commands: string[]): string | undefined => {
 	return bad === undefined ? undefined : `A check command may not contain a newline or control character (write one command per entry): ${JSON.stringify(bad)}`;
 };
 
-export interface DraftFields { outcome?: string; doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[] }
+export interface DraftFields { outcome?: string; doneCheck?: CheckSpec; outcomeChecks?: string[]; antiGoals?: string[]; scopeAnchors?: string[]; specLinks?: string[]; serves?: string }
 
 /** Agent-reachable: set draft fields (an Outcome Check is only a suggestion). Never locks; refuses once the goal is no longer a draft. */
 export function fillDraft(g: Goal, f: DraftFields): Result {
@@ -288,10 +303,14 @@ export function fillDraft(g: Goal, f: DraftFields): Result {
 	const commands = f.doneCheck ? f.doneCheck.commands.map(oneLine).filter(Boolean) : g.doneCheck.commands;
 	const suggested = (f.outcomeChecks ?? g.doneCheck.outcomeChecks).map(oneLine);
 	if (f.outcomeChecks && suggested.some((c) => !commands.includes(c))) return refuse("An Outcome Check must be one of the done-check commands.");
+	const serves = f.serves ? oneLine(f.serves) : g.serves;
 	return {
 		ok: true,
 		goal: {
 			...g,
+			// A draft is renamed as its outcome and KR firm up; once locked, the id never changes.
+			id: draftId(g.branch, outcome, serves),
+			...(serves ? { serves } : {}),
 			outcome,
 			doneCheck: { ...g.doneCheck, kind: f.doneCheck?.kind ?? g.doneCheck.kind, commands, outcomeChecks: suggested.filter((c) => commands.includes(c)) },
 			antiGoals: f.antiGoals?.map(oneLine).filter(Boolean) ?? g.antiGoals,
@@ -336,20 +355,6 @@ export function applyLock(g: Goal, input: { now: Date; baseCommit: string; baseE
 	};
 }
 
-/** Agent-reachable: park a proposed replacement for the locked done-check. It changes nothing until the human approves. */
-export function proposeChange(g: Goal, input: { now: Date; by: string; reason: string; check: CheckSpec }): Result {
-	if (g.status !== "active") return refuse(`Changes to a done-check are proposed only for an active goal (the goal is ${g.status}).`);
-	if (!oneLine(input.reason)) return refuse("A proposed change needs a reason.");
-	const bad = badCommand(input.check.commands);
-	if (bad) return refuse(bad);
-	const commands = input.check.commands.map(oneLine).filter(Boolean);
-	if (input.check.kind === "command" && !commands.length) return refuse("A command check needs at least one command.");
-	return {
-		ok: true,
-		goal: { ...g, pending: { at: stamp(input.now), by: input.by, reason: oneLine(input.reason), old: specOf(g.doneCheck), new: { kind: input.check.kind, commands } } },
-	};
-}
-
 /** Human only: take a locked goal back to a draft for correction. The locked check is kept in the history so a relock can tell a weakening. */
 export function applyUnlock(g: Goal, input: { now: Date }): Result {
 	if (g.status !== "active") return refuse(`Only a locked goal can be unlocked (the goal is ${g.status}).`);
@@ -359,7 +364,6 @@ export function applyUnlock(g: Goal, input: { now: Date }): Result {
 		goal: {
 			...g,
 			status: "draft",
-			pending: undefined,
 			doneCheck: { ...g.doneCheck, lockedAt: "", lockedBy: "" },
 			history: [...g.history, { at, by: "human", reason: "unlocked", old: specOf(g.doneCheck) }],
 		},
@@ -376,36 +380,6 @@ export function lastLockedSpec(g: Goal): CheckSpec | undefined {
 	return undefined;
 }
 
-/** Human only: apply the pending change and record it. */
-export function applyApprovedChange(g: Goal, input: { now: Date; outcomeChecks?: string[] }): Result {
-	const p = g.pending;
-	if (!p?.new) return refuse("No change is pending.");
-	let outcomeChecks: string[] = [];
-	if (p.new.kind === "command") {
-		outcomeChecks = input.outcomeChecks ?? g.doneCheck.outcomeChecks.filter((c) => p.new!.commands.includes(c));
-		const bad = outcomeCheckProblem(outcomeChecks, p.new.commands);
-		if (bad) return refuse(`Not approved: ${bad}`);
-	}
-	return {
-		ok: true,
-		goal: {
-			...g,
-			doneCheck: { ...g.doneCheck, kind: p.new.kind, commands: [...p.new.commands], outcomeChecks },
-			pending: undefined,
-			history: [...g.history, { at: stamp(input.now), by: "human", reason: p.reason, old: p.old, new: p.new }],
-		},
-	};
-}
-
-/** Human only: discard the pending change and log that it was rejected. */
-export function applyReject(g: Goal, input: { now: Date }): Result {
-	if (!g.pending) return refuse("No change is pending.");
-	return {
-		ok: true,
-		goal: { ...g, pending: undefined, history: [...g.history, { at: stamp(input.now), by: "human", reason: `change rejected: ${g.pending.reason}` }] },
-	};
-}
-
 /** `exit` is the done-check exit code (undefined: it could not run). For kind human the caller has the human's confirmation. */
 export function closeDecision(checkExit: number | undefined, kind: CheckKind): { close: true; closedBy: "check" | "assertion" } | { close: false; reason: string } {
 	if (kind === "human") return { close: true, closedBy: "assertion" };
@@ -418,7 +392,7 @@ export function closeDecision(checkExit: number | undefined, kind: CheckKind): {
 export function applyClose(g: Goal, input: { now: Date; closedBy: "check" | "assertion" }): Result {
 	if (g.status !== "active") return refuse(`Only an active goal can be closed (the goal is ${g.status}).`);
 	const at = stamp(input.now);
-	return { ok: true, goal: { ...g, status: "closed", closedAt: at, closedBy: input.closedBy, pending: undefined, history: [...g.history, { at, by: "human", reason: `closed (${input.closedBy})` }] } };
+	return { ok: true, goal: { ...g, status: "closed", closedAt: at, closedBy: input.closedBy, history: [...g.history, { at, by: "human", reason: `closed (${input.closedBy})` }] } };
 }
 
 /** Human only: abandon a draft or active goal. */
@@ -426,7 +400,7 @@ export function dropGoal(g: Goal, input: { now: Date; reason: string }): Result 
 	if (g.status !== "draft" && g.status !== "active") return refuse(`The goal is already ${g.status}.`);
 	const at = stamp(input.now);
 	const why = oneLine(input.reason) || "no reason given";
-	return { ok: true, goal: { ...g, status: "dropped", pending: undefined, history: [...g.history, { at, by: "human", reason: `dropped: ${why}` }] } };
+	return { ok: true, goal: { ...g, status: "dropped", history: [...g.history, { at, by: "human", reason: `dropped: ${why}` }] } };
 }
 
 /** The one line added to each prompt; none unless the goal is active. */

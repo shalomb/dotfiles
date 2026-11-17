@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** pi-find: search all pi sessions; on a terminal pick one with fzf and resume it in its worktree and profile. */
 import { readSync } from "node:fs";
-import { runPicker, spawnFzf, hasFzf, gitCreateWorktree, spawnResume } from "../../.pi/agent/extensions/_lib/registry-pick";
+import { runPicker, spawnFzf, hasFzf, gitCreateWorktree, spawnResume, shellCwdProfile } from "../../.pi/agent/extensions/_lib/registry-pick";
 
 /** Line prompt on the terminal; empty answer keeps the suggestion, EOF cancels. */
 function prompt(question: string, suggestion: string): string | null {
@@ -23,6 +23,7 @@ const result = runPicker(process.argv.slice(2), process.cwd(), {
 	prompt,
 	createWorktree: gitCreateWorktree,
 	warn: (m: string) => process.stderr.write(m + "\n"),
+	cwdProfile: (cwd: string) => shellCwdProfile(cwd),
 	launch: spawnResume,
 });
 

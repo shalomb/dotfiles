@@ -1,18 +1,16 @@
 /**
- * /goal — one Goal Contract per branch, with a done-check that the human locks and a command gates closing.
- *   /goal <outcome>   draft a goal at HEAD; the agent fills done-check, anti-goals, scope anchors, spec links via goal_propose
- *   /goal             show the contract
- *   /goal lock        run the check at the base commit (temp detached worktree); refuse if it passes; ask; lock
- *   /goal check       run the done-check now: green or red
- *   /goal approve     apply the agent's pending change to the locked done-check (asks first)
- *   /goal reject      discard the pending change
- *   /goal done        close on a green check (or on your confirmation for a human-confirm check), then suggest /persist and lessons
- *   /goal drop        abandon the goal
- * The agent can reach the store only through goal_propose (a draft, or a pending change; never lock, approve or close),
- * and a tool_call guard blocks direct writes to the goals directory. Only these command handlers, driven by the human,
- * lock, approve, reject, close or drop. Each prompt gets a one-line reminder while the goal is active; session start
- * warns about goals whose branch is merged or deleted.
- * Store: ${XDG_CACHE_HOME:-~/.cache}/agent-skills/todos/<repo_slug>/goals/<branch-slug>.md (contract: docs/specs/agentic-coding/contracts/goal-todo-contract.md).
+ * /goal: one Goal Contract per goal, with a done-check that the human locks and a command gates closing.
+ *   /goal [<outcome>]   no goal: the agent drafts one (Discovery first) via goal_propose; draft: card; locked: card + check, offers close when green
+ *   /goal lock          run the check at the base commit (temp detached worktree); refuse if it passes; one dialog picks the Outcome Check and locks
+ *   /goal unlock        locked -> draft, to correct it; relock re-validates (typing the id if weaker)
+ *   /goal done          close on a green check (or your confirmation for a human-confirm check); runs nothing else
+ *   /goal drop [<id>]   abandon this branch's goal, or any live goal by id
+ *   /goal show <id>     any goal by id, current or archived
+ *   /goal drive, /drive hand the locked goal to the drive skill
+ * The agent reaches the store only through goal_propose (drafts only; never lock, unlock, close or drop), and a
+ * tool_call guard blocks direct writes to the store. Ids name the goal (g-<kr>-<outcome>); never on main/develop.
+ * Each prompt gets a one-line reminder while the goal is active; session start warns about goals whose branch is merged or deleted.
+ * Store: one file per branch, finished goals archived by id (contract: .pi/docs/specs/agentic-coding/contracts/goal-todo-contract.md).
  * Logic + tests: _lib/goal.ts, goal-io.ts, goal-flow.ts and their *.test.ts. This file is glue only.
  *
  * Load location: ~/.pi/agent/extensions/goal-command.ts (global)
@@ -42,6 +40,7 @@ const Params = Type.Object({
 	anti_goals: Type.Optional(Type.Array(Type.String(), { description: "What this work must not do" })),
 	scope_anchors: Type.Optional(Type.Array(Type.String(), { description: "Repo paths the work belongs to" })),
 	spec_links: Type.Optional(Type.Array(Type.String(), { description: "Specs, ADRs or issues that define the outcome" })),
+	serves: Type.Optional(Type.String({ description: "The end-state key result this goal serves, e.g. KR-2.1. Becomes part of the goal id." })),
 });
 
 export default function (pi: ExtensionAPI) {
@@ -76,7 +75,6 @@ export default function (pi: ExtensionAPI) {
 				});
 			},
 			tellAgent: (m) => void send(m, false),
-			runCommand: (c) => send(c, true),
 		};
 	};
 
@@ -102,7 +100,7 @@ export default function (pi: ExtensionAPI) {
 		name: TOOL,
 		label: "Goal propose",
 		description:
-			"Draft the Goal Contract of the current branch (outcome, done_check, anti_goals, scope_anchors, spec_links). " +
+			"Draft the Goal Contract of the current branch (outcome, done_check, anti_goals, scope_anchors, spec_links, serves). The goal id follows the outcome and serves. " +
 			"Writes a draft only; a locked goal is changed by the user with /goal unlock. You cannot lock, approve or close a goal: the user does that with /goal.",
 		promptSnippet: "Draft the branch's Goal Contract (draft only; a locked goal needs /goal unlock first)",
 		promptGuidelines: [
@@ -120,13 +118,14 @@ export default function (pi: ExtensionAPI) {
 				antiGoals: params.anti_goals,
 				scopeAnchors: params.scope_anchors,
 				specLinks: params.spec_links,
+				serves: params.serves,
 			}) : { ok: false, message: "Not in a git repository." };
 			return { content: [{ type: "text" as const, text: r.ok ? r.message : `Error: ${r.message}` }], details: { ok: r.ok } };
 		},
 	} as any);
 
 	pi.registerCommand("goal", {
-		description: "/goal [<outcome>] | lock | unlock | done | drop | help — branch goal with a human-locked done-check",
+		description: "/goal [<outcome>] | lock | unlock | done | drop | drive | help — branch goal with a human-locked done-check",
 		getArgumentCompletions: (prefix: string) => {
 			const hits = SUBCOMMANDS.filter((o) => o.startsWith(prefix));
 			return hits.length ? hits.map((value) => ({ value, label: value })) : null;
@@ -135,6 +134,19 @@ export default function (pi: ExtensionAPI) {
 			const d = await depsFor(ctx);
 			if (!d) return ctx.ui.notify("/goal needs a git repository.", "error");
 			await runGoalCommand(d, args);
+		},
+	});
+
+	pi.registerCommand("drive", {
+		description: "/drive [scenic|motorway] [extra instructions] — alias of /goal drive: drive the locked goal",
+		getArgumentCompletions: (prefix: string) => {
+			const hits = ["scenic", "motorway"].filter((o) => o.startsWith(prefix));
+			return hits.length ? hits.map((value) => ({ value, label: value })) : null;
+		},
+		handler: async (args: string, ctx: any) => {
+			const d = await depsFor(ctx);
+			if (!d) return ctx.ui.notify("/drive needs a git repository.", "error");
+			await runGoalCommand(d, `drive ${args ?? ""}`);
 		},
 	});
 }

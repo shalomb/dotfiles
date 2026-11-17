@@ -18,7 +18,9 @@ import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { commandsOf } from "./_lib/shell-segments.ts";
+import { deepSegments, stripPrefixes, tokenize } from "./_lib/shell-segments.ts";
+import { fixFor } from "./_lib/modern-cli-fix.ts";
+import { logGuardEvent } from "./_lib/guard-log.ts";
 import { blockReason } from "./_lib/modern-cli-message.ts";
 
 const MODERN_REPLACEMENTS: Record<string, string> = {
@@ -49,6 +51,20 @@ function skillBody(): string {
 	}
 }
 
+const REF_PATH = join(homedir(), ".pi/agent/skills/modern-cli-overrides/references/tool-mappings.md");
+
+// Derived from 560 guard hits in session history (2026-10/11): range reads, pipe substitutions and
+// in-place edits dominate. Pairs are placed first so the rule is seen where the command is written.
+const NEVER_TYPE = [
+	"NEVER type grep/egrep/fgrep, find or sed (a guard blocks the whole command; nothing runs). Write the modern form first time:",
+	"- `cmd | grep X` -> `cmd | rg X`   |   `grep -rn X dir` -> `rg -n X dir`",
+	"- `find . -name '*.py'` -> `fd -g '*.py'`   |   `find src -type f` -> `fd -t f . src`",
+	"- `sed -n '10,40p' f` -> the `read` tool (path, offset=10, limit=31), or `bat -r 10:40 f`",
+	"- `cmd | sed -n 2p` -> `cmd | tail -n +2 | head -n 1`",
+	"- `cmd | sed 's/a/b/g'` -> `cmd | sd 'a' 'b'`   |   `sed -i 's/a/b/g' f` -> `sd 'a' 'b' f` (or the `edit` tool)",
+	`Full syntax: ${REF_PATH}`,
+].join("\n");
+
 // `sed -n '196,212p' file` only prints a line range; sd is for substitutions, so point at the right tool.
 const SED_PRINT_RANGE = /^\$?\d*(,\$|,\d+)?p$/;
 
@@ -66,7 +82,8 @@ export default function (pi: ExtensionAPI) {
 		// A prompt *section* (rendered as <modern_cli_overrides>…</modern_cli_overrides>), not a forced
 		// `systemPrompt`: forcing makes the prompt opaque, so later before_agent_start hooks (e.g. the
 		// skills-loader tier filter) could no longer change it.
-		event.systemPromptOptions.sections = { ...event.systemPromptOptions.sections, modern_cli_overrides: body };
+		logGuardEvent({ guard: "modern-cli", kind: "prompt", sections: ["modern_cli_overrides"] });
+		event.systemPromptOptions.sections = { ...event.systemPromptOptions.sections, modern_cli_overrides: `${NEVER_TYPE}\n\n${body.replace("(references/tool-mappings.md)", `(${REF_PATH})`)}` };
 		return undefined;
 	});
 
@@ -76,10 +93,14 @@ export default function (pi: ExtensionAPI) {
 		const command = String((event.input as { command?: string }).command ?? "");
 		if (!command.trim()) return undefined;
 
-		for (const tokens of commandsOf(command)) {
+		for (const seg of deepSegments(command)) {
+			const tokens = stripPrefixes(tokenize(seg.text));
+			if (tokens.length === 0) continue;
 			const cmd = basename(tokens[0]);
 			if (!(cmd in MODERN_REPLACEMENTS)) continue;
-			const reason = blockReason({ cmd, tokens, hint: hintFor(cmd, tokens.slice(1)), hasBody: !!skillBody(), skillInstruction: SKILL_INSTRUCTION });
+			const fix = fixFor(tokens, seg.pipedIn);
+			const reason = blockReason({ cmd, tokens, hint: hintFor(cmd, tokens.slice(1)), fix, hasBody: !!skillBody(), skillInstruction: SKILL_INSTRUCTION });
+			logGuardEvent({ guard: "modern-cli", kind: "block", rule: cmd, command: seg.text, fix });
 			if (ctx.hasUI) ctx.ui.notify(reason, "warning");
 			return { block: true, reason };
 		}

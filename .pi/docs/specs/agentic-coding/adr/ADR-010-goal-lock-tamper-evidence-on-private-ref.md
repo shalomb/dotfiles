@@ -1,6 +1,6 @@
 # ADR-010: Tamper Evidence for Locked Done-Checks on a Private Git Ref
 
-- **Status:** Accepted
+- **Status:** Accepted; amended 2026-11-15 (see Amendments 1-2)
 - **Date:** 2026-11-01
 - **Decider(s):** unop, Main Copilot (Design Session goal-v2)
 - **Consulted:** TB-7 adversarial reviews (write guard is best-effort; no symlink check)
@@ -94,3 +94,14 @@ On every lock and every approved change, `/goal` records a hash of the canonical
 
 - A real tamper case is found, meaning an agent rewrote both the file and the ref: move to Option D.
 - The goal store must be portable across machines: reconsider where the record lives.
+
+## Amendment 1 (2026-11-15): lock and relock, not approve
+
+The hash is recorded on every lock and relock (after `/goal unlock`); there is no `approve` commit any more. The ref stays keyed
+by branch, while goal ids now name the goal, so one ref holds the lock and tombstone history of each goal on that branch in turn.
+
+## Amendment 2 (2026-11-15): agent locks and closes write the same ref
+
+Locks and closes made by the loop ([ADR-012](ADR-012-intent-upstream-loop-runs-itself.md)) write the ref exactly like the human's. The lock commit message names the
+key result and the hash of its approved text: `lock <id> serves <KR> kr:<sha256>`, so an audit can tell a
+self-lock from a human lock and check the key result was unchanged.
