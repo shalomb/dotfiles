@@ -17,7 +17,8 @@ STYLES = ("default", "emphasis", "security", "deploy")
 NOTE_KINDS = KINDS + ("neutral",)
 SCHEMA = {
     "title": None, "lede": None, "foot": None,
-    "nodes": [{"id": None, "label": None, "sub": None, "kind": None, "col": None, "row": None, "span": None}],
+    "nodes": [{"id": None, "label": None, "sub": None, "kind": None, "col": None, "row": None, "span": None,
+               "detail": {"description": None, "tech": None, "links": [{"label": None, "url": None}], "notes": None}}],
     "boundaries": [{"id": None, "label": None, "nodes": None}],
     "edges": [{"from": None, "to": None, "label": None, "kind": None, "dashed": None}],
     "notes": [{"title": None, "kind": None, "items": None}],
@@ -62,6 +63,17 @@ def check_structure(doc):
                 fail(f"{f}.{key}", "must be a whole number, 0 or more")
         if "span" in n and (not isinstance(n["span"], int) or isinstance(n["span"], bool) or n["span"] < 1):
             fail(f"{f}.span", "must be a whole number, 1 or more")
+        if "detail" in n:
+            d = need(n, "detail", dict, f)
+            opt_text(d, "description", f"{f}.detail")
+            opt_text(d, "tech", f"{f}.detail")
+            opt_text(d, "notes", f"{f}.detail")
+            if "links" in d:
+                links = need(d, "links", list, f"{f}.detail")
+                for j, l in enumerate(links):
+                    lf = f"{f}.detail.links[{j}]"
+                    need(l, "label", str, lf)
+                    need(l, "url", str, lf)
     cells = {}
     for n in nodes:
         for c in range(n["col"], n["col"] + n.get("span", 1)):
@@ -208,7 +220,11 @@ def draw_node(n):
     x, y, w, h = b["x"], b["y"], b["w"], b["h"]
     cx = x + w / 2
     title = f'{n["label"]}: {n["sub"]}' if n.get("sub") else n["label"]
-    parts = [f'<g class="node k-{n["kind"]}" data-node-id="{esc(n["id"])}" tabindex="0"><title>{esc(title)} ({KIND_NAMES[n["kind"]].lower()})</title>',
+    has_det = "detail" in n
+    cls = f'node k-{n["kind"]}' + (" has-detail" if has_det else "")
+    parts = [f'<g class="{cls}" data-node-id="{esc(n["id"])}" tabindex="0"' +
+             (' data-has-detail="true" role="button" aria-haspopup="dialog"' if has_det else '') +
+             f'><title>{esc(title)} ({KIND_NAMES[n["kind"]].lower()})</title>',
              f'<rect class="box" x="{num(x)}" y="{num(y)}" width="{num(w)}" height="{h}" rx="10"/>',
              f'<path class="icon" transform="translate({num(x + 8)} {num(y + 7)})" d="{ICONS[n["kind"]]}"/>']
     ly = y + (32 if n.get("sub") else 40)
@@ -290,11 +306,17 @@ def notes_html(notes):
     return f'<div class="notes">{"".join(cards)}</div>' if cards else ""
 
 
+def dialog_html():
+    return ('<dialog id="am-dlg" class="am-dlg"><div class="am-m">'
+            '<button class="am-x" onclick="document.getElementById(\'am-dlg\').close()" aria-label="Close">✕</button>'
+            '<div id="am-mb"></div></div></dialog>')
+
+
 def body(doc):
     lede = f'<p class="lede">{esc(doc["lede"])}</p>' if doc.get("lede") else ""
     foot = f'<p class="foot">{esc(doc["foot"])}</p>' if doc.get("foot") else ""
     return (f'<h1>{esc(doc["title"])}</h1>{lede}<div class="stage">{diagram(doc)}{legend(doc["nodes"])}</div>'
-            f'{notes_html(doc.get("notes", []))}{foot}')
+            f'{notes_html(doc.get("notes", []))}{foot}{dialog_html()}')
 
 
 def derive(doc):
@@ -304,7 +326,7 @@ def derive(doc):
 def build(doc):
     doc = keep_known(doc, SCHEMA)
     check_structure(doc)
-    skip = {"id", "kind", "col", "row", "span", "from", "to", "dashed", "nodes"}
+    skip = {"id", "kind", "col", "row", "span", "from", "to", "dashed", "nodes", "url"}
     texts = list(text_fields({k: v for k, v in doc.items() if k != "boundaries"}, "", skip))
     texts += [(f"boundaries[{i}].label", b["label"]) for i, b in enumerate(doc.get("boundaries", []))]
     check_tone({"meta": {"title": doc["title"]}}, texts)

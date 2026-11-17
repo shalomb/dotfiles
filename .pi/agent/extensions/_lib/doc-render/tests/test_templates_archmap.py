@@ -63,6 +63,21 @@ class ArchmapTest(unittest.TestCase):
         self.assertIn("nope", r.stderr)
         self.assertEqual(page, "")
 
+    def test_node_with_detail_renders_popup_data(self):
+        doc = example()
+        doc["nodes"][0]["detail"] = {
+            "description": "Enterprise identity provider handling OIDC flows.",
+            "tech": "Microsoft Entra ID",
+            "links": [{"label": "Admin portal", "url": "https://entra.microsoft.com"}],
+            "notes": "Federated with corporate Active Directory."
+        }
+        r, page = render(doc)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("has-detail", page)
+        self.assertIn('data-has-detail="true"', page)
+        self.assertIn('<dialog id="am-dlg"', page)
+        self.assertIn("Enterprise identity provider", page)
+
     def test_listed(self):
         r = subprocess.run([sys.executable, str(TEMPLATE), "--list"], capture_output=True, text=True)
         self.assertIn("archmap", json.loads(r.stdout))
