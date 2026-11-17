@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { nextStep } from "./next-hop";
+import { nextStep, tail } from "./next-hop";
 
 const H = "abc123";
 const red = (id: string) => ({ id, exit: 1 });
@@ -85,5 +85,39 @@ describe("stops", () => {
 		const results = [red("KR-1.1"), red("KR-2.1")];
 		expect(nextStep(ctx(results, 70))).toEqual({ kind: "stop", reason: "budget" });
 		expect(nextStep(ctx(results, undefined))).toEqual({ kind: "drive", kr: "KR-1.1" });
+	});
+});
+
+describe("hardening", () => {
+	const exits = (id: string, exit: number) => ({ id, exit });
+
+	// Scenario 1: timeout and signal exits stop as blocked
+	for (const code of [124, 137, 143]) {
+		test(`stops as blocked on exit ${code} instead of driving`, () => {
+			expect(nextStep(at([red("KR-1.1"), exits("KR-2.1", code)]))).toEqual({ kind: "stop", reason: "blocked" });
+		});
+	}
+
+	// Scenario 2: a served key result that turns red is a regression
+	test("stops as regression when an already-served key result is red", () => {
+		expect(nextStep({ ...at([green("KR-1.1"), red("KR-2.1")]), served: ["KR-2.1"] })).toEqual({ kind: "stop", reason: "regression" });
+	});
+	test("drives when the red key result was never served", () => {
+		expect(nextStep({ ...at([red("KR-2.1")]), served: ["KR-1.1"] })).toEqual({ kind: "drive", kr: "KR-2.1" });
+	});
+	test("served and green still arrives", () => {
+		expect(nextStep({ ...at([green("KR-2.1")]), served: ["KR-2.1"] })).toEqual({ kind: "stop", reason: "arrived" });
+	});
+	test("blocked outranks regression", () => {
+		expect(nextStep({ ...at([red("KR-1.1"), exits("KR-2.1", 124)]), served: ["KR-1.1"] })).toEqual({ kind: "stop", reason: "blocked" });
+	});
+
+	// Scenario 3: bounded diagnostic tail
+	test("tail keeps the last lines and bounds their length", () => {
+		const text = Array.from({ length: 50 }, (_, i) => `line ${i}`).join("\n");
+		const t = tail(text, 5);
+		expect(t.split("\n")).toEqual(["line 45", "line 46", "line 47", "line 48", "line 49"]);
+		expect(tail("x".repeat(5000), 5, 100).length).toBeLessThanOrEqual(100);
+		expect(tail("", 5)).toBe("");
 	});
 });
