@@ -37,6 +37,14 @@ the repo root. The first red key result, in file order, is the next hop.
 - **KR-4.1** The fast test target is green and fails on any failure — check: `make test-fast`
 - **KR-4.2** Tests leave no litter in `/tmp` — check: `bun test ./.pi/agent/extensions/_lib/registry-spikes.test.ts && test -z "$(fd -d1 -t d '^spike-h2-' /tmp)"`
 
+### O5. Autonomy is visible
+
+- **KR-5.1** Every hop logs the key result it targeted, whether it moved, and its tokens and time, and a summary reads that log back — check: `bun test ./.pi/agent/extensions/_lib/telemetry.test.ts`
+
+### O6. The docs do not lie
+
+- **KR-6.1** No ADR is Accepted without cited evidence: a commit, a test or a check that shows it — check: `bun test ./.pi/agent/extensions/_lib/adr-evidence.test.ts`
+
 ## Approval
 
 The human approves the key results once by writing the hash of the key-result lines below. `/n` stops if the hash
@@ -50,5 +58,4 @@ Approved: 2026-11-15 a51260fe4c3dbe98
 
 ## Later, not now
 
-- O5. Autonomy is visible: every hop logs the key result it targeted, whether it moved, tokens and time.
-- O6. The docs do not lie: one source of truth; no ADR is Accepted without cited evidence.
+Nothing yet. O5 and O6 are now key results above, awaiting approval.

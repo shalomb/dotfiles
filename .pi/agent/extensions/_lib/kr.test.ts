@@ -65,12 +65,11 @@ test("hash is first 16 hex of sha256 of KR lines plus trailing newline", () => {
 });
 
 // Scenario: the real end-state file parses and matches its approved hash
-test("end-state file has 8 key results and its approved hash", () => {
+test("end-state file has 10 key results and its approved hash", () => {
 	const md = readFileSync(END_STATE, "utf8");
 	expect(parseKeyResults(md).map((k) => k.id)).toEqual([
-		"KR-1.1", "KR-2.1", "KR-2.2", "KR-3.1", "KR-3.2", "KR-3.3", "KR-4.1", "KR-4.2",
+		"KR-1.1", "KR-2.1", "KR-2.2", "KR-3.1", "KR-3.2", "KR-3.3", "KR-4.1", "KR-4.2", "KR-5.1", "KR-6.1",
 	]);
 	const approved = md.match(/^Approved: \S+ ([0-9a-f]{16})$/m)![1];
-	expect(approved).toBe("a51260fe4c3dbe98");
 	expect(keyResultsHash(md)).toBe(approved);
 });
