@@ -61,7 +61,6 @@
       "scout": {
         "model": "anthropic/claude-haiku-5-5"
       }
-    },
-    "defaultExtensions": ""
+    }
   }
 }
