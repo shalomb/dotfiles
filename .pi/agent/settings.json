@@ -49,7 +49,7 @@
   "transport": "auto",
   "tuiMode": "regular",
   "extensionChangelogVersions": {
-    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.4.12",
+    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.5.0",
     "{\"source\":\"npm:pi-powerline-footer\",\"scope\":\"user\"}": "0.22.0",
     "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.88.1",
     "{\"source\":\"npm:@tmustier/pi-usage-extension\",\"scope\":\"user\"}": "0.10.2",
@@ -61,6 +61,7 @@
       "scout": {
         "model": "anthropic/claude-haiku-5-5"
       }
-    }
+    },
+    "defaultExtensions": ""
   }
 }
