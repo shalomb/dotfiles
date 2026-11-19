@@ -20,6 +20,10 @@ _pi_run() {
   export PI_LENS_MAX_PROJECT_FILES="${PI_LENS_MAX_PROJECT_FILES:-1000}"
   export PI_LENS_LSP_BUDGET_RSS_MB="${PI_LENS_LSP_BUDGET_RSS_MB:-400}"
 
+  # Background jobs shell policy: isolate bg_run commands into their own cgroup scope
+  export PI_BG_POSIX_SHELL=bash
+  export PI_BG_POSIX_SHELL_PATH="$HOME/.local/bin/bg-scoped-bash"
+
   NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=${PI_HEAP_MB:-1024}" \
     systemd-run --user --scope -q \
     -p MemoryHigh="${PI_MEM_HIGH:-2G}" -p MemoryMax="${PI_MEM_MAX:-3G}" \
