@@ -83,3 +83,9 @@ A pure function `rankSessions(rows, terms, env)` in `registry-find.ts`, unit-tes
 ## Revisit Criteria
 
 - Replayed-query recall (H1) falls below 90%.
+
+## Evidence
+
+- commit: b26c530 — adds scope-weighted ranking in locate
+- test: .pi/agent/extensions/_lib/locate.test.ts — covers zone-weighted ranking
+- check: `rg -q "ZONE_WEIGHTS.*0.25" .pi/agent/extensions/_lib/locate.ts` — weights cwd 1.0 … registry 0.25 live in one table

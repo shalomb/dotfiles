@@ -154,3 +154,8 @@ Agents MUST:
 3. Never skip `make test-bash`
 4. Never proceed with export if tests fail
 5. Fix issues when tests fail, not skip testing
+
+## Evidence
+
+- commit: 01020e9 — adds the mandatory testing workflow to AGENTS.md and the Makefile
+- check: `rg -q "Never skip .make test-bash" AGENTS.md` — AGENTS.md keeps the requirement

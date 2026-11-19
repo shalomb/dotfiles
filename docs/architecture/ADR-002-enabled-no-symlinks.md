@@ -58,3 +58,7 @@ mv disabled/fzf-utils.sh enabled/fzf-utils.sh
 # Deploy changes
 uv run python -m dotfile_manager export .config/bash/enabled/
 ```
+## Evidence
+
+- commit: f66d486 — adds `enabled/` as a directory of real tool scripts
+- check: `test -z "$(fd -t l . .config/bash/enabled)"` — `enabled/` contains no symlinks

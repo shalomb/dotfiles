@@ -134,3 +134,8 @@ uv run python -m dotfile_manager export .config/bash/bashrc
 source ~/.bashrc
 type dotfiles  # Should now be available
 ```
+
+## Evidence
+
+- commit: 521463b — loads core files before `enabled/` scripts
+- check: `rg -q "BASHRC_DIR\"/lib/\*" .config/bash/bashrc` — bashrc sources the core directory with a glob loop, not per-file

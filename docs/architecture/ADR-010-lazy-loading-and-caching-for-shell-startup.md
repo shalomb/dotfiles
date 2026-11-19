@@ -54,3 +54,8 @@ q() {
     fi
 }
 ```
+
+## Evidence
+
+- commit: ea29bd8 — adds completion caching and lazy init to delta, fzf, rustup and ob
+- check: `rg -q "bash_completions" .config/bash/enabled/delta.sh` — delta completion is cached under `$XDG_CACHE_HOME/bash_completions`
