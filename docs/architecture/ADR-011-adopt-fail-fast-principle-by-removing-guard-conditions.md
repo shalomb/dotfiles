@@ -44,3 +44,10 @@ source <(delta --generate-completion bash)
 # After (without terminal check)
 # ... script logic ...
 ```
+
+## Evidence
+
+- commit: ea29bd8 — strips guard conditions from delta, fzf, rustup and ob scripts
+- check: `! rg -q "if command -v delta" .config/bash/enabled/delta.sh` — delta.sh runs without a command-existence guard
+
+Partially implemented: `if command -v` guards remain in other `enabled/` scripts (for example `gh.sh`, `cd.sh`, `cursor.sh`, `browse-md.sh`), so the decision is not yet applied repo-wide.

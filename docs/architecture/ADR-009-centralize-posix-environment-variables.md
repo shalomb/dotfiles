@@ -36,3 +36,8 @@ During the "Holistic Bash Startup Refactoring", it was identified that environme
 . ~/.config/posix/01-xdg.sh
 . ~/.config/posix/00-path.sh
 ```
+
+## Evidence
+
+- commit: ea29bd8 — creates `.config/posix/` with `00-path.sh` and `01-xdg.sh`
+- check: `rg -q "posix/00-path.sh" .config/bash/profile` — profile sources the POSIX scripts

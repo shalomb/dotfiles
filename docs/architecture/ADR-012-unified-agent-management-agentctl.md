@@ -375,3 +375,8 @@ bash: 2025-10-27: command not found
 ## Authors
 
 - Shalom Bhooshi (with Claude Code assistance)
+
+## Evidence
+
+- commit: b9dd9ff — adds the `agentctl` Python core in `src/agent_management/`
+- test: tests/test_agent_management.py — covers agent management behaviour

@@ -62,23 +62,29 @@ describe("H1 recall: one term in three wrong, target in top 5", () => {
 describe("H2 speed: p95 <= 300 ms at 5000 sessions", () => {
 	test("ftsSearch p95 over 10 runs", () => {
 		const { r, rows } = synthetic(5000, 11, 60, 200);
-		const db = openRegistry(join(mkdtempSync(join(tmpdir(), "spike-h2-")), "registry.db"));
-		insertAll(db, rows);
-		const t0 = performance.now();
-		refreshFts(db);
-		console.log(`H2 index build ${(performance.now() - t0).toFixed(0)} ms`);
-		const times: number[] = [];
-		for (let i = 0; i < 10; i++) {
-			const own = rows[Math.floor(r() * rows.length)].digest.split(" ");
-			const terms = [pick(r, own), pick(r, own), word(r)];
-			const t = performance.now();
-			ftsSearch(db, terms, 20);
-			times.push(performance.now() - t);
+		const dir = mkdtempSync(join(tmpdir(), "spike-h2-"));
+		const db = openRegistry(join(dir, "registry.db"));
+		try {
+			insertAll(db, rows);
+			const t0 = performance.now();
+			refreshFts(db);
+			console.log(`H2 index build ${(performance.now() - t0).toFixed(0)} ms`);
+			const times: number[] = [];
+			for (let i = 0; i < 10; i++) {
+				const own = rows[Math.floor(r() * rows.length)].digest.split(" ");
+				const terms = [pick(r, own), pick(r, own), word(r)];
+				const t = performance.now();
+				ftsSearch(db, terms, 20);
+				times.push(performance.now() - t);
+			}
+			times.sort((a, b) => a - b);
+			const p95 = times[Math.ceil(0.95 * times.length) - 1];
+			console.log(`H2 p95 ${p95.toFixed(1)} ms (max ${times[times.length - 1].toFixed(1)})`);
+			expect(p95).toBeLessThanOrEqual(300);
+		} finally {
+			db.close();
+			rmSync(dir, { recursive: true, force: true });
 		}
-		times.sort((a, b) => a - b);
-		const p95 = times[Math.ceil(0.95 * times.length) - 1];
-		console.log(`H2 p95 ${p95.toFixed(1)} ms (max ${times[times.length - 1].toFixed(1)})`);
-		expect(p95).toBeLessThanOrEqual(300);
 	});
 });
 

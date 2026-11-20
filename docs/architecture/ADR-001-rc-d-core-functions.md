@@ -41,3 +41,7 @@ rc.d/dotfiles        # Dotfile management functions
 # Tools can source core functions
 source ~/.config/bash/rc.d/01-functions
 ```
+## Evidence
+
+- commit: 521463b — loads the core function directory before `enabled/` tools (core/tool split; dir later renamed `rc.d/` → `lib/` in 13c4877)
+- check: `test -f .config/bash/lib/01-functions && test -d .config/bash/enabled` — core functions live apart from user tools

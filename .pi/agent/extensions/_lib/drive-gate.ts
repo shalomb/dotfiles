@@ -72,6 +72,9 @@ function g2(i: GateInput): GateCheck {
 	return hit.length ? check("G2", "reject", `Steward path touched: ${hit.join(", ")}`) : check("G2", "pass", "no Steward path touched");
 }
 
+/** G3 on a diff alone: did it remove a Scenario, add @skip/@wip, or drop more assertions than it added? */
+export const checkWeakening = (changed: GateInput["changed"]): GateCheck => g3({ changed } as GateInput);
+
 function g3(i: GateInput): GateCheck {
 	const bad: string[] = [];
 	for (const c of i.changed) {

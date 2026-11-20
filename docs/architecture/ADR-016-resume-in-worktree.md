@@ -82,3 +82,8 @@ A resolver `resolveTargetWorktree(session, gumRepo)` returns a worktree path or 
 
 - gum drops worktree support.
 - H3 fails in field use.
+
+## Evidence
+
+- commit: dc9eefd — resolves pi-find resume into a worktree
+- test: .pi/agent/extensions/_lib/registry-resume.test.ts — covers original-worktree resume and fallback

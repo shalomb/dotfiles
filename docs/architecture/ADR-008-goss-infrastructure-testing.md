@@ -508,3 +508,9 @@ time make test-bash
 - System Administrator
 - Development Team
 - AI Agents (via AGENTS.md)
+
+## Evidence
+
+- commit: ea29bd8 — adds the goss suites and bash test runner
+- test: tests/goss-bash.yaml — goss suite for bash infrastructure
+- check: `rg -q "goss -g" Makefile` — `make test-bash` runs the goss suites

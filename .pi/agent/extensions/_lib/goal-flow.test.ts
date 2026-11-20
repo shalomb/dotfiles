@@ -263,7 +263,7 @@ test("show prints the contract summary of a locked goal", async () => {
 	expect(lastNote()).toContain("g-users-can-export-a-backlog-as-csv");
 	expect(lastNote()).toContain("Users can export a backlog as CSV");
 	expect(lastNote()).toContain("test -f export.csv");
-	expect(lastNote()).toMatch(/active/);
+	expect(lastNote()).toMatch(/LOCKED/);
 });
 
 // Contract: one-line reminder only for an active goal on the current branch
@@ -358,7 +358,7 @@ test("a branch whose name collides with another branch's goal slug sees no goal 
 
 // P1: approving a change is held to the same fail-on-base rule as lock.
 // Scenario: Locking needs an Outcome Check
-test("lock is one dialog: the human picks the Outcome Check and that pick locks, with no second confirm", async () => {
+test("an ambiguous check is one dialog: the human picks the Outcome Check and that pick locks, with no second confirm", async () => {
 	const d = await draftWithCheck(["test -f never.csv", "test -f export.csv"]);
 	pick = 1;
 	await lockGoal(d);
@@ -370,12 +370,36 @@ test("lock is one dialog: the human picks the Outcome Check and that pick locks,
 	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "active", doneCheck: { outcomeChecks: ["test -f export.csv"] } });
 });
 
-test("a single-command check offers one Lock option and Cancel", async () => {
+test("a single-command check is a short Lock/Cancel confirm naming that default", async () => {
 	const d = await draftWithCheck(["test -f export.csv"]);
 	pick = 0;
 	await lockGoal(d);
-	expect(selects[0].options).toEqual(["Lock · Outcome Check: test -f export.csv", "Cancel"]);
-	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	expect(selects[0].options).toEqual(["Lock", "Cancel"]);
+	expect(selects[0].title).toContain("Outcome Check: test -f export.csv");
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "active", doneCheck: { outcomeChecks: ["test -f export.csv"] } });
+});
+
+test("many long commands with no suggestion offer at most 3 short choices, and lock the verbatim command", async () => {
+	const long = (n: number) => `test -f export.csv && echo ${"x".repeat(120)} ${n}`;
+	const d = await draftWithCheck([long(1), long(2), long(3), long(4), long(5)]);
+	pick = 0;
+	await lockGoal(d);
+	const opts = selects[0].options;
+	expect(opts.at(-1)).toBe("Cancel");
+	expect(opts.length - 1).toBeLessThanOrEqual(3);
+	for (const o of opts) expect(o.length).toBeLessThanOrEqual(80 + "Lock · Outcome Check: ".length);
+	const g = loadGoal(store, "feat/export")!;
+	expect(g.doneCheck.outcomeChecks).toEqual([long(1)]);
+	expect(g.doneCheck.commands).toEqual([long(1), long(2), long(3), long(4), long(5)]);
+});
+
+test("the lock dialog title does not list long commands in full", async () => {
+	const long = `test -f export.csv && echo ${"y".repeat(200)}`;
+	const d = await draftWithCheck([long]);
+	pick = 0;
+	await lockGoal(d);
+	expect(selects[0].title).not.toContain(long);
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual([long]);
 });
 
 test("cancelling the lock dialog, or picking Cancel, leaves the draft unlocked and asks no confirm", async () => {
@@ -391,15 +415,24 @@ test("cancelling the lock dialog, or picking Cancel, leaves the draft unlocked a
 	expect(worktrees()).toBe(1);
 });
 
-test("the agent's suggested Outcome Check is listed first, but the human's pick decides", async () => {
+test("exactly one agent suggestion is the default: one Lock/Cancel confirm naming it, and Lock marks it", async () => {
 	const d = await draftWithCheck(["test -f export.csv", "test -f never.csv"]);
 	const r = await proposeFromAgent(d, { outcomeChecks: ["test -f never.csv"] });
 	expect(r.ok).toBe(true);
 	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft", doneCheck: { outcomeChecks: ["test -f never.csv"] } });
+	pick = 0;
+	await lockGoal(d);
+	expect(selects[0].options).toEqual(["Lock", "Cancel"]);
+	expect(selects[0].title).toContain("Outcome Check: test -f never.csv");
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "active", doneCheck: { outcomeChecks: ["test -f never.csv"] } });
+});
+
+test("Cancel on the default confirm leaves the draft unlocked", async () => {
+	const d = await draftWithCheck(["test -f export.csv"]);
 	pick = 1;
 	await lockGoal(d);
-	expect(selects[0].options[0]).toBe("Lock · Outcome Check: test -f never.csv");
-	expect(loadGoal(store, "feat/export")!.doneCheck.outcomeChecks).toEqual(["test -f export.csv"]);
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+	expect(lastNote()).toMatch(/Not locked/);
 });
 
 test("goal_propose cannot set the Outcome Check of an active goal", async () => {
@@ -559,7 +592,7 @@ test("refused or declined transitions append no event", async () => {
 test("parseGoalArgs: unlock and help are subcommands; retired verbs are flagged, not taken as outcomes", () => {
 	expect(parseGoalArgs("unlock")).toEqual({ kind: "unlock" });
 	expect(parseGoalArgs("help")).toEqual({ kind: "help" });
-	for (const w of ["check", "approve", "reject"]) expect(parseGoalArgs(w)).toEqual({ kind: "retired", word: w });
+	for (const w of ["approve", "reject"]) expect(parseGoalArgs(w)).toEqual({ kind: "retired", word: w });
 	expect(parseGoalArgs("check the csv export")).toEqual({ kind: "start", outcome: "check the csv export" });
 });
 
@@ -585,7 +618,7 @@ test("bare /goal on a closed goal shows it, saves a fresh draft and asks the age
 	await draftWithCheck();
 	saveGoal(store, { ...loadGoal(store, "feat/export")!, status: "closed" });
 	await runGoalCommand(deps(), "");
-	expect(notes.join("\n")).toMatch(/closed/);
+	expect(notes.join("\n")).toMatch(/CLOSED/);
 	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft" });
 	expect(toAgent.join("\n")).toMatch(/next goal/i);
 	expect(toAgent.join("\n")).toMatch(/discussion|conversation/);
@@ -1026,7 +1059,7 @@ test("/goal show <id> shows an archived goal", async () => {
 	notes = [];
 	expect(parseGoalArgs("show g-users-can-export-csv")).toEqual({ kind: "show-id", id: "g-users-can-export-csv" });
 	await runGoalCommand(deps(), "show g-users-can-export-csv");
-	expect(lastNote()).toMatch(/g-users-can-export-csv \[dropped\] Users can export CSV/);
+	expect(lastNote()).toMatch(/DROPPED · g-users-can-export-csv[\s\S]*Users can export CSV/);
 	await runGoalCommand(deps(), "show g-nope");
 	expect(lastNote()).toMatch(/No goal g-nope/);
 });
@@ -1092,6 +1125,36 @@ test("the stale warning for a deleted branch points at /goal drop <id>", async (
 	expect(w).not.toMatch(/Switch to feat\/gone/);
 });
 
+// /goal check runs the contract's done_check, read-only.
+test("check is a subcommand and parses", () => {
+	expect((SUBCOMMANDS as readonly string[]).includes("check")).toBe(true);
+	expect(parseGoalArgs("check")).toEqual({ kind: "check" });
+});
+test("check reports red then green and never changes the goal", async () => {
+	const d = await activeGoal();
+	const before = JSON.stringify(loadGoal(store, "feat/export"));
+	await runGoalCommand(d, "check");
+	expect(lastNote()).toMatch(/^FAIL 1 test -f export\.csv \(\d+ms\)$/m);
+	expect(lastNote()).toMatch(/done_check: red \(0\/1\)$/);
+	commitFile("export.csv");
+	await runGoalCommand(d, "check");
+	expect(lastNote()).toMatch(/^PASS 1 test -f export\.csv \(\d+ms\)$/m);
+	expect(lastNote()).toMatch(/done_check: green \(1\/1\)$/);
+	expect(JSON.stringify(loadGoal(store, "feat/export"))).toBe(before);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+});
+test("check on a human-confirm goal says so and runs nothing", async () => {
+	const d = await draftWithCheck();
+	const g = loadGoal(store, "feat/export")!;
+	saveGoal(store, { ...g, doneCheck: { ...g.doneCheck, kind: "human", commands: [] } });
+	await runGoalCommand(d, "check");
+	expect(lastNote()).toMatch(/human/i);
+	expect(lastNote()).not.toMatch(/done_check:/);
+});
+test("check with no goal says so", async () => {
+	await runGoalCommand(deps(), "check");
+	expect(lastNote()).toMatch(/no goal/i);
+});
 // ---- /drive priming: bounded-autonomy orchestrator ----
 test("/drive primes a high-agency orchestrator with bounded autonomy", async () => {
 	await lockedGoal();

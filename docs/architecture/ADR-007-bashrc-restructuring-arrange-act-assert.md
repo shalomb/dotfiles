@@ -204,3 +204,7 @@ make test-bash
 This restructuring was necessary because the original bashrc had become unmaintainable due to mixed concerns and lack of validation. The Arrange-Act-Assert pattern provides a clear, robust structure that prevents the silent failures that were occurring before.
 
 The key insight was that bashrc is the central orchestrator for all bash logic and needs to be super robust. This structure ensures that critical variables are always set correctly and that failures are caught immediately rather than silently.
+## Evidence
+
+- commit: ea29bd8 — restructures bashrc and adds the goss bootstrap suite
+- test: tests/goss-bash-bootstrap.yaml — checks bashrc bootstrap variables and loading

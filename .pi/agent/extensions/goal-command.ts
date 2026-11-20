@@ -23,7 +23,7 @@ import { join } from "node:path";
 import { popupArgs, surface } from "./_lib/ui-gate.ts";
 import { type Exec, agentWouldWriteGoalStore, resolveRepo } from "./_lib/goal-io.ts";
 import {
-	type Deps, SUBCOMMANDS, promptReminder, proposeFromAgent, runGoalCommand, staleWarning,
+	type Deps, SUBCOMMANDS, checkGoal, promptReminder, proposeFromAgent, runGoalCommand, staleWarning,
 } from "./_lib/goal-flow.ts";
 
 const TOOL = "goal_propose";
@@ -124,8 +124,25 @@ export default function (pi: ExtensionAPI) {
 		},
 	} as any);
 
+	// Read-only: runs the locked contract's own done_check commands; never locks, unlocks, closes or edits the goal.
+	pi.registerTool({
+		name: "goal_check",
+		label: "Goal check",
+		description: "Run the current branch goal's done_check commands (from its contract) and return a PASS/FAIL report per command. Read-only: it does not lock, close or change the goal.",
+		promptSnippet: "Run the goal's done_check and see which commands pass",
+		promptGuidelines: ["Call goal_check to see how far the work is from done; it runs only the contract's commands."],
+		parameters: Type.Object({ timeoutSeconds: Type.Optional(Type.Number({ description: "Per-command time limit in seconds (default 120)" })) }),
+		async execute(_id: string, params: any, _signal: any, _onUpdate: any, ctx: any) {
+			const d = await depsFor(ctx);
+			if (!d) return { content: [{ type: "text" as const, text: "Error: Not in a git repository." }], details: { ok: false } };
+			const secs = typeof params?.timeoutSeconds === "number" && params.timeoutSeconds > 0 ? params.timeoutSeconds : undefined;
+			const r = await checkGoal(d, secs && secs * 1000);
+			return { content: [{ type: "text" as const, text: r.text }], details: { ok: r.ok } };
+		},
+	} as any);
+
 	pi.registerCommand("goal", {
-		description: "/goal [<outcome>] | lock | unlock | done | drop | drive | help — branch goal with a human-locked done-check",
+		description: "/goal [<outcome>] | lock | unlock | done | drop | check | drive | help — branch goal with a human-locked done-check",
 		getArgumentCompletions: (prefix: string) => {
 			const hits = SUBCOMMANDS.filter((o) => o.startsWith(prefix));
 			return hits.length ? hits.map((value) => ({ value, label: value })) : null;

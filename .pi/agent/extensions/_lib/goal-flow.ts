@@ -8,6 +8,8 @@ import {
 	reminderLine, stamp, staleGoal,
 } from "./goal.ts";
 import { branchSlug, goalIdFor } from "./goal.ts";
+import { allPass, formatReport, runDoneCheck } from "./goal-check.ts";
+import { lockPlan, shorten } from "./goal-lock.ts";
 import { GOAL_HELP } from "./goal-help.ts";
 import { type Dirent, existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
@@ -40,16 +42,16 @@ export interface Deps {
 }
 
 export type GoalArgs =
-	| { kind: "show" | "lock" | "unlock" | "done" | "drop" | "help" }
+	| { kind: "show" | "lock" | "unlock" | "done" | "drop" | "check" | "help" }
 	| { kind: "retired"; word: string }
 	| { kind: "drive"; rest: string }
 	| { kind: "show-id"; id: string }
 	| { kind: "drop-id"; id: string }
 	| { kind: "start"; outcome: string };
 
-export const SUBCOMMANDS = ["lock", "unlock", "done", "drop", "drive", "help"] as const;
+export const SUBCOMMANDS = ["lock", "unlock", "done", "drop", "check", "drive", "help"] as const;
 /** Verbs of the old protocol: still recognised, so a typed one gets a pointer instead of becoming an outcome. */
-const RETIRED = ["check", "approve", "reject"] as const;
+const RETIRED = ["approve", "reject"] as const;
 
 /** A subcommand is the whole argument. Anything longer is an outcome, even if its first word is a subcommand. */
 export function parseGoalArgs(raw: string): GoalArgs {
@@ -79,7 +81,10 @@ const NEEDS_BRANCH = "No goal on a detached HEAD. Switch to a branch first.";
 const NO_GOAL = "No goal for this branch. Start one with /goal <outcome>.";
 
 const checkLines = (g: Goal) => (g.doneCheck.kind === "human" ? ["(human-confirm check: you confirm the outcome yourself)"] : g.doneCheck.commands.map((c) => `  $ ${c}`));
-const bullets = (items: string[]) => (items.length ? items.map((i) => `  - ${i}`).join("\n") : "  (none)");
+/** The lock dialog's view of the check: one short line per command, so a long done_check never floods the dialog. */
+const lockCheckLines = (g: Goal) => (g.doneCheck.kind === "human" ? checkLines(g) : g.doneCheck.commands.map((c) => `  $ ${shorten(c)}`));
+/** Base-run output with each `$ <command>` echo shortened, for the lock dialog only. */
+const shortenEchoes = (output: string) => output.split("\n").map((l) => (l.startsWith("$ ") ? `$ ${shorten(l.slice(2))}` : l)).join("\n");
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -184,17 +189,30 @@ async function integrityProblem(d: Deps, g: Goal): Promise<string | undefined> {
 	return undefined;
 }
 
+const STATUS_GLYPH: Record<string, string> = { draft: "◌", active: "●", closed: "✔", dropped: "✘" };
+const STATUS_LABEL: Record<string, string> = { draft: "DRAFT", active: "LOCKED", closed: "CLOSED", dropped: "DROPPED" };
+
+/** The goal as a scannable card: header, outcome, then one titled block per section. */
 export function summary(g: Goal): string {
+	const dc = g.doneCheck;
+	const list = (items: string[], mark: string) => (items.length ? items.map((i) => `│   ${mark} ${i}`) : ["│   (none)"]);
+	const lock = dc.lockedAt ? `locked ${dc.lockedAt} · red on base ${dc.baseCommit}` : "not locked";
 	const lines = [
-		`${g.id} [${g.status}] ${g.outcome}`,
-		`Done-check (${g.doneCheck.kind}${g.doneCheck.lockedAt ? `, locked ${g.doneCheck.lockedAt}, failed on base ${g.doneCheck.baseCommit}` : ", not locked"}):`,
-		...checkLines(g),
-		...(g.doneCheck.outcomeChecks.length ? [`Outcome Check: ${g.doneCheck.outcomeChecks.join(", ")}`] : []),
-		"Anti-goals:", bullets(g.antiGoals),
-		"Scope anchors:", bullets(g.scopeAnchors),
-		"Spec links:", bullets(g.specLinks),
+		`╭─ ${STATUS_GLYPH[g.status] ?? "?"} ${STATUS_LABEL[g.status] ?? g.status} · ${g.id}`,
+		"│",
+		`│  ${g.outcome}`,
+		"│",
+		`├─ Done-check · ${dc.kind} · ${lock}`,
+		...(dc.kind === "human" ? ["│   (human-confirm check: you confirm the outcome yourself)"] : dc.commands.map((c) => `│   $ ${c}`)),
+		...(dc.outcomeChecks.length ? [`│   ★ Outcome Check: ${dc.outcomeChecks.join(", ")}`] : []),
+		"├─ Anti-goals",
+		...list(g.antiGoals, "✗"),
+		"├─ Scope",
+		...list(g.scopeAnchors, "▸"),
+		"├─ Specs",
+		...list(g.specLinks, "↗"),
 	];
-	if (g.closedBy) lines.push(`Closed ${g.closedAt} by ${g.closedBy}.`);
+	lines.push(g.closedBy ? `╰─ Closed ${g.closedAt} by ${g.closedBy}` : "╰─");
 	return lines.join("\n");
 }
 
@@ -206,7 +224,7 @@ export async function showGoal(d: Deps): Promise<void> {
 		if (error === NO_GOAL) return await draftFromContext(d);
 		return d.ui.notify(error!, "error");
 	}
-	if (goal.status === "draft") return d.ui.notify(`${summary(goal)}\nNext: /goal lock when this is right (the agent can still change it); /goal drop to abandon.`, "info");
+	if (goal.status === "draft") return d.ui.notify(`${summary(goal)}\n→ Next: /goal lock when this is right (the agent can still change it); /goal drop to abandon.`, "info");
 	if (goal.status === "closed" || goal.status === "dropped") {
 		d.ui.notify(`${summary(goal)}\nThis goal is finished. Drafting the next goal from the discussion; review it, then /goal lock. (Or /goal <outcome> to state it yourself.)`, "info");
 		return await draftFromContext(d, goal);
@@ -217,15 +235,35 @@ export async function showGoal(d: Deps): Promise<void> {
 	if (goal.doneCheck.kind === "human") status = "Human-confirm check: /goal done asks you to confirm.";
 	else {
 		const run = await runChecks(d.exec, goal.doneCheck.commands, d.root);
-		status = run.exit === 0 ? `Done-check green.\n${run.output}` : `Done-check red (exit ${run.exit}).\n${run.output}`;
-		if (run.exit !== 0) return d.ui.notify(`${summary(goal)}\n${status}\nNext: do the work, /goal to re-check; /goal unlock to correct the goal`, "info");
+		status = run.exit === 0 ? `✔ Done-check green.\n${run.output}` : `✘ Done-check red (exit ${run.exit}).\n${run.output}`;
+		if (run.exit !== 0) return d.ui.notify(`${summary(goal)}\n${status}\n→ Next: do the work, /goal to re-check; /goal unlock to correct the goal`, "info");
 		d.ui.notify(`${summary(goal)}\n${status}`, "info");
 		// Green is the moment to close: offer it here instead of making the human remember /goal done.
 		const choice = await d.ui.select(`${goal.id}: done-check green. Close the goal?`, ["Close the goal", "Not yet"]);
 		if (choice === "Close the goal") return await doneGoal(d);
 		return d.ui.notify("Still active. /goal done closes it when you are ready.", "info");
 	}
-	d.ui.notify(`${summary(goal)}\n${status}\nNext: /goal done`, "info");
+	d.ui.notify(`${summary(goal)}\n${status}\n→ Next: /goal done`, "info");
+}
+
+/** Run the current goal's done_check commands (only those in the contract) and report. Read-only: never touches the goal store. */
+export async function checkGoal(d: Deps, timeoutMs?: number): Promise<{ ok: boolean; text: string; level: "info" | "error" }> {
+	const { goal, error } = load(d);
+	if (!goal) return { ok: false, text: error === NO_GOAL ? "No goal for this branch, so there is no done_check to run." : error!, level: "error" };
+	if (goal.doneCheck.kind === "human") return { ok: false, text: `${goal.id} has a human-confirm check: there are no commands to run. /goal done asks you to confirm.`, level: "info" };
+	if (!goal.doneCheck.commands.length) return { ok: false, text: `${goal.id} has no done_check commands yet, so nothing was run.`, level: "info" };
+	if (goal.status === "active") {
+		const problem = await integrityProblem(d, goal);
+		if (problem) return { ok: false, text: problem, level: "error" };
+	}
+	const results = await runDoneCheck(goal.doneCheck.commands, { exec: d.exec, cwd: d.root, timeoutMs });
+	return { ok: allPass(results), text: formatReport(results), level: "info" };
+}
+
+/** `/goal check`: show the done_check report. */
+export async function checkGoalCommand(d: Deps): Promise<void> {
+	const r = await checkGoal(d);
+	d.ui.notify(r.text, r.level);
 }
 
 /** `/goal show <id>`: any goal by id, live or archived. */
@@ -332,15 +370,19 @@ export async function proposeFromAgent(d: Deps, p: Proposal): Promise<{ ok: bool
 const LOCK_PREFIX = "Lock · Outcome Check: ";
 
 /**
- * The single lock dialog for a command check: the card and the base evidence as the title, one "Lock · Outcome Check: <cmd>"
- * option per command (the agent's suggestion first) and Cancel. The human's pick both marks the Outcome Check and locks.
- * Undefined when they cancel.
+ * The single lock dialog for a command check (see goal-lock.ts). Unambiguous: one "Lock"/"Cancel" select naming the
+ * default Outcome Check. Ambiguous: at most 3 short "Lock · Outcome Check: <label>" options and Cancel. Labels are
+ * display only; the verbatim command is what gets marked. Undefined when they cancel.
  */
 async function askLockWithOutcomeCheck(d: Deps, g: Goal, body: string): Promise<string[] | undefined> {
-	const suggested = (g.doneCheck.outcomeChecks ?? []).filter((c) => g.doneCheck.commands.includes(c));
-	const ordered = [...suggested, ...g.doneCheck.commands.filter((c) => !suggested.includes(c))];
-	const picked = await d.ui.select(`Lock ${g.id}? Pick the Outcome Check (tests the outcome from outside).\n${body}`, [...ordered.map((c) => LOCK_PREFIX + c), "Cancel"]);
-	return picked?.startsWith(LOCK_PREFIX) ? [picked.slice(LOCK_PREFIX.length)] : undefined;
+	const plan = lockPlan(g.doneCheck);
+	if (plan.mode === "confirm") {
+		const picked = await d.ui.select(`Lock ${g.id}? Outcome Check: ${plan.label}\n${body}`, ["Lock", "Cancel"]);
+		return picked === "Lock" ? [plan.default] : undefined;
+	}
+	const picked = await d.ui.select(`Lock ${g.id}? Pick the Outcome Check (tests the outcome from outside).\n${body}`, [...plan.options.map((o) => LOCK_PREFIX + o.label), "Cancel"]);
+	const hit = plan.options.find((o) => LOCK_PREFIX + o.label === picked);
+	return hit ? [hit.command] : undefined;
 }
 
 /**
@@ -371,12 +413,12 @@ export async function lockGoal(d: Deps): Promise<void> {
 		const refused = canLock(baseExit);
 		if (!refused.ok) return d.ui.notify(`${refused.reason}\n${run.output}`, "error");
 		if (!(await environmentFailureOverridden(d, g, run))) return;
-		evidence = `On base ${g.doneCheck.baseCommit} it fails (exit ${baseExit}):\n${run.output}`;
+		evidence = `On base ${g.doneCheck.baseCommit} it fails (exit ${baseExit}):\n${shortenEchoes(run.output)}`;
 	}
 	// A relock of a check weaker than the one that was unlocked needs the goal id typed, so a reflex "yes" cannot loosen it.
 	const before = lastLockedSpec(g);
 	const weakening = !!before && weakens(before, { kind: g.doneCheck.kind, commands: g.doneCheck.commands });
-	const body = `${g.outcome}\n${checkLines(g).join("\n")}\n${evidence}\nOnce locked, only you can change it (/goal unlock).`;
+	const body = `${g.outcome}\n${lockCheckLines(g).join("\n")}\n${evidence}\nOnce locked, only you can change it (/goal unlock).`;
 	let outcomeChecks: string[] | undefined;
 	if (g.doneCheck.kind === "command") {
 		outcomeChecks = await askLockWithOutcomeCheck(d, g, weakening ? `WEAKENING (you will type the goal id next). Was:\n${before!.commands.map((c) => `  $ ${c}`).join("\n")}\n${body}` : body);
@@ -529,6 +571,7 @@ export async function runGoalCommand(d: Deps, raw: string): Promise<void> {
 			case "help": return d.showHelp ? d.showHelp(GOAL_HELP) : d.ui.notify(GOAL_HELP, "info");
 			case "retired": return d.ui.notify(`/goal ${a.word} is retired. /goal shows the card and whether the check is green; to correct a locked goal use /goal unlock, then /goal lock.`, "info");
 			case "done": return await doneGoal(d);
+			case "check": return await checkGoalCommand(d);
 			case "drop": return await dropCurrentGoal(d, "dropped by the user");
 			case "drive": return await driveGoal(d, a.rest);
 			case "show-id": return showGoalById(d, a.id);

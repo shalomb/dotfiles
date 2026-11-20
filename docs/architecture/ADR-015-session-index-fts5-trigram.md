@@ -80,3 +80,8 @@ A migration test builds the index from fixture sessions. A speed test (H2) fails
 
 - Registry moves off SQLite.
 - Index size passes an agreed cap.
+
+## Evidence
+
+- commit: 8459ba3 — adds the FTS5 trigram index for pi-find
+- test: .pi/agent/extensions/_lib/registry-fts.test.ts — covers the FTS5 trigram index

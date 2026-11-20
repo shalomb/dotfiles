@@ -312,3 +312,18 @@ test("appendGoalEvent appends one JSON line per event to <store>/trajectories.js
 	expect(JSON.parse(lines[0])).toEqual({ at: "2026-11-01T10:00:00Z", event: "goal_locked", goal: "g-feat-export", branch: "feat/export", checkHash: HASH_A });
 	expect(JSON.parse(lines[1]).reason).toBe("multi\nline");
 });
+
+test("agentWouldWriteGoalStore allows reads redirected away and blocks only real store writes", () => {
+	const s = "~/.cache/agent-skills/todos/x/" + "goals/b.md";
+	const blocked = (command: string) => agentWouldWriteGoalStore("bash", { command });
+	for (const ok of [`yq . ${s} > /tmp/o.txt`, `bat ${s} 2>/dev/null`, `cat ${s}`]) expect([ok, blocked(ok)]).toEqual([ok, false]);
+	const d = "~/.cache/agent-skills/todos/x/" + "goals";
+	for (const bad of [
+		`cd ${d} && echo x > b.md`, `cd ${d}; cat /tmp/o > b.md`, `pushd ${d} && printf x >b.md`, `cd ${d} && echo x > $PWD/b.md`, `cd ${d} && echo x > "$(pwd)/b.md"`, `cd ${d} && echo x >&f`, `echo x 2>&${d}/b.md`, `cd ${d} && echo x >>&f`,
+		`cat ${s} | rg x > out.txt`,
+		`echo x > ${s}`, `yq . /tmp/o >> ${s}`, `cmd 1> ${s}`, `cmd &> ${s}`, `echo x >${s}`,
+		`echo x | tee ${s}`, `echo x | tee -a ${s}`, `sed -i s/a/b/ ${s}`, `sd a b ${s}`, `perl -pi -e 's/a/b/' ${s}`,
+		`mv /tmp/a ${s}`, `cp /tmp/a ${s}`, `rm ${s}`, `truncate -s0 ${s}`, `install /tmp/a ${s}`, `dd of=${s}`, `ln -sf /tmp/a ${s}`,
+		`python3 -c "open('${s}','w')"`, `node -e "x" ${s}`, `bun -e "x" ${s}`, `perl -e 'x' ${s}`, "git show refs/goals/x",
+	]) expect([bad, blocked(bad)]).toEqual([bad, true]);
+});

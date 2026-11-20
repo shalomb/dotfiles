@@ -134,3 +134,8 @@ run_test "cdp function works" "cdp /tmp >/dev/null"
 - `Makefile` - test-bash target
 - `tests/bash-standards/validate-standards.sh` - Behavioral validation script
 - `AGENTS.md` - Definition of Done includes testing
+
+## Evidence
+
+- commit: 01020e9 — adds the `make test-bash` target
+- check: `rg -q "^test-bash:" Makefile` — the standard validation target exists
