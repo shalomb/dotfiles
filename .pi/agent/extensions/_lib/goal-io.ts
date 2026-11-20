@@ -237,8 +237,8 @@ const GOAL_STORE_IN_COMMAND = /agent-skills\/todos\/[^\s'"]*\/goals\b/;
 /** The private ref of ADR-010: any command or path naming it is blocked for the agent, reads included. */
 const GOAL_REF = /refs\/goals\//;
 const SHELL_WRITE = /(?:^|[\s;&|(])(?:tee|sed\s+-\S*i|sd|mv|cp|rm|truncate|install|dd|ln|perl|python3?|node|bun)\b/;
-/** Every redirect target in a command: `>`, `>>`, `>|`, `&>`, optionally fd-prefixed, with optional space. */
-const REDIRECT_TARGET = /(?:\d*|&)>>?\|?\s*([^\s;&|)]+)/g;
+/** Every redirect target in a command: `>`, `>>`, `>|`, `&>`, `>&file`, optionally fd-prefixed, with optional space. */
+const REDIRECT_TARGET = /(?:\d*|&)>>?[|&]?\s*([^\s;&|)]+)/g;
 /** Redirects that cannot write a file: to /dev/null, or an fd dup like 2>&1 or >&2. */
 const HARMLESS_REDIRECT = /\d*>>?\s*(?:\/dev\/null\b|&\d+)/g;
 
