@@ -29,7 +29,7 @@ function brandLine(css: string | undefined, style?: string): string {
 }
 
 const TemplateParams = Type.Object({
-	type: Type.Union(TEMPLATE_TYPES.map((t) => Type.Literal(t)), { description: "epicmap | readout | decision | guide | runbook | changerecord | postmortem | onepager" | "archmap" }),
+	type: Type.Union(TEMPLATE_TYPES.map((t) => Type.Literal(t)), { description: "epicmap | readout | decision | guide | runbook | changerecord | postmortem | onepager | archmap" }),
 });
 
 /** The lines every publish reports, from the tool and from `/doc <type> <input.json>`. */
