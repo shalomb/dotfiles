@@ -254,7 +254,11 @@ export function agentWouldWriteGoalStore(toolName: string, input: { path?: strin
 		if (GOAL_REF.test(command)) return true;
 		if (!GOAL_STORE_IN_COMMAND.test(command)) return false;
 		const cleaned = command.replace(HARMLESS_REDIRECT, " ");
-		for (const m of cleaned.matchAll(REDIRECT_TARGET)) if (GOAL_STORE_IN_COMMAND.test(m[1] ?? "")) return true;
+		for (const m of cleaned.matchAll(REDIRECT_TARGET)) {
+			const target = m[1] ?? "";
+			// Fail closed: a relative target may land in the store after a cd/pushd/-C into it.
+			if (GOAL_STORE_IN_COMMAND.test(target) || !/^[/~$&]/.test(target)) return true;
+		}
 		return SHELL_WRITE.test(cleaned);
 	}
 	return false;
