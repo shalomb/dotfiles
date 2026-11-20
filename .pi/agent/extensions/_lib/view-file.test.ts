@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { parseViewArgs, viewArgv } from "./view-file";
+import { editOutcome, parseViewArgs, viewArgv } from "./view-file";
 
 const dir = mkdtempSync(join(tmpdir(), "view-"));
 const f = join(dir, "a b.ts");
@@ -42,4 +42,10 @@ test("no path is an error", () => {
 test("argv: read-only vim with +line, never goes through a shell", () => {
 	expect(viewArgv({ path: "/w/a b.ts", line: 5, edit: false }, "vim")).toEqual(["vim", "-R", "+5", "--", "/w/a b.ts"]);
 	expect(viewArgv({ path: "/w/a.ts", edit: true }, "vim")).toEqual(["vim", "--", "/w/a.ts"]);
+});
+
+test("editOutcome: says whether the human saved a change, so the agent knows to re-read", () => {
+	expect(editOutcome("/r/a.md", "x", "x")).toBe("edited /r/a.md in vim: no changes saved");
+	expect(editOutcome("/r/a.md", "x", "y")).toBe("edited /r/a.md in vim: changes saved; re-read it before acting");
+	expect(editOutcome("/r/a.md", undefined, "y")).toBe("edited /r/a.md in vim: file created; re-read it before acting");
 });
