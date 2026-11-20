@@ -69,3 +69,12 @@
   - `fusion_*` for multi-model reasoning, research and validation.
 - Parallel writers still need isolation: give each its own worktree
   (`using-git-worktrees`).
+
+## Ambiguity and time limits
+
+- Ask when instructions are ambiguous. If the user is unavailable, make a
+  best-effort decision and record why.
+- Time-box every command whose run time is unknown (e.g. `timeout 30s`). Give it
+  room to finish, but never let it hang.
+- On a timeout, find the cause and retry a few times at most, then stop and report.
+- Run long jobs in the background (`bg_run`) and wait for the completion notice.
