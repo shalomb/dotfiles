@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__</title><style>/*__KERNEL_CSS__*/</style>
+<style>
+main{max-width:1100px}
+h1{max-width:880px}
+.lede{max-width:840px}
+.sub{max-width:800px}
+.kpis{margin:22px 0}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.opt{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:16px}.opt.rec{border-color:var(--G);box-shadow:0 0 0 2px #2f7d5722}.opt h3{font:400 21px Georgia,serif;margin:6px 0}.opt ul{margin:6px 0;padding-left:18px;font-size:14px}.g{color:var(--G)}.c{color:var(--R)}
+.clock{display:flex;gap:18px;align-items:center}.bar{flex:1;height:14px;background:#eee9da;border-radius:7px;position:relative}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:7px;background:var(--A)}.bar u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--R)}
+.rec2{background:#fff;border:1px solid var(--line);border-left:5px solid var(--G);border-radius:10px;padding:14px 18px}pre{white-space:pre-wrap;font:14px/1.5 ui-monospace,monospace;background:#f3f1e9;border-radius:10px;padding:14px}
+.tag{font-size:11px;font-weight:700;color:var(--A);letter-spacing:.08em;text-transform:uppercase}
+@media (max-width:768px){.opts{grid-template-columns:1fr}.clock{flex-direction:column;align-items:stretch}}
+</style></head><body><main>__NOSCRIPT__
+<div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="lede" id="lede"></p>
+<div class="kpis" id="kpis"></div>
+<h2>How long we have</h2><div class="card clock" id="clock"></div><p class="sub" id="clocknote" style="margin-top:8px"></p>
+<h2>The ways forward</h2><div class="opts" id="opts"></div>
+<h2>Why this one</h2><div class="rec2" id="why"></div>
+<h2>What I need, and from whom</h2><table id="needs"><thead><tr><th>I need</th><th>From</th><th>By</th></tr></thead><tbody></tbody></table>
+<div id="replybox"></div>
+<div id="glossbox"></div>
+<div id="refsbox"></div>
+__GATE__
+<p class="foot" id="foot"></p>
+<details class="made" id="made"><summary>How this page was made</summary><div id="madebody"></div></details>
+</main>
+<script type="application/json" id="recipe">__RECIPE__</script>
+<script>
+const DATA=__DATA__;
+/*__KERNEL_JS__*/
+const M=DATA.meta,D=DATA.derived,L=DATA.deadline;
+$("eyebrow").textContent=M.eyebrow;$("title").textContent=M.title;cite($("lede"),M.lede);
+[[String(D.days_left),"days to "+L.date_label,DATA.derived_basis.days_left]].concat(DATA.facts.map(f=>[f.value,f.label,f.basis]),[[String(D.options),"ways forward",DATA.derived_basis.options]]).forEach(x=>$("kpis").appendChild(el("div",{class:"card kpi"},[el("b",{text:x[0]}),el("span",{text:x[1]}),basisTag(x[2])])));
+$("clock").appendChild(el("div",{},[el("b",{style:"font:400 30px Georgia,serif",text:L.today_text}),el("div",{class:"sub",text:"today"})]));
+const bar=el("div",{class:"bar"},[el("i",{style:"width:"+D.elapsed_pct+"%"}),el("u",{style:"left:"+D.ask_by_pct+"%"})]);$("clock").appendChild(bar);
+$("clock").appendChild(el("div",{},[el("b",{style:"font:400 30px Georgia,serif;color:var(--R)",text:L.date_text}),el("div",{class:"sub",text:L.date_label})]));
+$("clocknote").textContent="Red line ("+L.ask_by_text+"): "+L.ask_by_note+".";
+DATA.options.forEach((o,i)=>{const c=el("div",{class:"opt"+(o.recommended?" rec":"")},[
+ el("span",{class:"badge",style:"background:"+(o.recommended?"var(--G)":"var(--N)"),text:o.recommended?"Recommended":"Option "+(i+1)}),
+ el("h3",{text:o.title}),el("ul",{class:"g"},[el("li",{text:o.pro})]),el("ul",{class:"c"},[el("li",{text:o.con})]),el("div",{class:"sub",text:o.note})]);$("opts").appendChild(c);});
+cite($("why"),DATA.why);
+DATA.needs.forEach(r=>{const tr=el("tr");[r.need,r.from,r.by].forEach(c=>tr.appendChild(el("td",{text:c})));document.querySelector("#needs tbody").appendChild(tr);});
+if(DATA.reply){$("replybox").appendChild(el("h2",{text:"The reply to "+DATA.reply.to+" (draft, a human posts it)"}));$("replybox").appendChild(el("pre",{text:DATA.reply.text}));}
+renderGlossary($("glossbox"),el("h2",{text:"In plain words"}));
+cite($("foot"),M.foot+" The recommendation is the author's judgement and has not been tested.");
+renderRefs($("refsbox"));
+renderMade();
+</script></body></html>

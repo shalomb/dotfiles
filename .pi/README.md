@@ -14,7 +14,7 @@ holds real files only for what must differ.
 
 ```
 ~/.pi/agent/                 shared base (tracked in this repo under .pi/agent)
-~/.pi/profiles/work/         PI_CODING_AGENT_DIR for Takeda work
+~/.pi/profiles/work/         PI_CODING_AGENT_DIR for work
 ~/.pi/profiles/personal/     PI_CODING_AGENT_DIR for personal use
 ```
 
@@ -24,7 +24,7 @@ holds real files only for what must differ.
 | :-- | :-- |
 | `auth.json` | API keys and OAuth for that subscription |
 | `mcp-auth.json` | OAuth tokens for MCP servers |
-| `mcp.json` | Work has Atlassian, GitHub (oneTakeda) and the governance server |
+| `mcp.json` | Work has Atlassian, GitHub (work org) and the governance server |
 | `git/` | Per-profile git identity and credential state |
 | `models-store.json` | Models offered depend on the subscription (work: Bedrock, Copilot) |
 | `settings.json` model keys | `defaultProvider`, `defaultModel`, `enabledModels`, `modelThinkingLevels` |

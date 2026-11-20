@@ -1,0 +1,139 @@
+/* Story-doc widgets: pills, KPIs, spine, compare, diagrams, tables, bars, callouts, folds, decisions, steps, glossary. Lifted from docs/prototypes/lead-doc-template.html. */
+/* ---------- status pills ---------- */
+.pill{display:inline-block; font-size:11.5px; font-weight:600; line-height:1;
+  padding:5px 8px; border-radius:99px; background:var(--surface); color:var(--slate);
+  letter-spacing:.02em; white-space:nowrap; vertical-align:.12em}
+.pill.ok{background:var(--ok-soft); color:var(--ok)}
+.pill.warn{background:var(--warn-soft); color:var(--warn)}
+.pill.risk{background:var(--risk-soft); color:var(--risk)}
+.pill.accent{background:var(--accent-soft); color:var(--accent)}
+
+/* ---------- KPI tiles ---------- */
+.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:1px; margin:28px 0 0; background:var(--rule); border:1px solid var(--rule);
+  border-radius:var(--radius); overflow:hidden}
+.kpis > div{background:var(--card); padding:18px 20px 16px; display:flex; flex-direction:column; gap:4px}
+.kpis dt{order:2; font-size:13px; color:var(--slate); line-height:1.35}
+.kpis dd{order:1; margin:0; font-size:2rem; font-weight:600; letter-spacing:-.02em;
+  line-height:1.1; font-variant-numeric:tabular-nums lining-nums}
+.kpis dd.delta{font-weight:400; letter-spacing:0; line-height:1.4; order:3; font-size:12px; color:var(--mute)}
+.kpis .ask{background:var(--accent-soft)}
+.kpis .ask dd{color:var(--accent)}
+
+/* ---------- spine ---------- */
+.spine{list-style:none; padding:0; margin:20px 0 0; display:grid; gap:0;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); counter-reset:s}
+.spine li{padding:14px 18px 14px 0; border-top:3px solid var(--rule); font-size:14.5px;
+  line-height:1.45; color:var(--slate)}
+.spine li + li{padding-left:18px}
+.spine b{display:block; font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--mute); margin-bottom:6px}
+.spine li:last-child{border-top-color:var(--accent)}
+.spine li:last-child b{color:var(--accent)}
+@media (max-width:640px){.spine li + li{padding-left:0}}
+
+/* ---------- before / after ---------- */
+.compare{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin:22px 0}
+.compare > div{border:1px solid var(--rule); border-radius:var(--radius); background:var(--card); padding:4px 20px 12px}
+.compare h3{margin-top:14px; display:flex; gap:10px; align-items:center}
+.compare ol{padding-left:1.2em; font-size:15.5px}
+.compare .after{border-color:var(--accent); box-shadow:inset 0 3px 0 var(--accent)}
+
+/* ---------- figures & diagram ---------- */
+figure{margin:26px 0}
+figcaption{font-size:13px; color:var(--mute); margin-top:10px; max-width:var(--measure)}
+figcaption b{color:var(--slate)}
+.diagram{border:1px solid var(--rule); border-radius:var(--radius); background:var(--card); padding:12px; overflow-x:auto}
+.diagram svg{display:block; width:100%; height:auto; min-width:640px}
+.diagram text{font-family:var(--sans); fill:var(--ink); font-size:13px}
+.diagram .lane-label{fill:var(--mute); font-size:11px; letter-spacing:.1em; text-transform:uppercase}
+.diagram .lane{fill:none; stroke:var(--rule-soft)}
+.diagram .node{fill:var(--card); stroke:var(--rule); stroke-width:1.2}
+.diagram .node.hp{stroke:var(--accent); stroke-width:1.8; fill:var(--accent-soft)}
+.diagram .edge{fill:none; stroke:var(--mute); stroke-width:1.2}
+.diagram .edge.hp{stroke:var(--accent); stroke-width:2}
+.diagram .elabel{fill:var(--mute); font-size:11px}
+.diagram .elabel.hp{fill:var(--accent)}
+.theme{margin-left:auto; display:inline-flex; border:1px solid var(--rule); border-radius:99px; padding:2px; text-transform:none; letter-spacing:0}
+.theme input{position:absolute; opacity:0; pointer-events:none}
+.theme label{padding:3px 9px; border-radius:99px; cursor:pointer; font-size:11.5px; color:var(--mute)}
+.theme input:checked + label{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.theme input:focus-visible + label{outline:2px solid var(--accent); outline-offset:1px}
+.diagram marker path{fill:var(--accent)}
+@media print{.theme{display:none}}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto; border:1px solid var(--rule); border-radius:var(--radius); background:var(--card)}
+table{border-collapse:collapse; width:100%; font-size:14px; line-height:1.45}
+th,td{text-align:left; vertical-align:top; padding:10px 14px; border-bottom:1px solid var(--rule-soft)}
+thead th{font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--mute);
+  font-weight:600; background:var(--surface); border-bottom:1px solid var(--rule)}
+tbody tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right; font-variant-numeric:tabular-nums lining-nums; white-space:nowrap}
+code{font-family:var(--mono); font-size:.86em; background:var(--surface); padding:1px 5px; border-radius:4px}
+
+/* ---------- bars (number with its comparison) ---------- */
+.bar{display:grid; grid-template-columns:minmax(120px,14ch) 1fr 4.5ch; gap:12px; align-items:center;
+  font-family:var(--sans); font-size:13.5px; margin:8px 0}
+.bar .track{position:relative; height:10px; background:var(--surface); border-radius:99px}
+.bar .fill{position:absolute; inset:0 auto 0 0; border-radius:99px; background:var(--mute)}
+.bar.hp .fill{background:var(--accent)}
+.bar .kill{position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--risk)}
+.bar output{text-align:right; font-variant-numeric:tabular-nums; font-weight:600}
+.bars{max-width:620px; margin:20px 0}
+.bars .legend{font-family:var(--sans); font-size:12px; color:var(--mute)}
+.bars .legend i{display:inline-block; width:2px; height:10px; background:var(--risk); margin:0 6px -1px 0}
+
+/* ---------- callout ---------- */
+.callout{border-left:3px solid var(--warn); background:var(--warn-soft); padding:12px 16px;
+  margin:20px 0; border-radius:0 var(--radius) var(--radius) 0; max-width:var(--measure); font-size:15.5px}
+.callout.risk{border-color:var(--risk); background:var(--risk-soft)}
+.callout b{font-family:var(--sans); font-size:11px; letter-spacing:.12em; text-transform:uppercase; margin-right:8px}
+
+/* ---------- folds ---------- */
+details.fold{margin:22px 0; border:1px solid var(--rule); border-radius:var(--radius); background:var(--card)}
+details.fold > summary{cursor:pointer; list-style:none; padding:12px 16px; font-size:14px; font-weight:600;
+  color:var(--slate); display:flex; gap:10px; align-items:center}
+details.fold > summary::-webkit-details-marker{display:none}
+details.fold > summary::before{content:"+"; font-family:var(--mono); color:var(--accent); width:1ch}
+details.fold[open] > summary::before{content:"\2212"}
+details.fold > summary:hover{color:var(--ink)}
+details.fold > summary small{font-weight:400; color:var(--mute)}
+details.fold[open] > summary{border-bottom:1px solid var(--rule-soft)}
+details.fold > div{padding:4px 16px 16px}
+details.fold .tw{border:0; margin:0 -16px -16px; border-radius:0 0 var(--radius) var(--radius)}
+
+/* ---------- decision cards ---------- */
+.decisions{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; margin:22px 0}
+.decision{border:1px solid var(--rule); border-radius:var(--radius); background:var(--card);
+  padding:16px 18px; display:flex; flex-direction:column; gap:8px; break-inside:avoid}
+.decision.primary{border-color:var(--accent); box-shadow:inset 0 3px 0 var(--accent)}
+.decision header{display:flex; justify-content:space-between; gap:8px; align-items:baseline;
+  font-size:12px; color:var(--mute); letter-spacing:.06em}
+.decision h3{margin:0; font-family:var(--serif); font-size:1.1rem; font-weight:600; line-height:1.3}
+.decision dl{margin:4px 0 0; display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:13.5px}
+.decision dt{color:var(--mute)} .decision dd{margin:0}
+.decision dd.rec{color:var(--ink); font-weight:600}
+
+/* ---------- steps ---------- */
+ol.steps{list-style:none; padding:0; counter-reset:st; display:grid; gap:0; max-width:var(--measure)}
+ol.steps li{counter-increment:st; display:grid; grid-template-columns:2.2em 1fr; gap:10px;
+  padding:10px 0; border-bottom:1px solid var(--rule-soft); margin:0}
+ol.steps li::before{content:counter(st); font-family:var(--sans); font-weight:600; color:var(--accent);
+  font-variant-numeric:tabular-nums}
+ol.steps li:first-child::before{content:"now"; font-size:11px; letter-spacing:.08em; text-transform:uppercase; padding-top:4px}
+
+/* ---------- glossary ---------- */
+a.term{color:inherit; text-decoration:underline dotted var(--mute); text-underline-offset:.22em}
+a.term:hover{color:var(--accent); text-decoration-color:var(--accent)}
+.glossary{display:grid; grid-template-columns:minmax(9em,auto) 1fr; gap:0; margin:18px 0;
+  font-size:15px; max-width:860px}
+.glossary dt,.glossary dd{padding:9px 0; border-bottom:1px solid var(--rule-soft); margin:0}
+.glossary dt{font-family:var(--sans); font-weight:650; font-size:14px; padding-right:20px}
+.glossary dt:target,.glossary dt:target + dd{background:var(--accent-soft)}
+.glossary dt:target{box-shadow:-8px 0 0 var(--accent-soft)}
+
+
+/* ---------- additions for generated pages ---------- */
+.diagram.mermaid svg{min-width:0; max-width:100%; height:auto; margin:0 auto}
+.diagram.mermaid .label text, .diagram.mermaid .nodeLabel{fill:var(--ink); color:var(--ink)}

@@ -1,0 +1,54 @@
+{
+  "title": "The example service runs behind one gateway with three data stores and a separate delivery path",
+  "lede": "A generic target architecture: a user reaches the API through DNS, a CDN with a firewall and an API gateway. The function reads its data stores, an identity provider signs tokens, and a CI repository ships code and infrastructure.",
+  "foot": "Source: an invented example. Replace every name with your own.",
+  "nodes": [
+    {"id": "idp", "label": "Identity provider", "sub": "OpenID Connect", "kind": "security", "col": 0, "row": 0},
+    {"id": "user", "label": "Engineer", "sub": "browser", "kind": "external", "col": 0, "row": 1},
+    {"id": "dns", "label": "DNS zone", "sub": "alias record", "kind": "cloud", "col": 1, "row": 1},
+    {"id": "cdn", "label": "CDN + firewall", "sub": "IP allowlist, rate limit", "kind": "cloud", "col": 2, "row": 1},
+    {"id": "gw", "label": "API gateway", "sub": "REST endpoints", "kind": "cloud", "col": 3, "row": 1},
+    {"id": "authz", "label": "Token checker", "sub": "validates bearer token", "kind": "security", "col": 3, "row": 0},
+    {"id": "api", "label": "Example API", "sub": "function, REST", "kind": "backend", "col": 4, "row": 1},
+    {"id": "db", "label": "SQL database", "sub": "via connection proxy", "kind": "database", "col": 4, "row": 0},
+    {"id": "secrets", "label": "Secret store", "sub": "keys, credentials", "kind": "security", "col": 5, "row": 0},
+    {"id": "site", "label": "Site bucket", "sub": "built web bundle", "kind": "database", "col": 2, "row": 2},
+    {"id": "data", "label": "Data bucket", "sub": "backend data storage", "kind": "database", "col": 4, "row": 2},
+    {"id": "partner", "label": "Partner API", "sub": "REST", "kind": "external", "col": 6, "row": 1},
+    {"id": "lake", "label": "Analytics store", "sub": "batch import", "kind": "external", "col": 6, "row": 2},
+    {"id": "ci_site", "label": "Site workflow", "sub": "static site build", "kind": "external", "col": 2, "row": 4},
+    {"id": "repo", "label": "Main repository", "sub": "infra, web, function", "kind": "external", "col": 3, "row": 4},
+    {"id": "ci_fn", "label": "Function workflow", "sub": "package and deploy", "kind": "external", "col": 5, "row": 4},
+    {"id": "iac", "label": "IaC workspace", "sub": "one per account", "kind": "external", "col": 3, "row": 5}
+  ],
+  "boundaries": [
+    {"id": "hosting", "label": "Hosting account, three stages", "nodes": ["dns", "cdn", "gw", "authz", "api", "db", "secrets", "site", "data"]},
+    {"id": "partner_acct", "label": "Partner account", "nodes": ["partner", "lake"]}
+  ],
+  "edges": [
+    {"from": "user", "to": "dns", "label": "HTTPS", "kind": "emphasis"},
+    {"from": "dns", "to": "cdn", "label": "alias record", "kind": "emphasis"},
+    {"from": "cdn", "to": "gw", "label": "API calls", "kind": "emphasis"},
+    {"from": "gw", "to": "api", "label": "invoke", "kind": "emphasis"},
+    {"from": "user", "to": "idp", "label": "sign-in redirect", "kind": "security"},
+    {"from": "gw", "to": "authz", "label": "authorize", "kind": "security"},
+    {"from": "authz", "to": "idp", "label": "token signing keys", "kind": "security"},
+    {"from": "api", "to": "db", "label": "SQL"},
+    {"from": "api", "to": "secrets", "label": "get secrets", "kind": "security"},
+    {"from": "cdn", "to": "site", "label": "static origin"},
+    {"from": "api", "to": "data", "label": "read / write"},
+    {"from": "api", "to": "partner", "label": "private REST"},
+    {"from": "data", "to": "lake", "label": "export"},
+    {"from": "repo", "to": "ci_site", "label": "web code"},
+    {"from": "repo", "to": "ci_fn", "label": "function code"},
+    {"from": "ci_site", "to": "site", "label": "sync to site", "kind": "deploy"},
+    {"from": "ci_fn", "to": "api", "label": "deploy function", "kind": "deploy"},
+    {"from": "repo", "to": "iac", "label": "infrastructure code"}
+  ],
+  "notes": [
+    {"title": "Hosting", "kind": "cloud", "items": ["One account per stage holds the stack shown here.", "The firewall only admits listed office addresses."]},
+    {"title": "Delivery", "kind": "database", "items": ["One repository holds infrastructure, web and function code.", "Two workflows ship the site and the function."]},
+    {"title": "Authentication", "kind": "security", "items": ["The identity provider signs every token.", "The token checker validates it before the function runs."]},
+    {"title": "Not built yet", "kind": "neutral", "items": ["Drawn from the described target; not checked against a live account."]}
+  ]
+}

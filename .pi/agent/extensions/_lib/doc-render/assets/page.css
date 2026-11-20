@@ -1,0 +1,90 @@
+/* Story-doc page frame: base, layout, masthead, contents, sections, footer, print. Lifted from docs/prototypes/lead-doc-template.html. */
+/* ---------- base ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; scroll-padding-top:24px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0; background:var(--paper); color:var(--ink);
+  font:17px/1.62 var(--serif); font-feature-settings:"kern","liga","onum";
+  text-rendering:optimizeLegibility}
+h1,h2,h3{text-wrap:balance; line-height:1.15; margin:0}
+p,li,dd{text-wrap:pretty}
+p{margin:14px 0}
+a{color:var(--accent); text-decoration-thickness:1px; text-underline-offset:.18em}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:3px}
+strong{font-weight:650}
+.sans,table,.kpis,.spine,.pill,.eyebrow,figcaption,.decision,summary,.toc{font-family:var(--sans)}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.skip{position:absolute; left:-9999px}
+.skip:focus{left:16px; top:16px; background:var(--card); padding:8px 12px; z-index:9}
+
+/* ---------- layout ---------- */
+.page{max-width:1180px; margin:0 auto; padding:0 var(--gap)}
+.body{display:grid; grid-template-columns:minmax(0,1fr); gap:var(--gap)}
+@media (min-width:1080px){.body{grid-template-columns:200px minmax(0,1fr)}}
+
+/* ---------- masthead ---------- */
+.masthead{padding:56px 0 28px; border-bottom:2px solid var(--ink)}
+.eyebrow{display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center;
+  font-size:12px; letter-spacing:.06em; color:var(--mute); margin:0 0 18px}
+.eyebrow .kind{text-transform:uppercase; letter-spacing:.14em; font-weight:650; color:var(--accent)}
+h1{font-weight:600; font-size:clamp(2rem,4.4vw,3rem); letter-spacing:-.02em; max-width:22ch}
+.lede{font-size:clamp(1.1rem,1.6vw,1.28rem); line-height:1.5; color:var(--slate);
+  max-width:60ch; margin:18px 0 0}
+
+/* ---------- toc ---------- */
+.toc{display:none}
+@media (min-width:1080px){.toc{display:block; position:sticky; top:24px; align-self:start;
+  padding-top:40px; font-size:13px}}
+.toc h2{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--mute); margin-bottom:10px}
+.toc ol{list-style:none; margin:0; padding:0; display:grid; gap:2px}
+.toc a{display:block; padding:5px 8px; margin-left:-8px; border-radius:5px;
+  color:var(--slate); text-decoration:none; line-height:1.35}
+.toc a:hover{background:var(--accent-soft); color:var(--accent)}
+
+/* ---------- sections ---------- */
+main{min-width:0; padding-bottom:96px}
+main > section{padding-top:44px; content-visibility:auto; contain-intrinsic-size:auto 600px}
+main > section > :where(p,ul,ol:not(.spine),h3){max-width:var(--measure)}
+section > h2{font-size:clamp(1.45rem,2.4vw,1.8rem); font-weight:600; letter-spacing:-.012em;
+  padding-top:18px; border-top:1px solid var(--rule); margin-bottom:6px; max-width:30ch}
+section > h2 a.anchor{color:var(--mute); text-decoration:none; font-family:var(--sans);
+  font-size:.6em; margin-left:.4em; opacity:0}
+section > h2:hover a.anchor, section > h2 a.anchor:focus{opacity:1}
+h3{font-size:1.08rem; font-family:var(--sans); font-weight:650; margin-top:28px}
+ul{padding-left:1.25em} li{margin:6px 0} li::marker{color:var(--mute)}
+
+/* ---------- footer ---------- */
+.colophon{border-top:1px solid var(--rule); padding:20px 0 48px; font-family:var(--sans);
+  font-size:12.5px; color:var(--mute); display:flex; flex-wrap:wrap; gap:6px 18px}
+
+/* ---------- print ---------- */
+@media print{
+  :root{color-scheme:light !important}
+  body{font-size:11pt}
+  .toc,.anchor,.skip{display:none !important}
+  .body{display:block}
+  main > section{content-visibility:visible; padding-top:16pt}
+  details.fold > summary::before{content:""}
+  details.fold::details-content{content-visibility:visible; display:block}
+  a{color:inherit; text-decoration:none}
+  .kpis,.compare > div,.decision,figure,table{break-inside:avoid}
+  section > h2{break-after:avoid}
+}
+
+/* ---------- additions for generated pages ---------- */
+section > h2 .num{font-family:var(--sans); font-size:.55em; font-weight:700; color:var(--accent);
+  font-variant-numeric:tabular-nums; margin-right:.6em; vertical-align:.25em}
+.eyebrow .meta-f b{font-weight:600; color:var(--slate)}
+.masthead > blockquote{margin:24px 0 0; padding:4px 0 4px 18px; border-left:3px solid var(--accent);
+  font-size:1.08rem; color:var(--slate); max-width:60ch}
+main blockquote{margin:22px 0; padding:4px 0 4px 18px; border-left:3px solid var(--rule); color:var(--slate); max-width:var(--measure)}
+.footnotes{font-family:var(--sans); font-size:13.5px; color:var(--slate); max-width:var(--measure)}
+.footnotes ol{padding-left:1.4em}
+.footnotes .footnote-back{display:none}
+.footnotes li:target{background:var(--accent-soft)}
+a.footnote-ref{text-decoration:none; font-family:var(--sans)}
+a.footnote-ref sup{font-size:.7em; padding:0 1px}
+pre{background:var(--surface); padding:12px 14px; border-radius:var(--radius); overflow-x:auto; font-size:13.5px}
+pre code{background:none; padding:0}
+main > section > .tw, main > section > figure{max-width:none}

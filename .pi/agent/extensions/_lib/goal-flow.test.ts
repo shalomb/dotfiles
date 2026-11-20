@@ -1155,3 +1155,21 @@ test("check with no goal says so", async () => {
 	await runGoalCommand(deps(), "check");
 	expect(lastNote()).toMatch(/no goal/i);
 });
+// ---- /drive priming: bounded-autonomy orchestrator ----
+test("/drive primes a high-agency orchestrator with bounded autonomy", async () => {
+	await lockedGoal();
+	await driveGoal(deps(), "");
+	const p = toAgent[0];
+	expect(p).toMatch(/high-agency orchestrator/);
+	expect(p).toMatch(/Hard stops/);
+	expect(p).toMatch(/GPG/);
+	expect(p).toMatch(/cheapest model tier/);
+	expect(p).toMatch(/RAM and CPU/);
+	expect(p).toMatch(/own git worktree/);
+	expect(p).toMatch(/not your context/);
+	expect(p).toMatch(/rebase[^.]*fast-forward/i);
+	expect(p).toMatch(/drive_gate/);
+	expect(p).toMatch(/end of the session/);
+	expect(p).toMatch(/pre-mortem/);
+	expect(p).toMatch(/goal_propose/);
+});

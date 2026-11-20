@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "eyebrow": "DEMO-12 · decision · as of 14 Nov 2026",
+    "title": "An unused staging queue is billed until 10 December: someone needs to say keep it or drop it",
+    "lede": "A staging queue in the demo account has had no traffic for ninety days. Its reservation renews on 10 December. Nobody has said who owns it. Ticket [r2].",
+    "asof": "14 Nov 2026",
+    "foot": "Source: a made-up scenario for tests."
+  },
+  "deadline": {"start": "2026-11-01", "today": "2026-11-14", "date": "2026-12-10", "ask_by": "2026-12-06",
+               "date_label": "renewal", "ask_by_note": "last sensible day to ask the owner"},
+  "facts": [{"value": "0", "label": "messages in ninety days", "basis": "measured"}, {"value": "0", "label": "owners named so far", "basis": "judged"}],
+  "options": [
+    {"id": "lapse", "title": "Let it renew unnoticed", "pro": "No effort", "con": "Pays for something nobody owns", "note": "Only if usage is clean."},
+    {"id": "ask", "title": "Ask the owner, then drop it", "pro": "One question, a record left behind", "con": "Needs an answer before 6 Dec", "note": "No answer by 6 Dec means drop it.", "recommended": true},
+    {"id": "keep", "title": "Renew on purpose", "pro": "No surprise outage", "con": "Needs an owner and a reason", "note": "Only if an owner confirms a planned use."}
+  ],
+  "why": "Dropping an unowned queue is cheap to undo, while renewing it quietly adds a cost nobody tracks. The one real risk is a hidden user, and a single question closes it [r1].",
+  "needs": [
+    {"need": "Who owns the queue", "from": "Account contact", "by": "2 Dec"},
+    {"need": "Any producer or consumer still pointing at it", "from": "Platform team", "by": "2 Dec"},
+    {"need": "Keep or drop, in one line", "from": "The owner", "by": "6 Dec"}
+  ],
+  "reply": {"to": "Platform team", "text": "Re DEMO-12: the staging queue shows no traffic for 90 days. Unless the owner replies by 6 Dec, please drop it."},
+  "refs": [
+    {"id": "r1", "title": "Doc system principles: say which kind of claim it is", "href": "docs/specs/doc-system/principles.md", "kind": "spec"},
+    {"id": "r2", "title": "DEMO-12: unused staging queue", "href": "https://jira.example.test/browse/DEMO-12", "kind": "ticket"},
+    {"id": "r3", "title": "Earlier edition of this decision", "href": "editions/demo-12-v1.html", "kind": "edition"}
+  ],
+  "glossary": {}
+}

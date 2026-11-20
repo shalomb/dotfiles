@@ -1,0 +1,41 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__</title><style>/*__KERNEL_CSS__*/</style>
+<style>
+main{max-width:1000px}
+h1,.lede,.sub{max-width:840px}
+.steps{list-style:none;counter-reset:s;padding:0;margin:0}.steps li{counter-increment:s;position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 56px;margin:10px 0}
+.steps li:before{content:counter(s);position:absolute;left:14px;top:12px;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;text-align:center;line-height:30px;font-weight:700}
+.steps h3{font:600 17px system-ui;margin:0 0 4px}.steps p{margin:0}.steps .ok{margin-top:8px;font-size:14px;border-left:4px solid var(--G);background:#eef6f1;padding:6px 10px;border-radius:4px}
+.who{background:#fff;border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:10px;padding:12px 16px}
+.pill{display:inline-block;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;padding:2px 10px;border-radius:999px;text-transform:uppercase;min-width:64px;text-align:center}.pill.todo{background:var(--N)}.pill.doing{background:var(--A)}.pill.done{background:var(--G)}
+details.fold{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0}details.fold summary{cursor:pointer;font-weight:600}details.fold p{margin:8px 0 0}
+.kpis{grid-template-columns:repeat(4,1fr)}
+</style></head><body><main>__NOSCRIPT__
+<div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="lede" id="lede"></p>
+<div class="kpis" id="kpis"></div>
+<h2>Who this is for</h2><div class="who" id="who"></div>
+<h2>Steps</h2><ol class="steps" id="steps"></ol>
+<h2>Checklist</h2><table id="checklist"><thead><tr><th>Item</th><th>Status</th></tr></thead><tbody></tbody></table>
+<div id="foldsbox"></div>
+<div id="glossbox"></div>
+<div id="refsbox"></div>
+__GATE__
+<p class="foot" id="foot"></p>
+<details class="made" id="made"><summary>How this page was made</summary><div id="madebody"></div></details>
+</main>
+<script type="application/json" id="recipe">__RECIPE__</script>
+<script>
+const DATA=__DATA__;
+/*__KERNEL_JS__*/
+const M=DATA.meta,D=DATA.derived;
+$("eyebrow").textContent=M.eyebrow;$("title").textContent=M.title;cite($("lede"),M.lede);
+const kp=(v,l,k)=>$("kpis").appendChild(el("div",{class:"card kpi"},[el("b",{text:String(v)}),el("span",{text:l}),basisTag(DATA.derived_basis[k])]));
+kp(D.steps,"steps","steps");kp(D.items,"checklist items","items");kp(D.done,"done","done");kp(D.todo,"still to do","todo");
+cite($("who"),DATA.for);
+DATA.steps.forEach(s=>{const k=[el("h3",{text:s.title}),el("p",{text:s.text})];if(s.check)k.push(el("div",{class:"ok"},[el("b",{text:"Check: "}),document.createTextNode(s.check)]));$("steps").appendChild(el("li",{},k));});
+DATA.checklist.forEach(c=>{document.querySelector("#checklist tbody").appendChild(el("tr",{},[el("td",{text:c.item}),el("td",{},[el("span",{class:"pill "+c.status,text:c.status})])]));});
+if(DATA.folds.length){$("foldsbox").appendChild(el("h2",{text:"More detail"}));DATA.folds.forEach(f=>$("foldsbox").appendChild(el("details",{class:"fold"},[el("summary",{text:f.title}),el("p",{text:f.text})])));}
+renderGlossary($("glossbox"),el("h2",{text:"In plain words"}));
+cite($("foot"),M.foot);
+renderRefs($("refsbox"));
+renderMade();
+</script></body></html>

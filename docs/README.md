@@ -15,6 +15,7 @@ This documentation follows the **Diataxis framework** for technical documentatio
 
 **Available:**
 - [GPG TUI Setup](./how-to-guides/gpg-tui-setup.md) - How to configure GPG in terminal environments
+- [Scratch Notes](./how-to/scratch-notes.md) - How to keep per-worktree notes outside the git tree
 
 ### 📖 **Technical Reference** (`technical-reference/`)
 **Information-oriented** - Detailed technical specifications

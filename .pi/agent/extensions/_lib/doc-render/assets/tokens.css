@@ -1,0 +1,27 @@
+/* Story-doc tokens: colours, type, theme switch. Lifted from docs/prototypes/lead-doc-template.html. */
+:root{
+  color-scheme:light dark;
+  --paper:light-dark(#FBFAF8,#101316);
+  --card:light-dark(#FFFFFF,#161A1E);
+  --surface:light-dark(#F3F4F6,#1B2025);
+  --ink:light-dark(#16191D,#E6E8EA);
+  --slate:light-dark(#4F5966,#B0B8C3);
+  --mute:light-dark(#6B7584,#8A95A3);
+  --rule:light-dark(rgba(22,25,29,.13),rgba(230,232,234,.16));
+  --rule-soft:light-dark(rgba(22,25,29,.07),rgba(230,232,234,.08));
+  --accent:light-dark(#1B5E6B,#6CC0CF);
+  --accent-soft:light-dark(#E6EFF1,#16292E);
+  --ok:light-dark(#2E7D5B,#6CC59A);
+  --ok-soft:light-dark(#E5F2EC,#14261E);
+  --warn:light-dark(#9A5F0E,#E0A955);
+  --warn-soft:light-dark(#F8EEDC,#2A2114);
+  --risk:light-dark(#A33A3A,#E08A8A);
+  --risk-soft:light-dark(#F7E6E6,#2B1717);
+  --serif:Charter,"Bitstream Charter","Iowan Old Style","Source Serif Pro",Georgia,serif;
+  --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --measure:68ch; --gap:clamp(20px,3vw,40px); --radius:8px;
+}
+:root:has(#theme-light:checked){color-scheme:light}
+:root:has(#theme-dark:checked){color-scheme:dark}
+

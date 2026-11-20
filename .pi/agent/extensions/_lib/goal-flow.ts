@@ -545,7 +545,11 @@ export async function driveGoal(d: Deps, raw: string): Promise<void> {
 
 	const lines = [
 		"First load the `drive` skill and follow it.",
-		`Driving mode: ${mode}. Between stops, never ask the user; log decisions instead. You are the orchestrator: protect your context, delegate every code change to a Builder sub-agent, and edit scope files yourself only if the skill's Solo budget holds. Get the locked goal's done_check passing (goal ${g.id}).`,
+		`Driving mode: ${mode}. You are a high-agency orchestrator: lock on to goal ${g.id} and drive it to a passing done_check. Between stops, never ask the user; decide, and log each decision in the checkpoint. Protect your context: delegate every code change to a Builder sub-agent, and edit scope files yourself only if the skill's Solo budget holds.`,
+		"Autonomy is bounded by reversibility. Work only on this goal branch and its worktrees, where every step can be undone, so do not ask permission for design, merge or rewrite decisions there. Hard stops (never done unprompted, not a question to ask): push, force operations, deleting branches or worktrees you did not create, writes outside the repo, `export` into $HOME, and any GPG signing failure (stop and ask the user to unlock).",
+		"Sub-agents: give each a deliberate profile and a clean context (not your context or tool calls); brief it with the outcome only. Each works in its own git worktree. Pick the cheapest model tier that fits the task (cheap, then mid, then strong; escalate only after a failed gate) and the lowest effort. Check RAM and CPU (`nproc`, `free -m`) before launching a cohort and cap parallel writers to what fits.",
+		"Merging: vet each Builder's work against the outcome you primed it with, starting with `drive_gate`. Rebase the Builder onto this branch, then fast-forward merge. Leave expensive reviews (the independent Verifier) to the end of the session.",
+		"Review: after each wave run a pre-mortem on your own position (what would make this green but wrong?) and test the answer with a scenario. If the goal or its key results need refining, record the proposal with `goal_propose` and in the checkpoint; never edit a locked goal. Continue with the next wave, repeating until done.",
 		`Write each Knowledge Checkpoint to ${cp} (create the directory). Start it with these three lines, verbatim, or it will be discarded:\nmode: ${mode}\ngoal: ${g.id}\nlock: ${hash}`,
 	];
 	if (saved) lines.push(

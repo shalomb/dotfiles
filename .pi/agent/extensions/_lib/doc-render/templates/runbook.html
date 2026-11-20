@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>__TITLE__</title><style>/*__KERNEL_CSS__*/</style>
+<style>
+main{max-width:1000px}
+h1,.lede,.sub{max-width:840px}
+.purpose{background:#fff;border:1px solid var(--line);border-left:5px solid var(--G);border-radius:10px;padding:12px 16px}
+.steps{list-style:none;counter-reset:s;padding:0;margin:0}.steps li{counter-increment:s;position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 56px;margin:10px 0}
+.steps li:before{content:counter(s);position:absolute;left:14px;top:12px;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;text-align:center;line-height:30px;font-weight:700}
+#rollback.steps li:before{background:var(--R)}
+.steps h3{font:600 17px system-ui;margin:0 0 6px}
+pre.cmd{white-space:pre-wrap;font:14px/1.5 ui-monospace,monospace;background:#f3f1e9;border-radius:10px;padding:10px 14px;margin:6px 0}
+.exp{font-size:14px;border-left:4px solid var(--G);background:#eef6f1;padding:6px 10px;border-radius:4px}
+.pre{list-style:none;padding:0;margin:0}.pre li{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 14px;margin:6px 0}.pre li:before{content:"\2610";margin-right:10px;color:var(--mut)}
+.kpis{grid-template-columns:repeat(4,1fr)}
+</style></head><body><main>__NOSCRIPT__
+<div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p class="lede" id="lede"></p>
+<div class="kpis" id="kpis"></div>
+<h2>Purpose</h2><div class="purpose" id="purpose"></div>
+<h2>Before you start</h2><ul class="pre" id="pre"></ul>
+<h2>Steps</h2><ol class="steps" id="steps"></ol>
+<h2>Rollback</h2><ol class="steps" id="rollback"></ol>
+<h2>Who to call</h2><table id="esc"><thead><tr><th>Role</th><th>When</th><th>How</th></tr></thead><tbody></tbody></table>
+<div id="glossbox"></div>
+<div id="refsbox"></div>
+__GATE__
+<p class="foot" id="foot"></p>
+<details class="made" id="made"><summary>How this page was made</summary><div id="madebody"></div></details>
+</main>
+<script type="application/json" id="recipe">__RECIPE__</script>
+<script>
+const DATA=__DATA__;
+/*__KERNEL_JS__*/
+const M=DATA.meta,D=DATA.derived;
+$("eyebrow").textContent=M.eyebrow;$("title").textContent=M.title;cite($("lede"),M.lede);
+const kp=(v,l,k)=>$("kpis").appendChild(el("div",{class:"card kpi"},[el("b",{text:String(v)}),el("span",{text:l}),basisTag(DATA.derived_basis[k])]));
+kp(D.preconditions,"things to confirm first","preconditions");kp(D.steps,"steps","steps");kp(D.rollback,"rollback steps","rollback");kp(D.contacts,"escalation contacts","contacts");
+cite($("purpose"),DATA.purpose);
+DATA.preconditions.forEach(p=>{const k=[document.createTextNode(p.item)];if(p.check)k.push(el("span",{class:"sub",text:" Check: "+p.check}));$("pre").appendChild(el("li",{},k));});
+const steps=(id,list)=>list.forEach(s=>$(id).appendChild(el("li",{},[el("h3",{text:s.title}),el("pre",{class:"cmd",plain:s.command}),el("div",{class:"exp"},[el("b",{text:"Expect: "}),document.createTextNode(s.expect)])])));
+steps("steps",DATA.steps);steps("rollback",DATA.rollback);
+DATA.escalation.forEach(e=>{document.querySelector("#esc tbody").appendChild(el("tr",{},[e.role,e.when,e.how].map(t=>el("td",{text:t}))));});
+renderGlossary($("glossbox"),el("h2",{text:"In plain words"}));
+cite($("foot"),M.foot);
+renderRefs($("refsbox"));
+renderMade();
+</script></body></html>

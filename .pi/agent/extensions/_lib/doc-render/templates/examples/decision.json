@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "eyebrow": "EX-4 · decision · as of 2 Feb 2031",
+    "title": "The shared build cache is billed until 1 March: someone needs to say keep it or retire it",
+    "lede": "A shared build cache in the example project has served no builds for sixty days. Its plan renews on 1 March. Nobody has said who owns it. Ticket [r1].",
+    "asof": "2 Feb 2031",
+    "foot": "Source: an invented example. Replace every value with your own facts."
+  },
+  "deadline": {"start": "2031-01-15", "today": "2031-02-02", "date": "2031-03-01", "ask_by": "2031-02-24",
+               "date_label": "renewal", "ask_by_note": "last sensible day to ask the owner"},
+  "facts": [{"value": "0", "label": "builds served in sixty days", "basis": "measured"}, {"value": "0", "label": "owners named so far", "basis": "judged"}],
+  "options": [
+    {"id": "lapse", "title": "Let it renew unnoticed", "pro": "No effort", "con": "Pays for something nobody owns", "note": "Only if usage is clean."},
+    {"id": "ask", "title": "Ask the owner, then retire it", "pro": "One question and a record left behind", "con": "Needs an answer before 24 Feb", "note": "No answer by 24 Feb means retire it.", "recommended": true},
+    {"id": "keep", "title": "Renew on purpose", "pro": "No surprise slow builds", "con": "Needs an owner and a reason", "note": "Only if an owner confirms a planned use."}
+  ],
+  "why": "Retiring an unused cache is cheap to undo, while renewing it quietly adds a cost nobody tracks. The one real risk is a hidden user, and a single question closes it [r1].",
+  "needs": [
+    {"need": "Who owns the cache", "from": "Project lead", "by": "20 Feb"},
+    {"need": "Any pipeline still pointing at it", "from": "Platform team", "by": "20 Feb"},
+    {"need": "Keep or retire, in one line", "from": "The owner", "by": "24 Feb"}
+  ],
+  "reply": {"to": "Platform team", "text": "Re EX-4: the shared build cache served no builds for 60 days. Unless the owner replies by 24 Feb, please retire it."},
+  "refs": [
+    {"id": "r1", "title": "EX-4: unused shared build cache", "href": "https://jira.example.test/browse/EX-4", "kind": "ticket"}
+  ],
+  "glossary": {}
+}
