@@ -1091,3 +1091,34 @@ test("the stale warning for a deleted branch points at /goal drop <id>", async (
 	expect(w).toContain("/goal drop g-gone-work");
 	expect(w).not.toMatch(/Switch to feat\/gone/);
 });
+
+// /goal check runs the contract's done_check, read-only.
+test("check is a subcommand and parses", () => {
+	expect((SUBCOMMANDS as readonly string[]).includes("check")).toBe(true);
+	expect(parseGoalArgs("check")).toEqual({ kind: "check" });
+});
+test("check reports red then green and never changes the goal", async () => {
+	const d = await activeGoal();
+	const before = readFileSync(join(store, "feat-export.json"), "utf8");
+	await runGoalCommand(d, "check");
+	expect(lastNote()).toMatch(/^FAIL 1 test -f export\.csv \(\d+ms\)$/m);
+	expect(lastNote()).toMatch(/done_check: red \(0\/1\)$/);
+	commitFile("export.csv");
+	await runGoalCommand(d, "check");
+	expect(lastNote()).toMatch(/^PASS 1 test -f export\.csv \(\d+ms\)$/m);
+	expect(lastNote()).toMatch(/done_check: green \(1\/1\)$/);
+	expect(readFileSync(join(store, "feat-export.json"), "utf8")).toBe(before);
+	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+});
+test("check on a human-confirm goal says so and runs nothing", async () => {
+	const d = await draftWithCheck();
+	const g = loadGoal(store, "feat/export")!;
+	saveGoal(store, { ...g, doneCheck: { ...g.doneCheck, kind: "human", commands: [] } });
+	await runGoalCommand(d, "check");
+	expect(lastNote()).toMatch(/human/i);
+	expect(lastNote()).not.toMatch(/done_check:/);
+});
+test("check with no goal says so", async () => {
+	await runGoalCommand(deps(), "check");
+	expect(lastNote()).toMatch(/no goal/i);
+});
