@@ -60,5 +60,5 @@ uv run python -m dotfile_manager export .config/bash/enabled/
 ```
 ## Evidence
 
-- commit: f66d486 — adds `enabled/` as a directory of real tool scripts
+- commit: 40465bf — moves tools to real files in `disabled/` and `enabled/`, removing all symlinks
 - check: `test -z "$(fd -t l . .config/bash/enabled)"` — `enabled/` contains no symlinks
