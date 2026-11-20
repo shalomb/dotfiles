@@ -18,6 +18,11 @@ unset _pi_lib _pi_f
 
 pi() {
   local arg args=() no_resume=0 profile
+  # Memory diagnostics: heap snapshot near the heap limit or on `kill -USR2 <pid>`,
+  # fatal-error reports. Output in ~/.cache/pi-diag. Scoped to this call (local -x).
+  # NOTE: launch.sh appends --max-old-space-size=${PI_HEAP_MB:-1024} after this, so it wins.
+  mkdir -p "$HOME/.cache/pi-diag"
+  local -x NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--max-old-space-size=1800 --heapsnapshot-near-heap-limit=2 --heapsnapshot-signal=SIGUSR2 --report-on-fatalerror --diagnostic-dir=$HOME/.cache/pi-diag"
   for arg in "$@"; do
     if [[ "$arg" == --no-resume ]]; then no_resume=1; else args+=("$arg"); fi
   done
