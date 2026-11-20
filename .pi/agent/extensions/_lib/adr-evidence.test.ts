@@ -75,3 +75,42 @@ describe("checkDir", () => {
     expect(f.every((x) => x.reason.length > 0)).toBe(true);
   });
 });
+
+describe("fails closed", () => {
+  function adr(body: string): { failures: ReturnType<typeof checkDir>; sha: string } {
+    const { root, sha } = repo();
+    const d = tmp();
+    writeFileSync(join(d, "ADR-900.md"), body.replaceAll("SHA", sha));
+    return { failures: checkDir(d, root), sha };
+  }
+  test("bold or lowercase Accepted is still Accepted", () => {
+    expect(parseStatus("## Status\n**Accepted**\n")).toBe("Accepted");
+    expect(parseStatus("## Status\naccepted\n")).toBe("Accepted");
+    expect(parseStatus("- **Status**: Accepted\n")).toBe("Accepted");
+  });
+  test("an ADR whose status cannot be read fails", () => {
+    expect(adr("# ADR\nno status here\n").failures[0]?.reason).toMatch(/status unreadable/);
+  });
+  test("bold Accepted without evidence fails", () => {
+    expect(adr("## Status\n**Accepted**\n").failures).toHaveLength(1);
+  });
+  test("an unparseable evidence bullet fails even beside a valid one", () => {
+    const f = adr("## Status\nAccepted\n## Evidence\n- commit: SHA\n- commit: HEAD\n").failures;
+    expect(f[0]?.reason).toMatch(/unparseable/);
+  });
+  test("a sha with a suffix is unparseable", () => {
+    expect(adr("## Status\nAccepted\n## Evidence\n- commit: SHA-fake\n").failures).toHaveLength(1);
+  });
+  test("a valid sha with a note passes", () => {
+    expect(adr("## Status\nAccepted\n## Evidence\n- commit: SHA — note\n").failures).toEqual([]);
+  });
+  test("test: must be a file inside the repo", () => {
+    expect(adr("## Status\nAccepted\n## Evidence\n- test: .\n").failures).toHaveLength(1);
+    expect(adr("## Status\nAccepted\n## Evidence\n- test: ../../etc/hostname\n").failures).toHaveLength(1);
+    expect(adr("## Status\nAccepted\n## Evidence\n- test: t.test.ts\n").failures).toEqual([]);
+  });
+  test("a heading inside a code fence does not end the section", () => {
+    const f = adr("## Status\nAccepted\n## Evidence\n```\n# x\n```\n- commit: HEAD\n").failures;
+    expect(f).toHaveLength(1);
+  });
+});
