@@ -85,7 +85,6 @@ const checkLines = (g: Goal) => (g.doneCheck.kind === "human" ? ["(human-confirm
 const lockCheckLines = (g: Goal) => (g.doneCheck.kind === "human" ? checkLines(g) : g.doneCheck.commands.map((c) => `  $ ${shorten(c)}`));
 /** Base-run output with each `$ <command>` echo shortened, for the lock dialog only. */
 const shortenEchoes = (output: string) => output.split("\n").map((l) => (l.startsWith("$ ") ? `$ ${shorten(l.slice(2))}` : l)).join("\n");
-const bullets = (items: string[]) => (items.length ? items.map((i) => `  - ${i}`).join("\n") : "  (none)");
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
