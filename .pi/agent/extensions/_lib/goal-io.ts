@@ -236,7 +236,9 @@ export function isGoalStorePath(path: string): boolean {
 const GOAL_STORE_IN_COMMAND = /agent-skills\/todos\/[^\s'"]*\/goals\b/;
 /** The private ref of ADR-010: any command or path naming it is blocked for the agent, reads included. */
 const GOAL_REF = /refs\/goals\//;
-const SHELL_WRITE = /(?:^|[\s;&|])(?:tee|sed\s+-\S*i|mv|cp|rm|truncate|install|dd|perl\s+-\S*i|python3?|node|bun)\b|>/;
+const SHELL_WRITE = /(?:^|[\s;&|(])(?:tee|sed\s+-\S*i|sd|mv|cp|rm|truncate|install|dd|ln|perl|python3?|node|bun)\b/;
+/** Every redirect target in a command: `>`, `>>`, `>|`, `&>`, optionally fd-prefixed, with optional space. */
+const REDIRECT_TARGET = /(?:\d*|&)>>?\|?\s*([^\s;&|)]+)/g;
 /** Redirects that cannot write a file: to /dev/null, or an fd dup like 2>&1 or >&2. */
 const HARMLESS_REDIRECT = /\d*>>?\s*(?:\/dev\/null\b|&\d+)/g;
 
@@ -249,7 +251,11 @@ export function agentWouldWriteGoalStore(toolName: string, input: { path?: strin
 	if (toolName === "write" || toolName === "edit") return isGoalStorePath(String(input.path ?? "")) || GOAL_REF.test(String(input.path ?? ""));
 	if (toolName === "bash") {
 		const command = String(input.command ?? "");
-		return GOAL_REF.test(command) || (GOAL_STORE_IN_COMMAND.test(command) && SHELL_WRITE.test(command.replace(HARMLESS_REDIRECT, " ")));
+		if (GOAL_REF.test(command)) return true;
+		if (!GOAL_STORE_IN_COMMAND.test(command)) return false;
+		const cleaned = command.replace(HARMLESS_REDIRECT, " ");
+		for (const m of cleaned.matchAll(REDIRECT_TARGET)) if (GOAL_STORE_IN_COMMAND.test(m[1] ?? "")) return true;
+		return SHELL_WRITE.test(cleaned);
 	}
 	return false;
 }
