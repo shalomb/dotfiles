@@ -358,7 +358,7 @@ test("a branch whose name collides with another branch's goal slug sees no goal 
 
 // P1: approving a change is held to the same fail-on-base rule as lock.
 // Scenario: Locking needs an Outcome Check
-test("lock is one dialog: the human picks the Outcome Check and that pick locks, with no second confirm", async () => {
+test("an ambiguous check is one dialog: the human picks the Outcome Check and that pick locks, with no second confirm", async () => {
 	const d = await draftWithCheck(["test -f never.csv", "test -f export.csv"]);
 	pick = 1;
 	await lockGoal(d);
@@ -370,12 +370,36 @@ test("lock is one dialog: the human picks the Outcome Check and that pick locks,
 	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "active", doneCheck: { outcomeChecks: ["test -f export.csv"] } });
 });
 
-test("a single-command check offers one Lock option and Cancel", async () => {
+test("a single-command check is a short Lock/Cancel confirm naming that default", async () => {
 	const d = await draftWithCheck(["test -f export.csv"]);
 	pick = 0;
 	await lockGoal(d);
-	expect(selects[0].options).toEqual(["Lock · Outcome Check: test -f export.csv", "Cancel"]);
-	expect(loadGoal(store, "feat/export")!.status).toBe("active");
+	expect(selects[0].options).toEqual(["Lock", "Cancel"]);
+	expect(selects[0].title).toContain("Outcome Check: test -f export.csv");
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "active", doneCheck: { outcomeChecks: ["test -f export.csv"] } });
+});
+
+test("many long commands with no suggestion offer at most 3 short choices, and lock the verbatim command", async () => {
+	const long = (n: number) => `test -f export.csv && echo ${"x".repeat(120)} ${n}`;
+	const d = await draftWithCheck([long(1), long(2), long(3), long(4), long(5)]);
+	pick = 0;
+	await lockGoal(d);
+	const opts = selects[0].options;
+	expect(opts.at(-1)).toBe("Cancel");
+	expect(opts.length - 1).toBeLessThanOrEqual(3);
+	for (const o of opts) expect(o.length).toBeLessThanOrEqual(80 + "Lock · Outcome Check: ".length);
+	const g = loadGoal(store, "feat/export")!;
+	expect(g.doneCheck.outcomeChecks).toEqual([long(1)]);
+	expect(g.doneCheck.commands).toEqual([long(1), long(2), long(3), long(4), long(5)]);
+});
+
+test("the lock dialog title does not list long commands in full", async () => {
+	const long = `test -f export.csv && echo ${"y".repeat(200)}`;
+	const d = await draftWithCheck([long]);
+	pick = 0;
+	await lockGoal(d);
+	expect(selects[0].title).not.toContain(long);
+	expect(loadGoal(store, "feat/export")!.doneCheck.commands).toEqual([long]);
 });
 
 test("cancelling the lock dialog, or picking Cancel, leaves the draft unlocked and asks no confirm", async () => {
@@ -391,15 +415,24 @@ test("cancelling the lock dialog, or picking Cancel, leaves the draft unlocked a
 	expect(worktrees()).toBe(1);
 });
 
-test("the agent's suggested Outcome Check is listed first, but the human's pick decides", async () => {
+test("exactly one agent suggestion is the default: one Lock/Cancel confirm naming it, and Lock marks it", async () => {
 	const d = await draftWithCheck(["test -f export.csv", "test -f never.csv"]);
 	const r = await proposeFromAgent(d, { outcomeChecks: ["test -f never.csv"] });
 	expect(r.ok).toBe(true);
 	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "draft", doneCheck: { outcomeChecks: ["test -f never.csv"] } });
+	pick = 0;
+	await lockGoal(d);
+	expect(selects[0].options).toEqual(["Lock", "Cancel"]);
+	expect(selects[0].title).toContain("Outcome Check: test -f never.csv");
+	expect(loadGoal(store, "feat/export")).toMatchObject({ status: "active", doneCheck: { outcomeChecks: ["test -f never.csv"] } });
+});
+
+test("Cancel on the default confirm leaves the draft unlocked", async () => {
+	const d = await draftWithCheck(["test -f export.csv"]);
 	pick = 1;
 	await lockGoal(d);
-	expect(selects[0].options[0]).toBe("Lock · Outcome Check: test -f never.csv");
-	expect(loadGoal(store, "feat/export")!.doneCheck.outcomeChecks).toEqual(["test -f export.csv"]);
+	expect(loadGoal(store, "feat/export")!.status).toBe("draft");
+	expect(lastNote()).toMatch(/Not locked/);
 });
 
 test("goal_propose cannot set the Outcome Check of an active goal", async () => {
