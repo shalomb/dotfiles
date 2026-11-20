@@ -39,12 +39,17 @@ export function parseViewArgs(input: string, cwd: string, home: string = homedir
 	return { ok: true, path, line, edit };
 }
 
-export function viewArgv(t: ViewTarget, editor: string = process.env.PI_VIEW_EDITOR ?? "vim"): string[] {
+/** The popup editor: $PI_VIEW_EDITOR, then $VISUAL, then $EDITOR, then vi. A bare `vim` may be a shim on this host. */
+export function pickEditor(env: Record<string, string | undefined> = process.env): string {
+	return [env.PI_VIEW_EDITOR, env.VISUAL, env.EDITOR].find((e) => e?.trim())?.trim() ?? "vi";
+}
+
+export function viewArgv(t: ViewTarget, editor: string = pickEditor()): string[] {
 	return [editor, ...(t.edit ? [] : ["-R"]), ...(t.line ? [`+${t.line}`] : []), "--", t.path];
 }
 
 /** What the agent hears after an editable popup closes: whether the human saved a change (contents before vs after). */
 export function editOutcome(path: string, before: string | undefined, after: string | undefined): string {
-	if (before === undefined && after !== undefined) return `edited ${path} in vim: file created; re-read it before acting`;
-	return before === after ? `edited ${path} in vim: no changes saved` : `edited ${path} in vim: changes saved; re-read it before acting`;
+	if (before === undefined && after !== undefined) return `edited ${path} in the editor: file created; re-read it before acting`;
+	return before === after ? `edited ${path} in the editor: no changes saved` : `edited ${path} in the editor: changes saved; re-read it before acting`;
 }

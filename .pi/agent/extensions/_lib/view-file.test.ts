@@ -45,9 +45,9 @@ test("argv: read-only vim with +line, never goes through a shell", () => {
 });
 
 test("editOutcome: says whether the human saved a change, so the agent knows to re-read", () => {
-	expect(editOutcome("/r/a.md", "x", "x")).toBe("edited /r/a.md in vim: no changes saved");
-	expect(editOutcome("/r/a.md", "x", "y")).toBe("edited /r/a.md in vim: changes saved; re-read it before acting");
-	expect(editOutcome("/r/a.md", undefined, "y")).toBe("edited /r/a.md in vim: file created; re-read it before acting");
+	expect(editOutcome("/r/a.md", "x", "x")).toBe("edited /r/a.md in the editor: no changes saved");
+	expect(editOutcome("/r/a.md", "x", "y")).toBe("edited /r/a.md in the editor: changes saved; re-read it before acting");
+	expect(editOutcome("/r/a.md", undefined, "y")).toBe("edited /r/a.md in the editor: file created; re-read it before acting");
 });
 
 test("pickEditor: PI_VIEW_EDITOR, then VISUAL, then EDITOR, then vi (never a hardcoded vim)", () => {

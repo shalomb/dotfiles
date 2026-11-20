@@ -18,7 +18,7 @@ export default function (pi: ExtensionAPI) {
 		const before = t.edit ? readFileSync(t.path, "utf8") : undefined;
 		const res = await openPopup(pi.exec.bind(pi) as any, { name: "view", cwd, width: "95%", height: "95%", argv: viewArgv(t) }, process.env, hasUI);
 		if (res.status !== "shown") return { ok: true, text: notShownNote(res, "view") };
-		if (res.code !== 0) return { ok: false, text: `view popup failed (${res.code}): ${res.stderr?.trim() || "is vim installed?"}` };
+		if (res.code !== 0) return { ok: false, text: `view popup failed (${res.code}): ${res.stderr?.trim() || "is $VISUAL/$EDITOR set to a working editor?"}` };
 		if (t.edit) return { ok: true, text: editOutcome(t.path, before, readFileSync(t.path, "utf8")) };
 		return { ok: true, text: `showed ${t.path}${t.line ? `:${t.line}` : ""}; popup closed` };
 	};
