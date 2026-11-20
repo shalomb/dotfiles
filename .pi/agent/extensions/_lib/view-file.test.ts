@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { editOutcome, parseViewArgs, viewArgv } from "./view-file";
+import { editOutcome, parseViewArgs, pickEditor, viewArgv } from "./view-file";
 
 const dir = mkdtempSync(join(tmpdir(), "view-"));
 const f = join(dir, "a b.ts");
@@ -45,7 +45,14 @@ test("argv: read-only vim with +line, never goes through a shell", () => {
 });
 
 test("editOutcome: says whether the human saved a change, so the agent knows to re-read", () => {
-	expect(editOutcome("/r/a.md", "x", "x")).toBe("edited /r/a.md in vim: no changes saved");
-	expect(editOutcome("/r/a.md", "x", "y")).toBe("edited /r/a.md in vim: changes saved; re-read it before acting");
-	expect(editOutcome("/r/a.md", undefined, "y")).toBe("edited /r/a.md in vim: file created; re-read it before acting");
+	expect(editOutcome("/r/a.md", "x", "x")).toBe("edited /r/a.md in the editor: no changes saved");
+	expect(editOutcome("/r/a.md", "x", "y")).toBe("edited /r/a.md in the editor: changes saved; re-read it before acting");
+	expect(editOutcome("/r/a.md", undefined, "y")).toBe("edited /r/a.md in the editor: file created; re-read it before acting");
+});
+
+test("pickEditor: PI_VIEW_EDITOR, then VISUAL, then EDITOR, then vi (never a hardcoded vim)", () => {
+	expect(pickEditor({ PI_VIEW_EDITOR: "hx", VISUAL: "nvim", EDITOR: "nano" })).toBe("hx");
+	expect(pickEditor({ VISUAL: "nvim", EDITOR: "nano" })).toBe("nvim");
+	expect(pickEditor({ EDITOR: "nano" })).toBe("nano");
+	expect(pickEditor({ VISUAL: "", EDITOR: "" })).toBe("vi");
 });
