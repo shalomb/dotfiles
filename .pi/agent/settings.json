@@ -14,7 +14,7 @@
     "antigravity/*"
   ],
   "hideThinkingBlock": false,
-  "lastChangelogVersion": "1.5.2",
+  "lastChangelogVersion": "1.6.0",
   "markdown": {
     "mermaid": "streaming"
   },
@@ -49,9 +49,9 @@
   "transport": "auto",
   "tuiMode": "regular",
   "extensionChangelogVersions": {
-    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.5.0",
+    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.5.1",
     "{\"source\":\"npm:pi-powerline-footer\",\"scope\":\"user\"}": "0.22.0",
-    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.88.1",
+    "{\"source\":\"npm:pi-subagents\",\"scope\":\"user\"}": "0.89.1",
     "{\"source\":\"npm:@tmustier/pi-usage-extension\",\"scope\":\"user\"}": "0.10.2",
     "{\"source\":\"npm:@narumitw/pi-tool\",\"scope\":\"user\"}": "0.4.3"
   },
