@@ -256,8 +256,8 @@ export function agentWouldWriteGoalStore(toolName: string, input: { path?: strin
 		const cleaned = command.replace(HARMLESS_REDIRECT, " ");
 		for (const m of cleaned.matchAll(REDIRECT_TARGET)) {
 			const target = m[1] ?? "";
-			// Fail closed: a relative target may land in the store after a cd/pushd/-C into it.
-			if (GOAL_STORE_IN_COMMAND.test(target) || !/^[/~$&]/.test(target)) return true;
+			// Fail closed: a relative or variable ($PWD, $(pwd)) target may land in the store after a cd/pushd/-C into it.
+			if (GOAL_STORE_IN_COMMAND.test(target) || !/^[/~&]/.test(target)) return true;
 		}
 		return SHELL_WRITE.test(cleaned);
 	}
