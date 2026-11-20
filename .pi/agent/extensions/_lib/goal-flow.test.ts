@@ -559,7 +559,7 @@ test("refused or declined transitions append no event", async () => {
 test("parseGoalArgs: unlock and help are subcommands; retired verbs are flagged, not taken as outcomes", () => {
 	expect(parseGoalArgs("unlock")).toEqual({ kind: "unlock" });
 	expect(parseGoalArgs("help")).toEqual({ kind: "help" });
-	for (const w of ["check", "approve", "reject"]) expect(parseGoalArgs(w)).toEqual({ kind: "retired", word: w });
+	for (const w of ["approve", "reject"]) expect(parseGoalArgs(w)).toEqual({ kind: "retired", word: w });
 	expect(parseGoalArgs("check the csv export")).toEqual({ kind: "start", outcome: "check the csv export" });
 });
 
@@ -1099,7 +1099,7 @@ test("check is a subcommand and parses", () => {
 });
 test("check reports red then green and never changes the goal", async () => {
 	const d = await activeGoal();
-	const before = readFileSync(join(store, "feat-export.json"), "utf8");
+	const before = JSON.stringify(loadGoal(store, "feat/export"));
 	await runGoalCommand(d, "check");
 	expect(lastNote()).toMatch(/^FAIL 1 test -f export\.csv \(\d+ms\)$/m);
 	expect(lastNote()).toMatch(/done_check: red \(0\/1\)$/);
@@ -1107,7 +1107,7 @@ test("check reports red then green and never changes the goal", async () => {
 	await runGoalCommand(d, "check");
 	expect(lastNote()).toMatch(/^PASS 1 test -f export\.csv \(\d+ms\)$/m);
 	expect(lastNote()).toMatch(/done_check: green \(1\/1\)$/);
-	expect(readFileSync(join(store, "feat-export.json"), "utf8")).toBe(before);
+	expect(JSON.stringify(loadGoal(store, "feat/export"))).toBe(before);
 	expect(loadGoal(store, "feat/export")!.status).toBe("active");
 });
 test("check on a human-confirm goal says so and runs nothing", async () => {

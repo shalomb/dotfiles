@@ -17,13 +17,14 @@ export const GOAL_HELP = STATES + `# GOAL(1)
 ## NAME
 goal - one checkable goal per branch, locked before work starts
 ## SYNOPSIS
-\`/goal [<outcome>] | lock | unlock | done | drop | help\`
+\`/goal [<outcome>] | lock | unlock | done | drop | check | help\`
 ## COMMANDS
 - **/goal** - No goal: agent drafts one from context. Draft: show card. Locked: card + check; when green, offers to close. Closed/dropped: drafts the next goal from the discussion
 - **\`/goal <outcome>\`** - Same as /goal, seeding the outcome
 - **/goal lock** - One dialog: pick the Outcome Check (agent's suggestion first) to lock. Refuses if the check already passes on the base commit
 - **/goal unlock** - Locked -> draft, to correct it. Logged; relock re-validates
 - **/goal done** - Run the check; close if green, then suggest /persist, lessons and the next goal (alias: /goal close)
+- **/goal check** - Run the locked goal's done_check commands (only those in the contract), time-boxed, and show PASS/FAIL per command. Changes nothing
 - **/goal drop** - Abandon the goal (removes its drive checkpoint)
 - **\`/goal drop <id>\`** - Drop a live goal of any branch, e.g. one whose branch was deleted (asks first)
 - **\`/goal drive [scenic|motorway] [extra]\`** - Hand the locked goal to the drive skill (alias: /drive). Refuses unless locked and intact; resumes from a checkpoint only if it names this goal and lock

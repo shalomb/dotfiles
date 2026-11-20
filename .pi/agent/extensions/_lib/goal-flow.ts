@@ -8,6 +8,7 @@ import {
 	reminderLine, stamp, staleGoal,
 } from "./goal.ts";
 import { branchSlug, goalIdFor } from "./goal.ts";
+import { allPass, formatReport, runDoneCheck } from "./goal-check.ts";
 import { GOAL_HELP } from "./goal-help.ts";
 import { type Dirent, existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
@@ -40,16 +41,16 @@ export interface Deps {
 }
 
 export type GoalArgs =
-	| { kind: "show" | "lock" | "unlock" | "done" | "drop" | "help" }
+	| { kind: "show" | "lock" | "unlock" | "done" | "drop" | "check" | "help" }
 	| { kind: "retired"; word: string }
 	| { kind: "drive"; rest: string }
 	| { kind: "show-id"; id: string }
 	| { kind: "drop-id"; id: string }
 	| { kind: "start"; outcome: string };
 
-export const SUBCOMMANDS = ["lock", "unlock", "done", "drop", "drive", "help"] as const;
+export const SUBCOMMANDS = ["lock", "unlock", "done", "drop", "check", "drive", "help"] as const;
 /** Verbs of the old protocol: still recognised, so a typed one gets a pointer instead of becoming an outcome. */
-const RETIRED = ["check", "approve", "reject"] as const;
+const RETIRED = ["approve", "reject"] as const;
 
 /** A subcommand is the whole argument. Anything longer is an outcome, even if its first word is a subcommand. */
 export function parseGoalArgs(raw: string): GoalArgs {
@@ -239,6 +240,26 @@ export async function showGoal(d: Deps): Promise<void> {
 		return d.ui.notify("Still active. /goal done closes it when you are ready.", "info");
 	}
 	d.ui.notify(`${summary(goal)}\n${status}\n→ Next: /goal done`, "info");
+}
+
+/** Run the current goal's done_check commands (only those in the contract) and report. Read-only: never touches the goal store. */
+export async function checkGoal(d: Deps, timeoutMs?: number): Promise<{ ok: boolean; text: string; level: "info" | "error" }> {
+	const { goal, error } = load(d);
+	if (!goal) return { ok: false, text: error === NO_GOAL ? "No goal for this branch, so there is no done_check to run." : error!, level: "error" };
+	if (goal.doneCheck.kind === "human") return { ok: false, text: `${goal.id} has a human-confirm check: there are no commands to run. /goal done asks you to confirm.`, level: "info" };
+	if (!goal.doneCheck.commands.length) return { ok: false, text: `${goal.id} has no done_check commands yet, so nothing was run.`, level: "info" };
+	if (goal.status === "active") {
+		const problem = await integrityProblem(d, goal);
+		if (problem) return { ok: false, text: problem, level: "error" };
+	}
+	const results = await runDoneCheck(goal.doneCheck.commands, { exec: d.exec, cwd: d.root, timeoutMs });
+	return { ok: allPass(results), text: formatReport(results), level: "info" };
+}
+
+/** `/goal check`: show the done_check report. */
+export async function checkGoalCommand(d: Deps): Promise<void> {
+	const r = await checkGoal(d);
+	d.ui.notify(r.text, r.level);
 }
 
 /** `/goal show <id>`: any goal by id, live or archived. */
@@ -538,6 +559,7 @@ export async function runGoalCommand(d: Deps, raw: string): Promise<void> {
 			case "help": return d.showHelp ? d.showHelp(GOAL_HELP) : d.ui.notify(GOAL_HELP, "info");
 			case "retired": return d.ui.notify(`/goal ${a.word} is retired. /goal shows the card and whether the check is green; to correct a locked goal use /goal unlock, then /goal lock.`, "info");
 			case "done": return await doneGoal(d);
+			case "check": return await checkGoalCommand(d);
 			case "drop": return await dropCurrentGoal(d, "dropped by the user");
 			case "drive": return await driveGoal(d, a.rest);
 			case "show-id": return showGoalById(d, a.id);
