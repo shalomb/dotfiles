@@ -56,3 +56,8 @@ test("pickEditor: PI_VIEW_EDITOR, then VISUAL, then EDITOR, then vi (never a har
 	expect(pickEditor({ EDITOR: "nano" })).toBe("nano");
 	expect(pickEditor({ VISUAL: "", EDITOR: "" })).toBe("vi");
 });
+
+test("/vi edits by default, /view stays read-only", () => {
+	expect(parseViewArgs("a.md", "/r", "/h", { defaultEdit: true })).toMatchObject({ ok: true, edit: true });
+	expect(parseViewArgs("a.md", "/r", "/h")).toMatchObject({ ok: true, edit: false });
+});

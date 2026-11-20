@@ -19,8 +19,8 @@ function expand(p: string, cwd: string, home: string): string {
 	return isAbsolute(bare) ? bare : resolve(cwd, bare);
 }
 
-export function parseViewArgs(input: string, cwd: string, home: string = homedir()): ViewParse {
-	let edit = false;
+export function parseViewArgs(input: string, cwd: string, home: string = homedir(), opts: { defaultEdit?: boolean } = {}): ViewParse {
+	let edit = opts.defaultEdit ?? false;
 	let line: number | undefined;
 	let raw: string | undefined;
 	for (const a of splitArgs(input)) {

@@ -1,5 +1,5 @@
 /**
- * /view <file>[:line] [--edit] — show a file in a tmux popup with vim (read-only by default). No agent turn.
+ * /view <file>[:line] — show a file read-only in a tmux editor popup; /vi <file>[:line] edits it. No agent turn.
  * Also registers the `show_file` tool so the agent can put a file in front of you when you ask
  * ("show me X"). Both go through _lib/ui-gate.ts: shown if you are looking at pi's pane, otherwise
  * parked (bell + @pi_attn); child processes never surface. Editor: $PI_VIEW_EDITOR (default vim).
@@ -23,11 +23,13 @@ export default function (pi: ExtensionAPI) {
 		return { ok: true, text: `showed ${t.path}${t.line ? `:${t.line}` : ""}; popup closed` };
 	};
 
-	for (const name of ["view", "vi"]) {
+	for (const [name, defaultEdit] of [["view", false], ["vi", true]] as const) {
 		pi.registerCommand(name, {
-			description: "/view <file>[:line] [--edit] — show a file in a tmux vim popup (read-only unless --edit; no agent turn).",
+			description: defaultEdit
+				? "/vi <file>[:line] — edit a file in a tmux editor popup (no agent turn)."
+				: "/view <file>[:line] [--edit] — show a file read-only in a tmux editor popup (no agent turn).",
 			handler: async (args: string, ctx: any) => {
-				const p = parseViewArgs(args, ctx.cwd);
+				const p = parseViewArgs(args, ctx.cwd, undefined, { defaultEdit });
 				if (!p.ok) return ctx.ui.notify(p.error, "error");
 				const r = await show(p, ctx.cwd, ctx.hasUI !== false);
 				ctx.ui.notify(r.text, r.ok ? "info" : "error");
