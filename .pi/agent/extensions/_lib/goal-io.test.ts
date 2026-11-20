@@ -319,7 +319,7 @@ test("agentWouldWriteGoalStore allows reads redirected away and blocks only real
 	for (const ok of [`yq . ${s} > /tmp/o.txt`, `bat ${s} 2>/dev/null`, `cat ${s}`]) expect([ok, blocked(ok)]).toEqual([ok, false]);
 	const d = "~/.cache/agent-skills/todos/x/" + "goals";
 	for (const bad of [
-		`cd ${d} && echo x > b.md`, `cd ${d}; cat /tmp/o > b.md`, `pushd ${d} && printf x >b.md`,
+		`cd ${d} && echo x > b.md`, `cd ${d}; cat /tmp/o > b.md`, `pushd ${d} && printf x >b.md`, `cd ${d} && echo x > $PWD/b.md`, `cd ${d} && echo x > "$(pwd)/b.md"`,
 		`cat ${s} | rg x > out.txt`,
 		`echo x > ${s}`, `yq . /tmp/o >> ${s}`, `cmd 1> ${s}`, `cmd &> ${s}`, `echo x >${s}`,
 		`echo x | tee ${s}`, `echo x | tee -a ${s}`, `sed -i s/a/b/ ${s}`, `sd a b ${s}`, `perl -pi -e 's/a/b/' ${s}`,
